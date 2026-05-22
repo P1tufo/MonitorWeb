@@ -41,13 +41,14 @@ async def get_ubicaciones(material: str, user = Depends(get_current_user), sessi
 
     query_db = get_query("inv_historial_ubicaciones")
     if query_db:
-        # Substitute dynamic column names in case the stored query has stale placeholders
+        # Substitute dynamic column names and normalise bind-params to SQLAlchemy style
         query = (
             query_db
             .replace("s.ubicacin", f"s.{ubi_col}")
             .replace("s.texto_breve_de_material", f"s.{desc_col}")
             .replace("{ubi_col}", ubi_col)
             .replace("{desc_col}", desc_col)
+            .replace("?", ":mat")   # convierte posicionales sqlite3 → nombrados SQLAlchemy
         )
     else:
         query = f"""
