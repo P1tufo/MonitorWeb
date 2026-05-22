@@ -40,7 +40,7 @@ async def generate_pdf(
 
         # 2. Generar PDF en memoria
         pdf = WMS_Landscape_PDF()
-        ots_list = get_ots_for_delivery(entrega, session) # Retorna LISTA
+        ots_list = get_ots_for_delivery(entrega, session.connection().connection)
         
         pdf.add_page()
         draw_delivery_page(pdf, df.iloc[0], df, include_logo, ots_list)
@@ -127,7 +127,7 @@ async def generate_pdf_bulk(
                 try:
                     items_df = pd.read_sql(text("SELECT * FROM outbound_deliveries WHERE entrega = :entrega"), session.connection(), params={"entrega": entrega_id})
                     if not items_df.empty:
-                        ots = get_ots_for_delivery(str(entrega_id), session)
+                        ots = get_ots_for_delivery(str(entrega_id), session.connection().connection)
                         pdf.add_page()
                         draw_delivery_page(pdf, items_df.iloc[0], items_df, include_logo, ots)
                 except Exception as page_err:
