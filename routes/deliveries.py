@@ -164,17 +164,16 @@ def get_non_palletized_details(
                 FROM inventory_movements 
                 GROUP BY doc_mat, usuario, cmv
             ) m ON p.otcuanto = m.doc_mat
-            WHERE m.usuario = ? AND m.cmv = ?
+            WHERE m.usuario = :user AND m.cmv = :cmv
               AND CAST(REPLACE(p.stock_disp, ',', '.') AS REAL) != 0
             GROUP BY p.otcuanto
             ORDER BY created_at DESC
             LIMIT 200
         """
-        cursor = db.cursor()
-        cursor.execute(query, (user, clase_mov))
-        cols = [c[0] for c in cursor.description]
-        rows = [dict(zip(cols, r)) for r in cursor.fetchall()]
-        return {"status": "success", "data": sanitize_for_json(rows)}
+        df = pd.read_sql(text(query), db.connection(), params={"user": user, "cmv": clase_mov})
+        rows = sanitize_for_json(df.to_dict(orient="records"))
+        return {"status": "success", "data": rows}
+
     except Exception as e:
         logger.error(f"Error cargando detalle no paletizado para {user} / {clase_mov}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
