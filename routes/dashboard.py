@@ -67,7 +67,7 @@ async def get_ubicaciones(material: str, user = Depends(get_current_user), sessi
                 NULL as umb,
                 NULL as ubic_actual
             FROM warehouse_tasks w
-            WHERE UPPER(TRIM(w.material)) = ?
+            WHERE UPPER(TRIM(w.material)) = :mat
               AND w.tp_dest NOT LIKE '9%'
               AND w.ubic_dest IS NOT NULL
               AND TRIM(w.ubic_dest) != ''
@@ -82,7 +82,7 @@ async def get_ubicaciones(material: str, user = Depends(get_current_user), sessi
                 s.umb as umb,
                 s.{ubi_col} as ubic_actual
             FROM stock_levels s
-            WHERE UPPER(TRIM(s.material)) = ?
+            WHERE UPPER(TRIM(s.material)) = :mat
               AND s.{ubi_col} IS NOT NULL
               AND TRIM(s.{ubi_col}) != ''
         ) l
@@ -91,7 +91,8 @@ async def get_ubicaciones(material: str, user = Depends(get_current_user), sessi
         """
     try:
         material_upper = material.strip().upper()
-        df = pd.read_sql(text(query), session.connection(), params=(material_upper, material_upper))
+        # text() requiere parámetros nombrados (:param) y dict, no tupla con '?'
+        df = pd.read_sql(text(query), session.connection(), params={"mat": material_upper})
         df = df.astype(object).where(pd.notnull(df), None)
         return df.to_dict(orient='records')
     except Exception as e:
