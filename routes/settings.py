@@ -320,6 +320,12 @@ async def api_query_preview(update: QueryUpdate, db: DBSession, state: AppState 
     AREA_EXPR = DeliveriesRepository.AREA_EXPR
     
     sql = update.sql_text
+
+    # Guard: rechazar SQL vacío/None o el string literal "undefined" que JS envía
+    # cuando document.getElementById('editQueryText') no existe en el DOM.
+    if not sql or not sql.strip() or sql.strip().lower() == "undefined":
+        return {"error": "El campo SQL está vacío. Escribe o selecciona una consulta antes de previsualizar."}
+
     if "{AREA_EXPR}" in sql:
         sql = sql.replace("{AREA_EXPR}", AREA_EXPR)
         
@@ -347,9 +353,8 @@ async def api_query_preview(update: QueryUpdate, db: DBSession, state: AppState 
                     params_dict[placeholder] = "2026%"
         
         # 2. Ejecutar con límite de seguridad
-        from sqlalchemy import text
-        # Usamos el motor de SQLAlchemy con parámetros nombrados (diccionario)
-        df = pd.read_sql(text(sql_preview), db.bind, params=params_dict)
+        # db.bind está deprecado en SQLAlchemy 2.x → usar db.connection()
+        df = pd.read_sql(text(sql_preview), db.connection(), params=params_dict)
         df = df.head(100)
         
         # 3. Saneamiento ULTRA-SEGURO
