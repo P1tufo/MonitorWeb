@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Database files — nunca versionar la BD de producción
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets & config local
+.env
+.env.*
+secrets.json
+config.local.*
+
+# Logs
+*.log
+logs/
+
+# Scratch / temp
+scratch/*.xlsx
+scratch/*.csv
+scratch/*.pyc
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node
+node_modules/
+npm-debug.log*
