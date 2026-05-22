@@ -1,0 +1,119 @@
+<!-- MODALS -->
+<!-- Modal: Area Uso -->
+<div id="modalArea" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalAreaTitle">Consumo Específico</h2>
+            <button class="close-btn" onclick="closeModal('modalArea')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <ul class="rank-list" id="modalAreaList" style="max-height: 60vh; overflow-y: auto;">
+                <!-- JS injected -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: User Top Actions -->
+<div id="modalUser" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalUserTitle">Actividad de Asistente</h2>
+            <button class="close-btn" onclick="closeModal('modalUser')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <ul class="rank-list" id="modalUserList" style="max-height: 60vh; overflow-y: auto;">
+                <!-- JS injected -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Fast Movers Todos -->
+<div id="modalFast" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Consumo Consolidado de Materiales</h2>
+            <button class="close-btn" onclick="closeModal('modalFast')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <ul class="rank-list" style="max-height: 60vh; overflow-y: auto;">
+                {% for mat in inv_top_materials[:200] %}
+                <li>
+                    <div>
+                        <div class="name" style="font-size: 1rem;"><span
+                                style="color:var(--primario);font-size:0.85rem;">[{{ mat.cod_mat }}]</span> {{
+                            mat.material }}</div>
+                    </div>
+                    <div class="score" style="font-size: 1.1rem; display: flex; flex-direction: column; align-items: flex-end;">
+                        <div>{{ mat.qty_fmt }} req.</div>
+                        {% if mat.qty_cm is defined and mat.qty_cm %}
+                        <div style="font-size: 0.7rem; color: #94a3b8; font-weight: normal; margin-top: 2px;">{{ mat.qty_cm|int }} este mes</div>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Heatmap Detail -->
+<div id="modalUbicacion" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalUbicacionTitle">Desglose de Ubicación</h2>
+            <button class="close-btn" onclick="closeModal('modalUbicacion')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <ul class="rank-list" id="modalUbicacionList" style="max-height: 60vh; overflow-y: auto;">
+                <!-- JS injected -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Curva ABC -->
+<div id="modalABC" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalABCTitle">Materiales Curva ABC</h2>
+            <button class="close-btn" onclick="closeModal('modalABC')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <ul class="rank-list" id="modalABCList" style="max-height: 60vh; overflow-y: auto;">
+                <!-- JS injected -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Día de la Semana (DOW) -->
+<div id="modalDOW" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalDOWTitle">Materiales Frecuentes</h2>
+            <button class="close-btn" onclick="closeModal('modalDOW')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <ul class="rank-list" id="modalDOWList" style="max-height: 60vh; overflow-y: auto;">
+                <!-- JS injected -->
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Producción vs Mantención (PM) -->
+<div id="modalPM" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalPMTitle">Top Materiales</h2>
+            <button class="close-btn" onclick="closeModal('modalPM')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <ul class="rank-list" id="modalPMList" style="max-height: 60vh; overflow-y: auto;">
+                <!-- JS injected -->
+            </ul>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,22 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# MonitorWeb — Docker Compose Override (Desarrollo Local)
+# ─────────────────────────────────────────────────────────────────────────────
+# Uso: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Diferencias respecto a producción:
+#   - Monta el código fuente completo (bind mount) para hot-reload.
+#   - Habilita APP_RELOAD=true para Uvicorn watch mode.
+#   - No borra el contenedor al parar (sin restart policy).
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  web:
+    restart: "no"
+    volumes:
+      # Bind mount del código fuente para hot-reload
+      - ..:/app
+      # Evitar que el contenedor sobrescriba los node_modules/venv del host
+      - /app/__pycache__
+      - /app/.pytest_cache
+    environment:
+      - APP_RELOAD=true

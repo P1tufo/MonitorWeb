@@ -1,0 +1,82 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# MonitorWeb — Docker Compose (Orquestación de Servicios SaaS)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Perfiles disponibles:
+#   - default (solo 'web'):     docker compose up
+#   - con PostgreSQL:           docker compose --profile postgres up
+#
+# Para desarrollo local con hot-reload:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Aplicación Web (FastAPI + Uvicorn) ────────────────────────────────────
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: monitorweb_app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    volumes:
+      # Volumen persistente para la BD SQLite y archivos generados
+      - app_data:/app/data
+      - app_pdfs:/app/PDFs_Generados
+      - app_cleansed:/app/DELIVERIES_cleansed
+    environment:
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+      - APP_RELOAD=false
+      - DB_PATH=/app/data/wms_transactions.db
+      # Descomentar para conectar a PostgreSQL:
+      # - DATABASE_URL=postgresql+psycopg2://monitor_user:monitor_pass@db:5432/monitor_db
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/status')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
+    networks:
+      - monitorweb_net
+
+  # ── Base de Datos PostgreSQL (Perfil: postgres) ───────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: monitorweb_postgres
+    restart: unless-stopped
+    profiles:
+      - postgres
+    environment:
+      POSTGRES_USER: monitor_user
+      POSTGRES_PASSWORD: monitor_pass
+      POSTGRES_DB: monitor_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U monitor_user -d monitor_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monitorweb_net
+
+# ── Volúmenes Persistentes ──────────────────────────────────────────────────
+volumes:
+  app_data:
+    driver: local
+  app_pdfs:
+    driver: local
+  app_cleansed:
+    driver: local
+  postgres_data:
+    driver: local
+
+# ── Red Interna ─────────────────────────────────────────────────────────────
+networks:
+  monitorweb_net:
+    driver: bridge

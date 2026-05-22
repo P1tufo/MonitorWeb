@@ -1,0 +1,251 @@
+<!-- PESTAÑA: ANÁLISIS DE MOVIMIENTOS -->
+<div id="tab-inventory" class="tab-content">
+    <!-- Header con Selector de Vista -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <h2 style="color: #f8f9fa; font-size: 1.8rem; font-weight: 800; margin: 0;">📦 Análisis de Movimientos</h2>
+
+        <div class="view-selector-group"
+            style="display: flex; align-items: center; gap: 1rem; background: var(--glass); padding: 5px 15px; border-radius: 12px; border: 1px solid var(--border);">
+            <i class="fas fa-layer-group" style="color: var(--primary);"></i>
+            <select id="inv-view-select" onchange="switchInventarioView(this.value)"
+                style="background: transparent; border: none; color: #f8f9fa; font-weight: 600; cursor: pointer; outline: none; padding: 5px;">
+                <option value="operative">Vista Operativa (Anual)</option>
+                <option value="historical">Vista Semanal (Histórico)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="row-grid kpi-row">
+        <div class="stat-card">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn"
+                onclick="openEditQueryModal('inv_kpi_ingresos', 'Total Ingresos (101, 301+)')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Total Ingresos (101, 301+)</h3>
+            <div class="value" style="color: var(--verde);">{{ kpi_ingresos | default(0) }}</div>
+            <div class="desc">Frecuencia / Transacciones</div>
+        </div>
+        <div class="stat-card">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn"
+                onclick="openEditQueryModal('inv_kpi_consumos_prod', 'Consumo Producción (201)')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Consumo Producción (201)</h3>
+            <div class="value" style="color: var(--naranja);">{{ kpi_consumos_prod | default(0) }}</div>
+            <div class="desc">Entregas/Ventanilla</div>
+        </div>
+        <div class="stat-card">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn"
+                onclick="openEditQueryModal('inv_kpi_consumos_mant', 'Consumo Mantención (261)')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Consumo Mantención (261)</h3>
+            <div class="value" style="color: #64748b;">{{ kpi_consumos_mant | default(0) }}</div>
+            <div class="desc">Retiros de Mantencion</div>
+        </div>
+        <div class="stat-card">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn"
+                onclick="openEditQueryModal('inv_kpi_rate_reabast', 'Tasa Reabastecimiento')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Tasa Reabastecimiento</h3>
+            <div class="value"
+                style="color: {% if rate_reabast is defined and rate_reabast > 110 %}var(--rojo){% else %}var(--calipso){% endif %};">
+                {{ rate_reabast | default(0) }}%</div>
+            <div class="desc">% Entrada vs Salida</div>
+        </div>
+        <div class="stat-card">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn"
+                onclick="openEditQueryModal('inv_kpi_traspasos', 'Traspasos (303, 301-)')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Traspasos (303, 301-)</h3>
+            <div class="value" style="color: var(--primario);">{{ kpi_traspasos | default(0) }}</div>
+            <div class="desc">Traspasos a otros centros</div>
+        </div>
+        <div class="stat-card">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn"
+                onclick="openEditQueryModal('inv_kpi_rate_devolucion', 'Tasa Devoluciones (202, 262)')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Tasa Devoluciones (202, 262)</h3>
+            <div class="value"
+                style="color: {% if (rate_devolucion | default(0)) > 15 %}var(--rojo){% else %}var(--calipso){% endif %};">
+                {{ rate_devolucion | default(0) }}%</div>
+            <div class="desc">Errores de despacho ({{ kpi_devoluciones | default(0) }})</div>
+        </div>
+        <div class="stat-card">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn"
+                onclick="openEditQueryModal('inv_kpi_rate_eficiencia', 'Eficiencia de Bodega')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Eficiencia de Bodega</h3>
+            <div class="value"
+                style="color: {% if (rate_eficiencia | default(0)) < 85 %}var(--rojo){% else %}var(--verde){% endif %};">
+                {{ rate_eficiencia | default(0) }}%</div>
+            <div class="desc">A tiempo vs Fecha Doc.</div>
+        </div>
+    </div>
+
+    <div class="row-grid-3">
+        <div class="chart-box">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn" onclick="openEditQueryModal('inv_consumos_abc', 'Curva ABC')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Distribución de Curva ABC</h3>
+            <div style="position: relative; height: 260px; width: 100%; display: flex; justify-content: center;">
+                <canvas id="abcPieChart"></canvas>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.8rem; color: #64748b; text-align: center; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 6px;">
+                <b>A:</b> Eje Crítico (Top 80% frecuencia) • <b>B:</b> Moderados (Sig. 15%) • <b>C:</b> Esporádicos
+            </div>
+        </div>
+        <div class="chart-box">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn" onclick="openEditQueryModal('inv_area_stats_prod', 'Consumo por Área')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Tendencia de Consumo (Planificado vs Desplanificado)</h3>
+            <div style="position: relative; height: 280px; width: 100%;">
+                <canvas id="plannedTrendChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-box">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn"
+                onclick="openEditQueryModal('inv_volumen_stats', 'Tendencia Operacional')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Tendencia Operacional (Abastecimiento vs Consumo)</h3>
+            <div style="position: relative; height: 280px; width: 100%;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="row-grid-3">
+        <!-- CONCURRENCIA SEMANAL -->
+        <div class="chart-box">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn" onclick="openEditQueryModal('inv_dow_stats', 'Carga Semanal')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Carga Semanal de BMRI</h3>
+            <div style="position: relative; height: 280px; width: 100%;">
+                <canvas id="dowChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Producción vs Mantención -->
+        <div class="chart-box">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn"
+                onclick="openEditQueryModal('inv_pm_type_records', 'Producción vs Mantención')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Proporción Producción vs Mantención</h3>
+            <div style="position: relative; height: 260px; width: 100%; display: flex; justify-content: center;">
+                <canvas id="pmDoughnutChart"></canvas>
+            </div>
+        </div>
+
+        <!-- FAST MOVERS -->
+        <div class="chart-box" style="cursor: pointer;" onclick="openModal('modalFast')">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn" onclick="openEditQueryModal('inv_consumos_abc', 'Top Consumidos')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Top Consumidos</h3>
+                <span style="font-size: 0.8rem; color: #64748b;">Ver más →</span>
+            </div>
+            <ul class="rank-list" style="max-height: 280px; overflow-y: hidden;">
+                {% for mat in top_materials_quick %}
+                <li>
+                    <div>
+                        <div class="name" style="font-size: 0.95rem;"><span style="color:var(--primario);font-size:0.8rem;">[{{ mat.cod_mat }}]</span> {{ mat.material[:25] }}{% if mat.material|length > 25 %}...{% endif %}</div>
+                    </div>
+                    <div class="score"
+                        style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
+                        <div>{{ mat.qty_fmt }} req.</div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="row-grid">
+        <!-- TOP USUARIOS -->
+        <div class="chart-box">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn" onclick="openEditQueryModal('inv_top_users', 'Top Asistentes Bodega')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Top Asistentes de Bodega (Frecuencia de Despachos)</h3>
+            <ul class="rank-list" style="max-height: 280px; overflow-y: auto;">
+                {% for u in top_users %}
+                <li style="cursor: pointer; transition: background 0.2s;"
+                    onclick="openModalUserInventario('{{ u.user }}')"
+                    onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+                    onmouseout="this.style.background='transparent'">
+                    <div>
+                        <div class="name">{{ u.user }}
+                            {% if u.error_rate > 0 %}
+                            <span style="font-size: 0.75rem; color: var(--rojo); background: rgba(239,68,68,0.1); padding: 2px 6px; border-radius: 4px; margin-left: 6px;"
+                                title="Tasa de Anulación ({{ u.anulaciones }} anulados)">
+                                ⚠️ {{ u.error_rate }}% anul.
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="score"
+                        style="color: var(--naranja); background: rgba(234,118,0,0.15); display: flex; flex-direction: column; align-items: flex-end; justify-content: center; padding: 4px 8px;">
+                        <div>{{ u.qty_fmt }} req.</div>
+                    </div>
+                </li>
+                {% else %}
+                <li style="text-align: center; color: #64748b; padding: 2rem;">No hay registros de asistentes.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>

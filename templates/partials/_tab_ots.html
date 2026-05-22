@@ -1,0 +1,313 @@
+<!-- PESTAÑA: GESTIÓN DE OTS -->
+<div id="tab-ots" class="tab-content">
+    <h2 style="color: #f8f9fa; font-size: 1.8rem; font-weight: 800; margin-bottom: 1.5rem;">📑 Gestión de Ordenes de Transporte (OTs)</h2>
+
+    <div class="row-grid kpi-row">
+        <div class="stat-card">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn" onclick="openEditQueryModal('ots_kpi_pending', 'Tareas Pendientes')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Tareas Pendientes</h3>
+            <div class="value" style="color: var(--primary);">{{ ots_pending_count if ots_pending_count is defined else (ots_recent|length if ots_recent else 0) }}</div>
+            <div class="desc">OTs sin fecha de confirmación</div>
+        </div>
+        <div class="stat-card">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn" onclick="openEditQueryModal('ots_kpi_users', 'Usuarios Activos')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Usuarios Activos</h3>
+            <div class="value" style="color: var(--naranja);">{{ ots_user_count if ots_user_count is defined else (ots_user_labels|length if ots_user_labels else 0) }}</div>
+            <div class="desc">Personal confirmando OTs</div>
+        </div>
+        <div class="stat-card">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn"
+                onclick="openEditQueryModal('ots_kpi_critical', 'OTs Críticas (>4 Días)')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>OTs Críticas (>4 Días)</h3>
+            <div class="value" style="color: var(--rojo);">{{ ots_critical_count if ots_critical_count is defined else 0 }}</div>
+            <div class="desc">Abiertas hace más de 4 días</div>
+        </div>
+    </div>
+
+    <div class="row-grid">
+        <div class="chart-box">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn"
+                onclick="openEditQueryModal('ots_daily_trend', 'Tendencia Diaria de OTs')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Tendencia Diaria de OTs</h3>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="otsTrendChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-box">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn"
+                onclick="openEditQueryModal('ots_by_user_dual', 'Productividad por Usuario')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>Productividad por Usuario (Confirmaciones)</h3>
+            <div style="position: relative; height: 300px; width: 100%;">
+                <canvas id="otsUserChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selector de Subpestañas para Tablas de OTs y Movimientos -->
+    <div class="sub-tabs-header"
+        style="display: flex; gap: 0.75rem; margin-top: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem; flex-wrap: wrap;">
+        <button class="sub-tab-btn active" onclick="switchSubTab('ots-pendientes', this)"
+            style="background: rgba(93, 186, 169, 0.15); border: 1px solid rgba(93, 186, 169, 0.4); color: #5DBAA9; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-family: inherit;">
+            📑 OTs Pendientes de Confirmar
+            <span
+                style="background: rgba(93, 186, 169, 0.2); color: #5DBAA9; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(93, 186, 169, 0.3);">
+                {{ ots_pending_count if ots_pending_count is defined else (ots_recent|length if ots_recent else 0) }}
+            </span>
+        </button>
+        <button class="sub-tab-btn" onclick="switchSubTab('movs-no-paletizados', this)"
+            style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-family: inherit;">
+            ⚠️ Movimientos No Paletizados
+            <span
+                style="background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.3);">
+                {{ non_palletized_total_count if non_palletized_total_count is defined else 0 }}
+            </span>
+        </button>
+    </div>
+
+    <!-- Subpestaña 1: OTs Pendientes de Confirmar -->
+    <div id="sub-tab-ots-pendientes" class="sub-tab-content" style="display: block; margin-top: 1rem;">
+        <div class="chart-box">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn" onclick="openEditQueryModal('ots_list_pending', 'Listado de OTs Pendientes')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <h3 style="margin: 0; color: #f8f9fa;">Listado de OTs Pendientes de Confirmar</h3>
+                <span style="background: rgba(93, 186, 169, 0.15); color: #5DBAA9; border: 1px solid rgba(93, 186, 169, 0.3); padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700;">
+                    <i class="fas fa-filter"></i> Filtrado en Tiempo Real
+                </span>
+            </div>
+
+            <!-- Filtros de Cabecera para OTs -->
+            <div class="table-filters" style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); align-items: center;">
+                <div style="flex: 1; min-width: 180px;">
+                    <input type="text" id="filter-ot-search" placeholder="🔍 Buscar OT, Material o Ubicación..." onkeyup="filterOTTable()" 
+                           style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem;">
+                </div>
+                <div style="width: 160px;">
+                    <select id="filter-ot-tipo" onchange="filterOTTable()" 
+                            style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem; cursor: pointer;">
+                        <option value="">📁 Todos los Tipos</option>
+                    </select>
+                </div>
+                <div style="width: 180px;">
+                    <select id="filter-ot-creator" onchange="filterOTTable()" 
+                            style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem; cursor: pointer;">
+                        <option value="">👤 Todos los Creadores</option>
+                    </select>
+                </div>
+                <div style="width: 160px;">
+                    <select id="filter-ot-sla" onchange="filterOTTable()" 
+                            style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem; cursor: pointer;">
+                        <option value="">⏱️ Todos los SLA</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table style="color: #e2e8f0;">
+                    <thead>
+                        <tr>
+                            <th>OT / Pos</th>
+                            <th>Material</th>
+                            <th>Tipo Mov.</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>Fecha Creación</th>
+                            <th>Estado SLA</th>
+                            <th>Creado por</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ot in ots_recent %}
+                        <tr class="row ot-row" data-tipo="{{ ot.clase_mov }}" data-creator="{{ ot.creator }}" data-sla="{{ ot.sla_status }}">
+                            <td style="font-weight: 800; color: var(--primary);">{{ ot.numero_ot }}</td>
+                            <td>{{ ot.material }}<br><small style="color: #64748b;">{{ ot.material_name }}</small></td>
+                            <td style="font-size: 0.85rem; color: #94a3b8;">{{ ot.clase_mov }}</td>
+                            <td>{{ ot.source }}</td>
+                            <td>{{ ot.dest }}</td>
+                            <td>{{ ot.created_at }}</td>
+                            <td>
+                                <span style="background: {{ ot.sla_color }}22; color: {{ ot.sla_color }}; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid {{ ot.sla_color }}44;">
+                                    {{ ot.sla_status }}
+                                </span>
+                            </td>
+                            <td style="color: var(--calipso); font-weight: 600;">{{ ot.creator }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 2rem; color: #64748b;">No hay OTs pendientes actualmente. ¡Todo al día!</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subpestaña 2: Movimientos No Paletizados -->
+    <div id="sub-tab-movs-no-paletizados" class="sub-tab-content" style="display: none; margin-top: 1rem;">
+        <!-- Alerta Operativa Global -->
+        <div style="background: rgba(245, 158, 11, 0.08); border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; color: #e2e8f0; font-size: 0.9rem; line-height: 1.5;">
+            <strong style="color: #f59e0b;"><i class="fas fa-info-circle"></i> Alerta Operativa:</strong>
+            Se han identificado movimientos en <code>inventory_movements</code> cuyo código <code>doc_mat</code> no registra ninguna Orden de Transporte en la base de datos de WMS. En este flujo, para garantizar la consistencia, se listan los movimientos no paletizados para su análisis y auditoría.
+        </div>
+        <!-- Tabla 1: Resumen Agrupado por Usuario y Tipo Movimiento -->
+        <div class="chart-box" style="border-top: 4px solid var(--naranja); margin-bottom: 2rem;">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn" onclick="openEditQueryModal('inv_non_palletized_summary', 'Resumen de Discrepancias')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <style>
+                .summary-clickable-row {
+                    cursor: pointer !important;
+                    transition: background-color 0.2s ease !important;
+                }
+
+                .summary-clickable-row:hover {
+                    background-color: rgba(93, 186, 169, 0.08) !important;
+                }
+            </style>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <h3 style="margin: 0; color: #f8f9fa;">Resumen de Discrepancias por Usuario y Tipo Movimiento</h3>
+                <span style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700;">
+                    <i class="fas fa-chart-pie"></i> Vista Agrupada de Trazabilidad
+                </span>
+            </div>
+
+            <!-- Filtros de Cabecera para Discrepancias -->
+            <div class="table-filters" style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); align-items: center;">
+                <div style="flex: 1; min-width: 180px;">
+                    <input type="text" id="filter-discrepancy-search" placeholder="🔍 Buscar Usuario o Tipo Movimiento..." onkeyup="filterDiscrepancyTable()" 
+                           style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem;">
+                </div>
+                <div style="width: 200px;">
+                    <select id="filter-discrepancy-tipo" onchange="filterDiscrepancyTable()" 
+                            style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem; cursor: pointer;">
+                        <option value="">📁 Todos los Tipos</option>
+                    </select>
+                </div>
+                <div style="width: 200px;">
+                    <select id="filter-discrepancy-user" onchange="filterDiscrepancyTable()" 
+                            style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem; cursor: pointer;">
+                        <option value="">👤 Todos los Usuarios</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table style="color: #e2e8f0;">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Tipo de Movimiento</th>
+                            <th style="text-align: center; cursor: pointer; user-select: none;" onclick="sortTableDiscrepancy(2)" title="Clic para ordenar">
+                                Cantidad Movimientos <i id="sort-icon-2" class="fas fa-sort" style="margin-left: 5px; color: #94a3b8;"></i>
+                            </th>
+                            <th>Fecha Más Antigua</th>
+                            <th>Fecha Más Reciente</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in non_palletized_summary %}
+                        <tr class="row summary-clickable-row discrepancy-row"
+                            data-tipo="{{ row.clase_mov }}" data-user="{{ row.user }}"
+                            onclick="openNonPalletizedDetails('{{ row.user }}', '{{ row.clase_mov }}')"
+                            title="Haga clic para ver detalles de este grupo">
+                            <td style="color: var(--calipso); font-weight: 700;">{{ row.user }}</td>
+                            <td style="font-size: 0.85rem; color: #f87171; font-weight: 600;">{{ row.clase_mov }}</td>
+                            <td style="font-weight: 800; color: #f3f4f6; text-align: center;">
+                                <span style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.2); padding: 4px 10px; border-radius: 20px; color: #fb7185; font-size: 0.85rem;">
+                                    {{ row.count }}
+                                </span>
+                            </td>
+                            <td style="color: #94a3b8; font-size: 0.85rem;">{{ row.oldest }}</td>
+                            <td style="color: #34d399; font-size: 0.85rem; font-weight: 600;">{{ row.newest }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 2rem; color: #64748b;">No hay registros agrupados disponibles.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tabla 2: Listado Detallado (Últimos 100) -->
+        <div class="chart-box" style="border-top: 4px solid var(--rojo);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <h3 style="margin: 0; color: #f8f9fa;">Listado de Movimientos No Paletizados (Últimos 100)</h3>
+                <span style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-exclamation-triangle"></i> Detección Automática de Discrepancias
+                </span>
+            </div>
+
+            <div class="table-container">
+                <table style="color: #e2e8f0;">
+                    <thead>
+                        <tr>
+                            <th>Doc. Material</th>
+                            <th>Pos</th>
+                            <th>Material</th>
+                            <th>Clase Mov.</th>
+                            <th>Cantidad</th>
+                            <th>Almacén</th>
+                            <th>Centro</th>
+                            <th>Fecha Contable</th>
+                            <th>Registrado Por</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for mov in non_palletized_movements %}
+                        <tr class="row">
+                            <td style="font-weight: 800; color: var(--naranja);">{{ mov.doc_mat }}</td>
+                            <td style="color: #94a3b8; font-size: 0.85rem;">{{ mov.pos }}</td>
+                            <td>{{ mov.material }}<br><small style="color: #64748b;">{{ mov.material_name }}</small></td>
+                            <td style="font-size: 0.85rem; color: #f87171; font-weight: 600;">{{ mov.clase_mov }}</td>
+                            <td style="font-weight: 700; color: #e2e8f0;">{{ mov.qty }}</td>
+                            <td>{{ mov.source }}</td>
+                            <td>{{ mov.dest }}</td>
+                            <td>{{ mov.created_at }}</td>
+                            <td style="color: var(--calipso); font-weight: 600;">{{ mov.creator }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 2rem; color: #64748b;">No se detectaron discrepancias de movimientos no paletizados. ¡Excelente consistencia operacional!</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

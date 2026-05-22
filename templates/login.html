@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonitorWeb — Login</title>
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-card: rgba(15, 23, 42, 0.85);
+            --border: rgba(93, 186, 169, 0.15);
+            --calipso: #5DBAA9;
+            --calipso-glow: rgba(93, 186, 169, 0.3);
+            --text-primary: #e2e8f0;
+            --text-muted: #94a3b8;
+            --rojo: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(93, 186, 169, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2.5rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--calipso);
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--calipso);
+            box-shadow: 0 0 0 3px var(--calipso-glow);
+        }
+
+        .form-group input::placeholder {
+            color: #475569;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 0.85rem;
+            background: linear-gradient(135deg, var(--calipso), #4a9e8f);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            margin-top: 0.5rem;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px var(--calipso-glow);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: var(--rojo);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-msg.visible { display: block; }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.75rem;
+            color: #475569;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>🔐 MonitorWeb</h1>
+                <p>Ingrese sus credenciales para continuar</p>
+            </div>
+
+            <div id="error-box" class="error-msg"></div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="username">Usuario</label>
+                    <input type="text" id="username" name="username" placeholder="admin" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-login" id="btn-submit">Iniciar Sesión</button>
+                
+                <a href="/" style="display: block; text-align: center; margin-top: 15px; color: var(--text-muted); text-decoration: none; font-size: 0.85rem; transition: color 0.2s;" onmouseover="this.style.color='var(--calipso)'" onmouseout="this.style.color='var(--text-muted)'">
+                    <i class="fas fa-arrow-left"></i> Volver al Panel Principal
+                </a>
+            </form>
+
+            <div class="footer-text">
+                MonitorWeb SaaS Platform &copy; 2026
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit');
+            const errorBox = document.getElementById('error-box');
+
+            btn.disabled = true;
+            btn.textContent = 'Autenticando...';
+            errorBox.classList.remove('visible');
+
+            const formData = new URLSearchParams();
+            formData.append('username', document.getElementById('username').value);
+            formData.append('password', document.getElementById('password').value);
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData,
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    // Guardar token en localStorage
+                    localStorage.setItem('monitorweb_token', data.access_token);
+                    localStorage.setItem('monitorweb_user', data.username);
+                    localStorage.setItem('monitorweb_role', data.role);
+                    // Redirigir al dashboard
+                    window.location.href = '/';
+                } else {
+                    const err = await res.json();
+                    errorBox.textContent = err.detail || 'Error de autenticación';
+                    errorBox.classList.add('visible');
+                }
+            } catch (err) {
+                errorBox.textContent = 'Error de conexión con el servidor';
+                errorBox.classList.add('visible');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Iniciar Sesión';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+/* Explorador de Documentación - Estilo Premium & Responsive */
+.docs-explorer-container {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1.5rem;
+    height: calc(100vh - 250px);
+    min-height: 600px;
+    margin-top: 1rem;
+}
+
+/* Sidebar del Árbol */
+.docs-sidebar {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.docs-sidebar h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #e2e8f0;
+}
+
+.docs-tree {
+    overflow-y: auto;
+    flex-grow: 1;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+}
+
+.tree-item-row {
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    transition: all 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #94a3b8;
+}
+
+.tree-item-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #f1f5f9;
+}
+
+.tree-item-row.active {
+    background: rgba(93, 186, 169, 0.15);
+    color: #5DBAA9 !important;
+    font-weight: 600;
+}
+
+/* Visor de Contenido */
+.docs-main {
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 2rem;
+    overflow-y: auto;
+    position: relative;
+}
+
+.docs-content {
+    max-width: 850px;
+    margin: 0 auto;
+    line-height: 1.7;
+    color: #cbd5e1;
+    font-size: 0.95rem;
+}
+
+.docs-content h1, .docs-content h2, .docs-content h3 {
+    color: #f1f5f9;
+    margin-top: 1.8rem;
+    margin-bottom: 0.8rem;
+}
+
+.docs-content pre {
+    background: #0d1117;
+    padding: 1.2rem;
+    border-radius: 10px;
+    overflow-x: auto;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    margin: 1.2rem 0;
+    font-size: 0.85rem;
+}
+
+.docs-content code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #64748b;
+    text-align: center;
+    opacity: 0.6;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* --- MEDIA QUERIES PARA RESPONSIVE --- */
+
+@media (max-width: 1024px) {
+    .docs-explorer-container {
+        grid-template-columns: 260px 1fr;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .docs-explorer-container {
+        grid-template-columns: 1fr; /* Una sola columna */
+        height: auto; /* Altura automática en móvil */
+        min-height: auto;
+        gap: 1.5rem;
+    }
+
+    .docs-sidebar {
+        height: 300px; /* Limitamos la altura del árbol en móvil */
+        order: 1; /* El árbol arriba */
+    }
+
+    .docs-main {
+        min-height: 400px;
+        order: 2; /* El contenido abajo */
+        padding: 1.2rem;
+    }
+
+    .docs-content {
+        font-size: 0.9rem;
+    }
+
+    .docs-sidebar h3 {
+        font-size: 1rem;
+    }
+}
+
+/* Ajustes finos para móviles muy pequeños */
+@media (max-width: 480px) {
+    .docs-sidebar {
+        height: 250px;
+        padding: 1rem;
+    }
+    
+    .docs-main {
+        padding: 1rem;
+    }
+}
+
+/* Animación suave al cargar contenido */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.docs-content {
+    animation: fadeIn 0.3s ease-out;
+}

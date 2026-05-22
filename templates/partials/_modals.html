@@ -1,0 +1,53 @@
+<!-- PDF Viewer Modal -->
+<div id="pdfModal" class="pdf-modal">
+    <div class="pdf-modal-content">
+        <div class="pdf-modal-header">
+            <h3 class="modal-title">📄 Visor de PDF (Documento Interno)</h3>
+            <span class="pdf-close" onclick="closePdfModal()" title="Cerrar">&times;</span>
+        </div>
+        <iframe name="pdfViewerFrame" id="pdfViewerFrame" class="pdf-iframe"></iframe>
+    </div>
+</div>
+
+<!-- Author Mapping Modal -->
+<div id="authorModal" class="pdf-modal">
+    <div class="pdf-modal-content modal-content-small">
+        <div class="pdf-modal-header">
+            <h3 class="modal-title">👥 Tabla de usuarios y sus areas</h3>
+            <span class="pdf-close" onclick="document.getElementById('authorModal').classList.remove('active')"
+                title="Cerrar">&times;</span>
+        </div>
+        <div class="modal-body">
+            <table class="modal-table">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Área Asignada</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if autores_map %}
+                    {% for a in autores_map %}
+                    <tr>
+                        <td>{{ a.autor }}</td>
+                        <td>
+                            <span class="status-badge status-tratada">{{ a.area_negocio }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="2" class="modal-text-center modal-opacity-low" style="padding: 20px;">
+                            No hay autores guardados en memoria aún.<br>Sincroniza para aprender patrones.
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            <p class="tooltip modal-text-center modal-margin-top">
+                El sistema asignará dinámicamente el área conocida al detectar entregas atípicas de un autor sin
+                ubicación.
+            </p>
+        </div>
+    </div>
+</div>

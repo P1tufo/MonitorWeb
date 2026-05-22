@@ -1,0 +1,57 @@
+# ─── MonitorWeb: Archivos y directorios excluidos del contexto Docker ─────────
+
+# Control de versiones
+.git
+.gitignore
+
+# Entornos virtuales y caché Python
+venv/
+.venv/
+env/
+.env
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Bases de datos locales (se crean dentro del contenedor via volúmenes)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Archivos de datos procesados (se regeneran via sync)
+DELIVERIES_cleansed/
+PDFs_Generados/
+Temp_Assets/
+
+# Documentación y caché del doc_generator
+.doc_cache/
+doc_generator_state.json
+documentacion_global.md
+mejoras_global.md
+
+# Node.js (no necesario en el contenedor Python)
+node_modules/
+package.json
+package-lock.json
+
+# Ngrok local (binario de host, no compatible con el contenedor Linux)
+ngrok
+tunnel_url.txt
+
+# IDE y sistema
+.vscode/
+.idea/
+*.DS_Store
+*.swp
+*.swo
+
+# Logs
+server.log
+*.log
+
+# Archivos legacy
+scratch/
+_legacy_reference/

@@ -1,0 +1,93 @@
+<!-- Modal: Alertas Completas -->
+<div id="modalAlerts" class="modal-overlay">
+    <div class="modal-content" style="max-width: 1100px;">
+        <div class="modal-header">
+            <h2>Todas las Alertas de Desplanificación</h2>
+            <button class="close-btn" onclick="closeModal('modalAlerts')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-filters">
+                <input type="text" id="searchAlertsInput" placeholder="Buscar material..." onkeyup="filterAlerts()" class="filter-input">
+                <select id="areaAlertsSelect" onchange="filterAlerts()" class="filter-select">
+                    <option value="all">Todas las Áreas</option>
+                </select>
+            </div>
+            <div style="max-height: 60vh; overflow-y: auto;">
+                <table class="table-alerts">
+                    <thead>
+                        <tr>
+                            <th>Score</th>
+                            <th>Material / Insumo</th>
+                            <th>Área</th>
+                            <th>Cant. Promedio</th>
+                            <th>Mes Actual</th>
+                            <th>Intervalo Promedio</th>
+                            <th>Días de Retraso</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalAlertsBody">
+                        <!-- JS injected -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Combos Completos -->
+<div id="modalCombos" class="modal-overlay">
+    <div class="modal-content" style="max-width: 1100px;">
+        <div class="modal-header">
+            <h2>Correlaciones de Materiales (Basket)</h2>
+            <button class="close-btn" onclick="closeModal('modalCombos')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="searchCombosInput" placeholder="Buscar material A o B..." onkeyup="filterCombos()" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: white; margin-bottom: 1rem;">
+            <div id="modalCombosList" style="max-height: 60vh; overflow-y: auto;">
+                <!-- JS injected -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Scatter Completos -->
+<div id="modalScatter" class="modal-overlay">
+    <div class="modal-content" style="max-width: 1100px;">
+        <div class="modal-header">
+            <h2>Listado Frecuencia vs Volumen</h2>
+            <button class="close-btn" onclick="closeModal('modalScatter')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-filters">
+                <input type="text" id="searchScatterInput" placeholder="Buscar material..." onkeyup="filterScatter()" class="filter-input">
+                <select id="areaScatterSelect" onchange="filterScatter()" class="filter-select">
+                    <option value="all">Todas las Áreas</option>
+                </select>
+                <select id="categoryScatterSelect" onchange="filterScatter()" class="filter-select">
+                    <option value="all">Todas las Categorías</option>
+                    <option value="Corredor">Corredores</option>
+                    <option value="Elefante">Elefantes</option>
+                    <option value="Crítico">Críticos</option>
+                    <option value="Tortuga">Tortugas</option>
+                </select>
+            </div>
+            <div style="max-height: 60vh; overflow-y: auto;">
+                <table class="table-alerts">
+                    <thead>
+                        <tr>
+                            <th>Categoría</th>
+                            <th>Material / Insumo</th>
+                            <th>Área Frecuente</th>
+                            <th>Frecuencia Total</th>
+                            <th>Volumen Promedio</th>
+                            <th>Mes Actual</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalScatterBody">
+                        <!-- JS injected -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

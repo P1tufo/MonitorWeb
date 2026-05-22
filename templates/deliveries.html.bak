@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analíticas Consolidadas | Proyecto</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    {% include "partials/_styles.html" %}
+    <link rel="stylesheet" href="{{ url_for('static', path='css/deliveries.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/inventory.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/analytics_proyecciones.css') }}?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/docs_explorer.css') }}?v=1">
+    <style>
+        .tabs-header {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn.active {
+            background: rgba(93, 186, 169, 0.2);
+            color: #5DBAA9;
+            border-color: rgba(93, 186, 169, 0.5);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="analytics-container">
+        <header class="main-header">
+            <div class="header-top">
+                <div class="logo-group">
+                    <h1>Analíticas Consolidadas</h1>
+                    <p class="header-desc">KPIs Operativos, Movimientos y Proyecciones IA</p>
+                </div>
+                <div class="actions">
+                    <a href="/" class="btn btn-secondary">🏠 Dashboard</a>
+                    {% if user.username != "invitado" %}
+                    <span style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px;">👤 {{ user.username }}</span>
+                    <button class="btn btn-secondary" style="background:rgba(239,68,68,0.1); color:#ef4444;"
+                        onclick="logout()">🚪 Salir</button>
+                    {% if user.role == 'admin' %}
+                    <a href="/settings" class="btn btn-secondary"
+                        style="background: rgba(93, 186, 169, 0.1); border-color: rgba(93, 186, 169, 0.3); color: #5DBAA9;">⚙️
+                        Configuración</a>
+                    {% endif %}
+                    {% else %}
+                    <a href="/login" class="btn btn-secondary" style="background:#5DBAA9; color:#0f172a;">🔑 Entrar</a>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <div class="tabs-header">
+            <button id="btn-deliveries" class="tab-btn active" onclick="switchTab('deliveries', this)">📊 Entregas
+                Outbound</button>
+            <button id="btn-inventory" class="tab-btn" onclick="switchTab('inventory', this)">📦 Movimientos
+                Inventario</button>
+            <button id="btn-ots" class="tab-btn" onclick="switchTab('ots', this)">📑 Gestión de OTs</button>
+            <button id="btn-ia" class="tab-btn" onclick="switchTab('ia', this)">🧠 IA (Analisis e Insomnio)</button>
+            <button id="btn-docs" class="tab-btn" onclick="switchTab('docs', this)">📚 Documentación</button>
+            <button id="btn-historial" class="tab-btn" onclick="switchTab('historial', this)">📍 Historial de
+                Ubicaciones</button>
+        </div>
+
+        <!-- PESTAÑA: DOCUMENTACIÓN (Única versión limpia) -->
+        <div id="tab-docs" class="tab-content">
+            <div class="docs-explorer-container">
+                <aside class="docs-sidebar">
+                    <h3><i class="fas fa-sitemap"></i> Estructura del Proyecto</h3>
+                    <div id="docs-tree-root" class="docs-tree">Cargando árbol...</div>
+                </aside>
+                <main id="docs-content-view" class="docs-main">
+                    <div class="empty-state">
+                        <i class="fas fa-book-open"></i>
+                        <h3>Explorador de Documentación</h3>
+                        <p>Selecciona un archivo del árbol para visualizar su análisis técnico.</p>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <!-- PESTAÑA: HISTORIAL DE UBICACIONES -->
+        <div id="tab-historial" class="tab-content">
+            <div class="row-grid">
+                <div class="chart-box full-width">
+                    <h3>📍 Historial de Ubicaciones Anteriores</h3>
+                    <p class="chart-subtitle">Busca un material para ver en qué ubicaciones estuvo previamente.</p>
+                    <div style="margin-top: 1rem;">
+                        <input type="text" id="ubic-search-input" placeholder="Ej: 1000142..."
+                            style="width: 100%; padding: 12px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; font-size: 1rem; outline: none; font-family: 'Outfit', sans-serif;">
+                    </div>
+                    <div id="ubic-material-desc"
+                        style="margin-top: 1rem; color: #5DBAA9; font-weight: 600; font-size: 1.1rem;"></div>
+                    <div class="table-responsive" style="margin-top: 0.5rem; max-height: 450px; overflow-y: auto;">
+                        <table class="table-alerts" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Ubicación</th>
+                                    <th>Última Fecha Registrada</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ubic-results-body">
+                                <tr>
+                                    <td colspan="2" style="text-align: center; color: #94a3b8; padding: 2rem;">Digita un
+                                        material para visualizar sus ubicaciones anteriores</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-ia" class="tab-content">
+            {% if error_msg %}
+            <div class="error-banner">
+                ⚠️ Error: {{ error_msg }}
+            </div>
+            {% endif %}
+
+            <div class="row-grid">
+                <div class="chart-box full-width">
+                    <h3>🚦 Semáforo de Desplanificación (Alertas)</h3>
+                    <p class="chart-subtitle">Materiales cuyo ciclo habitual de reposición ya se venció. Alta
+                        probabilidad de solicitud inminente.</p>
+                    <div class="table-responsive">
+                        <table class="table-alerts">
+                            <thead>
+                                <tr>
+                                    <th>Score</th>
+                                    <th>Material / Insumo</th>
+                                    <th>Área</th>
+                                    <th>Cant. Promedio</th>
+                                    <th>Mes Actual</th>
+                                    <th>Intervalo Promedio</th>
+                                    <th>Días de Retraso</th>
+                                    <th>Comportamiento</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for alert in alerts[:10] %}
+                                <tr>
+                                    <td data-label="Score"><span class="badge-{{ alert.color }}">{{ alert.score
+                                            }}%</span></td>
+                                    <td data-label="Material" style="font-weight: 600;">{{ alert.material }}</td>
+                                    <td data-label="Área" style="color:#e2e8f0;">{{ alert.area }}</td>
+                                    <td data-label="Cant. Promedio" style="color:#e2e8f0;">{{ alert.avg_qty }} unds</td>
+                                    <td data-label="Mes Actual" style="color:#38bdf8; font-weight: 600;">{{
+                                        alert.curr_month }}</td>
+                                    <td data-label="Intervalo Promedio" style="color:#94a3b8;">Cada {{
+                                        alert.avg_interval }} días</td>
+                                    <td data-label="Días de Retraso" style="color:#ef4444;">Hace {{ alert.days_since }}
+                                        días</td>
+                                    <td data-label="Comportamiento"><span class="badge-info"
+                                            style="background: rgba(148, 163, 184, 0.1); color: #cbd5e1;">{{
+                                            alert.behavior }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if alerts|length > 10 %}
+                    <button class="btn btn-secondary" style="margin-top: 1rem; width: 100%; justify-content: center;"
+                        onclick="openModalAlerts()">Ver todas ({{ alerts|length }})</button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row-grid-2">
+                <div class="chart-box">
+                    <h3>🐘 Cuadrante Frecuencia vs Volumen</h3>
+                    <div style="height: 400px;"><canvas id="scatterChart"></canvas></div>
+                    <button class="btn btn-secondary" style="margin-top: 1rem; width: 100%;"
+                        onclick="openModalScatter()">Ver listado completo</button>
+                </div>
+                <div class="chart-box">
+                    <h3>🔗 Market Basket (Combos Frecuentes)</h3>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        {% for combo in combos[:10] %}
+                        <div class="combo-card">
+                            <div class="materials">
+                                <span class="mat-name" title="{{ combo.mat_a }}">{{ combo.mat_a }}</span>
+                                <span class="arrow">➔</span>
+                                <span class="mat-name" title="{{ combo.mat_b }}">{{ combo.mat_b }}</span>
+                            </div>
+                            <div class="prob">{{ combo.probability }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-deliveries" class="tab-content">
+            <!-- Header con Selector de Vista -->
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <h2 style="color: #f8f9fa; font-size: 1.8rem; font-weight: 800; margin: 0;">📊 Análisis de Entregas</h2>
+
+                <div class="view-selector-group"
+                    style="display: flex; align-items: center; gap: 1rem; background: var(--glass); padding: 5px 15px; border-radius: 12px; border: 1px solid var(--border);">
+                    <i class="fas fa-layer-group" style="color: var(--primary);"></i>
+                    <select id="vl-view-select" onchange="switchVLView(this.value)"
+                        style="background: transparent; border: none; color: #f8f9fa; font-weight: 600; cursor: pointer; outline: none; padding: 5px;">
+                        <option value="operative">Vista Operativa (Anual)</option>
+                        <option value="historical">Vista Semanal (Histórico)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- KPI Row -->
+            <div class="row-grid">
+                <div class="stat-card">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn" onclick="openEditQueryModal('vl_kpi_total', 'Volumen Total (Año)')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Volumen Total (Año)</h3>
+                    <div class="value" id="vl-kpi-total">{{ kpi_total }}</div>
+                    <div class="desc">Entregas totales generadas</div>
+                </div>
+            </div>
+
+            <!-- KPI Row 2 (SLA) -->
+            <div class="row-grid" style="margin-top: -10px;">
+                <div class="stat-card">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn" onclick="openEditQueryModal('vl_kpi_eff', 'Eficiencia de Bodega')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Eficiencia de Bodega</h3>
+                    <div class="value" id="vl-kpi-eff" style="color: var(--calipso);">{{ kpi_eff }}%</div>
+                    <div class="desc">Entregas despachadas en ≤ 2 días</div>
+                </div>
+
+                <a href="/analytics/sla?type=ontime" style="text-decoration: none; display: inherit;">
+                    <div class="stat-card" style="transition: transform 0.2s; cursor: pointer;"
+                        onmouseover="this.style.transform='translateY(-5px)'"
+                        onmouseout="this.style.transform='translateY(0)'">
+                        {% if user.role == 'admin' %}
+                        <div class="edit-query-btn"
+                            onclick="event.preventDefault(); event.stopPropagation(); openEditQueryModal('vl_kpi_ontime', 'Entregadas a tiempo')"
+                            title="Editar Consulta SQL">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        {% endif %}
+                        <h3>Entregadas a tiempo</h3>
+                        <div class="value" id="vl-kpi-ontime" style="color: var(--verde);">{{ kpi_ontime }}</div>
+                        <div class="desc">(Click para auditar)</div>
+                    </div>
+                </a>
+
+                <a href="/analytics/sla?type=late" style="text-decoration: none; display: inherit;">
+                    <div class="stat-card" style="transition: transform 0.2s; cursor: pointer;"
+                        onmouseover="this.style.transform='translateY(-5px)'"
+                        onmouseout="this.style.transform='translateY(0)'">
+                        {% if user.role == 'admin' %}
+                        <div class="edit-query-btn"
+                            onclick="event.preventDefault(); event.stopPropagation(); openEditQueryModal('vl_kpi_late', 'Entregas atrasadas')"
+                            title="Editar Consulta SQL">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        {% endif %}
+                        <h3>Entregas atrasadas</h3>
+                        <div class="value" id="vl-kpi-late" style="color: var(--rojo);">{{ kpi_late }}</div>
+                        <div class="desc">(Click para auditar)</div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- GLOBAL Entregas FILTER -->
+            <div
+                style="display: flex; justify-content: flex-end; margin-bottom: 1.5rem; animation: fadeIn 1s ease-out;">
+                <div class="multiselect" style="position: relative; z-index: 100;">
+                    <div class="selectBox" onclick="toggleMulti('chartAreaCheckboxes')"
+                        style="background: var(--glass); padding: 10px 20px; border-radius: 12px; cursor: pointer; border: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+                        <span style="font-weight: 600; color: var(--primary);">📍 Áreas Seleccionadas</span>
+                        <span style="font-size: 0.8rem; opacity: 0.7;">(Filtrar todo el tablero)</span>
+                    </div>
+                    <div id="chartAreaCheckboxes" class="checkboxes"
+                        style="display: none; position: absolute; right: 0; top: 110%; background: #23221e; border: 1px solid var(--border); border-radius: 12px; padding: 15px; min-width: 250px; box-shadow: 0 15px 35px rgba(0,0,0,0.5); max-height: 400px; overflow-y: auto; z-index: 1000;">
+                        <label
+                            style="display: flex; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 10px; cursor: pointer;">
+                            <input type="checkbox" id="chartAreaFilterAll" checked
+                                onchange="toggleChartSelectAll(this.checked)"
+                                style="width: 18px; height: 18px; margin-right: 10px; accent-color: var(--primary);" />
+                            <b>Todas las áreas</b>
+                        </label>
+                        {% for a in areas_vl %}
+                        <label
+                            style="display: flex; align-items: center; margin-bottom: 8px; font-size: 0.9rem; cursor: pointer; transition: 0.2s;"
+                            onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='inherit'">
+                            <input type="checkbox" class="chart-area-cb" value="{{ a }}" checked
+                                onchange="handleSmartCheckbox(this)"
+                                style="width: 16px; height: 16px; margin-right: 10px; accent-color: var(--primary);" />
+                            {{ a }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div id="vl-operative-charts">
+                <div class="row-grid">
+                    <div class="chart-box full-width">
+                        {% if user.role == 'admin' %}
+                        <div class="edit-query-btn"
+                            onclick="openEditQueryModal('vl_monthly_evolution', 'Evolución por Mes')"
+                            title="Editar Consulta SQL">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        {% endif %}
+                        <h3>📈 Evolución por Mes (Histórico Anual)</h3>
+                        <div style="position: relative; height: 350px; width: 100%;">
+                            <canvas id="monthlyTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row-grid" style="margin-top: 1.5rem;">
+                    <div class="chart-box full-width">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 300px;">
+                                {% if user.role == 'admin' %}
+                                <div class="edit-query-btn"
+                                    onclick="openEditQueryModal('vl_sla_monthly_trend', 'SLA Mensual Global')"
+                                    title="Editar Consulta SQL">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                {% endif %}
+                                <h3>🎯 Tendencia de Cumplimiento SLA Mensual (% On-Time)</h3>
+                                <div style="position: relative; height: 300px; width: 100%;">
+                                    <canvas id="slaMonthlyTrendChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="capacity-box"
+                                style="width: 240px; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-top: 40px;">
+                                <h4
+                                    style="font-size: 0.85rem; color: #f8fafc; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 1.1rem;">🚀</span> Capacidad Mensual
+                                </h4>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div
+                                        style="padding: 8px; border-left: 3px solid #22c55e; background: rgba(34, 197, 94, 0.05);">
+                                        <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">Punto
+                                            Ideal</div>
+                                        <div style="font-size: 0.9rem; color: #22c55e; font-weight: bold;">1.9k - 2.2k
+                                            <small>mats/mes</small>
+                                        </div>
+                                    </div>
+                                    <div
+                                        style="padding: 8px; border-left: 3px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
+                                        <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">
+                                            Estabilidad</div>
+                                        <div style="font-size: 0.9rem; color: #f59e0b; font-weight: bold;">2.3k
+                                            <small>mats/mes</small>
+                                        </div>
+                                    </div>
+                                    <div
+                                        style="padding: 8px; border-left: 3px solid #ef4444; background: rgba(239, 68, 68, 0.05);">
+                                        <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">
+                                            Saturación</div>
+                                        <div style="font-size: 0.9rem; color: #ef4444; font-weight: bold;">>2.4k
+                                            <small>mats/mes</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row-grid" style="margin-top: 1.5rem;">
+                    <div class="chart-box full-width">
+                        {% if user.role == 'admin' %}
+                        <div class="edit-query-btn"
+                            onclick="openEditQueryModal('vl_sla_area_monthly_trend', 'SLA Mensual por Área')"
+                            title="Editar Consulta SQL">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        {% endif %}
+                        <h3>📈 Cumplimiento SLA Mensual por Área</h3>
+                        <p class="chart-subtitle" style="font-size: 0.75rem; margin-bottom: 15px;">Análisis mensual de
+                            eficiencia por sección</p>
+                        <div id="sla-monthly-trellis-container"
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; width: 100%;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="vl-historical-charts" style="display: none;">
+                <div class="row-grid">
+                    <div class="chart-box full-width">
+                        {% if user.role == 'admin' %}
+                        <div class="edit-query-btn"
+                            onclick="openEditQueryModal('vl_weekly_evolution', 'Evolución por Semana')"
+                            title="Editar Consulta SQL">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        {% endif %}
+                        <h3>📈 Evolución por Semana (Histórico)</h3>
+                        <div style="position: relative; height: 350px; width: 100%;">
+                            <canvas id="weeklyTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row-grid" style="margin-top: 1.5rem;">
+                    <div class="chart-box full-width">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 300px;">
+                                {% if user.role == 'admin' %}
+                                <div class="edit-query-btn"
+                                    onclick="openEditQueryModal('vl_sla_trend', 'SLA Semanal Global')"
+                                    title="Editar Consulta SQL">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                {% endif %}
+                                <h3>🎯 Tendencia de Cumplimiento SLA (% On-Time)</h3>
+                                <div style="position: relative; height: 300px; width: 100%;">
+                                    <canvas id="slaTrendChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="capacity-box"
+                                style="width: 240px; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; margin-top: 40px;">
+                                <h4
+                                    style="font-size: 0.85rem; color: #f8fafc; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 1.1rem;">🚀</span> Capacidad de Bodega
+                                </h4>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div
+                                        style="padding: 8px; border-left: 3px solid #22c55e; background: rgba(34, 197, 94, 0.05);">
+                                        <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">Punto
+                                            Ideal</div>
+                                        <div style="font-size: 0.9rem; color: #22c55e; font-weight: bold;">450-520
+                                            <small>mats/sem ⬆️90%</small>
+                                        </div>
+                                    </div>
+                                    <div
+                                        style="padding: 8px; border-left: 3px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
+                                        <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">
+                                            Límite Estabilidad</div>
+                                        <div style="font-size: 0.9rem; color: #f59e0b; font-weight: bold;">530
+                                            <small>mats/sem 85%</small>
+                                        </div>
+                                    </div>
+                                    <div
+                                        style="padding: 8px; border-left: 3px solid #ef4444; background: rgba(239, 68, 68, 0.05);">
+                                        <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">Zona
+                                            de Saturación</div>
+                                        <div style="font-size: 0.9rem; color: #ef4444; font-weight: bold;">>550
+                                            <small>mats/sem ⬇️82%</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p style="font-size: 0.65rem; color: #64748b; margin-top: 12px; font-style: italic;">
+                                    *Basado en histórico de eficiencia vs volumen.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row-grid" style="margin-top: 1.5rem;">
+                    <div class="chart-box full-width">
+                        {% if user.role == 'admin' %}
+                        <div class="edit-query-btn"
+                            onclick="openEditQueryModal('vl_sla_area_trend', 'SLA Semanal por Área')"
+                            title="Editar Consulta SQL">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        {% endif %}
+                        <h3>📈 Tendencia de Cumplimiento SLA por Área (Small Multiples)</h3>
+                        <p class="chart-subtitle" style="font-size: 0.75rem; margin-bottom: 15px;">Análisis individual
+                            de eficiencia On-Time por sección</p>
+                        <div id="sla-trellis-container"
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; width: 100%;">
+                            <!-- Dinámicamente generado por JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="row-grid-2">
+                <div class="chart-box">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn" onclick="openEditQueryModal('vl_top_authors', 'Top Solicitadores')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Top Solicitadores</h3>
+                    <ul class="rank-list" style="max-height: 280px; overflow-y: auto;">
+                        {% for a in top_authors %}
+                        <li data-area="{{ a.area or 'MIXTO' }}" style="cursor: pointer; transition: background 0.2s;"
+                            onclick="openModalUser('{{ a.name }}')"
+                            onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+                            onmouseout="this.style.background='transparent'">
+                            <div>
+                                <div class="name">
+                                    {{ a.name }}
+                                    <span
+                                        style="font-size: 0.65rem; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; margin-left: 5px; color: #cbd5e1; font-weight: normal;">{{
+                                        a.area or 'MIXTO' }}</span>
+                                </div>
+                                <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">{{ a.num_lineas }} ítems
+                                    solicitados</div>
+                            </div>
+                            <div class="score"
+                                style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
+                                <div>{{ a.entregas }} Entregas</div>
+                            </div>
+                        </li>
+                        {% else %}
+                        <li style="text-align: center; color: #64748b; padding: 2rem;">No hay registros de
+                            solicitadores.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Materials Grid -->
+            <h3 style="margin: 2rem 0 1rem; color: #e2e8f0; font-size: 1.5rem; font-weight: 600;">Ranking de Materiales
+                Repetitivos por Área</h3>
+            <div class="materials-grid">
+                {% for area, items in top_materials.items() %}
+                <div class="area-card" data-area="{{ area }}">
+                    <h4>{{ area }}</h4>
+                    {% for it in items %}
+                    <div class="mat-item">
+                        <span class="mat-name" title="{{ it.material }}">{{ loop.index }}. {{ it.material }}</span>
+                        <div style="text-align: right; display: flex; align-items: center;">
+                            <span class="mat-qty">{{ it.frequency }}x</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div
+                    style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 3rem; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <p>No se encontraron materiales repetitivos para el periodo seleccionado.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="tab-inventory" class="tab-content">
+            <!-- Header con Selector de Vista -->
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <h2 style="color: #f8f9fa; font-size: 1.8rem; font-weight: 800; margin: 0;">📦 Análisis de Movimientos
+                </h2>
+
+                <div class="view-selector-group"
+                    style="display: flex; align-items: center; gap: 1rem; background: var(--glass); padding: 5px 15px; border-radius: 12px; border: 1px solid var(--border);">
+                    <i class="fas fa-layer-group" style="color: var(--primary);"></i>
+                    <select id="inv-view-select" onchange="switchInventarioView(this.value)"
+                        style="background: transparent; border: none; color: #f8f9fa; font-weight: 600; cursor: pointer; outline: none; padding: 5px;">
+                        <option value="operative">Vista Operativa (Anual)</option>
+                        <option value="historical">Vista Semanal (Histórico)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- KPI Row -->
+            <div class="row-grid kpi-row">
+                <div class="stat-card">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn"
+                        onclick="openEditQueryModal('inv_kpi_ingresos', 'Total Ingresos (101, 301+)')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Total Ingresos (101, 301+)</h3>
+                    <div class="value" style="color: var(--verde);">{{ kpi_ingresos | default(0) }}</div>
+                    <div class="desc">Frecuencia / Transacciones</div>
+                </div>
+                <div class="stat-card">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn"
+                        onclick="openEditQueryModal('inv_kpi_consumos_prod', 'Consumo Producción (201)')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Consumo Producción (201)</h3>
+                    <div class="value" style="color: var(--naranja);">{{ kpi_consumos_prod | default(0) }}</div>
+                    <div class="desc">Entregas/Ventanilla</div>
+                </div>
+                <div class="stat-card">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn"
+                        onclick="openEditQueryModal('inv_kpi_consumos_mant', 'Consumo Mantención (261)')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Consumo Mantención (261)</h3>
+                    <div class="value" style="color: #64748b;">{{ kpi_consumos_mant | default(0) }}</div>
+                    <div class="desc">Retiros de Mantencion</div>
+                </div>
+                <div class="stat-card">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn"
+                        onclick="openEditQueryModal('inv_kpi_rate_reabast', 'Tasa Reabastecimiento')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Tasa Reabastecimiento</h3>
+                    <div class="value"
+                        style="color: {% if rate_reabast is defined and rate_reabast > 110 %}var(--rojo){% else %}var(--calipso){% endif %};">
+                        {{ rate_reabast | default(0) }}%</div>
+                    <div class="desc">% Entrada vs Salida</div>
+                </div>
+                <div class="stat-card">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn"
+                        onclick="openEditQueryModal('inv_kpi_traspasos', 'Traspasos (303, 301-)')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Traspasos (303, 301-)</h3>
+                    <div class="value" style="color: var(--primario);">{{ kpi_traspasos | default(0) }}</div>
+                    <div class="desc">Traspasos a otros centros</div>
+                </div>
+                <div class="stat-card">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn"
+                        onclick="openEditQueryModal('inv_kpi_rate_devolucion', 'Tasa Devoluciones (202, 262)')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Tasa Devoluciones (202, 262)</h3>
+                    <div class="value"
+                        style="color: {% if (rate_devolucion | default(0)) > 15 %}var(--rojo){% else %}var(--calipso){% endif %};">
+                        {{ rate_devolucion | default(0) }}%</div>
+                    <div class="desc">Errores de despacho ({{ kpi_devoluciones | default(0) }})</div>
+                </div>
+                <div class="stat-card">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn"
+                        onclick="openEditQueryModal('inv_kpi_rate_eficiencia', 'Eficiencia de Bodega')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Eficiencia de Bodega</h3>
+                    <div class="value"
+                        style="color: {% if (rate_eficiencia | default(0)) < 85 %}var(--rojo){% else %}var(--verde){% endif %};">
+                        {{ rate_eficiencia | default(0) }}%</div>
+                    <div class="desc">A tiempo vs Fecha Doc.</div>
+                </div>
+            </div>
+
+            <div class="row-grid-3">
+                <div class="chart-box">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn" onclick="openEditQueryModal('inv_consumos_abc', 'Curva ABC')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Distribución de Curva ABC</h3>
+                    <div
+                        style="position: relative; height: 260px; width: 100%; display: flex; justify-content: center;">
+                        <canvas id="abcPieChart"></canvas>
+                    </div>
+                    <div
+                        style="margin-top: 10px; font-size: 0.8rem; color: #64748b; text-align: center; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 6px;">
+                        <b>A:</b> Eje Crítico (Top 80% frecuencia) • <b>B:</b> Moderados (Sig. 15%) • <b>C:</b>
+                        Esporádicos
+                    </div>
+                </div>
+                <div class="chart-box">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn" onclick="openEditQueryModal('inv_area_stats_prod', 'Consumo por Área')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Tendencia de Consumo (Planificado vs Desplanificado)</h3>
+                    <div style="position: relative; height: 280px; width: 100%;">
+                        <canvas id="plannedTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn"
+                        onclick="openEditQueryModal('inv_volumen_stats', 'Tendencia Operacional')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Tendencia Operacional (Abastecimiento vs Consumo)</h3>
+                    <div style="position: relative; height: 280px; width: 100%;">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="row-grid-3">
+                <!-- CONCURRENCIA SEMANAL -->
+                <div class="chart-box">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn" onclick="openEditQueryModal('inv_dow_stats', 'Carga Semanal')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Carga Semanal de BMRI
+                    </h3>
+                    <div style="position: relative; height: 280px; width: 100%;">
+                        <canvas id="dowChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Producción vs Mantención -->
+                <div class="chart-box">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn"
+                        onclick="openEditQueryModal('inv_pm_type_records', 'Producción vs Mantención')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Proporción Producción vs Mantención</h3>
+                    <div
+                        style="position: relative; height: 260px; width: 100%; display: flex; justify-content: center;">
+                        <canvas id="pmDoughnutChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- FAST MOVERS -->
+                <div class="chart-box" style="cursor: pointer;" onclick="openModal('modalFast')">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn" onclick="openEditQueryModal('inv_consumos_abc', 'Top Consumidos')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3>Top Consumidos</h3>
+                        <span style="font-size: 0.8rem; color: #64748b;">Ver más →</span>
+                    </div>
+                    <ul class="rank-list" style="max-height: 280px; overflow-y: hidden;">
+                        {% for mat in top_materials_quick %}
+                        <li>
+                            <div>
+                                <div class="name" style="font-size: 0.95rem;"><span
+                                        style="color:var(--primario);font-size:0.8rem;">[{{ mat.cod_mat }}]</span> {{
+                                    mat.material[:25] }}{% if mat.material|length > 25 %}...{% endif %}</div>
+                            </div>
+                            <div class="score"
+                                style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
+                                <div>{{ mat.qty_fmt }} req.</div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+
+
+            <div class="row-grid">
+                <!-- TOP USUARIOS -->
+                <div class="chart-box">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn" onclick="openEditQueryModal('inv_top_users', 'Top Asistentes Bodega')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Top Asistentes de Bodega (Frecuencia de Despachos)</h3>
+                    <ul class="rank-list" style="max-height: 280px; overflow-y: auto;">
+                        {% for u in top_users %}
+                        <li style="cursor: pointer; transition: background 0.2s;"
+                            onclick="openModalUserInventario('{{ u.user }}')"
+                            onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+                            onmouseout="this.style.background='transparent'">
+                            <div>
+                                <div class="name">{{ u.user }}
+                                    {% if u.error_rate > 0 %}
+                                    <span
+                                        style="font-size: 0.75rem; color: var(--rojo); background: rgba(239,68,68,0.1); padding: 2px 6px; border-radius: 4px; margin-left: 6px;"
+                                        title="Tasa de Anulación ({{ u.anulaciones }} anulados)">
+                                        ⚠️ {{ u.error_rate }}% anul.
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="score"
+                                style="color: var(--naranja); background: rgba(234,118,0,0.15); display: flex; flex-direction: column; align-items: flex-end; justify-content: center; padding: 4px 8px;">
+                                <div>{{ u.qty_fmt }} req.</div>
+                            </div>
+                        </li>
+                        {% else %}
+                        <li style="text-align: center; color: #64748b; padding: 2rem;">No hay registros de asistentes.
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-ots" class="tab-content">
+            <h2 style="color: #f8f9fa; font-size: 1.8rem; font-weight: 800; margin-bottom: 1.5rem;">📑 Gestión de
+                Ordenes de Transporte (OTs)</h2>
+
+            <div class="row-grid kpi-row">
+                <div class="stat-card">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn" onclick="openEditQueryModal('ots_kpi_pending', 'Tareas Pendientes')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Tareas Pendientes</h3>
+                    <div class="value" style="color: var(--primary);">{{ ots_recent|length if ots_recent else 0 }}</div>
+                    <div class="desc">OTs sin fecha de confirmación</div>
+                </div>
+                <div class="stat-card">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn" onclick="openEditQueryModal('ots_kpi_users', 'Usuarios Activos')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Usuarios Activos</h3>
+                    <div class="value" style="color: var(--naranja);">{{ ots_user_labels|length if ots_user_labels else
+                        0 }}</div>
+                    <div class="desc">Personal confirmando OTs</div>
+                </div>
+                <div class="stat-card">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn"
+                        onclick="openEditQueryModal('ots_kpi_critical', 'OTs Críticas (>4 Días)')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>OTs Críticas (>4 Días)</h3>
+                    <div class="value" style="color: var(--rojo);">{{ ots_critical_count if ots_critical_count is
+                        defined else 0 }}</div>
+                    <div class="desc">Abiertas hace más de 4 días</div>
+                </div>
+            </div>
+
+            <div class="row-grid">
+                <div class="chart-box">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn"
+                        onclick="openEditQueryModal('ots_daily_trend', 'Tendencia Diaria de OTs')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Tendencia Diaria de OTs</h3>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="otsTrendChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-box">
+                    {% if user.role == 'admin' %}
+                    <div class="edit-query-btn"
+                        onclick="openEditQueryModal('ots_by_user_dual', 'Productividad por Usuario')"
+                        title="Editar Consulta SQL">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    {% endif %}
+                    <h3>Productividad por Usuario (Confirmaciones)</h3>
+                    <div style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="otsUserChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selector de Subpestañas para Tablas de OTs y Movimientos -->
+            <div class="sub-tabs-header"
+                style="display: flex; gap: 0.75rem; margin-top: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem; flex-wrap: wrap;">
+                <button class="sub-tab-btn active" onclick="switchSubTab('ots-pendientes', this)"
+                    style="background: rgba(93, 186, 169, 0.15); border: 1px solid rgba(93, 186, 169, 0.4); color: #5DBAA9; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-family: inherit;">
+                    📑 OTs Pendientes de Confirmar
+                    <span
+                        style="background: rgba(93, 186, 169, 0.2); color: #5DBAA9; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(93, 186, 169, 0.3);">
+                        {{ ots_recent|length if ots_recent else 0 }}
+                    </span>
+                </button>
+                <button class="sub-tab-btn" onclick="switchSubTab('movs-no-paletizados', this)"
+                    style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-family: inherit;">
+                    ⚠️ Movimientos No Paletizados
+                    <span
+                        style="background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.3);">
+                        {{ non_palletized_total_count if non_palletized_total_count is defined else 0 }}
+                    </span>
+                </button>
+            </div>
+
+            <!-- Subpestaña 1: OTs Pendientes de Confirmar -->
+            <div id="sub-tab-ots-pendientes" class="sub-tab-content" style="display: block; margin-top: 1rem;">
+                <div class="chart-box">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                        <h3 style="margin: 0; color: #f8f9fa;">Listado de OTs Pendientes de Confirmar</h3>
+                        <span style="background: rgba(93, 186, 169, 0.15); color: #5DBAA9; border: 1px solid rgba(93, 186, 169, 0.3); padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700;">
+                            <i class="fas fa-filter"></i> Filtrado en Tiempo Real
+                        </span>
+                    </div>
+
+                    <!-- Filtros de Cabecera para OTs -->
+                    <div class="table-filters" style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); align-items: center;">
+                        <div style="flex: 1; min-width: 180px;">
+                            <input type="text" id="filter-ot-search" placeholder="🔍 Buscar OT, Material o Ubicación..." onkeyup="filterOTTable()" 
+                                   style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem;">
+                        </div>
+                        <div style="width: 160px;">
+                            <select id="filter-ot-tipo" onchange="filterOTTable()" 
+                                    style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem; cursor: pointer;">
+                                <option value="">📁 Todos los Tipos</option>
+                            </select>
+                        </div>
+                        <div style="width: 180px;">
+                            <select id="filter-ot-creator" onchange="filterOTTable()" 
+                                    style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem; cursor: pointer;">
+                                <option value="">👤 Todos los Creadores</option>
+                            </select>
+                        </div>
+                        <div style="width: 160px;">
+                            <select id="filter-ot-sla" onchange="filterOTTable()" 
+                                    style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem; cursor: pointer;">
+                                <option value="">⏱️ Todos los SLA</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table style="color: #e2e8f0;">
+                            <thead>
+                                <tr>
+                                    <th>OT / Pos</th>
+                                    <th>Material</th>
+                                    <th>Tipo Mov.</th>
+                                    <th>Origen</th>
+                                    <th>Destino</th>
+                                    <th>Fecha Creación</th>
+                                    <th>Estado SLA</th>
+                                    <th>Creado por</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ot in ots_recent %}
+                                <tr class="row ot-row" data-tipo="{{ ot.clase_mov }}" data-creator="{{ ot.creator }}" data-sla="{{ ot.sla_status }}">
+                                    <td style="font-weight: 800; color: var(--primary);">{{ ot.numero_ot }}</td>
+                                    <td>{{ ot.material }}<br><small style="color: #64748b;">{{ ot.material_name }}</small></td>
+                                    <td style="font-size: 0.85rem; color: #94a3b8;">{{ ot.clase_mov }}</td>
+                                    <td>{{ ot.source }}</td>
+                                    <td>{{ ot.dest }}</td>
+                                    <td>{{ ot.created_at }}</td>
+                                    <td>
+                                        <span style="background: {{ ot.sla_color }}22; color: {{ ot.sla_color }}; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: 1px solid {{ ot.sla_color }}44;">
+                                            {{ ot.sla_status }}
+                                        </span>
+                                    </td>
+                                    <td style="color: var(--calipso); font-weight: 600;">{{ ot.creator }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 2rem; color: #64748b;">No hay
+                                        OTs pendientes actualmente. ¡Todo al día!</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subpestaña 2: Movimientos No Paletizados -->
+            <div id="sub-tab-movs-no-paletizados" class="sub-tab-content" style="display: none; margin-top: 1rem;">
+                <!-- Alerta Operativa Global -->
+                <div
+                    style="background: rgba(245, 158, 11, 0.08); border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; color: #e2e8f0; font-size: 0.9rem; line-height: 1.5;">
+                    <strong style="color: #f59e0b;"><i class="fas fa-info-circle"></i> Alerta Operativa:</strong>
+                    Se han identificado movimientos en <code>inventory_movements</code> cuyo código <code>doc_mat</code>
+                    no registra ninguna Orden de Transporte en la base de datos de WMS. En este flujo, para garantizar la consistencia, se listan los movimientos no paletizados para su análisis y auditoría.
+                </div>
+                <!-- Tabla 1: Resumen Agrupado por Usuario y Tipo Movimiento -->
+                <div class="chart-box" style="border-top: 4px solid var(--naranja); margin-bottom: 2rem;">
+                    <style>
+                        .summary-clickable-row {
+                            cursor: pointer !important;
+                            transition: background-color 0.2s ease !important;
+                        }
+ 
+                        .summary-clickable-row:hover {
+                            background-color: rgba(93, 186, 169, 0.08) !important;
+                        }
+                    </style>
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                        <h3 style="margin: 0; color: #f8f9fa;">Resumen de Discrepancias por Usuario y Tipo Movimiento
+                        </h3>
+                        <span
+                            style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700;">
+                            <i class="fas fa-chart-pie"></i> Vista Agrupada de Trazabilidad
+                        </span>
+                    </div>
+
+                    <!-- Filtros de Cabecera para Discrepancias -->
+                    <div class="table-filters" style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); align-items: center;">
+                        <div style="flex: 1; min-width: 180px;">
+                            <input type="text" id="filter-discrepancy-search" placeholder="🔍 Buscar Usuario o Tipo Movimiento..." onkeyup="filterDiscrepancyTable()" 
+                                   style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem;">
+                        </div>
+                        <div style="width: 200px;">
+                            <select id="filter-discrepancy-tipo" onchange="filterDiscrepancyTable()" 
+                                    style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem; cursor: pointer;">
+                                <option value="">📁 Todos los Tipos</option>
+                            </select>
+                        </div>
+                        <div style="width: 200px;">
+                            <select id="filter-discrepancy-user" onchange="filterDiscrepancyTable()" 
+                                    style="width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.85rem; cursor: pointer;">
+                                <option value="">👤 Todos los Usuarios</option>
+                            </select>
+                        </div>
+                    </div>
+ 
+                    <div class="table-container">
+                        <table style="color: #e2e8f0;">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Tipo de Movimiento</th>
+                                    <th style="text-align: center;">Cantidad Movimientos</th>
+                                    <th>Fecha Más Antigua</th>
+                                    <th>Fecha Más Reciente</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in non_palletized_summary %}
+                                <tr class="row summary-clickable-row discrepancy-row"
+                                    data-tipo="{{ row.clase_mov }}" data-user="{{ row.user }}"
+                                    onclick="openNonPalletizedDetails('{{ row.user }}', '{{ row.clase_mov }}')"
+                                    title="Haga clic para ver detalles de este grupo">
+                                    <td style="color: var(--calipso); font-weight: 700;">{{ row.user }}</td>
+                                    <td style="font-size: 0.85rem; color: #f87171; font-weight: 600;">{{ row.clase_mov }}</td>
+                                    <td style="font-weight: 800; color: #f3f4f6; text-align: center;">
+                                        <span
+                                            style="background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.2); padding: 4px 10px; border-radius: 20px; color: #fb7185; font-size: 0.85rem;">
+                                            {{ row.count }}
+                                        </span>
+                                    </td>
+                                    <td style="color: #94a3b8; font-size: 0.85rem;">{{ row.oldest }}</td>
+                                    <td style="color: #34d399; font-size: 0.85rem; font-weight: 600;">{{ row.newest }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 2rem; color: #64748b;">No hay registros agrupados disponibles.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tabla 2: Listado Detallado (Últimos 100) -->
+                <div class="chart-box" style="border-top: 4px solid var(--rojo);">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                        <h3 style="margin: 0; color: #f8f9fa;">Listado de Movimientos No Paletizados (Últimos 100)</h3>
+                        <span
+                            style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-exclamation-triangle"></i> Detección Automática de Discrepancias
+                        </span>
+                    </div>
+
+                    <div class="table-container">
+                        <table style="color: #e2e8f0;">
+                            <thead>
+                                <tr>
+                                    <th>Doc. Material</th>
+                                    <th>Pos</th>
+                                    <th>Material</th>
+                                    <th>Clase Mov.</th>
+                                    <th>Cantidad</th>
+                                    <th>Almacén</th>
+                                    <th>Centro</th>
+                                    <th>Fecha Contable</th>
+                                    <th>Registrado Por</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mov in non_palletized_movements %}
+                                <tr class="row">
+                                    <td style="font-weight: 800; color: var(--naranja);">{{ mov.doc_mat }}</td>
+                                    <td style="color: #94a3b8; font-size: 0.85rem;">{{ mov.pos }}</td>
+                                    <td>{{ mov.material }}<br><small style="color: #64748b;">{{ mov.material_name
+                                            }}</small></td>
+                                    <td style="font-size: 0.85rem; color: #f87171; font-weight: 600;">{{ mov.clase_mov
+                                        }}</td>
+                                    <td style="font-weight: 700; color: #e2e8f0;">{{ mov.qty }}</td>
+                                    <td>{{ mov.source }}</td>
+                                    <td>{{ mov.dest }}</td>
+                                    <td>{{ mov.created_at }}</td>
+                                    <td style="color: var(--calipso); font-weight: 600;">{{ mov.creator }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="9" style="text-align: center; padding: 2rem; color: #64748b;">No se
+                                        detectaron discrepancias de movimientos no paletizados. ¡Excelente consistencia
+                                        operacional!</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <script>
+            function switchTab(tabId, btnElement) {
+                console.log("--- SWITCH TO:", tabId);
+                const contents = document.querySelectorAll('.tab-content');
+                const buttons = document.querySelectorAll('.tab-btn');
+
+                contents.forEach(c => {
+                    c.classList.remove('active');
+                    c.style.display = 'none';
+                });
+
+                buttons.forEach(b => b.classList.remove('active'));
+
+                const target = document.getElementById('tab-' + tabId);
+                if (target) {
+                    target.classList.add('active');
+                    target.style.display = 'block';
+                }
+
+                if (btnElement) btnElement.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'auto' });
+                window.dispatchEvent(new Event('resize'));
+            }
+
+            function switchSubTab(subTabId, btnElement) {
+                const contents = document.querySelectorAll('.sub-tab-content');
+                const buttons = document.querySelectorAll('.sub-tab-btn');
+
+                contents.forEach(c => {
+                    c.style.display = 'none';
+                });
+
+                buttons.forEach(b => {
+                    b.style.background = 'rgba(255, 255, 255, 0.02)';
+                    b.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+                    b.style.color = '#cbd5e1';
+                });
+
+                const target = document.getElementById('sub-tab-' + subTabId);
+                if (target) {
+                    target.style.display = 'block';
+                }
+
+                btnElement.style.background = 'rgba(93, 186, 169, 0.15)';
+                btnElement.style.borderColor = 'rgba(93, 186, 169, 0.4)';
+                btnElement.style.color = '#5DBAA9';
+            }
+
+            async function openNonPalletizedDetails(user, claseMov) {
+                console.log("Abriendo detalle no paletizado para:", user, claseMov);
+
+                const modal = document.getElementById('modalNonPalletized');
+                const lblUser = document.getElementById('lblModalUser');
+                const lblClaseMov = document.getElementById('lblModalClaseMov');
+                const lblCount = document.getElementById('lblModalCount');
+                const loading = document.getElementById('modalNonPalletizedLoading');
+                const container = document.getElementById('modalNonPalletizedContainer');
+                const tbody = document.getElementById('modalNonPalletizedTableBody');
+
+                if (!modal) return;
+
+                // Mostrar modal y spinner
+                lblUser.innerText = user;
+                lblClaseMov.innerText = claseMov;
+                lblCount.innerText = "...";
+                loading.style.display = 'block';
+                container.style.display = 'none';
+                tbody.innerHTML = '';
+
+                modal.classList.add('show');
+
+                try {
+                    const response = await fetch(`/api/non-palletized/details?user=${encodeURIComponent(user)}&clase_mov=${encodeURIComponent(claseMov)}`);
+                    if (!response.ok) throw new Error("Error HTTP " + response.status);
+
+                    const res = await response.json();
+                    if (res.status === 'success') {
+                        const data = res.data;
+                        lblCount.innerText = data.length;
+
+                        if (data.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">No se encontraron registros.</td></tr>';
+                        } else {
+                            let html = '';
+                            data.forEach(item => {
+                                html += `
+                                    <tr class="row">
+                                        <td style="font-weight: 800; color: var(--naranja);">${item.doc_mat}</td>
+                                        <td style="color: #94a3b8; font-size: 0.85rem;">${item.pos}</td>
+                                        <td>${item.material}<br><small style="color: #64748b;">${item.material_name || ''}</small></td>
+                                        <td style="font-weight: 700; color: #e2e8f0;">${item.qty}</td>
+                                        <td>${item.source || ''}</td>
+                                        <td>${item.dest || ''}</td>
+                                        <td style="color: #cbd5e1; font-size: 0.85rem;">${item.created_at || ''}</td>
+                                    </tr>
+                                `;
+                            });
+                            tbody.innerHTML = html;
+                        }
+
+                        loading.style.display = 'none';
+                        container.style.display = 'block';
+                    } else {
+                        throw new Error(res.detail || "Error desconocido");
+                    }
+                } catch (err) {
+                    console.error("Error al cargar detalle no paletizado:", err);
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #ef4444;"><i class="fas fa-exclamation-circle"></i> Error al cargar datos: ${err.message}</td></tr>`;
+                    loading.style.display = 'none';
+                    container.style.display = 'block';
+                }
+            }
+
+            // Función para inicializar y poblar dinámicamente los selectores de filtros
+            function initTableFilters() {
+                console.log("Inicializando filtros de tablas...");
+                
+                // 1. Poblar Filtros de OTs Pendientes
+                const otRows = document.querySelectorAll('.ot-row');
+                const otTipos = new Set();
+                const otCreators = new Set();
+                const otSlas = new Set();
+                
+                otRows.forEach(row => {
+                    const tipo = row.getAttribute('data-tipo');
+                    const creator = row.getAttribute('data-creator');
+                    const sla = row.getAttribute('data-sla');
+                    if (tipo) otTipos.add(tipo.trim());
+                    if (creator) otCreators.add(creator.trim());
+                    if (sla) otSlas.add(sla.trim());
+                });
+                
+                const filterOtTipo = document.getElementById('filter-ot-tipo');
+                if (filterOtTipo) {
+                    filterOtTipo.innerHTML = '<option value="">📁 Todos los Tipos</option>';
+                    Array.from(otTipos).sort().forEach(val => {
+                        filterOtTipo.innerHTML += `<option value="${val}">${val}</option>`;
+                    });
+                }
+                
+                const filterOtCreator = document.getElementById('filter-ot-creator');
+                if (filterOtCreator) {
+                    filterOtCreator.innerHTML = '<option value="">👤 Todos los Creadores</option>';
+                    Array.from(otCreators).sort().forEach(val => {
+                        filterOtCreator.innerHTML += `<option value="${val}">${val}</option>`;
+                    });
+                }
+                
+                const filterOtSla = document.getElementById('filter-ot-sla');
+                if (filterOtSla) {
+                    filterOtSla.innerHTML = '<option value="">⏱️ Todos los SLA</option>';
+                    Array.from(otSlas).sort().forEach(val => {
+                        filterOtSla.innerHTML += `<option value="${val}">${val}</option>`;
+                    });
+                }
+                
+                // 2. Poblar Filtros de Resumen de Discrepancias
+                const discrepancyRows = document.querySelectorAll('.discrepancy-row');
+                const discTipos = new Set();
+                const discUsers = new Set();
+                
+                discrepancyRows.forEach(row => {
+                    const tipo = row.getAttribute('data-tipo');
+                    const user = row.getAttribute('data-user');
+                    if (tipo) discTipos.add(tipo.trim());
+                    if (user) discUsers.add(user.trim());
+                });
+                
+                const filterDiscTipo = document.getElementById('filter-discrepancy-tipo');
+                if (filterDiscTipo) {
+                    filterDiscTipo.innerHTML = '<option value="">📁 Todos los Tipos</option>';
+                    Array.from(discTipos).sort().forEach(val => {
+                        filterDiscTipo.innerHTML += `<option value="${val}">${val}</option>`;
+                    });
+                }
+                
+                const filterDiscUser = document.getElementById('filter-discrepancy-user');
+                if (filterDiscUser) {
+                    filterDiscUser.innerHTML = '<option value="">👤 Todos los Usuarios</option>';
+                    Array.from(discUsers).sort().forEach(val => {
+                        filterDiscUser.innerHTML += `<option value="${val}">${val}</option>`;
+                    });
+                }
+            }
+
+            // Función de Filtrado para la Tabla de OTs
+            function filterOTTable() {
+                const searchText = document.getElementById('filter-ot-search').value.toLowerCase();
+                const selectedTipo = document.getElementById('filter-ot-tipo').value;
+                const selectedCreator = document.getElementById('filter-ot-creator').value;
+                const selectedSla = document.getElementById('filter-ot-sla').value;
+                
+                const rows = document.querySelectorAll('.ot-row');
+                
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    const tipo = row.getAttribute('data-tipo');
+                    const creator = row.getAttribute('data-creator');
+                    const sla = row.getAttribute('data-sla');
+                    
+                    const matchSearch = text.includes(searchText);
+                    const matchTipo = !selectedTipo || tipo === selectedTipo;
+                    const matchCreator = !selectedCreator || creator === selectedCreator;
+                    const matchSla = !selectedSla || sla === selectedSla;
+                    
+                    if (matchSearch && matchTipo && matchCreator && matchSla) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+
+            // Función de Filtrado para la Tabla de Discrepancias
+            function filterDiscrepancyTable() {
+                const searchText = document.getElementById('filter-discrepancy-search').value.toLowerCase();
+                const selectedTipo = document.getElementById('filter-discrepancy-tipo').value;
+                const selectedUser = document.getElementById('filter-discrepancy-user').value;
+                
+                const rows = document.querySelectorAll('.discrepancy-row');
+                
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    const tipo = row.getAttribute('data-tipo');
+                    const user = row.getAttribute('data-user');
+                    
+                    const matchSearch = text.includes(searchText);
+                    const matchTipo = !selectedTipo || tipo === selectedTipo;
+                    const matchUser = !selectedUser || user === selectedUser;
+                    
+                    if (matchSearch && matchTipo && matchUser) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const params = new URLSearchParams(window.location.search);
+                let tab = params.get('tab') || 'deliveries';
+                switchTab(tab, document.getElementById('btn-' + tab));
+                
+                // Inicializar filtros después de cargar el DOM
+                initTableFilters();
+            });
+        </script>
+
+        <!-- Inject Data variables safely -->
+        <script type="application/json" id="data_area_stats">{{ area_stats_json | tojson | safe }}</script>
+        <script type="application/json" id="data_weekdays">{{ weekdays | tojson | safe }}</script>
+        <script type="application/json" id="data_weekdays_val">{{ weekdays_data | tojson | safe }}</script>
+        <script type="application/json" id="data_weekdays_val_cm">{{ weekdays_data_cm | tojson | safe }}</script>
+        <script type="application/json" id="data_ubic_mapping">{{ ubicaciones_mapping | tojson | safe }}</script>
+        <script type="application/json" id="data_area_mapping">{{ area_material_mapping | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_area_mapping_cm">{{ area_material_mapping_cm | tojson | safe }}</script>
+        <script type="application/json" id="data_user_mapping">{{ user_material_mapping | tojson | safe }}</script>
+        <script type="application/json" id="data_weekday_mapping">{{ weekday_mapping | tojson | safe }}</script>
+        <script type="application/json" id="data_weekday_mapping_cm">{{ weekday_mapping_cm | tojson | safe }}</script>
+        <script type="application/json" id="data_chart_labels_vl">{{ chart_labels_vl | tojson | safe }}</script>
+        <script type="application/json" id="data_chart_datasets_vl">{{ chart_datasets_vl | tojson | safe }}</script>
+        <script type="application/json" id="data_areas_vl">{{ areas_vl | tojson | safe }}</script>
+        <script id="data_total_dias_activos" type="application/json">{{ total_dias_activos | tojson }}</script>
+        <script id="data_weekday_raw" type="application/json">{{ weekday_raw_json | tojson | safe }}</script>
+        <script type="application/json" id="data_monthly_labels">{{ (monthly_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_monthly_data">{{ (monthly_data or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_weekly_labels">{{ (weekly_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_weekly_data">{{ (weekly_data or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_wms_labels">{{ (wms_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_wms_data">{{ (wms_data or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_lt_labels">{{ (lt_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_lt_data">{{ (lt_data or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_trend_labels">{{ (sla_trend_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_sla_trend_data">{{ (sla_trend_data or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_sla_trend_count">{{ (sla_trend_count or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_sla_area_labels">{{ (sla_area_labels or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_area_datasets">{{ (sla_area_datasets or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_monthly_labels">{{ (sla_monthly_labels or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_monthly_data">{{ (sla_monthly_data or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_monthly_count">{{ (sla_monthly_count or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_area_monthly_labels">{{ (sla_area_monthly_labels or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_area_monthly_datasets">{{ (sla_area_monthly_datasets or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_avg_mensual_año">{{ (avg_mensual_año or 0) | tojson | safe }}</script>
+        <script src="{{ url_for('static', path='js/deliveries.js') }}?v=15"></script>
+        <script type="application/json" id="data_volumen">{{ (volumen_data or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_area_stats_inv">{{ (inv_area_stats_json or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_trend_labels">{{ (trend_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_trend_entradas">{{ (trend_entradas or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_trend_salidas_prod">{{ (trend_salidas_prod or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_trend_salidas_mant">{{ (trend_salidas_mant or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_trend_labels_weekly">{{ (trend_labels_weekly or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_trend_entradas_weekly">{{ (trend_entradas_weekly or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_trend_salidas_prod_weekly">{{ (trend_salidas_prod_weekly or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_trend_salidas_mant_weekly">{{ (trend_salidas_mant_weekly or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_abc">{{ (abc_counts or {}) | tojson | safe }}</script>
+        <script type="application/json" id="data_abc_mapping">{{ (abc_mapping or {}) | tojson | safe }}</script>
+        <script type="application/json" id="data_kpi_prod">"{{ kpi_consumos_prod or '0' }}"</script>
+        <script type="application/json" id="data_kpi_mant">"{{ kpi_consumos_mant or '0' }}"</script>
+        <script type="application/json" id="data_kpi_prod_cm">{{ (cm_cons_prod or 0) | int }}</script>
+        <script type="application/json" id="data_kpi_mant_cm">{{ (cm_cons_mant or 0) | int }}</script>
+        <script type="application/json" id="data_kpi_201_planned">{{ (kpi_201_planned or 0) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_kpi_201_unplanned">{{ (kpi_201_unplanned or 0) | tojson | safe }}</script>
+        <script type="application/json" id="data_kpi_261_planned">{{ (kpi_261_planned or 0) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_kpi_261_unplanned">{{ (kpi_261_unplanned or 0) | tojson | safe }}</script>
+        <script type="application/json" id="data_dow">{{ (dow_distribution or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_dow_cm">{{ (dow_distribution_cm or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_ubic_mapping_inv">{{ (inv_ubicaciones_mapping or {}) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_area_mapping_inv">{{ (inv_area_material_mapping or {}) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_user_mapping_inv">{{ (inv_user_material_mapping or {}) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_dow_mapping">{{ (dow_material_mapping or {}) | tojson | safe }}</script>
+        <script type="application/json" id="data_pm_mapping">{{ (pm_material_mapping or {}) | tojson | safe }}</script>
+        <script type="application/json" id="data_scatter">{{ (scatter_data or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_alerts">{{ (alerts or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_combos">{{ (combos or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_planned_labels">{{ (planned_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_planned_data">{{ (planned_data or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_unplanned_data">{{ (unplanned_data or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_planned_labels_weekly">{{ (planned_labels_weekly or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_planned_data_weekly">{{ (planned_data_weekly or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_unplanned_data_weekly">{{ (unplanned_data_weekly or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_ots_trend_labels">{{ (ots_trend_labels or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_ots_trend_created">{{ (ots_trend_created or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_ots_trend_confirmed">{{ (ots_trend_confirmed or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_ots_user_labels">{{ (ots_user_labels or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_ots_user_created">{{ (ots_user_created or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_ots_user_confirmed">{{ (ots_user_confirmed or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_ots_type_labels">{{ (ots_type_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_ots_type_data">{{ (ots_type_data or []) | tojson | safe }}</script>
+        <script src="{{ url_for('static', path='js/tasks.js') }}?v=5"></script>
+        <script src="{{ url_for('static', path='js/inventory.js') }}?v=9"></script>
+        <script src="{{ url_for('static', path='js/analytics_proyecciones.js') }}?v=3"></script>
+        <script src="{{ url_for('static', path='js/docs_explorer.js') }}?v=5"></script>
+        {% include "partials/_deliveries_modals.html" %}
+        {% include "partials/_inventory_modals.html" %}
+        {% include "partials/_analytics_proyecciones_modals.html" %}
+        {% include "partials/_edit_query_modal.html" %}
+        {% include "partials/_logout.html" %}
+</body>
+
+</html>

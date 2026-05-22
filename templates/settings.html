@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración Dinámica | SaaS MonitorWeb</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    {% include "partials/_styles.html" %}
+    <style>
+        .settings-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            color: #f8f9fa;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .section-card {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #5DBAA9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        th {
+            color: #94a3b8;
+            font-weight: 600;
+        }
+        input.edit-field {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #334155;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        input.edit-field:focus {
+            outline: none;
+            border-color: #5DBAA9;
+            box-shadow: 0 0 0 2px rgba(93, 186, 169, 0.2);
+        }
+        .btn-save {
+            background: #5DBAA9;
+            color: #0f172a;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .add-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <div class="header">
+            <div>
+                <h1 style="margin:0; font-size: 2.2rem; font-weight:800;">⚙️ Configuración del Sistema (SaaS)</h1>
+                <p style="margin: 5px 0 0 0; color: #94a3b8;">Gestión dinámica de diccionarios y parámetros globales del WMS.</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <a href="/analytics" class="btn" style="background: linear-gradient(135deg, #5DBAA9, #4a9e8f); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 10px; transition: all 0.2s; box-shadow: 0 4px 15px rgba(93, 186, 169, 0.4);">
+                    <i class="fas fa-arrow-left"></i> Volver al Panel Principal
+                </a>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="section-title">Parámetros Globales (Settings)</h2>
+            <table>
+                <tr><th>Clave</th><th>Descripción</th><th>Valor Actual</th><th>Acción</th></tr>
+                {% set help_text = {
+                    'HEADER_DENSITY_THRESHOLD': 'Sensibilidad para detectar encabezados (0.0 a 1.0).',
+                    'HEADER_MIN_COLS': 'Mínimo de columnas para validar un encabezado.',
+                    'HEADER_SCAN_LIMIT': 'Número de filas iniciales a escanear en archivos.',
+                    'DEFAULT_ENCODING': 'Codificación de archivos (ej: utf-8, latin-1).',
+                    'DEFAULT_SEPARATOR': 'Separador de columnas (ej: ; o ,).',
+                    'MAX_COLUMN_BUFFER': 'Máximo de columnas permitidas en carga masiva.'
+                } %}
+                {% for key, val in settings.items() %}
+                <tr>
+                    <td style="font-family: monospace; color:#38bdf8;">{{ key }}</td>
+                    <td style="font-size: 0.8rem; color: #94a3b8; max-width: 300px;">{{ help_text[key] if key in help_text else 'Parámetro de configuración del sistema.' }}</td>
+                    <td><input type="text" id="setting-{{ key }}" class="edit-field" value="{{ val }}"></td>
+                    <td style="width: 100px;"><button class="btn-save" onclick="updateSetting('{{ key }}')">Guardar</button></td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="section-card">
+            <h2 class="section-title">Mapeo de Estados de Entrega (Status)</h2>
+            <table>
+                <tr><th>Código (WMS/WMS)</th><th>Etiqueta Visual</th><th>Acción</th></tr>
+                {% for code, label in status_mapping.items() %}
+                <tr id="row-status-{{ code }}">
+                    <td style="font-family: monospace; color:#e2e8f0;">{{ code }}</td>
+                    <td><input type="text" id="status-{{ code }}" class="edit-field" value="{{ label }}"></td>
+                    <td style="width: 180px; display: flex; gap: 8px;">
+                        <button class="btn-save" onclick="updateStatus('{{ code }}')">Guardar</button>
+                        <button class="btn-delete" onclick="deleteStatus('{{ code }}')">X</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            <div class="add-row">
+                <input type="text" id="new-status-code" class="edit-field" placeholder="Nuevo Código" style="width:150px;">
+                <input type="text" id="new-status-label" class="edit-field" placeholder="Etiqueta">
+                <button class="btn-save" onclick="addStatus()">+ Añadir</button>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="section-title">Mapeo de Centros de Costo a Áreas de Negocio</h2>
+            <table>
+                <tr><th>Código Centro Costo</th><th>Área de Negocio</th><th>Acción</th></tr>
+                {% for code, area in cost_centers.items() %}
+                <tr id="row-cost-{{ code }}">
+                    <td style="font-family: monospace; color:#e2e8f0;">{{ code }}</td>
+                    <td><input type="text" id="cost-{{ code }}" class="edit-field" value="{{ area }}"></td>
+                    <td style="width: 180px; display: flex; gap: 8px;">
+                        <button class="btn-save" onclick="updateCostCenter('{{ code }}')">Guardar</button>
+                        <button class="btn-delete" onclick="deleteCostCenter('{{ code }}')">X</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            <div class="add-row">
+                <input type="text" id="new-cost-code" class="edit-field" placeholder="Nuevo Centro" style="width:150px;">
+                <input type="text" id="new-cost-area" class="edit-field" placeholder="Área de Negocio">
+                <button class="btn-save" onclick="addCostCenter()">+ Añadir</button>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 class="section-title" style="margin:0;">Calendario de Feriados (Holidays)</h2>
+                <button class="btn" onclick="syncHolidays()" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.5); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    <i class="fas fa-sync"></i> Sincronizar Feriados Chile
+                </button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 2rem;">
+                {% for h in holidays %}
+                <div class="status-badge" style="background: rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                    <span>📅 {{ h }}</span>
+                    <button onclick="deleteHoliday('{{ h }}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; padding:0 5px;">✕</button>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="add-row">
+                <input type="date" id="new-holiday-date" class="edit-field" style="width:200px;">
+                <button class="btn-save" onclick="addHoliday()">+ Añadir Feriado Manual</button>
+            </div>
+        </div>
+
+        <!-- Sección de Motor de Consultas ocultada por redundancia con el Studio Dinámico -->
+    </div>
+
+    <div id="toast" class="toast">Guardado correctamente</div>
+
+    <script>
+        function showToast(msg, isError=false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.style.background = isError ? '#ef4444' : '#10b981';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        async function apiCall(url, method, data = null) {
+            const options = {
+                method: method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (data) options.body = JSON.stringify(data);
+            
+            try {
+                const res = await fetch(url, options);
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.detail || 'Error en servidor');
+                showToast(json.message || 'Operación exitosa');
+                return true;
+            } catch (e) {
+                showToast(e.message, true);
+                return false;
+            }
+        }
+
+        async function updateSetting(key) {
+            const val = document.getElementById('setting-' + key).value;
+            await apiCall('/api/settings/update', 'POST', {key: key, value: val});
+        }
+
+        async function updateStatus(code) {
+            const label = document.getElementById('status-' + code).value;
+            await apiCall('/api/settings/status', 'POST', {code: code, label: label});
+        }
+
+        async function addStatus() {
+            const code = document.getElementById('new-status-code').value.trim();
+            const label = document.getElementById('new-status-label').value.trim();
+            if(!code || !label) return showToast("Completar todos los campos", true);
+            if(await apiCall('/api/settings/status', 'POST', {code: code, label: label})) {
+                setTimeout(() => window.location.reload(), 500);
+            }
+        }
+
+        async function deleteStatus(code) {
+            if(!confirm(`¿Eliminar mapeo de estado: ${code}?`)) return;
+            if(await apiCall(`/api/settings/status/${code}`, 'DELETE')) {
+                document.getElementById('row-status-' + code).remove();
+            }
+        }
+
+        async function updateCostCenter(code) {
+            const area = document.getElementById('cost-' + code).value;
+            await apiCall('/api/settings/cost_center', 'POST', {center_code: code, business_area: area});
+        }
+
+        async function addCostCenter() {
+            const code = document.getElementById('new-cost-code').value.trim();
+            const area = document.getElementById('new-cost-area').value.trim();
+            if(!code || !area) return showToast("Completar todos los campos", true);
+            if(await apiCall('/api/settings/cost_center', 'POST', {center_code: code, business_area: area})) {
+                setTimeout(() => window.location.reload(), 500);
+            }
+        }
+
+        async function deleteCostCenter(code) {
+            if(!confirm(`¿Eliminar mapeo de centro de costo: ${code}?`)) return;
+            if(await apiCall(`/api/settings/cost_center/${code}`, 'DELETE')) {
+                document.getElementById('row-cost-' + code).remove();
+            }
+        }
+
+        async function syncHolidays() {
+            if(!confirm("¿Sincronizar feriados nacionales de Chile para este año y el próximo?")) return;
+            if(await apiCall('/api/settings/holidays/sync', 'POST')) {
+                setTimeout(() => window.location.reload(), 1000);
+            }
+        }
+
+        async function addHoliday() {
+            const date = document.getElementById('new-holiday-date').value;
+            if(!date) return showToast("Seleccionar una fecha", true);
+            if(await apiCall('/api/settings/holiday', 'POST', {date_str: date})) {
+                setTimeout(() => window.location.reload(), 500);
+            }
+        }
+
+        async function deleteHoliday(date_str) {
+            if(!confirm(`¿Eliminar feriado: ${date_str}?`)) return;
+            if(await apiCall(`/api/settings/holiday/${date_str}`, 'DELETE')) {
+                setTimeout(() => window.location.reload(), 500);
+            }
+        }
+
+        async function updateQuery(id) {
+            const sql = document.getElementById('query-' + id).value;
+            await apiCall('/api/settings/query', 'POST', {query_id: id, sql_text: sql});
+        }
+    </script>
+    {% include "partials/_logout.html" %}
+</body>
+</html>

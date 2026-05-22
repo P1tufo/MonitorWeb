@@ -1,0 +1,63 @@
+        <!-- Main Transactions Table -->
+        <main class="card">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable(0)" style="cursor:pointer;" title="Ordenar menor a mayor / mayor a menor">Entrega / OT ↕</th>
+                            <th onclick="sortTable(1)" style="cursor:pointer;" title="Ordenar menor a mayor / mayor a menor">Fecha ↕</th>
+                            <th onclick="sortTable(2)" style="cursor:pointer;" class="hide-mobile">Items ↕</th>
+                            <th onclick="sortTable(3)" style="cursor:pointer;" class="hide-mobile">Área ↕</th>
+                            <th onclick="sortTable(4)" style="cursor:pointer;">Estado ↕</th>
+                            <th>Acción</th>
+                        </tr>
+                        <tr class="search-row hide-mobile">
+                            <th style="padding:4px"><input type="text" class="col-search" onkeyup="filterTable()" placeholder="Buscar OT..." style="width:100%; padding:6px; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.2); color:#fff; font-size:0.8rem;"></th>
+                            <th style="padding:4px"><input type="text" class="col-search" onkeyup="filterTable()" placeholder="Buscar Fecha..." style="width:100%; padding:6px; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.2); color:#fff; font-size:0.8rem;"></th>
+                            <th style="padding:4px"><input type="text" class="col-search" onkeyup="filterTable()" placeholder="Buscar Items..." style="width:100%; padding:6px; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.2); color:#fff; font-size:0.8rem;"></th>
+                            <th style="padding:4px"><input type="text" class="col-search" onkeyup="filterTable()" placeholder="Buscar Área..." style="width:100%; padding:6px; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.2); color:#fff; font-size:0.8rem;"></th>
+                            <th style="padding:4px"><input type="text" class="col-search" onkeyup="filterTable()" placeholder="Buscar Estado..." style="width:100%; padding:6px; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.2); color:#fff; font-size:0.8rem;"></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionBody">
+                        {% for t in transactions %}
+                        <tr class="row">
+                            <td data-label="Entrega / OT" style="font-weight:600;">
+                                {{ t.entrega }}
+                                {% if t.has_ots %}<span title="Contiene OT(s) asociada(s)" style="font-size:0.8rem; margin-left:5px;">🏷️</span>{% endif %}
+                            </td>
+                            <td data-label="Fecha">{{ t.fe_carga }}</td>
+                            <td data-label="Items" class="hide-mobile"><span class="status-badge" style="background:rgba(255,255,255,0.05);">📦 {{ t.num_items }} items</span></td>
+                            <td data-label="Área" class="hide-mobile"><span style="opacity:0.7;">{{ t.area_negocio }}</span></td>
+                            <td data-label="Estado">
+                                <span class="status-badge
+                                    {% if 'Contabilizado' in t.estado_wms %}status-tratada
+                                    {% elif 'Abierta' in t.estado_wms %}status-abierta
+                                    {% else %}status-error{% endif %}">
+                                    {{ t.estado_wms }}
+                                </span>
+                            </td>
+                            <td data-label="Acciones">
+                                <form action="/generate-pdf" method="POST">
+                                    <input type="hidden" name="entrega" value="{{ t.entrega }}">
+                                    <input type="hidden" name="include_logo" class="logo-hidden-input" value="true">
+                                    <div style="display:flex; gap:4px;">
+                                        <button type="submit" name="action" value="previsualizar"
+                                            class="btn btn-small" style="flex:1; padding:6px 10px;"
+                                            onclick="return pdfSubmit(this, 'pdfViewerFrame', true);"
+                                            title="Ver en Pantalla">👁️ Ver</button>
+                                        <button type="submit" name="action" value="descargar"
+                                            class="btn btn-small"
+                                            style="flex:1; background:rgba(255,255,255,0.1); border:1px solid var(--border); padding:6px 10px;"
+                                            onclick="return pdfSubmit(this, 'downloadFrame', false);"
+                                            title="Descargar como PDF">⬇️ PDF</button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </main>

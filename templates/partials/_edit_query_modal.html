@@ -1,0 +1,415 @@
+<!-- Analytics Studio Modal (Admin) with Visual Query Builder -->
+<style>
+    /* 1. CSS CRÍTICO PARA EL BOTÓN (Debe estar disponible para los gráficos y KPIs) */
+    .chart-box, .stat-card { position: relative !important; }
+    
+    .edit-query-btn {
+        position: absolute !important;
+        top: 10px !important;
+        right: 10px !important;
+        background: #1e293b !important;
+        border: 1px solid var(--primary) !important;
+        color: var(--primary) !important;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        z-index: 99 !important;
+        opacity: 0.8 !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+        pointer-events: auto !important;
+    }
+    
+    /* Forzar que el icono no capture el clic */
+    .edit-query-btn i {
+        pointer-events: none !important;
+    }
+
+    .edit-query-btn:hover { 
+        opacity: 1 !important; 
+        transform: scale(1.1); 
+        background: var(--primary) !important; 
+        color: #0f172a !important; 
+    }
+    
+    .edit-query-btn:active {
+        background: #ff4757 !important;
+        transform: scale(0.9);
+    }
+
+    /* 2. DISEÑO DEL CONSTRUCTOR VISUAL */
+    .studio-tab {
+        padding: 12px 20px;
+        color: #94a3b8;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .studio-tab:hover {
+        color: #fff;
+    }
+
+    .studio-tab.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+        background: rgba(255,255,255,0.02);
+    }
+
+    .qb-section {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s;
+    }
+
+    .qb-section:hover {
+        border-color: rgba(93, 186, 169, 0.2);
+        background: rgba(255,255,255,0.03);
+    }
+
+    .qb-step-title {
+        color: var(--primary);
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .qb-step-badge {
+        background: var(--primary);
+        color: #0f172a;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 800;
+    }
+
+    .qb-form-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+        align-items: center;
+    }
+
+    .qb-select, .qb-input {
+        background: #020617 !important;
+        color: #fff !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        outline: none;
+        flex: 1;
+        transition: all 0.2s;
+    }
+
+    .qb-select:focus, .qb-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(93, 186, 169, 0.2);
+    }
+
+    .qb-btn-sec {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px dashed rgba(255, 255, 255, 0.2);
+        color: #94a3b8;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+        width: 100%;
+        justify-content: center;
+        margin-top: 5px;
+    }
+
+    .qb-btn-sec:hover {
+        background: rgba(93, 186, 169, 0.1);
+        border-color: var(--primary);
+        color: #fff;
+    }
+
+    .qb-trash-btn {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .qb-trash-btn:hover {
+        background: #ef4444;
+        color: #fff;
+        transform: scale(1.05);
+    }
+
+    .panel-scrollable {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+    .panel-scrollable::-webkit-scrollbar {
+        width: 6px;
+    }
+    .panel-scrollable::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+    }
+</style>
+
+<script src="{{ url_for('static', path='js/analytics_studio.js') }}?v=2"></script>
+
+<div id="modalEditQuery" class="modal-overlay">
+    <!-- Custom Premium Confirmation Overlay -->
+    <div id="confirmPublishOverlay" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 10000; align-items: center; justify-content: center;">
+        <div id="confirmPublishCard" style="background: #1e293b; border: 1px solid var(--primary); border-radius: 12px; padding: 30px; max-width: 450px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.6); text-align: center; transform: scale(0.9); transition: transform 0.2s ease-out;">
+            <div style="width: 60px; height: 60px; background: rgba(93, 186, 169, 0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <i class="fas fa-cloud-upload-alt" style="color: var(--primary); font-size: 1.8rem;"></i>
+            </div>
+            <h3 style="color: #f1f5f9; font-size: 1.25rem; margin: 0 0 10px; font-weight: 700;">¿Publicar cambios?</h3>
+            <p style="color: #94a3b8; font-size: 0.9rem; line-height: 1.5; margin: 0 0 25px;">Esta acción publicará la configuración visual de este panel en tiempo real para todos los usuarios de MonitorWeb. El SQL se compilará automáticamente a partir del estado visual.</p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button type="button" class="btn btn-secondary" onclick="hideConfirmPublish()" style="padding: 10px 20px; font-weight: 600;">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="executePublishQuery()" style="background: var(--primary); color: #000; font-weight: 700; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-check"></i> Sí, publicar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-content" style="max-width: 1350px; width: 98%; background: #0f172a; border: 1px solid var(--primary); padding: 0; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.7);">
+        <!-- Encabezado -->
+        <div class="studio-header" style="padding: 15px 25px; background: #1e293b; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+            <h2 id="editQueryTitle" style="color: #f1f5f9; font-size: 1.1rem; margin: 0; font-weight: 700;">Studio de Analíticas</h2>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeEditQueryModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="event.preventDefault(); event.stopPropagation(); showConfirmPublish();" style="background: var(--primary); color: #000; font-weight: 700; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer;">Publicar</button>
+            </div>
+        </div>
+
+
+
+        <!-- Grid Principal -->
+        <div class="studio-grid" style="display: grid; grid-template-columns: 550px 1fr; height: 75vh; background: #0b0f19;">
+            
+            <!-- PANEL IZQUIERDO: Constructor Visual -->
+            <div style="border-right: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; overflow: hidden;">
+                
+                <!-- Encabezado del Panel -->
+                <div style="padding: 12px 20px; background: #111827; border-bottom: 1px solid rgba(255,255,255,0.08); color: var(--primary); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-magic"></i> Constructor Visual Inteligente
+                </div>
+
+                <!-- Constructor Visual -->
+                <div id="panelVisualBuilder" class="panel-scrollable" style="display: block;">
+                    
+                    <!-- PASO 1: FROM / JOIN -->
+                    <div class="qb-section">
+                        <div class="qb-step-title">
+                            <span class="qb-step-badge">1</span> Orígenes de Datos y Uniones (FROM / JOIN)
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:5px;">Tabla Principal</label>
+                            <select id="qbBaseTable" class="qb-select" style="width: 100%;" onchange="onBaseTableChange()"></select>
+                        </div>
+                        <div id="qbJoinsContainer"></div>
+                        <button class="qb-btn-sec" onclick="addJoin()">
+                            <i class="fas fa-link"></i> + Añadir datos relacionados (JOIN)
+                        </button>
+                    </div>
+
+                    <!-- PASO 2: WHERE -->
+                    <div class="qb-section">
+                        <div class="qb-step-title">
+                            <span class="qb-step-badge">2</span> Filtros Avanzados (WHERE)
+                        </div>
+                        <div id="qbFiltersContainer" style="margin-bottom: 10px;"></div>
+                        <button class="qb-btn-sec" onclick="addFilter()">
+                            <i class="fas fa-plus"></i> + Añadir Filtro
+                        </button>
+                    </div>
+
+                    <!-- PASO 3: SELECT / GROUP BY -->
+                    <div class="qb-section">
+                        <div class="qb-step-title">
+                            <span class="qb-step-badge">3</span> Configurar Ejes (SELECT / GROUP BY)
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <div>
+                                <label style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:5px;">Eje Y (Métrica)</label>
+                                <select id="qbMetricColumn" class="qb-select" style="width: 100%;" onchange="onQbChange()"></select>
+                            </div>
+                            <div>
+                                <label style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:5px;">Agregación</label>
+                                <select id="qbMetricAgg" class="qb-select" style="width: 100%;" onchange="onQbChange()">
+                                    <option value="COUNT">Conteo (COUNT)</option>
+                                    <option value="COUNT_DISTINCT">Conteo Distintos (COUNT DISTINCT)</option>
+                                    <option value="SUM">Suma (SUM)</option>
+                                    <option value="AVG">Promedio (AVG)</option>
+                                    <option value="MIN">Mínimo (MIN)</option>
+                                    <option value="MAX">Máximo (MAX)</option>
+                                    <option value="SLA_EFFICIENCY">Eficiencia SLA (<= 2 días)</option>
+                                    <option value="REPLENISHMENT_RATE">Tasa Reabastecimiento (%)</option>
+                                    <option value="RETURN_RATE">Tasa Devolución (%)</option>
+                                    <option value="INV_EFFICIENCY">Eficiencia Inventario (<= 3 días)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:5px;">Formato</label>
+                                <select id="qbMetricFormat" class="qb-select" style="width: 100%;" onchange="onQbChange()">
+                                    <option value="number">Número (#)</option>
+                                    <option value="percent">Porcentaje (%)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 10px;">
+                            <div>
+                                <label style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:5px;">Eje X (Fecha de Registro)</label>
+                                <select id="qbTimeColumn" class="qb-select" style="width: 100%;" onchange="onQbChange()"></select>
+                            </div>
+                            <div>
+                                <label style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:5px;">Granularidad</label>
+                                <select id="qbTimeGranularity" class="qb-select" style="width: 100%;" onchange="onQbChange()">
+                                    <option value="HOUR">Hora</option>
+                                    <option value="DAY">Día</option>
+                                    <option value="WEEK">Semana</option>
+                                    <option value="MONTH">Mes</option>
+                                    <option value="YEAR">Año</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PASO 4: DESGLOSE -->
+                    <div class="qb-section">
+                        <div class="qb-step-title">
+                            <span class="qb-step-badge">4</span> Desglose por Serie (Opcional)
+                        </div>
+                        <label style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:5px;">Dividir métrica por columnas categóricas</label>
+                        <select id="qbBreakdownColumn" class="qb-select" style="width: 100%;" onchange="onQbChange()"></select>
+                    </div>
+
+                    <!-- PASO 5: SEGUNDA MÉTRICA -->
+                    <div class="qb-section">
+                        <div class="qb-step-title" style="justify-content: space-between;">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="qb-step-badge">5</span> Segunda Línea (Eje Secundario)
+                            </div>
+                            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; margin:0; font-size:0.75rem; color:#94a3b8; font-weight:400; text-transform:none; letter-spacing:0;">
+                                <input type="checkbox" id="qbSecondMetricEnabled" onchange="onSecondMetricToggle()" style="accent-color:var(--primary); width:14px; height:14px;">
+                                Activar
+                            </label>
+                        </div>
+                        <div id="qbSecondMetricPanel" style="display:none;">
+                            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 10px;">
+                                <div>
+                                    <label style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:5px;">Columna</label>
+                                    <select id="qbSecondMetricColumn" class="qb-select" style="width: 100%;" onchange="onQbChange()"></select>
+                                </div>
+                                <div>
+                                    <label style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:5px;">Agregación</label>
+                                    <select id="qbSecondMetricAgg" class="qb-select" style="width: 100%;" onchange="onQbChange()">
+                                        <option value="COUNT_DISTINCT">Conteo Distintos</option>
+                                        <option value="COUNT">Conteo</option>
+                                        <option value="SUM">Suma (SUM)</option>
+                                        <option value="AVG">Promedio (AVG)</option>
+                                        <option value="MIN">Mínimo (MIN)</option>
+                                        <option value="MAX">Máximo (MAX)</option>
+                                        <option value="SLA_EFFICIENCY">Eficiencia SLA (%)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label style="color:#64748b; font-size:0.75rem; display:block; margin-bottom:5px;">Etiqueta de la línea <span style="color:#475569;">(opcional)</span></label>
+                                <input type="text" id="qbSecondMetricLabel" class="qb-input" style="width:100%;" placeholder="ej: Materiales Solicitados" oninput="onQbChange()">
+                            </div>
+                            <p style="margin:8px 0 0; font-size:0.72rem; color:#475569;"><i class="fas fa-info-circle" style="color:var(--primary);"></i> Disponible solo sin Desglose activo. La segunda línea usa el eje Y derecho del gráfico.</p>
+                        </div>
+                        <p id="qbSecondMetricDisabledNote" style="display:none; margin:5px 0 0; font-size:0.72rem; color:#475569;"><i class="fas fa-ban" style="color:#ef4444;"></i> No disponible cuando hay Desglose activo.</p>
+                    </div>
+
+                </div>
+
+                <!-- ARTEFACTO DE COMPATIBILIDAD TEMPORAL (Fase 1 → Fase 2):
+                     Este textarea permanece oculto y NO es editable por el usuario.
+                     syncVisualToSQL() lo utiliza internamente para pasar el SQL compilado
+                     a runPreview(). Será eliminado en la Fase 2 cuando runPreview() consuma
+                     directamente el visual_state en lugar del SQL generado. -->
+                <textarea id="editQueryText" style="display: none;"></textarea>
+            </div>
+
+            <!-- PANEL DERECHO: Live Preview & Gráfico -->
+            <div style="display: flex; flex-direction: column; overflow: hidden; background: #070a13; padding: 20px;">
+                
+                <!-- Barra de Configuración de la Simulación -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 120px; gap: 15px; margin-bottom: 20px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div class="form-group">
+                        <label style="color:#64748b; font-size:0.7rem; display:block; margin-bottom:5px;">Tipo de Gráfico</label>
+                        <select id="studioChartType" onchange="runPreview()" class="qb-select" style="width: 100%;">
+                            <option value="line">📈 Línea</option>
+                            <option value="bar">📊 Barra Vertical</option>
+                            <option value="horizontalBar">🟰 Barra Horizontal</option>
+                            <option value="pie">🍕 Circular (Pie)</option>
+                            <option value="table">📋 Tabla de Datos</option>
+                            <option value="kpi">💎 KPI / Cuadro de Métrica</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label style="color:#64748b; font-size:0.7rem; display:block; margin-bottom:5px;">Color de Serie Principal</label>
+                        <input type="color" id="studioPrimaryColor" value="#5DBAA9" onchange="runPreview()" style="width:100%; height:32px; border:none; background:transparent; cursor:pointer;">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button onclick="runPreview()" class="btn btn-secondary" style="width:100%; height:32px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                            <i class="fas fa-sync-alt"></i> Simular
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contenedor del Gráfico / Simulación -->
+                <div style="flex: 1; background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.05); border-radius: 8px; position: relative; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 300px; overflow: auto;">
+                    <div id="studioTableContainer" style="display: none; width: 100%; height: 100%;"></div>
+                    <div id="studioTrellisContainer" style="display: none; width: 100%;"></div>
+                    <canvas id="studioPreviewChart" style="width: 100%; height: 100%;"></canvas>
+                    <div id="previewError" style="position: absolute; top: 20px; left: 20px; right: 20px; padding: 15px; border-radius: 6px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #ef4444; font-size: 0.8rem; display: none;"></div>
+                    <div id="studioTableControls" style="position: absolute; bottom: 10px; right: 10px; font-size: 0.7rem; color: #64748b; display: none;">
+                        <i class="fas fa-info-circle"></i> Vista previa (Primeras 100 filas)
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+        <input type="hidden" id="editQueryId">
+    </div>
+</div>

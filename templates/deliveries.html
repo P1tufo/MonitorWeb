@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secciones consolidadas | Proyecto</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    {% include "partials/_styles.html" %}
+    <link rel="stylesheet" href="{{ url_for('static', path='css/deliveries.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/inventory.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/analytics_proyecciones.css') }}?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='css/docs_explorer.css') }}?v=1">
+    <style>
+        .tabs-header {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-btn.active {
+            background: rgba(93, 186, 169, 0.2);
+            color: #5DBAA9;
+            border-color: rgba(93, 186, 169, 0.5);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="analytics-container">
+        <header class="main-header">
+            <div class="header-top">
+                <div class="logo-group">
+                    <h1>Proyecto-Onedrive</h1>
+                    <p class="header-desc">KPIs Operativos, Movimientos y Proyecciones IA</p>
+                </div>
+                <div class="actions">
+                    <a href="/" class="btn btn-secondary">🏠 Dashboard</a>
+                    {% if user.username != "invitado" %}
+                    <span style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px;">👤 {{ user.username }}</span>
+                    <button class="btn btn-secondary" style="background:rgba(239,68,68,0.1); color:#ef4444;"
+                        onclick="logout()">🚪 Salir</button>
+                    {% if user.role == 'admin' %}
+                    <a href="/settings" class="btn btn-secondary"
+                        style="background: rgba(93, 186, 169, 0.1); border-color: rgba(93, 186, 169, 0.3); color: #5DBAA9;">⚙️
+                        Configuración</a>
+                    {% endif %}
+                    {% else %}
+                    <a href="/login" class="btn btn-secondary" style="background:#5DBAA9; color:#0f172a;">🔑 Entrar</a>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <div class="tabs-header">
+            <button id="btn-deliveries" class="tab-btn active" onclick="switchTab('deliveries', this)">📊 Entregas
+                </button>
+            <button id="btn-inventory" class="tab-btn" onclick="switchTab('inventory', this)">📦 Movimientos
+                </button>
+            <button id="btn-ots" class="tab-btn" onclick="switchTab('ots', this)">📑 Gestión de OTs</button>
+            <button id="btn-ia" class="tab-btn" onclick="switchTab('ia', this)">🧠 IA Insomnio y Ansiedad</button>
+            <button id="btn-docs" class="tab-btn" onclick="switchTab('docs', this)">📚 Documentación</button>
+            <button id="btn-historial" class="tab-btn" onclick="switchTab('historial', this)">📍 Historial de
+                Ubicaciones</button>
+        </div>
+
+        {% include "partials/_tab_docs.html" %}
+        {% include "partials/_tab_historial.html" %}
+        {% include "partials/_tab_ia.html" %}
+        {% include "partials/_tab_deliveries.html" %}
+        {% include "partials/_tab_inventory.html" %}
+        {% include "partials/_tab_ots.html" %}
+
+        <script>
+            function switchTab(tabId, btnElement) {
+                console.log("--- SWITCH TO:", tabId);
+                const contents = document.querySelectorAll('.tab-content');
+                const buttons = document.querySelectorAll('.tab-btn');
+
+                contents.forEach(c => {
+                    c.classList.remove('active');
+                    c.style.display = 'none';
+                });
+
+                buttons.forEach(b => b.classList.remove('active'));
+
+                const target = document.getElementById('tab-' + tabId);
+                if (target) {
+                    target.classList.add('active');
+                    target.style.display = 'block';
+                }
+
+                if (btnElement) btnElement.classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'auto' });
+                window.dispatchEvent(new Event('resize'));
+            }
+
+            function switchSubTab(subTabId, btnElement) {
+                const contents = document.querySelectorAll('.sub-tab-content');
+                const buttons = document.querySelectorAll('.sub-tab-btn');
+
+                contents.forEach(c => {
+                    c.style.display = 'none';
+                });
+
+                buttons.forEach(b => {
+                    b.style.background = 'rgba(255, 255, 255, 0.02)';
+                    b.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+                    b.style.color = '#cbd5e1';
+                });
+
+                const target = document.getElementById('sub-tab-' + subTabId);
+                if (target) {
+                    target.style.display = 'block';
+                }
+
+                btnElement.style.background = 'rgba(93, 186, 169, 0.15)';
+                btnElement.style.borderColor = 'rgba(93, 186, 169, 0.4)';
+                btnElement.style.color = '#5DBAA9';
+            }
+
+            async function openNonPalletizedDetails(user, claseMov) {
+                console.log("Abriendo detalle no paletizado para:", user, claseMov);
+
+                const modal = document.getElementById('modalNonPalletized');
+                const lblUser = document.getElementById('lblModalUser');
+                const lblClaseMov = document.getElementById('lblModalClaseMov');
+                const lblCount = document.getElementById('lblModalCount');
+                const loading = document.getElementById('modalNonPalletizedLoading');
+                const container = document.getElementById('modalNonPalletizedContainer');
+                const tbody = document.getElementById('modalNonPalletizedTableBody');
+
+                if (!modal) return;
+
+                // Mostrar modal y spinner
+                lblUser.innerText = user;
+                lblClaseMov.innerText = claseMov;
+                lblCount.innerText = "...";
+                loading.style.display = 'block';
+                container.style.display = 'none';
+                tbody.innerHTML = '';
+
+                modal.classList.add('show');
+
+                try {
+                    const response = await fetch(`/api/non-palletized/details?user=${encodeURIComponent(user)}&clase_mov=${encodeURIComponent(claseMov)}`);
+                    if (!response.ok) throw new Error("Error HTTP " + response.status);
+
+                    const res = await response.json();
+                    if (res.status === 'success') {
+                        const data = res.data;
+                        lblCount.innerText = data.length;
+
+                        if (data.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #64748b;">No se encontraron registros.</td></tr>';
+                        } else {
+                            let html = '';
+                            data.forEach(item => {
+                                html += `
+                                    <tr class="row">
+                                        <td style="font-weight: 800; color: var(--naranja);">${item.doc_mat}</td>
+                                        <td style="color: #94a3b8; font-size: 0.85rem;">${item.pos}</td>
+                                        <td>${item.material}<br><small style="color: #64748b;">${item.material_name || ''}</small></td>
+                                        <td style="font-weight: 700; color: #e2e8f0;">${item.qty}</td>
+                                        <td>${item.source || ''}</td>
+                                        <td>${item.dest || ''}</td>
+                                        <td style="color: #cbd5e1; font-size: 0.85rem;">${item.created_at || ''}</td>
+                                    </tr>
+                                `;
+                            });
+                            tbody.innerHTML = html;
+                        }
+
+                        loading.style.display = 'none';
+                        container.style.display = 'block';
+                    } else {
+                        throw new Error(res.detail || "Error desconocido");
+                    }
+                } catch (err) {
+                    console.error("Error al cargar detalle no paletizado:", err);
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #ef4444;"><i class="fas fa-exclamation-circle"></i> Error al cargar datos: ${err.message}</td></tr>`;
+                    loading.style.display = 'none';
+                    container.style.display = 'block';
+                }
+            }
+
+            // Función para inicializar y poblar dinámicamente los selectores de filtros
+            function initTableFilters() {
+                console.log("Inicializando filtros de tablas...");
+
+                // 1. Poblar Filtros de OTs Pendientes
+                const otRows = document.querySelectorAll('.ot-row');
+                const otTipos = new Set();
+                const otCreators = new Set();
+                const otSlas = new Set();
+
+                otRows.forEach(row => {
+                    const tipo = row.getAttribute('data-tipo');
+                    const creator = row.getAttribute('data-creator');
+                    const sla = row.getAttribute('data-sla');
+                    if (tipo) otTipos.add(tipo.trim());
+                    if (creator) otCreators.add(creator.trim());
+                    if (sla) otSlas.add(sla.trim());
+                });
+
+                const filterOtTipo = document.getElementById('filter-ot-tipo');
+                if (filterOtTipo) {
+                    filterOtTipo.innerHTML = '<option value="">📁 Todos los Tipos</option>';
+                    Array.from(otTipos).sort().forEach(val => {
+                        filterOtTipo.innerHTML += `<option value="${val}">${val}</option>`;
+                    });
+                }
+
+                const filterOtCreator = document.getElementById('filter-ot-creator');
+                if (filterOtCreator) {
+                    filterOtCreator.innerHTML = '<option value="">👤 Todos los Creadores</option>';
+                    Array.from(otCreators).sort().forEach(val => {
+                        filterOtCreator.innerHTML += `<option value="${val}">${val}</option>`;
+                    });
+                }
+
+                const filterOtSla = document.getElementById('filter-ot-sla');
+                if (filterOtSla) {
+                    filterOtSla.innerHTML = '<option value="">⏱️ Todos los SLA</option>';
+                    Array.from(otSlas).sort().forEach(val => {
+                        filterOtSla.innerHTML += `<option value="${val}">${val}</option>`;
+                    });
+                }
+
+                // 2. Poblar Filtros de Resumen de Discrepancias
+                const discrepancyRows = document.querySelectorAll('.discrepancy-row');
+                const discTipos = new Set();
+                const discUsers = new Set();
+
+                discrepancyRows.forEach(row => {
+                    const tipo = row.getAttribute('data-tipo');
+                    const user = row.getAttribute('data-user');
+                    if (tipo) discTipos.add(tipo.trim());
+                    if (user) discUsers.add(user.trim());
+                });
+
+                const filterDiscTipo = document.getElementById('filter-discrepancy-tipo');
+                if (filterDiscTipo) {
+                    filterDiscTipo.innerHTML = '<option value="">📁 Todos los Tipos</option>';
+                    Array.from(discTipos).sort().forEach(val => {
+                        filterDiscTipo.innerHTML += `<option value="${val}">${val}</option>`;
+                    });
+                }
+
+                const filterDiscUser = document.getElementById('filter-discrepancy-user');
+                if (filterDiscUser) {
+                    filterDiscUser.innerHTML = '<option value="">👤 Todos los Usuarios</option>';
+                    Array.from(discUsers).sort().forEach(val => {
+                        filterDiscUser.innerHTML += `<option value="${val}">${val}</option>`;
+                    });
+                }
+            }
+
+            // Función de Filtrado para la Tabla de OTs
+            function filterOTTable() {
+                const searchText = document.getElementById('filter-ot-search').value.toLowerCase();
+                const selectedTipo = document.getElementById('filter-ot-tipo').value;
+                const selectedCreator = document.getElementById('filter-ot-creator').value;
+                const selectedSla = document.getElementById('filter-ot-sla').value;
+
+                const rows = document.querySelectorAll('.ot-row');
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    const tipo = row.getAttribute('data-tipo');
+                    const creator = row.getAttribute('data-creator');
+                    const sla = row.getAttribute('data-sla');
+
+                    const matchSearch = text.includes(searchText);
+                    const matchTipo = !selectedTipo || tipo === selectedTipo;
+                    const matchCreator = !selectedCreator || creator === selectedCreator;
+                    const matchSla = !selectedSla || sla === selectedSla;
+
+                    if (matchSearch && matchTipo && matchCreator && matchSla) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+
+            // Función de Filtrado para la Tabla de Discrepancias
+            function filterDiscrepancyTable() {
+                const searchText = document.getElementById('filter-discrepancy-search').value.toLowerCase();
+                const selectedTipo = document.getElementById('filter-discrepancy-tipo').value;
+                const selectedUser = document.getElementById('filter-discrepancy-user').value;
+
+                const rows = document.querySelectorAll('.discrepancy-row');
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    const tipo = row.getAttribute('data-tipo');
+                    const user = row.getAttribute('data-user');
+
+                    const matchSearch = text.includes(searchText);
+                    const matchTipo = !selectedTipo || tipo === selectedTipo;
+                    const matchUser = !selectedUser || user === selectedUser;
+
+                    if (matchSearch && matchTipo && matchUser) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+
+            // Función para Ordenar Tabla de Discrepancias
+            let sortDirectionDiscrepancy = true;
+            function sortTableDiscrepancy(columnIndex) {
+                const tbody = document.querySelector('.discrepancy-row').parentNode;
+                const rows = Array.from(tbody.querySelectorAll('.discrepancy-row'));
+                const icon = document.getElementById('sort-icon-' + columnIndex);
+
+                sortDirectionDiscrepancy = !sortDirectionDiscrepancy;
+
+                if (icon) {
+                    icon.className = sortDirectionDiscrepancy ? 'fas fa-sort-numeric-up' : 'fas fa-sort-numeric-down';
+                }
+
+                rows.sort((a, b) => {
+                    const aVal = parseInt(a.children[columnIndex].innerText.trim()) || 0;
+                    const bVal = parseInt(b.children[columnIndex].innerText.trim()) || 0;
+                    return sortDirectionDiscrepancy ? (aVal - bVal) : (bVal - aVal);
+                });
+
+                rows.forEach(row => tbody.appendChild(row));
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const params = new URLSearchParams(window.location.search);
+                let tab = params.get('tab') || 'deliveries';
+                switchTab(tab, document.getElementById('btn-' + tab));
+
+                // Inicializar filtros después de cargar el DOM
+                initTableFilters();
+            });
+        </script>
+
+        <!-- Inject Data variables safely -->
+        <script type="application/json" id="data_area_stats">{{ area_stats_json | tojson | safe }}</script>
+        <script type="application/json" id="data_weekdays">{{ weekdays | tojson | safe }}</script>
+        <script type="application/json" id="data_weekdays_val">{{ weekdays_data | tojson | safe }}</script>
+        <script type="application/json" id="data_weekdays_val_cm">{{ weekdays_data_cm | tojson | safe }}</script>
+        <script type="application/json" id="data_ubic_mapping">{{ ubicaciones_mapping | tojson | safe }}</script>
+        <script type="application/json" id="data_area_mapping">{{ area_material_mapping | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_area_mapping_cm">{{ area_material_mapping_cm | tojson | safe }}</script>
+        <script type="application/json" id="data_user_mapping">{{ user_material_mapping | tojson | safe }}</script>
+        <script type="application/json" id="data_weekday_mapping">{{ weekday_mapping | tojson | safe }}</script>
+        <script type="application/json" id="data_weekday_mapping_cm">{{ weekday_mapping_cm | tojson | safe }}</script>
+        <script type="application/json" id="data_chart_labels_vl">{{ chart_labels_vl | tojson | safe }}</script>
+        <script type="application/json" id="data_chart_datasets_vl">{{ chart_datasets_vl | tojson | safe }}</script>
+        <script type="application/json" id="data_areas_vl">{{ areas_vl | tojson | safe }}</script>
+        <script id="data_total_dias_activos" type="application/json">{{ total_dias_activos | tojson }}</script>
+        <script id="data_weekday_raw" type="application/json">{{ weekday_raw_json | tojson | safe }}</script>
+        <script type="application/json" id="data_monthly_labels">{{ (monthly_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_monthly_data">{{ (monthly_data or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_weekly_labels">{{ (weekly_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_weekly_data">{{ (weekly_data or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_wms_labels">{{ (wms_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_wms_data">{{ (wms_data or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_lt_labels">{{ (lt_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_lt_data">{{ (lt_data or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_trend_labels">{{ (sla_trend_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_sla_trend_data">{{ (sla_trend_data or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_sla_trend_count">{{ (sla_trend_count or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_sla_area_labels">{{ (sla_area_labels or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_area_datasets">{{ (sla_area_datasets or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_monthly_labels">{{ (sla_monthly_labels or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_monthly_data">{{ (sla_monthly_data or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_monthly_count">{{ (sla_monthly_count or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_area_monthly_labels">{{ (sla_area_monthly_labels or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_sla_area_monthly_datasets">{{ (sla_area_monthly_datasets or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_avg_mensual_año">{{ (avg_mensual_año or 0) | tojson | safe }}</script>
+        <script src="{{ url_for('static', path='js/deliveries.js') }}?v=15"></script>
+        <script type="application/json" id="data_volumen">{{ (volumen_data or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_area_stats_inv">{{ (inv_area_stats_json or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_trend_labels">{{ (trend_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_trend_entradas">{{ (trend_entradas or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_trend_salidas_prod">{{ (trend_salidas_prod or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_trend_salidas_mant">{{ (trend_salidas_mant or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_trend_labels_weekly">{{ (trend_labels_weekly or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_trend_entradas_weekly">{{ (trend_entradas_weekly or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_trend_salidas_prod_weekly">{{ (trend_salidas_prod_weekly or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_trend_salidas_mant_weekly">{{ (trend_salidas_mant_weekly or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_abc">{{ (abc_counts or {}) | tojson | safe }}</script>
+        <script type="application/json" id="data_abc_mapping">{{ (abc_mapping or {}) | tojson | safe }}</script>
+        <script type="application/json" id="data_kpi_prod">"{{ kpi_consumos_prod or '0' }}"</script>
+        <script type="application/json" id="data_kpi_mant">"{{ kpi_consumos_mant or '0' }}"</script>
+        <script type="application/json" id="data_kpi_prod_cm">{{ (cm_cons_prod or 0) | int }}</script>
+        <script type="application/json" id="data_kpi_mant_cm">{{ (cm_cons_mant or 0) | int }}</script>
+        <script type="application/json" id="data_kpi_201_planned">{{ (kpi_201_planned or 0) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_kpi_201_unplanned">{{ (kpi_201_unplanned or 0) | tojson | safe }}</script>
+        <script type="application/json" id="data_kpi_261_planned">{{ (kpi_261_planned or 0) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_kpi_261_unplanned">{{ (kpi_261_unplanned or 0) | tojson | safe }}</script>
+        <script type="application/json" id="data_dow">{{ (dow_distribution or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_dow_cm">{{ (dow_distribution_cm or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_ubic_mapping_inv">{{ (inv_ubicaciones_mapping or {}) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_area_mapping_inv">{{ (inv_area_material_mapping or {}) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_user_mapping_inv">{{ (inv_user_material_mapping or {}) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_dow_mapping">{{ (dow_material_mapping or {}) | tojson | safe }}</script>
+        <script type="application/json" id="data_pm_mapping">{{ (pm_material_mapping or {}) | tojson | safe }}</script>
+        <script type="application/json" id="data_scatter">{{ (scatter_data or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_alerts">{{ (alerts or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_combos">{{ (combos or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_planned_labels">{{ (planned_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_planned_data">{{ (planned_data or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_unplanned_data">{{ (unplanned_data or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_planned_labels_weekly">{{ (planned_labels_weekly or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_planned_data_weekly">{{ (planned_data_weekly or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_unplanned_data_weekly">{{ (unplanned_data_weekly or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_ots_trend_labels">{{ (ots_trend_labels or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_ots_trend_created">{{ (ots_trend_created or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_ots_trend_confirmed">{{ (ots_trend_confirmed or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_ots_user_labels">{{ (ots_user_labels or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_ots_user_created">{{ (ots_user_created or []) | tojson | safe }}</script>
+        <script type="application/json"
+            id="data_ots_user_confirmed">{{ (ots_user_confirmed or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_ots_type_labels">{{ (ots_type_labels or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_ots_type_data">{{ (ots_type_data or []) | tojson | safe }}</script>
+        <script src="{{ url_for('static', path='js/tasks.js') }}?v=5"></script>
+        <script src="{{ url_for('static', path='js/inventory.js') }}?v=10"></script>
+        <script src="{{ url_for('static', path='js/analytics_proyecciones.js') }}?v=3"></script>
+        <script src="{{ url_for('static', path='js/docs_explorer.js') }}?v=5"></script>
+        {% include "partials/_deliveries_modals.html" %}
+        {% include "partials/_inventory_modals.html" %}
+        {% include "partials/_analytics_proyecciones_modals.html" %}
+        {% include "partials/_edit_query_modal.html" %}
+        {% include "partials/_logout.html" %}
+</body>
+
+</html>

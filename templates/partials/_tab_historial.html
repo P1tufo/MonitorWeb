@@ -1,0 +1,67 @@
+<!-- PESTAÑA: HISTORIAL DE UBICACIONES -->
+<div id="tab-historial" class="tab-content">
+    <div class="row-grid">
+        <div class="chart-box full-width">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn" onclick="openEditQueryModal('inv_historial_ubicaciones', 'Historial de Ubicaciones Anteriores')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>📍 Historial de Ubicaciones Anteriores</h3>
+            <p class="chart-subtitle">Busca un material para ver en qué ubicaciones estuvo previamente.</p>
+            <div style="margin-top: 1rem;">
+                <input type="text" id="ubic-search-input" placeholder="Ej: 1000142..."
+                    style="width: 100%; padding: 12px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; font-size: 1rem; outline: none; font-family: 'Outfit', sans-serif;">
+            </div>
+            <div id="ubic-material-desc"
+                style="margin-top: 1rem; color: #5DBAA9; font-weight: 600; font-size: 1.1rem;"></div>
+
+            <!-- TABLAS EN HORIZONTAL: Stock Actual | Historial -->
+            <div style="display: flex; gap: 1.5rem; margin-top: 1.25rem; align-items: flex-start;">
+
+                <!-- TABLA 1: Stock Actual -->
+                <div id="ubic-stock-section" style="flex: 0 0 50%; min-width: 0;">
+                    <p style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #5DBAA9; margin-bottom: 0.5rem;">📦 Stock Actual</p>
+                    <div class="table-responsive" style="max-height: 380px; overflow-y: auto; overflow-x: auto;">
+                        <table class="table-alerts" style="width: auto; table-layout: auto; white-space: nowrap;">
+                            <thead>
+                                <tr>
+                                    <th>Ubicación Actual</th>
+                                    <th>Cantidad</th>
+                                    <th>UMB</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ubic-stock-body">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: #94a3b8; padding: 1.5rem;">Digita un material para ver el stock actual</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TABLA 2: Historial de Ubicaciones -->
+                <div id="ubic-historial-section" style="flex: 0 0 40%; min-width: 0;">
+                    <p style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 0.5rem;">🕘 Historial de Ubicaciones</p>
+                    <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                        <table class="table-alerts" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Ubicación</th>
+                                    <th>Última Fecha Registrada</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ubic-results-body">
+                                <tr>
+                                    <td colspan="2" style="text-align: center; color: #94a3b8; padding: 1.5rem;">Digita un material para visualizar sus ubicaciones anteriores</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,20 @@
+<script>
+    async function logout() {
+        console.log("Cerrando sesión...");
+        try {
+            // Intentar avisar al backend
+            await fetch('/api/auth/logout', { method: 'POST' });
+        } catch (e) { 
+            console.error("Error al notificar logout al backend:", e);
+        }
+        
+        // Limpiar almacenamiento local (Tokens y Datos de Usuario)
+        localStorage.removeItem('monitorweb_token');
+        localStorage.removeItem('monitorweb_user');
+        localStorage.removeItem('monitorweb_role');
+        localStorage.clear(); // Limpieza total por seguridad
+        
+        // Redirigir al Dashboard (el sistema lo tratará como invitado)
+        window.location.href = '/';
+    }
+</script>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisis según Inventario | Proyecto</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    {% include "partials/_styles.html" %}
+    <link rel="stylesheet" href="{{ url_for('static', path='css/inventory.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+</head>
+
+<body>
+    <div class="analytics-container">
+
+        <header class="main-header">
+            <div class="header-top">
+                <div class="logo-group">
+                    <h1>Analisis según Inventario</h1>
+                    <p class="header-desc">Mapeo de Materiales: Entradas, Consumos y Traspasos</p>
+                </div>
+                <div class="actions">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                <a href="/analytics?tab=historial" class="btn" style="background:rgba(139,92,246,0.15); color: #a78bfa; border:1px solid rgba(139,92,246,0.3); text-decoration: none;">📍 Historial</a>
+                <a href="/" class="btn" style="text-decoration:none;">🏠 Volver al Dashboard</a>
+            </div>
+                    {% if user.username != "invitado" %}
+                        <span style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px;">👤 {{ user.username }}</span>
+                        <button class="btn btn-secondary" style="background:rgba(239,68,68,0.1); color:#ef4444;" onclick="logout()">🚪 Salir</button>
+                    {% else %}
+                        <a href="/login" class="btn btn-secondary" style="background:#5DBAA9; color:#0f172a;">🔑 Entrar</a>
+                    {% endif %}
+                    <a href="/analytics?tab=historial" class="btn"
+                        style="background:rgba(139,92,246,0.15); color: #a78bfa; border:1px solid rgba(139,92,246,0.3); text-decoration: none;">📍 Historial</a>
+                    <a href="/analytics" class="btn"
+                        style="background:rgba(93,186,169,0.2); color: #5DBAA9; border:1px solid rgba(93,186,169,0.5); text-decoration: none;">📊 Entregas</a>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Row -->
+        <div class="row-grid kpi-row">
+            <div class="stat-card">
+                <h3>Total Ingresos (101, 301+)</h3>
+                <div class="value" style="color: var(--verde);">{{ kpi_ingresos }}</div>
+                <div class="desc">Frecuencia / Transacciones</div>
+            </div>
+            <div class="stat-card">
+                <h3>Consumo Producción (201)</h3>
+                <div class="value" style="color: var(--naranja);">{{ kpi_consumos_prod }}</div>
+                <div class="desc">Entregas/Ventanilla</div>
+            </div>
+            <div class="stat-card">
+                <h3>Consumo Mantención (261)</h3>
+                <div class="value" style="color: #64748b;">{{ kpi_consumos_mant }}</div>
+                <div class="desc">Retiros de Mantencion</div>
+            </div>
+            <div class="stat-card">
+                <h3>Tasa Reabastecimiento</h3>
+                <div class="value"
+                    style="color: {% if rate_reabast > 110 %}var(--rojo){% else %}var(--calipso){% endif %};">{{
+                    rate_reabast }}%</div>
+                <div class="desc">% Entrada vs Salida</div>
+            </div>
+            <div class="stat-card">
+                <h3>Traspasos (303, 301-)</h3>
+                <div class="value" style="color: var(--primario);">{{ kpi_traspasos }}</div>
+                <div class="desc">Traspasos a otros centros</div>
+            </div>
+            <div class="stat-card">
+                <h3>Tasa Devoluciones (202, 262)</h3>
+                <div class="value"
+                    style="color: {% if rate_devolucion > 15 %}var(--rojo){% else %}var(--calipso){% endif %};">{{
+                    rate_devolucion }}%</div>
+                <div class="desc">Errores de despacho o no ocupado ({{ kpi_devoluciones }})</div>
+            </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="row-grid">
+            <div class="chart-box">
+                <h3>Distribución de Curva ABC</h3>
+                <div style="position: relative; height: 260px; width: 100%; display: flex; justify-content: center;">
+                    <canvas id="abcPieChart"></canvas>
+                </div>
+                <div
+                    style="margin-top: 10px; font-size: 0.8rem; color: #64748b; text-align: center; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 6px;">
+                    <b>A:</b> Eje Crítico (Top 80% frecuencia) • <b>B:</b> Moderados (Sig. 15%) • <b>C:</b> Esporádicos
+                </div>
+            </div>
+            <div class="chart-box">
+                <h3>Consumos por Área (201)</h3>
+                <div style="position: relative; height: 280px; width: 100%;">
+                    <canvas id="areaConsumoChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-box">
+                <h3>Tendencia Operacional (Abastecimiento vs Consumo)</h3>
+                <div style="position: relative; height: 280px; width: 100%;">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="row-grid">
+            <!-- CONCURRENCIA SEMANAL -->
+            <div class="chart-box">
+                <h3>Carga Semanal de BMRI
+                </h3>
+                <div style="position: relative; height: 280px; width: 100%;">
+                    <canvas id="dowChart"></canvas>
+                </div>
+            </div>
+
+            <!-- HEATMAP UBICACIONES -->
+            <div class="chart-box">
+                <h3>Mapa de Calor de Ubicaciones (Consumos)</h3>
+                <ul class="rank-list" style="max-height: 280px; overflow-y: auto;">
+                    {% for ubi in top_ubicaciones_quick %}
+                    <li style="cursor: pointer; transition: background 0.2s;"
+                        onclick="openModalUbicacion('{{ ubi.ubi }}')"
+                        onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+                        onmouseout="this.style.background='transparent'">
+                        <div>
+                            <div class="name">Almacenaje: {{ ubi.ubi }}</div>
+                        </div>
+                        <div class="score" style="color: var(--calipso);">{{ ubi.total_qty_fmt }} req.</div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- FAST MOVERS -->
+            <div class="chart-box" style="cursor: pointer;" onclick="openModal('modalFast')">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Top Consumidos</h3>
+                    <span style="font-size: 0.8rem; color: #64748b;">Ver más →</span>
+                </div>
+                <ul class="rank-list" style="max-height: 280px; overflow-y: hidden;">
+                    {% for mat in top_materials_quick %}
+                    <li>
+                        <div>
+                            <div class="name" style="font-size: 0.95rem;"><span
+                                    style="color:var(--primario);font-size:0.8rem;">[{{ mat.cod_mat }}]</span> {{
+                                mat.material[:25] }}{% if mat.material|length > 25 %}...{% endif %}</div>
+                        </div>
+                        <div class="score">{{ mat.qty_fmt }} req.</div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Charts Row 3 -->
+        <div class="row-grid">
+            <!-- Producción vs Mantención -->
+            <div class="chart-box">
+                <h3>Proporción Producción vs Mantención</h3>
+                <div style="position: relative; height: 260px; width: 100%; display: flex; justify-content: center;">
+                    <canvas id="pmDoughnutChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 4 -->
+        <div class="row-grid">
+            <!-- TOP USUARIOS -->
+            <div class="chart-box">
+                <h3>Top Asistentes de Bodega (Frecuencia de Despachos)</h3>
+                <ul class="rank-list" style="max-height: 280px; overflow-y: auto;">
+                    {% for u in top_users %}
+                    <li style="cursor: pointer; transition: background 0.2s;" onclick="openModalUser('{{ u.user }}')"
+                        onmouseover="this.style.background='rgba(255,255,255,0.05)'"
+                        onmouseout="this.style.background='transparent'">
+                        <div>
+                            <div class="name">{{ u.user }}
+                                {% if u.error_rate > 0 %}
+                                <span
+                                    style="font-size: 0.75rem; color: var(--rojo); background: rgba(239,68,68,0.1); padding: 2px 6px; border-radius: 4px; margin-left: 6px;"
+                                    title="Tasa de Anulación ({{ u.anulaciones }} anulados)">
+                                    ⚠️ {{ u.error_rate }}% anul.
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="score" style="color: var(--naranja); background: rgba(234,118,0,0.15);">{{ u.qty_fmt
+                            }} req.</div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    {% include "partials/_inventory_modals.html" %}
+
+    <!-- Inject Data variables safely -->
+    <script type="application/json" id="data_volumen">{{ volumen_data | tojson | safe }}</script>
+    <script type="application/json" id="data_area_stats">{{ area_stats_json | safe }}</script>
+    <script type="application/json" id="data_trend_labels">{{ trend_labels | tojson | safe }}</script>
+    <script type="application/json" id="data_trend_entradas">{{ trend_entradas | tojson | safe }}</script>
+    <script type="application/json" id="data_trend_salidas_prod">{{ trend_salidas_prod | tojson | safe }}</script>
+    <script type="application/json" id="data_trend_salidas_mant">{{ trend_salidas_mant | tojson | safe }}</script>
+    <script type="application/json" id="data_abc">{{ abc_counts | tojson | safe }}</script>
+    <script type="application/json" id="data_abc_mapping">{{ abc_mapping | tojson | safe }}</script>
+
+    <!-- KPI values for Doughnut -->
+    <script type="application/json" id="data_kpi_prod">"{{ kpi_consumos_prod }}"</script>
+    <script type="application/json" id="data_kpi_mant">"{{ kpi_consumos_mant }}"</script>
+
+    <script type="application/json" id="data_dow">{{ dow_distribution | tojson | safe }}</script>
+    <script type="application/json" id="data_ubic_mapping">{{ ubicaciones_mapping | tojson | safe }}</script>
+    <script type="application/json" id="data_area_mapping">{{ area_material_mapping | tojson | safe }}</script>
+    <script type="application/json" id="data_user_mapping">{{ user_material_mapping | tojson | safe }}</script>
+    <script type="application/json" id="data_dow_mapping">{{ dow_material_mapping | tojson | safe }}</script>
+    <script type="application/json" id="data_pm_mapping">{{ pm_material_mapping | tojson | safe }}</script>
+
+    <script src="{{ url_for('static', path='js/inventory.js') }}"></script>
+    {% include "partials/_logout.html" %}
+</body>
+
+</html>

@@ -1,0 +1,941 @@
+olevba 0.60.2 on Python 3.13.12 - http://decalage.info/python/oletools
+===============================================================================
+FILE: Produccion_2024.xlsm
+Type: OpenXML
+WARNING  For now, VBA stomping cannot be detected for files in memory
+-------------------------------------------------------------------------------
+VBA MACRO ThisWorkbook.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/ThisWorkbook'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Hoja3.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Hoja3'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+Private Sub CommandButton1_Click()
+UserForm1.Show
+End Sub
+-------------------------------------------------------------------------------
+VBA MACRO Hoja6.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Hoja6'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO ModulCode128.bas 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/ModulCode128'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+Option Explicit
+
+' Code 128 symbol creation according ISO/IEC 15417:2007
+Public Function Code128(text As String) As String
+Attribute Code128.VB_Description = "Draw Code 128 barcode"
+Attribute Code128.VB_ProcData.VB_Invoke_Func = " \n18"
+On Error GoTo failed
+If Not TypeOf Application.Caller Is Range Then Err.Raise 513, "Code 128", "Call only from sheet"
+Dim m As Long, i As Long, j As Long, c As Long, l As Long, t As Long
+Dim shp As Shape, color As Long, txt As String ' redraw barcode ?
+color = vbBlack
+For Each shp In Application.Caller.Parent.Shapes
+    If shp.Name = Application.Caller.Address Then
+        If shp.Title = text Then Exit Function ' same as prev ?
+        color = shp.Fill.ForeColor.RGB ' redraw with same color
+        shp.Delete
+    End If
+Next shp
+txt = utf16to8(text): m = 3: l = 0: t = Len(txt)
+ReDim enc(3 * t + 3) As Byte
+For i = 1 To t
+    If m <> 2 Then ' alpha mode
+        For j = 0 To t - i ' count digits
+            If Not IsNumeric(Mid(txt, i + j, 1)) Then Exit For
+        Next j
+        If (j > 1 And i = 1) Or (j > 3 And (i + j < t Or (j And 1) = 0)) Then
+            enc(l) = IIf(i = 1, 105, 99) ' start / code C
+            l = l + 1: m = 2 ' to digit
+        End If
+    End If
+    If m = 2 Then ' digit mode
+        If IsNumeric(Mid(txt, i, 1)) And IsNumeric(Mid(txt, i + 1, 1)) Then
+            enc(l) = val(Mid(txt, i, 2)) ' two digits
+            l = l + 1: i = i + 1
+        Else
+            m = 3 ' exit digit
+        End If
+    End If
+    If m <> 2 Then ' alpha mode
+        c = Asc(Mid(txt, i, 1))
+        If m > 2 Or ((c And 127) < 32 And m) Or ((c And 127) > 95 And m = 0) Then  ' change ?
+            For j = IIf(m > 2 Or i + 1 = t, i, i + 1) To t - 1 ' A or B needed?
+                If Asc(Mid(txt, j, 1)) - 32 And 64 Then Exit For ' < 32 or > 95
+            Next j
+            j = IIf(Asc(Mid(txt, j, 1)) And 96, 1, 0) ' new set
+            enc(l) = IIf(i = 1, 103 + j, IIf(j <> m, 101 - j, 98))
+            l = l + 1: m = j ' change set: start,code,(shift)
+        End If
+        If c > 127 Then enc(l) = 101 - m: l = l + 1 ' FNC4: char > 127
+        enc(l) = ((c And 127) + 64) Mod 96: l = l + 1
+    End If
+Next i
+If i = 1 Then enc(0) = 103: l = 1 ' empty message
+j = enc(0) ' check sum
+For i = 1 To l
+    j = j + i * enc(i)
+Next i
+enc(l) = j Mod 103: enc(l + 1) = 106 ' stop
+
+With Application.Caller.Parent.Shapes
+    For i = 0 To l + 1 ' code to pattern
+        c = Array(277, 337, 341, 69, 73, 133, 84, 88, 148, 324, 328, 388, 22, 82, 86, 37, 97, _
+            101, 356, 322, 326, 292, 352, 530, 517, 577, 581, 532, 592, 596, 273, 281, 401, 9, _
+            129, 137, 24, 144, 152, 264, 384, 392, 18, 26, 146, 33, 41, 161, 545, 266, 386, 288, _
+            296, 290, 513, 521, 641, 528, 536, 656, 560, 332, 896, 5, 13, 65, 77, 193, 197, 20, 28, _
+            80, 92, 208, 212, 452, 320, 800, 448, 176, 7, 67, 71, 52, 112, 116, 772, 832, 836, 275, _
+            305, 785, 3, 11, 131, 48, 56, 768, 776, 35, 50, 515, 770, 268, 260, 262, 416)(enc(i))
+        m = c \ 256 + 1
+        .AddShape(msoShapeRectangle, 11 * i, 0, m, 1).Name = Application.Caller.Address ' 1st bar
+        j = 11 * i + m + ((c \ 64) And 3) + 1
+        m = ((c \ 16) And 3) + 1
+        .AddShape(msoShapeRectangle, j, 0, m, 1).Name = Application.Caller.Address ' 2nd bar
+        j = j + m + ((c \ 4) And 3) + 1
+        .AddShape(msoShapeRectangle, j, 0, (c And 3) + 1, 1).Name = Application.Caller.Address ' 3rd bar
+    Next i
+    .AddShape(msoShapeRectangle, 11 * i, 0, 2, 1).Name = Application.Caller.Address ' stop bar
+    j = 3 * l + 6: m = j
+
+    ReDim shps(j) As Integer ' group all shapes
+    For i = .Count To 1 Step -1
+        If .Range(i).Name = Application.Caller.Address Then
+            shps(j) = i: j = j - 1
+            If j < 0 Then Exit For
+        End If
+    Next i
+    With .Range(shps).Group
+        .Fill.ForeColor.RGB = color ' format barcode shape
+        .line.Visible = False
+        .Width = Application.Caller.MergeArea.Width * 2 * m / (2 * m + 1) ' fit symbol in excel cell
+        .Height = Application.Caller.MergeArea.Height - .Width / (2 * m)
+        .Left = Application.Caller.Left + (Application.Caller.MergeArea.Width - .Width) / 2
+        .Top = Application.Caller.Top + (Application.Caller.MergeArea.Height - .Height) / 2
+        .Name = Application.Caller.Address ' link shape to data
+        .Title = text
+        .AlternativeText = "Code128 barcode, " & (l + 2) & " characters"
+    End With
+End With
+failed:
+If Err.Number Then Code128 = "ERROR Code128: " & Err.Description
+End Function
+-------------------------------------------------------------------------------
+VBA MACRO UserForm1.frm 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/UserForm1'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+Private Sub btn_aceptar_Click()
+
+If fecha_txt.value = "" And ot_txt.value = "" Or fecha_txt.value <> "" And ot_txt.value <> "" Then
+
+MsgBox ("Debe ingresar un criterio")
+
+Else
+
+numero_ot = ot_txt.value
+fecha_ot = fecha_txt.value
+
+Call impresion
+
+End If
+ 
+ Unload Me
+
+End Sub
+
+Private Sub UserForm_Click()
+
+End Sub
+-------------------------------------------------------------------------------
+VBA MACRO Main.bas 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Main'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+Global numero_ot, fecha_ot
+Sub impresion()
+Application.ScreenUpdating = False
+
+Dim fila_ot As Integer
+'fecha_ot = "10-07-2020"
+
+If fecha_ot = "" Then
+
+'busqueda de la  OT
+
+Sheets("OTS").Activate
+Columns("D:D").Select
+    
+    Selection.Find(What:=numero_ot, After:=ActiveCell, LookIn:=xlFormulas _
+        , LookAt:=xlPart, SearchOrder:=xlByRows, SearchDirection:=xlNext, _
+        MatchCase:=False, SearchFormat:=False).Activate
+'
+'Set rgFound = Range("A1:A5").Find("John")
+'
+'If rgFound Is Nothing Then
+'    Debug.Print "Name was not found."
+'Else
+'    Debug.Print "Name found in :" & rgFound.Address
+'End If
+
+        fila_ot = ActiveCell.Row
+        
+llenado (fila_ot)
+
+Else
+
+'llenado por fecha
+
+Sheets("OTS").Activate
+Sheets("OTS").Range("F2").Select
+Dim celda As Range
+     
+   '  Cells.Find(what:=CDate(Format(fecha_ot, "dd-mm-yyyy")), After:=ActiveCell, LookIn:=xlFormulas _
+        , lookat:=xlPart, SearchOrder:=xlByRows, SearchDirection:=xlNext, _
+        MatchCase:=False, SearchFormat:=False).Activate
+        
+ If Not celda Is Nothing Then MsgBox findDate & " found in " & r.Address
+ 
+'Dim R As Range, WS As Worksheet
+
+'findStr = Format(fecha_ot, "dd-mm-yyyy")
+''
+'
+'With WS
+'     R = Cells.Find(what:=CDate(findStr), LookIn:=xlFormulas, lookat:=xlWhole)
+        
+
+    fila_ot = ActiveCell.Row
+    
+Do While Sheets("OTS").Cells(fila_ot, 6) <> ""
+
+Dim fecha As Date
+fecha = CDate(Format(Sheets("OTS").Cells(fila_ot, 6), "dd-mm-yyyy"))
+
+If fecha = fecha_ot Then
+
+'llenado (fila_ot)
+
+fila_ot = llenado(fila_ot)
+
+Else
+
+fila_ot = fila_ot + 1
+
+End If
+
+Loop
+
+End If
+Application.ScreenUpdating = True
+MsgBox ("Ordenes Impresas")
+
+End Sub
+
+Function llenado(fila_ot As Integer) As Integer
+
+Sheets("OTS").Activate
+'obtenciòn de datos generales
+Dim usuario, OT, OT2, linea, descOT, fecha, Reserva As String
+
+usuario = Cells(fila_ot, 8)
+linea = Cells(fila_ot, 2)
+OT = Cells(fila_ot, 4)
+OT2 = Cells(fila_ot, 15)
+descOT = Cells(fila_ot, 5)
+fecha = Format(Cells(fila_ot, 6), "dd-mm-yyyy")
+Reserva = Cells(fila_ot, 1)
+
+'pegado de datos generales en formato
+
+Sheets("Formato").Cells(3, 7) = usuario
+Sheets("Formato").Cells(4, 7) = linea
+Sheets("Formato").Cells(11, 7) = OT2 & "-" & descOT
+Sheets("Formato").Cells(9, 12) = CDate(fecha)
+Sheets("Formato").Cells(9, 4) = Reserva
+
+'##################
+'## Limpio Items ##
+'##################
+
+Dim fila_bar As Integer
+
+  Sheets("Formato").Activate
+  Range("K34").Select
+  Selection.End(xlUp).Select
+  fila_bar = ActiveCell.Row
+  
+  'elimina codigos de barra generados anteriormente
+  For i = 16 To fila_bar
+   ActiveSheet.Shapes.Range(Array("$L$" & i)).Select
+    Selection.Delete
+  
+  i = i + 1
+  Next i
+  
+  'Range("D15:K34").Select
+  Range("D15:i34").Select
+  Selection.ClearContents
+    Range("k15:k34").Select
+  Selection.ClearContents
+'##############
+'## Datos OT ##
+'##############
+
+'elimino duplicados de las OT
+
+Sheets("WMS").Activate
+ActiveSheet.Range("$A$1:$E$200").RemoveDuplicates Columns:=1, Header:=xlYes
+  
+Dim fila_wms, wms2 As Integer
+fila_wms = 2
+wms2 = 16 ' fila de pegado en la hoja formato
+
+Do While Cells(fila_wms, 4) <> ""
+
+If Cells(fila_wms, 4) = OT Then
+
+Sheets("Formato").Cells(wms2, 11) = Sheets("WMS").Cells(fila_wms, 2)
+Sheets("Formato").Cells(3, 9) = Sheets("WMS").Cells(fila_wms, 5)
+
+fila_wms = fila_wms + 1
+wms2 = wms2 + 2
+
+Else
+
+fila_wms = fila_wms + 1
+
+End If
+
+Loop
+
+Sheets("OTS").Activate
+
+'Pegado de items
+
+Dim fila_pegado, cont As Integer
+fila_pegado = 15
+cont = 0
+Do While Sheets("OTS").Cells(fila_ot, 4) = OT
+
+'material fila 10
+'cantidad fila 11
+'texto fila 12
+
+If Sheets("OTS").Cells(fila_ot, 11) - Sheets("OTS").Cells(fila_ot, 16) > 0 Then
+
+Sheets("Formato").Cells(fila_pegado, 4) = Sheets("OTS").Cells(fila_ot, 10)
+Sheets("Formato").Cells(fila_pegado, 5) = Sheets("OTS").Cells(fila_ot, 12)
+Sheets("Formato").Cells(fila_pegado, 9) = Sheets("OTS").Cells(fila_ot, 11) & "  " & Sheets("OTS").Cells(fila_ot, 17) '- Sheets("OTS").Cells(fila_ot, 16)
+
+fila_pegado = fila_pegado + 1
+fila_ot = fila_ot + 1
+cont = cont + 1
+
+'if para imprimir màs de dos paginas
+
+If fila_pegado > 34 Then
+    Sheets("Formato").Activate
+    Range("B2:M41").Select
+    Selection.PrintOut Copies:=1, Collate:=True
+    Application.Wait (Now + TimeValue("00:00:3"))
+    
+Sheets("Formato").Activate
+Range("D15:J34").Select
+Selection.ClearContents
+
+fila_pegado = 15
+
+End If
+
+Else
+
+fila_ot = fila_ot + 1
+
+End If
+
+
+Loop
+
+If cont > 0 Then
+Sheets("Formato").Activate
+Range("B2:M41").Select
+Selection.PrintOut Copies:=1, Collate:=True
+Application.Wait (Now + TimeValue("00:00:3"))
+
+End If
+
+llenado = fila_ot
+
+End Function
+
+-------------------------------------------------------------------------------
+VBA MACRO Hoja7.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Hoja7'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Hoja14.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Hoja14'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Hoja1.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Hoja1'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Hoja10.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Hoja10'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Hoja27.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Hoja27'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+Private Sub CopiarDatos_Click()
+    Load FRMCopiarDatos
+    FRMCopiarDatos.Show
+End Sub
+-------------------------------------------------------------------------------
+VBA MACRO ModulBarcode.bas 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/ModulBarcode'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+' Barcode symbol creation by VBA
+' Author: alois zingl
+' Version: V1.1 jan 2016
+' Copyright: Free and open-source software
+' http://members.chello.at/~easyfilter/barcode.html
+' Description: the indention of this library is a short and compact implementation to create barcodes
+'  of Code 128, Data Matrix, (micro) QR or Aztec symbols so it could be easily adapted for individual requirements.
+'  The Barcode is drawn as shape in the cell of the Excel sheet.
+'  The smallest bar code symbol fitting the data is automatically selected,
+'  but no size optimization for mixed data types in one code is done.
+' Functions:
+'   DataMatrix(text As String, Optional rectangle As Integer)
+'   QuickResponse(text As String, Optional level As String = "L", Optional version As Integer = 1)
+'   Aztec(text As String, Optional security As Integer, Optional layers As Integer = 1)
+'   Code128(text As String)
+'
+Option Explicit
+
+' add description to user defined barcode functions
+Private Sub Workbook_Open()
+ReDim arg(0) As String
+arg(0) = "text to encode"
+Application.MacroOptions macro:="Code128", Description:="Draw Code 128 barcode", Category:="Barcode", ArgumentDescriptions:=arg
+Application.MacroOptions macro:="DataMatrix", Description:="Draw DataMatrix barcode", Category:="Barcode", ArgumentDescriptions:=arg
+ReDim Preserve arg(2)
+arg(1) = "percentage of checkwords (1..90)" + vbCrLf + "number, optional, default 23%"
+arg(2) = "minimum number of layers (0-32)" + vbCrLf + "number, optional, default 1" + vbCrLf + "set to 0 for Aztec rune"
+Application.MacroOptions macro:="Aztec", Description:="Draw Aztec barcode", Category:="Barcode", ArgumentDescriptions:=arg
+arg(1) = "security level ""LMQH""" + vbCrLf + "low, medium, quartile, high" + vbCrLf + "letter, optional, default L"
+arg(2) = "minimum version size(-3..40)" + vbCrLf + "number, optional, default 1" + vbCrLf + "MircoQR M1:-3, M2:-2, M3:-1, M4:0"
+Application.MacroOptions macro:="QRCode", Description:="Draw QR code", Category:="Barcode", ArgumentDescriptions:=arg
+End Sub
+
+' convert UTF-16 (Windows) to UTF-8
+Public Function utf16to8(text As String) As String
+Dim i As Integer, c As Long
+utf16to8 = text
+For i = Len(text) To 1 Step -1
+    c = AscW(Mid(text, i, 1)) And 65535
+    If c > 127 Then
+        If c > 4095 Then
+            utf16to8 = Left(utf16to8, i - 1) + Chr(224 + c \ 4096) + Chr(128 + (c \ 64 And 63)) + Chr(128 + (c And 63)) & Mid(utf16to8, i + 1)
+        Else
+            utf16to8 = Left(utf16to8, i - 1) + Chr(192 + c \ 64) + Chr(128 + (c And 63)) & Mid(utf16to8, i + 1)
+        End If
+    End If
+Next i
+End Function
+
+'update all barcodes in active sheet
+Public Sub updateBarcodes()
+Attribute updateBarcodes.VB_Description = "Updates all barcode shapes of the actual sheet."
+Attribute updateBarcodes.VB_ProcData.VB_Invoke_Func = "q\n14"
+Dim shp As Shape, bc As Variant, str As String
+On Error Resume Next
+For Each shp In ActiveSheet.Shapes ' delete all lost barcode shapes
+    If shp.Type = msoAutoShape Then
+        str = LCase(shp.AlternativeText)
+        For Each bc In Array("aztec", "code128", "datamatrix", "qrcode")
+            If Left(str, Len(bc)) = bc Then
+                shp.Title = "" ' force redraw
+                If InStr(LCase(Range(shp.Name).Formula), bc) = 0 Then shp.Delete
+                Exit For
+            End If
+        Next bc
+    End If
+Next shp
+Application.CalculateFull ' refresh all barcodes
+Kanji
+End Sub
+
+' read/write kanji conversion string from/to file
+Public Sub Kanji()
+Dim p As Variant, s As Worksheet, k1 As String, c As Long
+Const k = "kanji" ' property name
+For Each s In Application.ThisWorkbook.Worksheets
+    For Each p In s.CustomProperties ' look for kanji conversion string
+        If p.Name = k Then If Len(p.value) > 10000 Then k1 = p.value
+    Next p
+Next s
+ChDir Application.ThisWorkbook.Path
+If k1 = "" Then  ' not found, get from file
+    p = Application.GetOpenFilename("Excel Files (*.xlsm), *.xlsm", 1, "Read Kanji Conversion String for QRCodes from 'barcode.xlsm'")
+    If p <> False Then
+        Application.ScreenUpdating = False
+        With Workbooks.Open(p, 0, True)
+            For Each s In .Worksheets
+                For Each p In s.CustomProperties ' look for kanji conversion string
+                    If p.Name = k Then If Len(p.value) > 10000 Then k1 = p.value
+                Next p
+            Next s
+            .Close
+        End With
+        Application.ScreenUpdating = True
+        If Len(k1) < 10000 Or (Len(k1) And 1) Then MsgBox "No Kanji conversion string for QRCodes found in Excel file."
+        For Each s In Application.ThisWorkbook.Worksheets
+            c = 0
+            For Each p In s.CustomProperties ' look for kanji conversion string
+                If p.Name = k Then p.value = k1: c = 1
+            Next p
+            If c = 0 Then s.CustomProperties.Add k, k1
+        Next s
+    End If
+End If
+End Sub
+-------------------------------------------------------------------------------
+VBA MACRO FRMCopiarDatos.frm 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/FRMCopiarDatos'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+Private Sub CMDCopiar_Click()
+    On Error Resume Next
+    
+    ' Definir las hojas de trabajo
+    Dim hojaOrigen As Worksheet
+    Dim hojaDestino As Worksheet
+    
+    ' Definir las variables
+    Dim ultimaFila As Long
+    Dim rngOrigen As Range
+    Dim rngFiltrado As Range
+    Dim rngDestino As Range
+    
+    ' Establecer las hojas de trabajo
+    Set hojaOrigen = ThisWorkbook.Sheets("OTS 2023")
+    Set hojaDestino = ThisWorkbook.Sheets("OTS")
+    
+    ' Encontrar la última fila en la hoja de origen
+    ultimaFila = hojaOrigen.Cells(hojaOrigen.Rows.Count, "C").End(xlUp).Row
+    
+    ' Definir el rango de origen basado en la selección en el formulario
+    Set rngOrigen = hojaOrigen.Range("C3:P" & ultimaFila)
+    
+    ' Limpiar todos los filtros en la hoja de origen
+    If hojaOrigen.AutoFilterMode Then
+        hojaOrigen.AutoFilterMode = False
+    End If
+    
+    ' Aplicar filtros según la selección en el formulario
+    If CMBFechaEntrega.value <> "" Then
+        ' Ajustar el formato de fecha al formato en la hoja de trabajo
+        Dim fechaFormateada As String
+        fechaFormateada = Format(CMBFechaEntrega.value, "DD-MM-YYYY")
+        
+        rngOrigen.AutoFilter Field:=7, Criteria1:=fechaFormateada
+    Else
+        ' Si no se selecciona ninguna fecha, quitar cualquier filtro en la columna 7
+        rngOrigen.AutoFilter Field:=7
+    End If
+        
+    If CMBCentro.value <> "" Then
+        rngOrigen.AutoFilter Field:=4, Criteria1:=CMBCentro.value
+    End If
+    
+    ' Limpiar el filtro de la columna 17 (CheckBox "Insumos" o "#N/D")
+    If hojaOrigen.AutoFilterMode Then
+        rngOrigen.AutoFilter Field:=17
+    End If
+    
+    ' Verificar el estado del CheckBox y aplicar filtro adicional si está activado
+    If CheckBoxGrua.value Then
+        ' Aplicar filtro adicional en la columna 17 con el criterio "Insumos"
+        rngOrigen.AutoFilter Field:=17, Criteria1:="Insumos"
+    Else
+        ' Si el CheckBox está desactivado, coincidir con "#N/D" en la columna 17
+        rngOrigen.AutoFilter Field:=17, Criteria1:="#N/A", Operator:=xlOr, Criteria2:="#N/D"
+    End If
+    
+    ' Limpiar el filtro de la columna 28 (CMB_OTS "OT Abierta" o "NO Tratada")
+    If hojaOrigen.AutoFilterMode Then
+        rngOrigen.AutoFilter Field:=28
+    End If
+    
+    ' Verificar el estado del CMB_OTS y aplicar filtro adicional si está activado
+    If CMB_OTS.value = "OT Abierta" Then
+        ' Quitar filtro de la columna 28
+        rngOrigen.AutoFilter Field:=28, Criteria1:="OT Abierta"
+        
+    ElseIf CMB_OTS.value = "" Or CMB_OTS.value = "---" Then
+        rngOrigen.AutoFilter Field:=28, Criteria1:="OT Abierta", Operator:=xlOr, Criteria2:="NO Tratada"
+        
+    Else
+        ' Si el CheckBox está desactivado, coincidir con "NO Tratada" en la columna 28
+        rngOrigen.AutoFilter Field:=28, Criteria1:="NO Tratada"
+    End If
+    
+    
+    ' Filtrar solo celdas con información real
+    On Error Resume Next
+    Set rngOrigen = rngOrigen.SpecialCells(xlCellTypeVisible)
+    On Error GoTo 0
+    
+    ' Verificar si se encontraron celdas con información real
+    If Not rngOrigen Is Nothing Then
+        ' Copiar las celdas visibles (filtradas)
+        Set rngFiltrado = rngOrigen.SpecialCells(xlCellTypeVisible)
+        
+        ' Verificar si quedan filas después del filtrado
+        If Not rngFiltrado Is Nothing Then
+            ' Definir el rango de destino (segunda fila en la hoja "OTS")
+            Set rngDestino = hojaDestino.Range("A2:N" & hojaDestino.Rows.Count)
+            
+            ' Eliminar contenido desde la fila 2 hasta la última fila en la hoja de destino
+            rngDestino.ClearContents
+            
+            ' Verificar si hay más de una fila antes de continuar
+        If rngFiltrado.Rows.Count > 1 Then
+            ' Definir el rango de destino (segunda fila en la hoja "OTS")
+            Set rngDestino = hojaDestino.Range("A2:N" & hojaDestino.Rows.Count)
+            
+            ' Eliminar contenido desde la fila 2 hasta la última fila en la hoja de destino
+            rngDestino.ClearContents
+            
+            ' Copiar datos desde el rango de origen filtrado
+            rngFiltrado.Copy
+            
+            ' Pegar datos en el rango de destino
+            rngDestino.PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
+            
+            ' Limpiar los filtros en la hoja de origen
+            hojaOrigen.AutoFilterMode = False
+            
+            ' Limpiar portapapeles
+            Application.CutCopyMode = False
+        Else
+    ' Mostrar un mensaje indicando que no hay suficientes filas para copiar
+    MsgBox "No hay suficientes filas para copiar!, Minimo 3 filas para evitar errores.", vbInformation
+End If
+        Else
+            MsgBox "No se encontraron filas con los criterios seleccionados.", vbInformation
+        End If
+    Else
+        MsgBox "No se encontró información para copiar.", vbInformation
+    End If
+    
+    ' Cerrar el formulario
+    Unload Me
+End Sub
+
+
+Private Sub UserForm_Initialize()
+    On Error Resume Next
+    ' Llamamos a la función para cargar datos únicos en el ComboBox
+    CargarDatosUnicosCentro
+    CargarDatosUnicosFechaEntrega
+    CargarDatosUnicosots
+    On Error GoTo 0
+End Sub
+Sub CargarDatosUnicosots()
+    On Error Resume Next
+    Dim ws As Worksheet
+    Dim rng As Range
+    Dim cell As Range
+    Dim uniqueValues As Collection
+    Dim value As Variant
+    
+    ' Definir la hoja de trabajo y el rango
+    Set ws = Worksheets("OTS 2023")
+    Set rng = ws.Range("AC3:AC" & ws.Cells(ws.Rows.Count, "E").End(xlUp).Row)
+    
+    ' Inicializar la colección para almacenar valores únicos
+    Set uniqueValues = New Collection
+    
+    ' Recorrer el rango y agregar valores únicos a la colección
+    For Each cell In rng
+        uniqueValues.Add cell.value, CStr(cell.value)
+    Next cell
+    
+    ' Limpiar el cuadro combinado antes de cargar los datos
+    On Error Resume Next
+    CMB_OTS.Clear
+    On Error GoTo 0
+    
+    ' Cargar los valores únicos en el cuadro combinado
+    On Error Resume Next
+    For Each value In uniqueValues
+        CMB_OTS.AddItem value
+    Next value
+    On Error GoTo 0
+End Sub
+
+Sub CargarDatosUnicosCentro()
+    On Error Resume Next
+    Dim ws As Worksheet
+    Dim rng As Range
+    Dim cell As Range
+    Dim uniqueValues As Collection
+    Dim value As Variant
+    
+    ' Definir la hoja de trabajo y el rango
+    Set ws = Worksheets("OTS 2023")
+    Set rng = ws.Range("E3:E" & ws.Cells(ws.Rows.Count, "E").End(xlUp).Row)
+    
+    ' Inicializar la colección para almacenar valores únicos
+    Set uniqueValues = New Collection
+    
+    ' Recorrer el rango y agregar valores únicos a la colección
+    For Each cell In rng
+        uniqueValues.Add cell.value, CStr(cell.value)
+    Next cell
+    
+    ' Limpiar el cuadro combinado antes de cargar los datos
+    On Error Resume Next
+    CMBCentro.Clear
+    On Error GoTo 0
+    
+    ' Cargar los valores únicos en el cuadro combinado
+    On Error Resume Next
+    For Each value In uniqueValues
+        CMBCentro.AddItem value
+    Next value
+    On Error GoTo 0
+End Sub
+
+Sub CargarDatosUnicosFechaEntrega()
+    ' Esta función se utilizará para cargar fechas basadas en el centro seleccionado,
+    ' por lo que no es necesario cargar fechas aquí al inicio.
+    ' Puedes dejar esta función vacía por ahora.
+End Sub
+
+Private Sub CMBCentro_Change()
+    ' Al cambiar el centro, cargar las fechas correspondientes al nuevo centro seleccionado
+    If CMBCentro.value <> "" Then
+        CargarFechasParaCentro CMBCentro.value
+    Else
+        ' Limpiar el ComboBox de fechas si no se selecciona ningún centro
+        CMBFechaEntrega.Clear
+    End If
+End Sub
+
+Sub CargarFechasParaCentro(centro As String)
+    On Error Resume Next
+    Dim ws As Worksheet
+    Dim rngCentro As Range
+    Dim rngFecha As Range
+    Dim rngGrua As Range
+    Dim cell As Range
+    Dim uniqueValues As Collection
+    Dim value As Variant
+    
+    ' Definir la hoja de trabajo y el rango de fechas para el centro seleccionado
+    Set ws = Worksheets("OTS 2023")
+    Set rngCentro = ws.Range("E3:E" & ws.Cells(ws.Rows.Count, "E").End(xlUp).Row)
+    Set rngFecha = ws.Range("H3:H" & ws.Cells(ws.Rows.Count, "H").End(xlUp).Row)
+    Set rngGrua = ws.Range("R3:R" & ws.Cells(ws.Rows.Count, "R").End(xlUp).Row)
+    
+    ' Inicializar la colección para almacenar valores únicos
+    Set uniqueValues = New Collection
+    
+    ' Recorrer el rango y agregar fechas únicas para el centro seleccionado a la colección
+    For i = 1 To rngCentro.Rows.Count
+        If rngCentro.Cells(i, 1).value = centro Then
+            ' Verificar si el CheckBox está activado y si se debe filtrar por "Insumos" en la columna R
+            If CheckBoxGrua.value Then
+                ' Mostrar solo fechas con "Insumos" en la columna R
+                If Not IsError(Application.Match("Insumos", rngGrua.Rows(i), 0)) Then
+                    ' Agregar al final de la colección
+                    uniqueValues.Add rngFecha.Cells(i, 1).value, CStr(rngFecha.Cells(i, 1).value)
+                End If
+            Else
+                ' Mostrar todas las fechas cuando el CheckBox está desactivado y el centro coincide
+                ' Agregar al final de la colección
+                uniqueValues.Add rngFecha.Cells(i, 1).value, CStr(rngFecha.Cells(i, 1).value)
+            End If
+        End If
+    Next i
+    
+    ' Limpiar el ComboBox de fechas antes de cargar los nuevos datos
+    CMBFechaEntrega.Clear
+    
+    ' Cargar los valores únicos en el ComboBox de fechas
+    For Each value In uniqueValues
+        CMBFechaEntrega.AddItem value
+    Next value
+End Sub
+
+
+
+
+
+-------------------------------------------------------------------------------
+VBA MACRO Hoja2.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Hoja2'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Hoja4.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Hoja4'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Hoja5.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Hoja5'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA MACRO Hoja8.cls 
+in file: xl/vbaProject.bin - OLE stream: 'VBA/Hoja8'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+(empty macro)
+-------------------------------------------------------------------------------
+VBA FORM STRING IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos/o'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+�Fecha entregas
+-------------------------------------------------------------------------------
+VBA FORM STRING IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos/o'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+�Copiar
+-------------------------------------------------------------------------------
+VBA FORM STRING IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos/o'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+�Centro
+-------------------------------------------------------------------------------
+VBA FORM STRING IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos/o'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+�Gr�a�	
+-------------------------------------------------------------------------------
+VBA FORM STRING IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos/o'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+�( Activar para solo gr�a )
+-------------------------------------------------------------------------------
+VBA FORM STRING IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos/o'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+�Otst�	
+-------------------------------------------------------------------------------
+VBA FORM STRING IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos/o'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+Tahomar
+-------------------------------------------------------------------------------
+VBA FORM STRING IN 'xl/vbaProject.bin' - OLE stream: 'UserForm1/o'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+�N�mero OT:Q��	
+-------------------------------------------------------------------------------
+VBA FORM STRING IN 'xl/vbaProject.bin' - OLE stream: 'UserForm1/o'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+H�,�	
+-------------------------------------------------------------------------------
+VBA FORM STRING IN 'xl/vbaProject.bin' - OLE stream: 'UserForm1/o'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+�Fecha de OT:g
+-------------------------------------------------------------------------------
+VBA FORM STRING IN 'xl/vbaProject.bin' - OLE stream: 'UserForm1/o'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+H�,�	
+-------------------------------------------------------------------------------
+VBA FORM STRING IN 'xl/vbaProject.bin' - OLE stream: 'UserForm1/o'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+�Aceptar
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'Label1'" IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+None
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'CMDCopiar'" IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+None
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'Label2'" IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+None
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'Label4'" IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+None
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'Label5'" IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+None
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'CMBFechaEntrega'" IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+b''
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'CheckBoxGrua'" IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+b'0'
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'CMBCentro'" IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+b''
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'Label6'" IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+None
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'CMB_OTS'" IN 'xl/vbaProject.bin' - OLE stream: 'FRMCopiarDatos'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+b''
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'Label1'" IN 'xl/vbaProject.bin' - OLE stream: 'UserForm1'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+None
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'ot_txt'" IN 'xl/vbaProject.bin' - OLE stream: 'UserForm1'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+b''
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'Label2'" IN 'xl/vbaProject.bin' - OLE stream: 'UserForm1'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+None
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'fecha_txt'" IN 'xl/vbaProject.bin' - OLE stream: 'UserForm1'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+b''
+-------------------------------------------------------------------------------
+VBA FORM Variable "b'btn_aceptar'" IN 'xl/vbaProject.bin' - OLE stream: 'UserForm1'
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+None
++----------+--------------------+---------------------------------------------+
+|Type      |Keyword             |Description                                  |
++----------+--------------------+---------------------------------------------+
+|AutoExec  |Workbook_Open       |Runs when the Excel Workbook is opened       |
+|AutoExec  |CommandButton1_Click|Runs when the file is opened and ActiveX     |
+|          |                    |objects trigger events                       |
+|AutoExec  |CMBCentro_Change    |Runs when the file is opened and ActiveX     |
+|          |                    |objects trigger events                       |
+|Suspicious|open                |May open a file                              |
+|Suspicious|write               |May write to a file (if combined with Open)  |
+|Suspicious|create              |May execute file or a system command through |
+|          |                    |WMI                                          |
+|Suspicious|Call                |May call a DLL using Excel 4 Macros (XLM/XLF)|
+|Suspicious|Windows             |May enumerate application windows (if        |
+|          |                    |combined with Shell.Application object)      |
+|Suspicious|Chr                 |May attempt to obfuscate specific strings    |
+|          |                    |(use option --deobf to deobfuscate)          |
+|Suspicious|Hex Strings         |Hex-encoded strings were detected, may be    |
+|          |                    |used to obfuscate strings (option --decode to|
+|          |                    |see all)                                     |
+|Suspicious|Base64 Strings      |Base64-encoded strings were detected, may be |
+|          |                    |used to obfuscate strings (option --decode to|
+|          |                    |see all)                                     |
+|IOC       |http://members.chell|URL                                          |
+|          |o.at/~easyfilter/bar|                                             |
+|          |code.html           |                                             |
++----------+--------------------+---------------------------------------------+
+

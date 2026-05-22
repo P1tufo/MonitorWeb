@@ -1,0 +1,79 @@
+<!-- PESTAÑA: IA (ANALISIS E INSOMNIO) -->
+<div id="tab-ia" class="tab-content">
+    {% if error_msg %}
+    <div class="error-banner">
+        ⚠️ Error: {{ error_msg }}
+    </div>
+    {% endif %}
+
+    <div class="row-grid">
+        <div class="chart-box full-width">
+            {% if user.role == 'admin' %}
+            <div class="edit-query-btn" onclick="openEditQueryModal('ia_predictive_movements', 'Motor Predictivo (IA)')"
+                title="Editar Consulta SQL">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            <h3>🚦 Semáforo de Desplanificación (Alertas)</h3>
+            <p class="chart-subtitle">Materiales cuyo ciclo habitual de reposición ya se venció. Alta probabilidad de solicitud inminente.</p>
+            <div class="table-responsive">
+                <table class="table-alerts">
+                    <thead>
+                        <tr>
+                            <th>Score</th>
+                            <th>Material / Insumo</th>
+                            <th>Área</th>
+                            <th>Cant. Promedio</th>
+                            <th>Mes Actual</th>
+                            <th>Intervalo Promedio</th>
+                            <th>Días de Retraso</th>
+                            <th>Comportamiento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in alerts[:10] %}
+                        <tr>
+                            <td data-label="Score"><span class="badge-{{ alert.color }}">{{ alert.score }}%</span></td>
+                            <td data-label="Material" style="font-weight: 600;">{{ alert.material }}</td>
+                            <td data-label="Área" style="color:#e2e8f0;">{{ alert.area }}</td>
+                            <td data-label="Cant. Promedio" style="color:#e2e8f0;">{{ alert.avg_qty }} unds</td>
+                            <td data-label="Mes Actual" style="color:#38bdf8; font-weight: 600;">{{ alert.curr_month }}</td>
+                            <td data-label="Intervalo Promedio" style="color:#94a3b8;">Cada {{ alert.avg_interval }} días</td>
+                            <td data-label="Días de Retraso" style="color:#ef4444;">Hace {{ alert.days_since }} días</td>
+                            <td data-label="Comportamiento"><span class="badge-info" style="background: rgba(148, 163, 184, 0.1); color: #cbd5e1;">{{ alert.behavior }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if alerts|length > 10 %}
+            <button class="btn btn-secondary" style="margin-top: 1rem; width: 100%; justify-content: center;"
+                onclick="openModalAlerts()">Ver todas ({{ alerts|length }})</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row-grid-2">
+        <div class="chart-box">
+            <h3>🐘 Cuadrante Frecuencia vs Volumen</h3>
+            <div style="height: 400px;"><canvas id="scatterChart"></canvas></div>
+            <button class="btn btn-secondary" style="margin-top: 1rem; width: 100%;"
+                onclick="openModalScatter()">Ver listado completo</button>
+        </div>
+        <div class="chart-box">
+            <h3>🔗 Market Basket (Combos Frecuentes)</h3>
+            <div style="max-height: 400px; overflow-y: auto;">
+                {% for combo in combos[:10] %}
+                <div class="combo-card">
+                    <div class="materials">
+                        <span class="mat-name" title="{{ combo.mat_a }}">{{ combo.mat_a }}</span>
+                        <span class="arrow">➔</span>
+                        <span class="mat-name" title="{{ combo.mat_b }}">{{ combo.mat_b }}</span>
+                    </div>
+                    <div class="prob">{{ combo.probability }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>

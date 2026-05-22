@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyecto-Onedrive | Alexander Valderrama</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    {% include "partials/_styles.html" %}
+</head>
+
+<body>
+    {% include "partials/_modals.html" %}
+
+    <div class="container">
+        <!-- Iframe oculto para descargas directas -->
+        <iframe name="downloadFrame" style="display:none;"></iframe>
+
+        <header>
+            <div class="logo-area">
+                <h1>Proyecto-Onedrive</h1>
+                <p>Monitor de delivery</p>
+            </div>
+            {% if is_syncing %}
+            <div id="globalSyncBanner"
+                style="background:rgba(234,118,0,0.1); border:1px solid rgba(234,118,0,0.3); color:var(--naranja); padding:8px 16px; border-radius:12px; display:flex; align-items:center; gap:10px; font-size:0.9rem; animation: pulse 2s infinite;">
+                <span class="spinner"
+                    style="width:14px; height:14px; border:2px solid var(--naranja); border-top-color:transparent; border-radius:50%; animation: spin 1s linear infinite;"></span>
+                Sincronización en curso... los datos se actualizarán automáticamente.
+            </div>
+            {% endif %}
+            <div class="actions">
+                <button class="btn btn-secondary mobile-only" onclick="toggleSidebar()"
+                    style="display:none; margin-right:8px;">
+                    🔍 Filtros
+                </button>
+                <a href="/analytics" class="btn"
+                    style="background:rgba(93,186,169,0.2); color: #5DBAA9; border:1px solid rgba(93,186,169,0.5); text-decoration: none;">
+                    📊 Entregas
+                </a>
+                <a href="/analytics?tab=inventory" class="btn"
+                    style="background:rgba(191,184,0,0.1); color: #BFB800; border:1px solid rgba(191,184,0,0.3); text-decoration: none;">
+                    📦 Movimientos
+                </a>
+                <a href="/analytics?tab=ots" class="btn"
+                    style="background:rgba(14,165,233,0.15); color: #38bdf8; border:1px solid rgba(14,165,233,0.3); text-decoration: none;">
+                    📑 Monitor OTs
+                </a>
+                <a href="/analytics?tab=ia" class="btn"
+                    style="background:rgba(234,118,0,0.1); color: #EA7600; border:1px solid rgba(234,118,0,0.3); text-decoration: none;">
+                    🧠 IA Insomnio y Ansiedad
+                </a>
+                <a href="/analytics?tab=historial" class="btn"
+                    style="background:rgba(139,92,246,0.15); color: #a78bfa; border:1px solid rgba(139,92,246,0.3); text-decoration: none;">
+                    📍 Ubicaciones de materiales
+                </a>
+                <button class="btn hide-mobile"
+                    style="background:rgba(255,255,255,0.1); border:1px solid var(--border);"
+                    onclick="document.getElementById('authorModal').classList.add('active')">
+                    👥 Usuarios
+                </button>
+                <a href="/analytics?tab=docs" class="btn"
+                    style="background:rgba(58,90,171,0.15); color: #8ea1ff; border:1px solid rgba(58,90,171,0.3); text-decoration: none;">
+                    📚 Documentación
+                </a>
+
+                {% if user.username != "invitado" %}
+                <span style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px;">👤 {{ user.username }} ({{
+                    user.role }})</span>
+                <button class="btn"
+                    style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);"
+                    onclick="logout()">
+                    🚪 Salir
+                </button>
+                {% if user.role == 'admin' %}
+                <a href="/settings" class="btn" title="Configuración SaaS">⚙️</a>
+                <button class="btn" onclick="syncData(event)">🚀 Sync</button>
+                {% endif %}
+                {% else %}
+                <a href="/login" class="btn" style="background:#5DBAA9; color:#0f172a; text-decoration:none;">🔑
+                    Entrar</a>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- KPIs -->
+        <div class="kpi-banner">
+            <div class="kpi-card">
+                <h4>Entregas generadas</h4>
+                <h2 id="kpiDeliveries" style="margin-bottom: 12px;">{{ kpi_deliveries }}</h2>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <div id="subDelAbierta" class="status-badge status-abierta"
+                        style="font-size: 0.8rem; padding: 4px 8px;">
+                        🏷️ <b>{{ sub_del_abierta }}</b> Entregas en curso
+                    </div>
+                    <div id="subDelNoTratada" class="status-badge status-error"
+                        style="font-size: 0.8rem; padding: 4px 8px;">
+                        ⚠️ <b>{{ sub_del_no_tratada }}</b> Entregas NO Tratadas
+                    </div>
+                    <!-- Nuevos SLA -->
+                    <div id="subDelReunido" class="status-badge"
+                        style="font-size: 0.8rem; padding: 4px 8px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);">
+                        ✅ <b>{{ sub_del_reunido }}</b> Reunido a tiempo
+                    </div>
+                    <div id="subDelAtrasado" class="status-badge"
+                        style="font-size: 0.8rem; padding: 4px 8px; background: rgba(234, 118, 0, 0.1); color: #ea7600; border: 1px solid rgba(234, 118, 0, 0.2);">
+                        🕒 <b>{{ sub_del_atrasado }}</b> Reunido atrasado
+                    </div>
+                    <div id="subDelCritico" class="status-badge"
+                        style="font-size: 0.8rem; padding: 4px 8px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); animation: pulse 2s infinite;">
+                        🚨 <b>{{ sub_del_critico }}</b> OT abierta atrasada
+                    </div>
+                </div>
+            </div>
+            <div class="kpi-card">
+                <h4>Materiales solicitados</h4>
+                <h2 id="kpiMaterials" style="margin-bottom: 12px;">{{ kpi_materials }}</h2>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <div id="subMatAbierta" class="status-badge status-abierta"
+                        style="font-size: 0.8rem; padding: 4px 8px;">
+                        🏷️ <b>{{ sub_mat_abierta }}</b> Picking en curso
+                    </div>
+                    <div id="subMatNoTratada" class="status-badge status-error"
+                        style="font-size: 0.8rem; padding: 4px 8px;">
+                        ⚠️ <b>{{ sub_mat_no_tratada }}</b> Pendientes por generar OT
+                    </div>
+                    <!-- Nuevos SLA -->
+                    <div id="subMatReunido" class="status-badge"
+                        style="font-size: 0.8rem; padding: 4px 8px; background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);">
+                        ✅ <b>{{ sub_mat_reunido }}</b> Reunido a tiempo
+                    </div>
+                    <div id="subMatAtrasado" class="status-badge"
+                        style="font-size: 0.8rem; padding: 4px 8px; background: rgba(234, 118, 0, 0.1); color: #ea7600; border: 1px solid rgba(234, 118, 0, 0.2);">
+                        🕒 <b>{{ sub_mat_atrasado }}</b> Reunido atrasado
+                    </div>
+                    <div id="subMatCritico" class="status-badge"
+                        style="font-size: 0.8rem; padding: 4px 8px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">
+                        🚨 <b>{{ sub_mat_critico }}</b> OT abierta atrasado
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Contenido principal: sidebar + tabla -->
+        <div class="grid">
+            {% include "partials/_sidebar.html" %}
+            {% include "partials/_table.html" %}
+        </div>
+    </div>
+
+    {% include "partials/_scripts.html" %}
+
+</body>
+
+</html>

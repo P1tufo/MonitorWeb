@@ -1,0 +1,133 @@
+<!-- Sidebar Filters -->
+<aside class="card filters">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h3 style="margin:0;">Filtros</h3>
+        <button class="mobile-only btn btn-small" onclick="toggleSidebar()" style="display:none; padding:5px 10px;">✕ Cerrar</button>
+    </div>
+
+    <!-- Filtro Fecha -->
+    <div class="filter-group">
+        <label>Filtrar por Fecha</label>
+        <div class="multiselect">
+            <div class="selectBox" onclick="toggleMulti('dateCheckboxes')">
+                <select>
+                    <option>Seleccionar Fechas...</option>
+                </select>
+                <div class="overSelect"></div>
+            </div>
+            <div id="dateCheckboxes" class="checkboxes">
+                <label
+                    style="border-bottom:1px solid var(--border); margin-bottom:8px !important; padding-bottom:8px; color:var(--primary);">
+                    <input type="checkbox" id="dateFilterAll" onchange="toggleSelectAll('date-cb', this.checked)" />
+                    <b>Seleccionar Todas las Fechas</b>
+                </label>
+                {% for date in dates %}
+                <label><input type="checkbox" class="date-cb" value="{{ date }}" {% if date in default_dates %}checked{%
+                        endif %} onchange="handleSmartCheckbox(this, 'date-cb', 'dateFilterAll', 'table')" /> {{ date
+                    }}</label>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtro Área -->
+    <div class="filter-group">
+        <label>Filtrar por área</label>
+        <div class="multiselect">
+            <div class="selectBox" onclick="toggleMulti('areaCheckboxes')">
+                <select>
+                    <option>Seleccionar áreas...</option>
+                </select>
+                <div class="overSelect"></div>
+            </div>
+            <div id="areaCheckboxes" class="checkboxes">
+                <label
+                    style="border-bottom:1px solid var(--border); margin-bottom:8px !important; padding-bottom:8px; color:var(--primary);">
+                    <input type="checkbox" id="areaFilterAll" checked
+                        onchange="toggleSelectAll('area-cb', this.checked)" />
+                    <b>Seleccionar Todas las áreas</b>
+                </label>
+                {% for a in areas %}
+                <label data-centro="{{ area_centro_map.get(a, 'Paneles') }}"><input type="checkbox" class="area-cb"
+                        value="{{ a }}" checked
+                        onchange="handleSmartCheckbox(this, 'area-cb', 'areaFilterAll', 'table')" /> {{ a }}</label>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtro Centro -->
+    <div class="filter-group">
+        <label>Filtrar por Centro</label>
+        <div class="radio-filter-group">
+            <label>
+                <input type="radio" id="centroAll" name="centro-filter" value="" checked
+                    onchange="applyCentroFilter(this.value)" />
+                <span>Todos los centros</span>
+            </label>
+            <label>
+                <input type="radio" name="centro-filter" value="Aserradero" onchange="applyCentroFilter(this.value)" />
+                <span>🪵 Complejo</span>
+            </label>
+            <label>
+                <input type="radio" name="centro-filter" value="Paneles" onchange="applyCentroFilter(this.value)" />
+                <span>🏭 Paneles</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Filtro OT (Estado WMS) -->
+    <div class="filter-group">
+        <label>Filtrar por OT</label>
+        <div class="radio-filter-group">
+            <label>
+                <input type="radio" name="ot-filter" value="" checked onchange="applyFilters()" />
+                <span>Todo</span>
+            </label>
+            <label>
+                <input type="radio" name="ot-filter" value="OT Abierta" onchange="applyFilters()" />
+                <span>OT Abierta</span>
+            </label>
+            <label>
+                <input type="radio" name="ot-filter" value="NO Tratada" onchange="applyFilters()" />
+                <span>NO Tratada</span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Búsqueda -->
+    <div class="filter-group">
+        <label>Buscar OT / Entrega</label>
+        <input type="text" id="orderSearch" placeholder="Ej: 8160..." onkeyup="applyFilters()">
+    </div>
+
+    <!-- Logo toggle -->
+    <div class="filter-group">
+        <label class="checkbox-group" style="cursor:pointer; display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="includeLogo" checked>
+            <span>Incluir Logo Arauco</span>
+        </label>
+    </div>
+
+    <!-- Botones PDF consolidado -->
+    <div class="filter-group" style="margin-top:2rem;">
+        <div style="display:flex; gap:8px; flex-direction:column;">
+            <button class="btn" style="width:100%; justify-content:center;" onclick="downloadBulk('previsualizar', this)">
+                👁️ Ver Reporte
+            </button>
+            <button class="btn"
+                style="width:100%; justify-content:center; background:rgba(255,255,255,0.1); border:1px solid var(--border);"
+                onclick="downloadBulk('descargar', this)">
+                ⬇️ Descargar
+            </button>
+        </div>
+        <p style="font-size:0.75rem; color:#94a3b8; margin-top:8px; text-align:center;">
+            Une todos los despachos filtrados en un PDF con anexo.
+        </p>
+    </div>
+
+    <div class="tooltip">
+        Formato: Carta (8.5" x 11")<br>
+        Generación de PDF con codigo de barras (Code 128)
+    </div>
+</aside>
