@@ -27,24 +27,15 @@ def _build_unified_where(date: str, area: str, centro: str, has_ots_filter: str,
     """
     Construye la cláusula WHERE a nivel de MATERIAL.
 
-    ── Invariante de Seguridad (Anti SQL Injection) ──────────────────────────
-    Esta función es segura contra inyección SQL porque:
-      1. Todos los valores suministrados por el usuario (date, area, centro,
-         has_ots_filter) se agregan SIEMPRE a `where_params` como bind params (?).
-         Nunca se interpolan directamente en el string `where_clause`.
-      2. Las únicas variables interpoladas en el string SQL son:
-         - DATE_EXPR  → constante hardcodeada definida en el módulo (línea 19).
-         - area_expr  → expresión CASE construida con literales hardcodeados,
-                        sin ningún input del usuario dentro de la expresión.
-         - placeholders → solo caracteres '?' separados por comas (ej: "?,?,?").
-      3. has_ots_filter se valida contra ALLOWED_OTS_STATES (whitelist estática)
-         antes de añadirse al WHERE. Si no está en la lista, se ignora.
-    ──────────────────────────────────────────────────────────────────────────
-    NOTA: Para filtros de área/centro, usamos una expresión que mapea el área del
-    material actual basándose en su ubicacion_area o area_negocio individual.
+    ── Invariante de Seguridad (Anti SQL Injection) ───────────────────────────────
+    Todos los valores del usuario se añaden como bind params nombrados
+    (:p0, :p1, ...) devueltos como dict. Nunca se interpolan en el SQL.
+    Las únicas variables en el string SQL son constantes del módulo.
+    ──────────────────────────────────────────────────────────────────
+    Retorna: (where_clause: str, where_params: dict)
     """
     where_clause = " WHERE 1=1"
-    where_params = []
+    raw_params: List[Any] = []  # Lista interna; se convierte a dict al final
 
     # Expresión para obtener el área del material actual (v).
     # ⚠ SOLO contiene literales hardcodeados — ningún input del usuario.
@@ -58,38 +49,44 @@ def _build_unified_where(date: str, area: str, centro: str, has_ots_filter: str,
         ELSE 'S/N' 
     END"""
 
-    # 1. Filtro de Fecha — valores del usuario → bind params (?)
+    def _add_param(value) -> str:
+        """Añade un valor a raw_params y devuelve el placeholder :pN."""
+        key = f"p{len(raw_params)}"
+        raw_params.append(value)
+        return f":{key}"
+
+    # 1. Filtro de Fecha — valores del usuario → bind params nombrados
     if not date or date.strip() == "":
-        where_clause += " AND v.week_sort >= ?"
-        where_params.append(min_week)
+        ph = _add_param(min_week)
+        where_clause += f" AND v.week_sort >= {ph}"
     else:
         date_list = [d.strip() for d in date.split(",") if d.strip()]
         if date_list:
-            placeholders = ','.join(['?'] * len(date_list))
-            where_clause += f" AND {DATE_EXPR} IN ({placeholders})"
-            where_params.extend(date_list)
+            phs = ", ".join(_add_param(d) for d in date_list)
+            where_clause += f" AND {DATE_EXPR} IN ({phs})"
         else:
-            where_clause += " AND v.week_sort >= ?"
-            where_params.append(min_week)
+            ph = _add_param(min_week)
+            where_clause += f" AND v.week_sort >= {ph}"
 
     # 2. Filtro de Estado OT — validado contra whitelist estática antes de usarse
     if has_ots_filter and has_ots_filter.strip() in ALLOWED_OTS_STATES:
-        where_clause += " AND v.estado_wms = ?"
-        where_params.append(has_ots_filter)
+        ph = _add_param(has_ots_filter)
+        where_clause += f" AND v.estado_wms = {ph}"
 
-    # 3. Filtro de Área — valores del usuario → bind params (?)
+    # 3. Filtro de Área — valores del usuario → bind params nombrados
     if area and area.strip() != "":
         area_list = [a.strip() for a in area.split(",") if a.strip()]
         if area_list:
-            placeholders = ','.join(['?'] * len(area_list))
-            where_clause += f" AND {area_expr} IN ({placeholders})"
-            where_params.extend(area_list)
+            phs = ", ".join(_add_param(a) for a in area_list)
+            where_clause += f" AND {area_expr} IN ({phs})"
 
-    # 4. Filtro de Centro — valor del usuario → bind param (?)
+    # 4. Filtro de Centro — valor del usuario → bind param nombrado
     if centro and centro.strip() != "":
-        where_clause += f" AND (CASE WHEN {area_expr} IN ('VIGAS', 'ASERRADERO', 'REMANUFACTURA') THEN 'Aserradero' ELSE 'Paneles' END) = ?"
-        where_params.append(centro)
+        ph = _add_param(centro)
+        where_clause += f" AND (CASE WHEN {area_expr} IN ('VIGAS', 'ASERRADERO', 'REMANUFACTURA') THEN 'Aserradero' ELSE 'Paneles' END) = {ph}"
 
+    # Convertir lista interna a dict nombrado {:p0: v0, :p1: v1, ...}
+    where_params = {f"p{i}": v for i, v in enumerate(raw_params)}
     return where_clause, where_params
 
 
@@ -117,11 +114,14 @@ async def filter_transactions(
 
     try:
         where_clause, where_params = _build_unified_where(date, area, centro, has_ots_filter, min_week)
-        
+
         # Filtro adicional de Entrega (solo para la tabla)
         if entrega:
-            where_clause += " AND (CAST(v.entrega AS TEXT) LIKE ? OR CAST(v.material AS TEXT) LIKE ?)"
-            where_params.extend([f"%{entrega}%", f"%{entrega}%"])
+            p_ent1 = f"p{len(where_params)}"
+            where_params[p_ent1] = f"%{entrega}%"
+            p_ent2 = f"p{len(where_params)}"
+            where_params[p_ent2] = f"%{entrega}%"
+            where_clause += f" AND (CAST(v.entrega AS TEXT) LIKE :{p_ent1} OR CAST(v.material AS TEXT) LIKE :{p_ent2})"
 
         q_base_join = """
             WITH BestArea AS (
@@ -159,7 +159,7 @@ async def filter_transactions(
             ORDER BY v.week_sort DESC, {DATE_EXPR} DESC, v.entrega DESC
             LIMIT 500
         """
-        
+
         df = pd.read_sql(text(query), session.connection(), params=where_params)
         return df.to_dict(orient='records')
 
@@ -205,17 +205,16 @@ async def get_kpis(
             {where_clause}
         """
         
-        # KPI Anual (Separado porque tiene su propio filtro de tiempo)
-        # Nota: Aquí no aplicamos el filtro de fecha/estado para mantener el total anual
+        # SQL anual (filtro propio de tiempo, sin filtros del usuario)
         q_year = f"""
             SELECT COUNT(DISTINCT v.entrega) as kpi_year_deliveries, COUNT(v.material) as kpi_year_materials
             FROM outbound_deliveries v
-            WHERE substr(v.week_sort, 1, 4) = ?
+            WHERE substr(v.week_sort, 1, 4) = :yr
         """
-        
+
         # Ejecución
-        k_df = pd.read_sql(text(q_kpi), session.connection(), params=where_params).iloc[0]
-        k_year = pd.read_sql(text(q_year), session.connection(), params=[str(iso_year)]).iloc[0]
+        k_df   = pd.read_sql(text(q_kpi),  session.connection(), params=where_params).iloc[0]
+        k_year = pd.read_sql(text(q_year), session.connection(), params={"yr": str(iso_year)}).iloc[0]
 
         def fmt(n): return f"{int(n or 0):,}".replace(",", ".")
 

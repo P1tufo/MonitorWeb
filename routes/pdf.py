@@ -5,6 +5,7 @@ import io
 import logging
 from core.database import get_session_dep
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 import pandas as pd
 from datetime import datetime
 from typing import List, Optional
@@ -33,7 +34,7 @@ async def generate_pdf(
     """Genera un PDF para una única entrega."""
     try:
         # 1. Obtener datos de la entrega
-        df = pd.read_sql(text("SELECT * FROM outbound_deliveries WHERE entrega = ?"), session.connection(), params=[entrega])
+        df = pd.read_sql(text("SELECT * FROM outbound_deliveries WHERE entrega = :entrega"), session.connection(), params={"entrega": entrega})
         if df.empty:
             raise HTTPException(status_code=404, detail="Entrega no encontrada.")
 
@@ -124,7 +125,7 @@ async def generate_pdf_bulk(
         for row in grouped_data:
             for entrega_id in row['items']:
                 try:
-                    items_df = pd.read_sql(text("SELECT * FROM outbound_deliveries WHERE entrega = ?"), session.connection(), params=[entrega_id])
+                    items_df = pd.read_sql(text("SELECT * FROM outbound_deliveries WHERE entrega = :entrega"), session.connection(), params={"entrega": entrega_id})
                     if not items_df.empty:
                         ots = get_ots_for_delivery(str(entrega_id), session)
                         pdf.add_page()
