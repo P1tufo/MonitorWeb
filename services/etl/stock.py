@@ -19,8 +19,26 @@ class StockLevelAdapter(BaseWMSProcessor):
         return skip >= 0
 
     def _get_required_columns(self) -> List[str]:
-        # Suponemos que requiere OT(cuanto) o Material
-        return []
+        """Columnas clave del header SAP LX02 (línea 5 del archivo)."""
+        return ['Material', 'UMB']
+
+    def read_and_clean_data(self, file_path: Path) -> pd.DataFrame:
+        """Lee el archivo LX02/Stock, detectando la fila header automáticamente."""
+        skip, encoding = self._detect_file_params(file_path, self._get_required_columns())
+        ext = file_path.suffix.lower()
+        try:
+            if ext in ['.xlsx', '.xls']:
+                df_raw = pd.read_excel(file_path, skiprows=skip)
+            else:
+                df_raw = pd.read_csv(
+                    file_path, sep='\t', skiprows=skip,
+                    encoding=encoding, dtype=str,
+                    on_bad_lines='skip'   # ignora líneas de totales al final
+                )
+            return self._clean_dataframe(df_raw)
+        except Exception as e:
+            logger.error(f"Error leyendo {file_path.name}: {e}")
+            return pd.DataFrame()
 
     def _clean_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         if df.empty: return df
