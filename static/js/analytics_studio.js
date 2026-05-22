@@ -927,14 +927,23 @@ errorEl.style.display = 'block';
                     </select>
                 `;
             } else if (valueType === 'date_diff') {
+                // Columnas que parecen fechas (nombre contiene fecha/fe/date/creac/conf/contab)
+                const dateCols = getActiveColumns().filter(c => /fecha|fe_|date|creac|conf|contab|registr|sm_real|carga/i.test(c));
+                const colOptions = [
+                    `<option value="today" ${f.compareColumn === 'today' ? 'selected' : ''}>📅 Hoy (DATE('now'))</option>`,
+                    ...getActiveColumns().map(c => `<option value="${c}" ${c === f.compareColumn ? 'selected' : ''}>${c}</option>`)
+                ].join('');
                 valControlsHtml = `
                     <span style="font-size:0.8rem; color:var(--text-muted); align-self:center; margin:0 5px;">vs</span>
-                    <select class="qb-select f-comp-col" onchange="updateFilter(${index})">
-                        <option value="" disabled ${!f.compareColumn ? 'selected' : ''}>-- Columna --</option>
-                        ${getActiveColumns().map(c => `<option value="${c}" ${c === f.compareColumn ? 'selected' : ''}>${c}</option>`).join('')}
+                    <select class="qb-select f-comp-col" onchange="updateFilter(${index})" style="min-width:160px;">
+                        ${colOptions}
                     </select>
-                    <span style="font-size:0.8rem; color:var(--text-muted); align-self:center; margin:0 5px;">diff ≤</span>
-                    <input type="number" class="qb-input f-offset" style="width:70px;" value="${f.offsetValue || '0'}" placeholder="Días" oninput="updateFilter(${index})">
+                    <select class="qb-select f-op-diff" onchange="updateFilter(${index})" style="width:90px;">
+                        <option value="lessthanequal" ${(f.diffOp||'lessthanequal')==='lessthanequal'?'selected':''}>diff ≤</option>
+                        <option value="greaterthan"   ${(f.diffOp||'')==='greaterthan'?'selected':''}>diff ></option>
+                        <option value="equals"        ${(f.diffOp||'')==='equals'?'selected':''}>diff =</option>
+                    </select>
+                    <input type="number" class="qb-input f-offset" style="width:65px;" value="${f.offsetValue ?? '2'}" placeholder="Días" oninput="updateFilter(${index})">
                     <span style="font-size:0.8rem; color:var(--text-muted); align-self:center; margin:0 2px;">días</span>
                 `;
             }
@@ -988,14 +997,18 @@ errorEl.style.display = 'block';
             visualState.filters[index].compareColumn = getActiveColumns()[1] || getActiveColumns()[0] || '';
             visualState.filters[index].value = '';
             visualState.filters[index].offsetValue = null;
+            visualState.filters[index].diffOp = null;
         } else if (type === 'date_diff') {
-            visualState.filters[index].compareColumn = getActiveColumns()[1] || getActiveColumns()[0] || '';
+            // Por defecto comparar contra Hoy — el caso más frecuente
+            visualState.filters[index].compareColumn = 'today';
             visualState.filters[index].value = '';
             visualState.filters[index].offsetValue = '2';
+            visualState.filters[index].diffOp = 'lessthanequal';
         } else {
             visualState.filters[index].compareColumn = null;
             visualState.filters[index].value = '';
             visualState.filters[index].offsetValue = null;
+            visualState.filters[index].diffOp = null;
         }
         renderFilters();
         onQbChange();
@@ -1028,8 +1041,10 @@ errorEl.style.display = 'block';
             } else if (valueType === 'date_diff') {
                 const compEl = row.querySelector('.f-comp-col');
                 const offsetEl = row.querySelector('.f-offset');
-                visualState.filters[index].compareColumn = compEl ? compEl.value : '';
-                visualState.filters[index].offsetValue = offsetEl ? offsetEl.value : '0';
+                const diffOpEl = row.querySelector('.f-op-diff');
+                visualState.filters[index].compareColumn = compEl ? compEl.value : 'today';
+                visualState.filters[index].offsetValue = offsetEl ? offsetEl.value : '2';
+                visualState.filters[index].diffOp = diffOpEl ? diffOpEl.value : 'lessthanequal';
             }
         }
         

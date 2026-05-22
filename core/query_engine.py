@@ -397,19 +397,37 @@ def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
 
         elif val_type == "date_diff":
             comp_col = getattr(f, "compareColumn", None)
-            offset = getattr(f, "offsetValue", "0") or "0"
+            offset   = str(getattr(f, "offsetValue", "2") or "2").strip()
+            diff_op  = getattr(f, "diffOp", None) or "lessthanequal"
             if comp_col:
-                left_date = f"substr({f.column}, 7, 4) || '-' || substr({f.column}, 4, 2) || '-' || substr({f.column}, 1, 2)"
-                right_date = f"substr({comp_col}, 7, 4) || '-' || substr({comp_col}, 4, 2) || '-' || substr({comp_col}, 1, 2)"
-                diff_expr = f"(julianday({right_date}) - julianday({left_date}))"
                 op_map = {
                     "equals": "=", "notequals": "!=",
                     "greaterthan": ">", "lessthan": "<",
                     "greaterthanequal": ">=", "greaterthanequals": ">=",
                     "lessthanequal": "<=", "lessthanequals": "<=",
                 }
-                if op in op_map:
-                    where_clauses.append(f"{diff_expr} {op_map[op]} {offset}")
+                sql_op = op_map.get(diff_op, "<=")
+
+                # Columnas SAP en formato ISO que julianday() acepta directamente
+                _ISO_COLS = {"registrado", "fe_contab", "fe_creac", "fecha_carga",
+                             "fecha_sm_real", "creado_el", "fecha_conf", "ingested_at"}
+
+                def _date_expr(col: str) -> str:
+                    if col == "today":
+                        return "DATE('now')"
+                    bare = col.split(".")[-1].lower()
+                    if bare in _ISO_COLS:
+                        return col
+                    # Formato DD-MM-YYYY de SAP -> ISO para julianday()
+                    return (f"substr({col}, 7, 4) || '-' || "
+                            f"substr({col}, 4, 2) || '-' || "
+                            f"substr({col}, 1, 2)")
+
+                left_expr  = _date_expr(f.column)
+                right_expr = _date_expr(comp_col)
+                diff_expr  = f"(julianday({right_expr}) - julianday({left_expr}))"
+                where_clauses.append(f"{diff_expr} {sql_op} {offset}")
+
 
         else:
             # Valores literales → siempre como bind param
