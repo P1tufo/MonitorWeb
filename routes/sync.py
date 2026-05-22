@@ -148,49 +148,60 @@ def _run_sync_pipeline():
                 files = [f for f in stock_path.iterdir() if f.suffix.lower() in {'.txt', '.xlsx'} and '_' in f.name]
                 if files:
                     latest = sorted(files, key=con._parse_file_date, reverse=True)[0]
-                    if is_file_changed(con.conn, latest):
+                    with get_session() as _sess_stock:
+                        changed = is_file_changed(_sess_stock, latest)
+                    if changed:
                         rows = con.overwrite_with_latest(str(stock_path), table_name="stock_levels")
                         con.enrich_deliveries_with_stock()
-                        mark_file_processed(con.conn, latest, row_count=rows)
+                        with get_session() as _sess_stock:
+                            mark_file_processed(_sess_stock, latest, row_count=rows)
                         has_changes = True
                     else:
                         logger.debug(f"Stock sin cambios ({latest.name})")
 
-            # Inventario
-            # Inventario
+            # Inventario (services/etl/movements.py → InventoryMovementAdapter)
             if inventory_path.exists():
-                from db.inventory_processor import process_inventory_file
+                from services.etl import process_inventory_file
                 for mb_file in inventory_path.glob("*"):
                     if mb_file.suffix.lower() in ['.txt', '.csv', '.xlsx'] and not mb_file.name.startswith('~'):
-                        if is_file_changed(con.conn, mb_file):
+                        with get_session() as _sess_inv:
+                            changed = is_file_changed(_sess_inv, mb_file)
+                        if changed:
                             rows = process_inventory_file(str(mb_file), str(DB_PATH), conn=con.conn)
-                            mark_file_processed(con.conn, mb_file, row_count=rows)
+                            with get_session() as _sess_inv:
+                                mark_file_processed(_sess_inv, mb_file, row_count=rows)
                             has_changes = True
                         else:
                             logger.debug(f"Movimientos sin cambios ({mb_file.name})")
 
-            # Tareas de Bodega
+            # Tareas de Bodega (services/etl/tasks.py → WarehouseTaskAdapter)
             if tasks_path.exists():
-                from db.warehouse_tasks_processor import process_tasks_file
+                from services.etl import process_tasks_file
                 for lt_file in tasks_path.glob("*"):
                     if lt_file.suffix.lower() in ['.txt', '.csv', '.xlsx'] and not lt_file.name.startswith('~'):
-                        if is_file_changed(con.conn, lt_file):
+                        with get_session() as _sess_tasks:
+                            changed = is_file_changed(_sess_tasks, lt_file)
+                        if changed:
                             rows = process_tasks_file(str(lt_file), str(DB_PATH), conn=con.conn)
-                            mark_file_processed(con.conn, lt_file, row_count=rows)
+                            with get_session() as _sess_tasks:
+                                mark_file_processed(_sess_tasks, lt_file, row_count=rows)
                             has_changes = True
                         else:
                             logger.debug(f"Tareas sin cambios ({lt_file.name})")
 
-            # Documentos No Paletizados (LX02_Pendientes)
+            # Documentos No Paletizados (services/etl/stock.py → StockLevelAdapter)
             if lx02_pendientes_path.exists():
-                from db.lx02_processor import process_lx02_pendientes
+                from services.etl import process_lx02_pendientes
                 cambios_lx02 = False
                 for lx_file in lx02_pendientes_path.glob("*"):
                     if lx_file.suffix.lower() in ['.txt', '.csv', '.xlsx'] and not lx_file.name.startswith('~'):
-                        if is_file_changed(con.conn, lx_file):
+                        with get_session() as _sess_lx:
+                            changed = is_file_changed(_sess_lx, lx_file)
+                        if changed:
                             cambios_lx02 = True
-                            mark_file_processed(con.conn, lx_file, row_count=0)
-                
+                            with get_session() as _sess_lx:
+                                mark_file_processed(_sess_lx, lx_file, row_count=0)
+
                 if cambios_lx02:
                     rows = process_lx02_pendientes(str(lx02_pendientes_path), str(DB_PATH), conn=con.conn)
                     if rows > 0:
