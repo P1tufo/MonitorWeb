@@ -190,68 +190,93 @@ def generate_time_labels(df: pd.DataFrame) -> pd.DataFrame:
         
     return df
 
-# ─── GESTIÓN DE MANIFIESTO (INCREMENTAL SYNC) ──────────────────────────────────
 
-def is_file_changed(session: Session, file_path: Path) -> bool:
+def _manifest_execute(session_or_conn, sql: str, params: dict):
+    """
+    Ejecuta una query de manifiesto sobre Session SQLAlchemy o sqlite3.Connection.
+    Centraliza la diferencia de API entre ambos tipos de conexión.
+    """
+    from sqlalchemy.orm import Session as SASession
+    if isinstance(session_or_conn, SASession):
+        # SQLAlchemy Session → usa text() y dict nombrado
+        return session_or_conn.execute(text(sql), params)
+    else:
+        # sqlite3.Connection → convierte a ? posicional
+        # Los params del manifiesto siempre tienen las mismas claves, mapeamos en orden
+        import re as _re
+        positional_sql = _re.sub(r':\w+', '?', sql)
+        ordered_values = list(params.values())
+        return session_or_conn.execute(positional_sql, ordered_values)
+
+
+def is_file_changed(session_or_conn, file_path: Path) -> bool:
     """
     Verifica si un archivo ha cambiado desde la última sincronización.
-    Retorna True si el archivo es nuevo o ha sido modificado (mtime/size/row_count).
+    Acepta SQLAlchemy Session o sqlite3.Connection.
+    Retorna True si el archivo es nuevo o ha sido modificado (mtime/size).
     """
     if not file_path.exists():
         return False
-        
+
     try:
-        stats = file_path.stat()
-        mtime = stats.st_mtime
-        size = stats.st_size
+        stats    = file_path.stat()
+        mtime    = stats.st_mtime
+        size     = stats.st_size
         path_str = str(file_path.absolute())
-        
-        # Intentamos obtener mtime, size y row_count
-        row = session.execute(
-            text("SELECT last_modified, file_size FROM sync_manifest WHERE file_path = :path"), 
+
+        result = _manifest_execute(
+            session_or_conn,
+            "SELECT last_modified, file_size FROM sync_manifest WHERE file_path = :path",
             {"path": path_str}
-        ).fetchone()
-        
+        )
+        row = result.fetchone()
+
         if row:
             db_mtime, db_size = row
-            # Comparación estricta de tamaño y tiempo
             if db_mtime == mtime and db_size == size:
                 logger.debug(f"Archivo sin cambios detectados: {file_path.name} ({size} bytes)")
                 return False
-            
             logger.info(f"Cambio detectado en {file_path.name}: "
                         f"Size {db_size} -> {size}, MTime {db_mtime} -> {mtime}")
-                
+
         return True
     except Exception as e:
         logger.error(f"Error verificando manifiesto para {file_path.name}: {e}")
-        return True # Por seguridad, si falla asumimos que cambió
+        return True  # Por seguridad, si falla asumimos que cambió
 
 
-def mark_file_processed(session: Session, file_path: Path, row_count: Optional[int] = None):
-    """Marca un archivo como procesado exitosamente en el manifiesto."""
+def mark_file_processed(session_or_conn, file_path: Path, row_count: Optional[int] = None):
+    """Marca un archivo como procesado en el manifiesto.
+    Acepta SQLAlchemy Session o sqlite3.Connection."""
     try:
-        stats = file_path.stat()
-        mtime = stats.st_mtime
-        size = stats.st_size
+        stats    = file_path.stat()
+        mtime    = stats.st_mtime
+        size     = stats.st_size
         path_str = str(file_path.absolute())
-        now = datetime.now().isoformat()
-        
-        # Asegurar que la columna row_count existe (Migración rápida si no existe)
+        now      = datetime.now().isoformat()
+
+        # Asegurar que la columna row_count existe
         try:
-            session.execute(text("ALTER TABLE sync_manifest ADD COLUMN row_count INTEGER"))
-        except:
-            pass # Ya existe
-            
-        session.execute(text("""
+            _manifest_execute(session_or_conn, "ALTER TABLE sync_manifest ADD COLUMN row_count INTEGER", {})
+        except Exception:
+            pass  # Ya existe
+
+        _manifest_execute(session_or_conn, """
             INSERT INTO sync_manifest (file_path, last_modified, file_size, processed_at, row_count)
             VALUES (:path, :mtime, :size, :now, :row_count)
             ON CONFLICT(file_path) DO UPDATE SET
                 last_modified = excluded.last_modified,
-                file_size = excluded.file_size,
-                processed_at = excluded.processed_at,
-                row_count = COALESCE(excluded.row_count, sync_manifest.row_count)
-        """), {"path": path_str, "mtime": mtime, "size": size, "now": now, "row_count": row_count})
-        session.commit()
+                file_size     = excluded.file_size,
+                processed_at  = excluded.processed_at,
+                row_count     = COALESCE(excluded.row_count, sync_manifest.row_count)
+        """, {"path": path_str, "mtime": mtime, "size": size, "now": now, "row_count": row_count})
+
+        # Commit según tipo de conexión
+        from sqlalchemy.orm import Session as SASession
+        if isinstance(session_or_conn, SASession):
+            session_or_conn.commit()
+        else:
+            session_or_conn.commit()
+
     except Exception as e:
         logger.error(f"Error actualizando manifiesto para {file_path.name}: {e}")

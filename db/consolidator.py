@@ -9,7 +9,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Optional, Final
 
-from services.etl import OutboundDeliveryAdapter
+from services.etl import OutboundDeliveryAdapter, StockLevelAdapter
 from .db_enrichment import (
     learn_author_areas, 
     apply_author_learning, 
@@ -122,7 +122,7 @@ class DataConsolidator:
         logger.info(f"Actualizando '{table_name}' usando archivo más reciente: {latest.name}")
 
         try:
-            df = OutboundDeliveryAdapter().read_and_clean_data(latest)
+            df = StockLevelAdapter().read_and_clean_data(latest)
 
             if not df.empty:
                 rows = len(df)
