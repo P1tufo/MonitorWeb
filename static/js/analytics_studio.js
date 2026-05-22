@@ -951,19 +951,29 @@ errorEl.style.display = 'block';
             const filterRow = document.createElement('div');
             filterRow.className = 'qb-form-row';
             filterRow.style = 'display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 8px;';
+
+            // Para date_diff, el operador principal no tiene sentido → mostrar label fijo
+            const opControl = (valueType === 'date_diff')
+                ? `<span class="qb-select" style="width:130px; display:flex; align-items:center; justify-content:center;
+                       font-size:0.78rem; color:var(--text-muted); border:1px dashed var(--border); border-radius:6px; cursor:default;">
+                       📅 diferencia
+                   </span>
+                   <input type="hidden" class="f-op" value="${f.operator || 'greaterthan'}">`
+                : `<select class="qb-select f-op" style="width: 130px;" onchange="updateFilter(${index})">
+                       ${operators.map(o => `<option value="${o.value}" ${o.value === f.operator ? 'selected' : ''}>${o.label}</option>`).join('')}
+                   </select>`;
+
             filterRow.innerHTML = `
                 <select class="qb-select f-col" style="flex: 1; min-width: 140px;" onchange="updateFilter(${index})">
                     ${getActiveColumns().map(c => `<option value="${c}" ${c === f.column ? 'selected' : ''}>${c}</option>`).join('')}
                 </select>
                 
-                <select class="qb-select f-op" style="width: 130px;" onchange="updateFilter(${index})">
-                    ${operators.map(o => `<option value="${o.value}" ${o.value === f.operator ? 'selected' : ''}>${o.label}</option>`).join('')}
-                </select>
+                ${opControl}
                 
                 ${isNullVal ? '' : `
                 <select class="qb-select f-type" style="width: 140px;" onchange="updateFilterType(${index}, this.value)">
-                    <option value="value" ${valueType === 'value' ? 'selected' : ''}>Valor Fijo</option>
-                    <option value="column" ${valueType === 'column' ? 'selected' : ''}>Otra Columna</option>
+                    <option value="value"     ${valueType === 'value'     ? 'selected' : ''}>Valor Fijo</option>
+                    <option value="column"    ${valueType === 'column'    ? 'selected' : ''}>Otra Columna</option>
                     <option value="date_diff" ${valueType === 'date_diff' ? 'selected' : ''}>Diferencia Fechas</option>
                 </select>
                 `}
@@ -974,6 +984,7 @@ errorEl.style.display = 'block';
                 
                 <div class="qb-trash-btn" onclick="removeFilter(${index})"><i class="fas fa-trash"></i></div>
             `;
+
             container.appendChild(filterRow);
         });
     }
