@@ -362,8 +362,17 @@
             if (!response.ok) throw new Error("Status: " + response.status);
             const data = await response.json();
 
-            // La API devuelve solo visual_state (ya no expone sql_text).
-            // El textarea oculto se limpia; syncVisualToSQL() lo rellenará al compilar.
+            // Caso A: query sin constructor visual (no tiene visual_state ni defaultVisualStates)
+            // La API expone sql_text directamente → cargar en textarea y preview sin builder.
+            const hasDefault = !!defaultVisualStates[queryId];
+            if (!data.visual_state && !hasDefault && data.sql_text) {
+                queryTextEl.value = data.sql_text;
+                setTimeout(() => runPreview(), 300);
+                return;
+            }
+
+            // Caso B: query con constructor visual → flujo normal
+            // El textarea se rellena vía syncVisualToSQL() → build_sql API
             queryTextEl.value = "";
 
             // Guardar el visual state del servidor si existe
@@ -390,6 +399,7 @@
         } finally {
             queryTextEl.disabled = false;
         }
+
     }
 
     async function loadSchema() {

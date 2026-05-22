@@ -262,9 +262,11 @@ def api_get_query(query_id: str, db: DBSession, state: AppState = Depends(get_ap
     if not row:
         raise HTTPException(status_code=404, detail="Consulta no encontrada")
     return {
-        "query_id": row.query_id,
-        "visual_state": row.visual_state,
+        "query_id":        row.query_id,
+        "visual_state":    row.visual_state,
         "has_visual_state": bool(row.visual_state),
+        # sql_text solo se expone cuando no hay visual_state (queries de solo SQL sin constructor visual)
+        "sql_text":        row.sql_text if not row.visual_state else None,
     }
 
 @router.post("/api/settings/query")
