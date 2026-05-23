@@ -101,6 +101,54 @@
             transform: translateY(0);
             opacity: 1;
         }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            backdrop-filter: blur(5px);
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 400px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            transform: translateY(20px);
+            transition: transform 0.2s;
+        }
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .modal-close:hover {
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -111,11 +159,16 @@
                 <p style="margin: 5px 0 0 0; color: #94a3b8;">Gestión dinámica de diccionarios y parámetros globales del WMS.</p>
             </div>
             <div style="display: flex; gap: 10px; align-items: center;">
+                <button onclick="openPasswordModal()" class="btn" style="background: rgba(255,255,255,0.05); color: #f8f9fa; border: 1px solid rgba(255,255,255,0.1); padding: 12px 20px; border-radius: 10px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; transition: background 0.2s;">
+                    <i class="fas fa-lock"></i> Seguridad
+                </button>
                 <a href="/analytics" class="btn" style="background: linear-gradient(135deg, #5DBAA9, #4a9e8f); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 10px; transition: all 0.2s; box-shadow: 0 4px 15px rgba(93, 186, 169, 0.4);">
                     <i class="fas fa-arrow-left"></i> Volver al Panel Principal
                 </a>
             </div>
         </div>
+
+
 
         <div class="section-card">
             <h2 class="section-title">Parámetros Globales (Settings)</h2>
@@ -210,6 +263,31 @@
 
     <div id="toast" class="toast">Guardado correctamente</div>
 
+    <!-- Password Modal -->
+    <div id="passwordModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="margin: 0; color: #f8f9fa;">Cambiar Contraseña</h3>
+                <button class="modal-close" onclick="closePasswordModal()">&times;</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div>
+                    <label style="display: block; color: #94a3b8; font-size: 0.85rem; margin-bottom: 5px;">Contraseña Actual</label>
+                    <input type="password" id="current-password" class="edit-field" placeholder="Tu contraseña actual">
+                </div>
+                <div>
+                    <label style="display: block; color: #94a3b8; font-size: 0.85rem; margin-bottom: 5px;">Nueva Contraseña</label>
+                    <input type="password" id="new-password" class="edit-field" placeholder="Mínimo 6 caracteres">
+                </div>
+                <div>
+                    <label style="display: block; color: #94a3b8; font-size: 0.85rem; margin-bottom: 5px;">Confirmar Contraseña</label>
+                    <input type="password" id="confirm-password" class="edit-field" placeholder="Repite la nueva contraseña">
+                </div>
+                <button class="btn-save" onclick="changePassword()" style="margin-top: 10px; padding: 10px; width: 100%;">Confirmar Cambio</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function showToast(msg, isError=false) {
             const toast = document.getElementById('toast');
@@ -235,6 +313,39 @@
             } catch (e) {
                 showToast(e.message, true);
                 return false;
+            }
+        }
+
+        function openPasswordModal() {
+            document.getElementById('passwordModal').classList.add('active');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+            document.getElementById('current-password').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+        }
+
+        async function changePassword() {
+            const currentPass = document.getElementById('current-password').value;
+            const newPass = document.getElementById('new-password').value;
+            const confirmPass = document.getElementById('confirm-password').value;
+
+            if (!currentPass || !newPass || !confirmPass) {
+                return showToast('Por favor, completa todos los campos de contraseña', true);
+            }
+            if (newPass !== confirmPass) {
+                return showToast('Las contraseñas nuevas no coinciden', true);
+            }
+
+            const success = await apiCall('/api/auth/change-password', 'POST', {
+                current_password: currentPass,
+                new_password: newPass
+            });
+
+            if (success) {
+                closePasswordModal();
             }
         }
 

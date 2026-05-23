@@ -207,8 +207,18 @@
                     localStorage.setItem('monitorweb_token', data.access_token);
                     localStorage.setItem('monitorweb_user', data.username);
                     localStorage.setItem('monitorweb_role', data.role);
-                    // Redirigir al dashboard
-                    window.location.href = '/';
+                    // Redirigir de vuelta a la página anterior o al dashboard
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const nextUrl = urlParams.get('next');
+                    const referrer = document.referrer;
+                    
+                    if (nextUrl) {
+                        window.location.href = nextUrl;
+                    } else if (referrer && referrer.includes(window.location.host) && !referrer.includes('/login')) {
+                        window.location.href = referrer;
+                    } else {
+                        window.location.href = '/';
+                    }
                 } else {
                     const err = await res.json();
                     errorBox.textContent = err.detail || 'Error de autenticación';

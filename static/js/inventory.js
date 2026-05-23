@@ -341,3 +341,78 @@ window.switchInventarioView = (view) => {
         window.invTrendChart.update();
     }
 };
+
+window.toggleMultiInv = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+};
+
+window.toggleAllInvAreas = (checkbox) => {
+    const boxes = document.querySelectorAll('.inv-chart-area-cb');
+    boxes.forEach(b => b.checked = checkbox.checked);
+    if (!checkbox.checked) {
+        setTimeout(() => {
+            checkbox.checked = true;
+            boxes.forEach(b => b.checked = true);
+            window.updateInventoryAnalytics();
+        }, 100);
+    } else {
+        window.updateInventoryAnalytics();
+    }
+};
+
+window.updateInventoryAnalytics = () => {
+    const selected = Array.from(document.querySelectorAll('.inv-chart-area-cb:checked')).map(cb => cb.value);
+    
+    // Si desmarcan todo, forzar a seleccionar todo para no romper la vista
+    if (selected.length === 0) {
+        document.querySelectorAll('.inv-chart-area-cb').forEach(b => b.checked = true);
+        const selAll = document.getElementById('invSelectAllAreas');
+        if (selAll) selAll.checked = true;
+        return window.updateInventoryAnalytics();
+    } else {
+        const boxes = document.querySelectorAll('.inv-chart-area-cb');
+        const selAll = document.getElementById('invSelectAllAreas');
+        if (selAll) selAll.checked = (selected.length === boxes.length);
+    }
+
+    // 1. Recalcular KPI Consumo Producción (201)
+    const areaStatsJsonStr = document.getElementById('data_inv_area_stats_json');
+    if (areaStatsJsonStr && areaStatsJsonStr.textContent) {
+        try {
+            const areaStats = JSON.parse(areaStatsJsonStr.textContent);
+            let totalConsumo = 0;
+            areaStats.forEach(s => {
+                if (selected.includes(s.area)) {
+                    totalConsumo += (s.count_val || 0);
+                }
+            });
+            
+            // Actualizar KPI en el DOM
+            const kpiCards = document.querySelectorAll('.stat-card');
+            kpiCards.forEach(card => {
+                const title = card.querySelector('h3');
+                if (title && title.textContent.includes('Consumo Producción (201)')) {
+                    const valEl = card.querySelector('.value');
+                    if (valEl) {
+                        valEl.innerText = totalConsumo.toLocaleString('de-DE');
+                    }
+                }
+            });
+        } catch (e) {}
+    }
+
+    // 2. Filtrar listas (Top Consumidos y Top Usuarios)
+    document.querySelectorAll('.rank-list li[data-area]').forEach(li => {
+        const area = li.getAttribute('data-area');
+        const show = selected.includes(area) || area === 'MIXTO';
+        li.style.display = show ? '' : 'none';
+    });
+};
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.multiselect')) {
+        const boxes = document.getElementById('invAreaCheckboxes');
+        if (boxes) boxes.style.display = 'none';
+    }
+});

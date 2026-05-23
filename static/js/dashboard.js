@@ -56,9 +56,9 @@ const DashboardAPI = {
         try {
             await fetch('/api/auth/logout', { method: 'POST' });
             localStorage.clear();
-            window.location.href = '/login';
+            window.location.reload();
         } catch (e) {
-            window.location.href = '/login';
+            window.location.reload();
         }
     }
 };
@@ -89,9 +89,6 @@ const UI = {
             btn.disabled = false;
             btn.style.opacity = "1";
         }
-    }
-};
-
 // Global click listener for multiselects
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.multiselect')) {
@@ -412,7 +409,7 @@ window.applyCentroFilter = (val) => {
 window.sortTable = sortTable;
 window.filterTable = filterTable;
 window.syncData = syncData;
-window.logout = () => DashboardAPI.logout();
+// window.logout removido para usar la función global definida en _logout.html
 window.downloadBulk = downloadBulk;
 window.applyFilters = applyFilters;
 window.toggleSelectAll = toggleSelectAll;

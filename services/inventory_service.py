@@ -249,11 +249,12 @@ class InventoryService:
         # 2. Consulta consolidada (Conteo de Transacciones/Retiros)
         query = """
             SELECT 
-                UPPER(TRIM(COALESCE(ce_coste, 'OTRO'))) as area_raw,
+                UPPER(TRIM(COALESCE(m.business_area, i.ce_coste, 'MIXTO'))) as area_raw,
                 COUNT(*) as count_val,
-                COUNT(CASE WHEN substr(fe_contab,4,2) = ? AND substr(fe_contab,7,4) = ? THEN 1 END) as count_cm
-            FROM inventory_movements
-            WHERE TRIM(cmv) = '201'
+                COUNT(CASE WHEN substr(i.fe_contab,4,2) = ? AND substr(i.fe_contab,7,4) = ? THEN 1 END) as count_cm
+            FROM inventory_movements i
+            LEFT JOIN config_cost_center_mapping m ON i.ce_coste LIKE m.center_code || '%'
+            WHERE TRIM(i.cmv) = '201'
             GROUP BY area_raw
         """
         df = pd.read_sql(query, self.session.connection().connection, params=(p_mes, p_anio))

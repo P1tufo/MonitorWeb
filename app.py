@@ -145,7 +145,10 @@ def initialize_app(fastapi_app: FastAPI) -> None:
             if exc.status_code == status.HTTP_401_UNAUTHORIZED:
                 accept = request.headers.get("accept", "")
                 if "text/html" in accept:
-                    return RedirectResponse(url="/login")
+                    next_url = request.url.path
+                    if request.url.query:
+                        next_url += f"?{request.url.query}"
+                    return RedirectResponse(url=f"/login?next={next_url}")
             
             # Para peticiones JSON o errores no-401, comportamiento estándar
             from fastapi.exception_handlers import http_exception_handler

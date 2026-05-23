@@ -20,7 +20,7 @@ from core.task_manager import task_manager
 from db.consolidator import DataConsolidator
 
 logger = logging.getLogger("routes-sync")
-router = APIRouter(dependencies=[Depends(require_auth)])
+router = APIRouter()
 
 # ─── Rutas ───────────────────────────────────────────────────────────────────
 
@@ -46,7 +46,7 @@ async def get_sync_status(state: AppState = Depends(get_app_state)):
     }
 
 @router.post("/sync")
-async def sync_data(state: AppState = Depends(get_app_state)):
+async def sync_data(state: AppState = Depends(get_app_state), admin = Depends(require_auth)):
     """
     Inicia el proceso de sincronización de datos.
     Encola la tarea en el TaskManager para ejecución trazable en segundo plano.
@@ -67,12 +67,12 @@ async def sync_data(state: AppState = Depends(get_app_state)):
 # ─── API: Monitoreo de Tareas ────────────────────────────────────────────────
 
 @router.get("/api/tasks")
-async def list_tasks(limit: int = 20, state: AppState = Depends(get_app_state)):
+async def list_tasks(limit: int = 20, state: AppState = Depends(get_app_state), admin = Depends(require_auth)):
     """Lista las tareas recientes del sistema."""
     return {"tasks": task_manager.list_tasks(limit)}
 
 @router.get("/api/tasks/{task_id}")
-async def get_task(task_id: str, state: AppState = Depends(get_app_state)):
+async def get_task(task_id: str, state: AppState = Depends(get_app_state), admin = Depends(require_auth)):
     """Consulta el estado de una tarea específica por su ID."""
     status = task_manager.get_task_status(task_id)
     if not status:

@@ -156,26 +156,28 @@ def seed_initial_config():
             ConfigQuery(
                 query_id="vl_monthly_evolution",
                 sql_text="""SELECT 
-                    substr(fecha_carga,7,4) as year,
-                    substr(fecha_carga,4,2) as month,
-                    substr(fecha_carga,7,4) || '-' || substr(fecha_carga,4,2) as label,
-                    COUNT(DISTINCT entrega) as entregas,
-                    COUNT(DISTINCT fecha_carga) as dias_activos
-                FROM outbound_deliveries
-                WHERE fecha_carga IS NOT NULL AND fecha_carga != ''
-                GROUP BY year, month
+                    substr(v.fecha_carga,7,4) as year,
+                    substr(v.fecha_carga,4,2) as month,
+                    substr(v.fecha_carga,7,4) || '-' || substr(v.fecha_carga,4,2) as label,
+                    {AREA_EXPR} as area,
+                    COUNT(DISTINCT v.entrega) as entregas,
+                    COUNT(DISTINCT v.fecha_carga) as dias_activos
+                FROM outbound_deliveries v
+                WHERE v.fecha_carga IS NOT NULL AND v.fecha_carga != ''
+                GROUP BY year, month, area
                 ORDER BY year ASC, month ASC"""
             ),
             ConfigQuery(
                 query_id="vl_weekly_evolution",
                 sql_text="""SELECT 
-                    week_sort,
-                    MAX(week_label) as label,
-                    COUNT(DISTINCT entrega) as entregas
-                FROM outbound_deliveries
-                WHERE week_sort IS NOT NULL AND week_sort != ''
-                GROUP BY week_sort
-                ORDER BY week_sort ASC"""
+                    v.week_sort,
+                    MAX(v.week_label) as label,
+                    {AREA_EXPR} as area,
+                    COUNT(DISTINCT v.entrega) as entregas
+                FROM outbound_deliveries v
+                WHERE v.week_sort IS NOT NULL AND v.week_sort != ''
+                GROUP BY v.week_sort, area
+                ORDER BY v.week_sort ASC"""
             ),
             ConfigQuery(
                 query_id="vl_top_locations",
@@ -234,6 +236,8 @@ ORDER BY fecha ASC;""",
                     substr(v.fecha_carga,7,4) || '-' || substr(v.fecha_carga,4,2) as month_sort,
                     MAX(substr(v.fecha_carga,4,2) || '-' || substr(v.fecha_carga,7,4)) as label,
                     {AREA_EXPR} as area,
+                    SUM(CASE WHEN v.dias_retraso <= ? THEN 1 ELSE 0 END) as ontime_count,
+                    COUNT(*) as total_count,
                     (SUM(CASE WHEN v.dias_retraso <= ? THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) as efficiency
                 FROM outbound_deliveries v
                 WHERE v.fecha_carga IS NOT NULL AND v.fecha_carga != ''
@@ -254,6 +258,8 @@ ORDER BY fecha ASC;""",
                 query_id="vl_sla_area_trend",
                 sql_text="""SELECT 
                     v.week_sort, MAX(v.week_label) as label, {AREA_EXPR} as area,
+                    SUM(CASE WHEN v.dias_retraso <= ? THEN 1 ELSE 0 END) as ontime_count,
+                    COUNT(*) as total_count,
                     (SUM(CASE WHEN v.dias_retraso <= ? THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) as efficiency
                 FROM outbound_deliveries v
                 WHERE v.week_sort IS NOT NULL AND v.week_sort != ''

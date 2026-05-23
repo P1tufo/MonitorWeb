@@ -1,10 +1,11 @@
 <!-- Chart.js Core -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+{% include "partials/_quick_login_modal.html" %}
 {% include "partials/_logout.html" %}
 
 <!-- Core UI Module: openModal, closeModal, renderMaterialModal, getData — compartido por todos los módulos -->
 <script src="{{ url_for('static', path='js/core_ui.js') }}?v=1"></script>
 
 <!-- Dashboard Business Logic & UI Helpers -->
-<script src="{{ url_for('static', path='js/dashboard.js') }}?v=4"></script>
+<script src="{{ url_for('static', path='js/dashboard.js') }}?v=7"></script>

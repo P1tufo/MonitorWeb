@@ -174,12 +174,25 @@ class DeliveriesService:
 
             # Evolución Mensual y Semanal
             monthly_df = DeliveriesRepository(self.session).get_monthly_evolution()
-            monthly_labels = monthly_df['label'].tolist() if not monthly_df.empty else []
-            monthly_data = monthly_df['entregas'].tolist() if not monthly_df.empty else []
-            
+            if not monthly_df.empty:
+                # El DataFrame ahora viene agrupado por (label, area). Agrupamos globalmente para compatibilidad.
+                monthly_global = monthly_df.groupby('label')['entregas'].sum().reset_index()
+                # Ordenar cronológicamente (label es YYYY-MM)
+                monthly_global = monthly_global.sort_values('label')
+                monthly_labels = monthly_global['label'].tolist()
+                monthly_data = monthly_global['entregas'].tolist()
+            else:
+                monthly_labels, monthly_data = [], []
+            monthly_raw_json = sanitize_for_json(monthly_df)
             weekly_df = DeliveriesRepository(self.session).get_weekly_evolution()
-            weekly_labels = weekly_df['label'].tolist() if not weekly_df.empty else []
-            weekly_data = weekly_df['entregas'].tolist() if not weekly_df.empty else []
+            if not weekly_df.empty:
+                weekly_global = weekly_df.groupby('label')['entregas'].sum().reset_index()
+                weekly_global = weekly_global.sort_values('label')
+                weekly_labels = weekly_global['label'].tolist()
+                weekly_data = weekly_global['entregas'].tolist()
+            else:
+                weekly_labels, weekly_data = [], []
+            weekly_raw_json = sanitize_for_json(weekly_df)
             
             # Nuevos Análisis Avanzados
             wms_status_df = DeliveriesRepository(self.session).get_wms_status_distribution(yr_mask)
@@ -196,6 +209,7 @@ class DeliveriesService:
             correlation_data = sanitize_for_json(correlation_df) if not correlation_df.empty else []
 
             sla_area_df = DeliveriesRepository(self.session).get_sla_trend_by_area()
+            sla_area_trend_raw_json = sanitize_for_json(sla_area_df)
             sla_area_labels = []
             sla_area_datasets = []
             if not sla_area_df.empty:
@@ -319,6 +333,10 @@ class DeliveriesService:
                 "sla_monthly_count": sla_monthly_count,
                 "sla_area_monthly_labels": sla_area_monthly_labels,
                 "sla_area_monthly_datasets": sla_area_monthly_datasets,
+                "monthly_raw_json": monthly_raw_json,
+                "weekly_raw_json": weekly_raw_json,
+                "sla_area_monthly_raw_json": sanitize_for_json(sla_area_monthly_df) if not sla_area_monthly_df.empty else [],
+                "sla_area_trend_raw_json": sla_area_trend_raw_json,
                 "correlation_data": correlation_data,
                 **kpis,
                 **inventory_ctx,

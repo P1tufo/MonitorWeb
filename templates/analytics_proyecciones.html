@@ -20,18 +20,23 @@
                     <p class="header-desc">Anticipación de demanda y detección de desplanificaciones.</p>
                 </div>
                 <div class="actions">
-                    <a href="/" class="btn btn-secondary">🏠 Dash</a>
-                    <a href="/analytics" class="btn"
-                        style="background:rgba(93,186,169,0.2); color: #5DBAA9; border:1px solid rgba(93,186,169,0.5); text-decoration: none;">📊
-                        Entregas</a>
-                    <a href="/analytics/inventory" class="btn"
-                        style="background:rgba(191,184,0,0.1); color: #BFB800; border:1px solid rgba(191,184,0,0.3); text-decoration: none;">📦
-                        Inventario</a>
-                    <button class="btn"
-                        style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);"
-                        onclick="logout()">
-                        🚪 Salir
-                    </button>
+                    <div class="dropdown">
+                        <button class="dropdown-btn">🚀 Ir a Módulo ▼</button>
+                        <div class="dropdown-content">
+                            <a href="/">🏠 Volver al Dashboard</a>
+                            <a href="/analytics">📊 Entregas</a>
+                            <a href="/analytics?tab=inventory">📦 Movimientos</a>
+                            <a href="/analytics?tab=ots">📑 Monitor OTs</a>
+                            <a href="/analytics?tab=historial">📍 Historial de Ubicaciones</a>
+                            <a href="/analytics?tab=docs">📚 Documentación</a>
+                        </div>
+                    </div>
+                    <!-- Guest View -->
+                    <button id="btn-login-trigger" class="btn btn-secondary" style="background:#5DBAA9; color:#0f172a; text-decoration:none; {% if user.username != 'invitado' %}display:none;{% endif %}" onclick="document.getElementById('quickLoginModal').classList.add('active')">🔑 Entrar</button>
+
+                    <!-- Authenticated View -->
+                    <span id="user-greeting" style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px; {% if user.username == 'invitado' %}display:none;{% endif %}">👤 <span id="user-name-display">{{ user.username }}</span></span>
+                    <button id="btn-logout-trigger" class="btn btn-secondary" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); {% if user.username == 'invitado' %}display:none;{% endif %}" onclick="logout()">🚪 Salir</button>
                 </div>
             </div>
         </header>

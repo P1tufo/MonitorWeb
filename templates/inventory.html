@@ -22,20 +22,23 @@
                     <p class="header-desc">Mapeo de Materiales: Entradas, Consumos y Traspasos</p>
                 </div>
                 <div class="actions">
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                <a href="/analytics?tab=historial" class="btn" style="background:rgba(139,92,246,0.15); color: #a78bfa; border:1px solid rgba(139,92,246,0.3); text-decoration: none;">📍 Historial</a>
-                <a href="/" class="btn" style="text-decoration:none;">🏠 Volver al Dashboard</a>
-            </div>
-                    {% if user.username != "invitado" %}
-                        <span style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px;">👤 {{ user.username }}</span>
-                        <button class="btn btn-secondary" style="background:rgba(239,68,68,0.1); color:#ef4444;" onclick="logout()">🚪 Salir</button>
-                    {% else %}
-                        <a href="/login" class="btn btn-secondary" style="background:#5DBAA9; color:#0f172a;">🔑 Entrar</a>
-                    {% endif %}
-                    <a href="/analytics?tab=historial" class="btn"
-                        style="background:rgba(139,92,246,0.15); color: #a78bfa; border:1px solid rgba(139,92,246,0.3); text-decoration: none;">📍 Historial</a>
-                    <a href="/analytics" class="btn"
-                        style="background:rgba(93,186,169,0.2); color: #5DBAA9; border:1px solid rgba(93,186,169,0.5); text-decoration: none;">📊 Entregas</a>
+                    <div class="dropdown">
+                        <button class="dropdown-btn">🚀 Ir a Módulo ▼</button>
+                        <div class="dropdown-content">
+                            <a href="/">🏠 Volver al Dashboard</a>
+                            <a href="/analytics">📊 Entregas</a>
+                            <a href="/analytics?tab=ots">📑 Monitor OTs</a>
+                            <a href="/analytics?tab=ia">🧠 IA Insomnio y Ansiedad</a>
+                            <a href="/analytics?tab=historial">📍 Historial de Ubicaciones</a>
+                            <a href="/analytics?tab=docs">📚 Documentación</a>
+                        </div>
+                    </div>
+                    <!-- Guest View -->
+                    <button id="btn-login-trigger" class="btn btn-secondary" style="background:#5DBAA9; color:#0f172a; text-decoration:none; {% if user.username != 'invitado' %}display:none;{% endif %}" onclick="document.getElementById('quickLoginModal').classList.add('active')">🔑 Entrar</button>
+
+                    <!-- Authenticated View -->
+                    <span id="user-greeting" style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px; {% if user.username == 'invitado' %}display:none;{% endif %}">👤 <span id="user-name-display">{{ user.username }}</span></span>
+                    <button id="btn-logout-trigger" class="btn btn-secondary" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); {% if user.username == 'invitado' %}display:none;{% endif %}" onclick="logout()">🚪 Salir</button>
                 </div>
             </div>
         </header>
@@ -219,7 +222,9 @@
     <script type="application/json" id="data_dow_mapping">{{ dow_material_mapping | tojson | safe }}</script>
     <script type="application/json" id="data_pm_mapping">{{ pm_material_mapping | tojson | safe }}</script>
 
+    <script src="{{ url_for('static', path='js/core_ui.js') }}?v=1"></script>
     <script src="{{ url_for('static', path='js/inventory.js') }}"></script>
+    {% include "partials/_quick_login_modal.html" %}
     {% include "partials/_logout.html" %}
 </body>
 

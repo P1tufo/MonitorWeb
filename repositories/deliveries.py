@@ -177,30 +177,32 @@ class DeliveriesRepository(BaseRepository):
         return pd.read_sql(query, self.session.connection(), params=(self._get_sla_threshold(), year, limit))
 
     def get_monthly_evolution(self) -> pd.DataFrame:
-        fallback = """
+        fallback = f"""
             SELECT 
-                substr(fecha_carga,7,4) as year,
-                substr(fecha_carga,4,2) as month,
-                substr(fecha_carga,7,4) || '-' || substr(fecha_carga,4,2) as label,
-                COUNT(DISTINCT entrega) as entregas,
-                COUNT(DISTINCT fecha_carga) as dias_activos
-            FROM outbound_deliveries
-            WHERE fecha_carga IS NOT NULL AND fecha_carga != ''
-            GROUP BY year, month
+                substr(v.fecha_carga,7,4) as year,
+                substr(v.fecha_carga,4,2) as month,
+                substr(v.fecha_carga,7,4) || '-' || substr(v.fecha_carga,4,2) as label,
+                {self.AREA_EXPR} as area,
+                COUNT(DISTINCT v.entrega) as entregas,
+                COUNT(DISTINCT v.fecha_carga) as dias_activos
+            FROM outbound_deliveries v
+            WHERE v.fecha_carga IS NOT NULL AND v.fecha_carga != ''
+            GROUP BY year, month, area
             ORDER BY year ASC, month ASC
         """
         return pd.read_sql(self._sql("vl_monthly_evolution", fallback), self.session.connection().connection)
 
     def get_weekly_evolution(self) -> pd.DataFrame:
-        fallback = """
+        fallback = f"""
             SELECT 
-                week_sort,
-                MAX(week_label) as label,
-                COUNT(DISTINCT entrega) as entregas
-            FROM outbound_deliveries
-            WHERE week_sort IS NOT NULL AND week_sort != ''
-            GROUP BY week_sort
-            ORDER BY week_sort ASC
+                v.week_sort,
+                MAX(v.week_label) as label,
+                {self.AREA_EXPR} as area,
+                COUNT(DISTINCT v.entrega) as entregas
+            FROM outbound_deliveries v
+            WHERE v.week_sort IS NOT NULL AND v.week_sort != ''
+            GROUP BY v.week_sort, area
+            ORDER BY v.week_sort ASC
         """
         return pd.read_sql(self._sql("vl_weekly_evolution", fallback), self.session.connection().connection)
 
@@ -278,13 +280,15 @@ class DeliveriesRepository(BaseRepository):
                 v.week_sort,
                 MAX(v.week_label) as label,
                 {self.AREA_EXPR} as area,
+                SUM(CASE WHEN v.dias_retraso <= ? THEN 1 ELSE 0 END) as ontime_count,
+                COUNT(*) as total_count,
                 (SUM(CASE WHEN v.dias_retraso <= ? THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) as efficiency
             FROM outbound_deliveries v
             WHERE v.week_sort IS NOT NULL AND v.week_sort != ''
             GROUP BY v.week_sort, area
             ORDER BY v.week_sort ASC
         """
-        return pd.read_sql(self._sql("vl_sla_area_trend", fallback), self.session.connection().connection, params=(self._get_sla_threshold(),))
+        return pd.read_sql(self._sql("vl_sla_area_trend", fallback), self.session.connection().connection, params=(self._get_sla_threshold(), self._get_sla_threshold()))
 
     def get_sla_monthly_trend(self) -> pd.DataFrame:
         sql = f"""
@@ -306,10 +310,12 @@ class DeliveriesRepository(BaseRepository):
                 substr(v.fecha_carga,7,4) || '-' || substr(v.fecha_carga,4,2) as month_sort,
                 MAX(substr(v.fecha_carga,4,2) || '-' || substr(v.fecha_carga,7,4)) as label,
                 {self.AREA_EXPR} as area,
+                SUM(CASE WHEN v.dias_retraso <= ? THEN 1 ELSE 0 END) as ontime_count,
+                COUNT(*) as total_count,
                 (SUM(CASE WHEN v.dias_retraso <= ? THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) as efficiency
             FROM outbound_deliveries v
             WHERE v.fecha_carga IS NOT NULL AND v.fecha_carga != ''
             GROUP BY month_sort, area
             ORDER BY month_sort ASC
         """
-        return pd.read_sql(self._sql("vl_sla_area_monthly_trend", fallback), self.session.connection().connection, params=(self._get_sla_threshold(),))
+        return pd.read_sql(self._sql("vl_sla_area_monthly_trend", fallback), self.session.connection().connection, params=(self._get_sla_threshold(), self._get_sla_threshold()))

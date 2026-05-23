@@ -1,0 +1,98 @@
+<!-- Quick Login Modal -->
+<div id="quickLoginModal" class="pdf-modal">
+    <div class="pdf-modal-content modal-content-small" style="max-width: 380px; padding: 10px;">
+        <div class="pdf-modal-header" style="border-bottom: none; background: transparent;">
+            <h3 class="modal-title" style="color: #5DBAA9; font-weight: 600;">🔐 Acceso Rápido</h3>
+            <span class="pdf-close" onclick="document.getElementById('quickLoginModal').classList.remove('active')" title="Cerrar">&times;</span>
+        </div>
+        <div class="modal-body" style="padding-top: 0;">
+            <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px;">Inicia sesión sin perder tus filtros actuales.</p>
+            <div id="quick-login-error" class="error-msg" style="display:none; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; border: 1px solid rgba(239,68,68,0.2);"></div>
+            <form id="quickLoginForm" onsubmit="handleQuickLogin(event)">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em;">Usuario</label>
+                    <input type="text" id="quick-username" style="width: 100%; padding: 12px; background: rgba(15,23,42,0.6); border: 1px solid rgba(93,186,169,0.2); border-radius: 8px; color: white; outline: none; transition: 0.2s;" required onfocus="this.style.borderColor='#5DBAA9'" onblur="this.style.borderColor='rgba(93,186,169,0.2)'">
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em;">Contraseña</label>
+                    <input type="password" id="quick-password" style="width: 100%; padding: 12px; background: rgba(15,23,42,0.6); border: 1px solid rgba(93,186,169,0.2); border-radius: 8px; color: white; outline: none; transition: 0.2s;" required onfocus="this.style.borderColor='#5DBAA9'" onblur="this.style.borderColor='rgba(93,186,169,0.2)'">
+                </div>
+                <button type="submit" id="quick-btn-submit" class="btn" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #5DBAA9, #4a9e8f); color: white; font-size: 1rem; border: none; padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s;">Iniciar Sesión</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+async function handleQuickLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('quick-btn-submit');
+    const errorBox = document.getElementById('quick-login-error');
+    
+    btn.disabled = true;
+    btn.textContent = 'Autenticando...';
+    errorBox.style.display = 'none';
+
+    const formData = new URLSearchParams();
+    formData.append('username', document.getElementById('quick-username').value);
+    formData.append('password', document.getElementById('quick-password').value);
+
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData,
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            localStorage.setItem('monitorweb_token', data.access_token);
+            localStorage.setItem('monitorweb_user', data.username);
+            localStorage.setItem('monitorweb_role', data.role);
+            
+            // Si estamos en el Dashboard puro (/) preservamos los filtros con magia negra
+            // Si estamos en una sección (ej. /analytics) necesitamos recargar para que Jinja2 dibuje los paneles de Admin
+            if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+                // Cerrar el modal
+                document.getElementById('quickLoginModal').classList.remove('active');
+                document.getElementById('quick-username').value = '';
+                document.getElementById('quick-password').value = '';
+
+                // Actualizar la UI sin recargar (magia negra)
+                const loginTrigger = document.getElementById('btn-login-trigger');
+                if(loginTrigger) loginTrigger.style.display = 'none';
+                
+                const userGreeting = document.getElementById('user-greeting');
+                if(userGreeting) userGreeting.style.display = 'inline';
+                
+                const userNameDisplay = document.getElementById('user-name-display');
+                if(userNameDisplay) userNameDisplay.textContent = data.username;
+                
+                const logoutTrigger = document.getElementById('btn-logout-trigger');
+                if(logoutTrigger) logoutTrigger.style.display = 'inline-block';
+                
+                if (data.role === 'admin') {
+                    const syncBtn = document.getElementById('btn-sync-trigger');
+                    if (syncBtn) syncBtn.style.display = 'inline-block';
+                    const settingsBtn = document.getElementById('btn-settings-trigger');
+                    if (settingsBtn) settingsBtn.style.display = 'inline-block';
+                }
+            } else {
+                // Recargar la página (al tener la URL actualizada, mantendrá el tab)
+                window.location.reload();
+            }
+        } else {
+            const err = await res.json();
+            errorBox.textContent = err.detail || 'Error de autenticación';
+            errorBox.style.display = 'block';
+        }
+    } catch (err) {
+        errorBox.textContent = 'Error de conexión con el servidor';
+        errorBox.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Iniciar Sesión';
+    }
+}
+window.handleQuickLogin = handleQuickLogin;
+</script>

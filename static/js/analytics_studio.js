@@ -488,11 +488,16 @@ errorEl.style.display = 'block';
             return;
         }
 
-        const chartType = document.getElementById('studioChartType').value;
+        let chartType = document.getElementById('studioChartType').value;
         const primaryColor = document.getElementById('studioPrimaryColor').value;
         const keys = Object.keys(data[0]);
         const isPercent = !!(visualState && visualState.metric && visualState.metric.format === 'percent');
         const PALETTE = ['#22c55e','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#5DBAA9','#EA7600'];
+
+        // Si la consulta devuelve una sola columna (ej. COUNT puro), forzar KPI si no es tabla
+        if (keys.length === 1 && chartType !== 'table') {
+            chartType = 'kpi';
+        }
 
         // ─── TABLE ─────────────────────────────────────────────────────────────
         if (chartType === 'table') {

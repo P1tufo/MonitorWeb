@@ -402,6 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 1. Crear elemento contenedor
             const wrapper = document.createElement('div');
             wrapper.className = 'trellis-item';
+            wrapper.setAttribute('data-area', ds.label);
             wrapper.style.cssText = 'background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; height: 220px;';
             
             const title = document.createElement('h4');
@@ -548,6 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (avg >= 85) statusColor = '#f59e0b'; // Amber/Yellow
 
             const wrapper = document.createElement('div');
+            wrapper.setAttribute('data-area', ds.label);
             wrapper.style.cssText = 'background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; height: 220px;';
             const title = document.createElement('h4');
             title.innerHTML = `${ds.label} <span style="color: ${statusColor}; margin-left: 8px; font-weight: bold;">Avg: ${avg}%</span>`;
@@ -606,16 +608,9 @@ window.toggleMulti = (id) => {
 
 
 function updateDeliveriesAnalytics() {
-    if (!window.intensidadChart) return;
     const selected = Array.from(document.querySelectorAll('.chart-area-cb:checked')).map(cb => cb.value);
     
-    // 1. Update Intensity Chart Visibility
-    window.intensidadChart.data.datasets.forEach((ds, i) => {
-        window.intensidadChart.setDatasetVisibility(i, selected.includes(ds.label));
-    });
-    window.intensidadChart.update();
-
-    // 2. Recalculate KPIs
+    // 1. Recalculate KPIs
     const areaStats = getData('data_area_stats') || [];
     const globalDays = getData('data_total_dias_activos') || 0;
     
@@ -667,58 +662,101 @@ function updateDeliveriesAnalytics() {
         card.style.display = selected.includes(area) ? '' : 'none';
     });
 
-    // 4. Update Area Mix Chart (Filter categories)
-    if (window.areaMixChart) {
-        const filteredStats = areaStats.filter(s => selected.includes(s.area));
-        window.areaMixChart.data.labels = filteredStats.map(s => s.area);
-        window.areaMixChart.data.datasets[0].data = filteredStats.map(s => s.promedio_diario);
-        window.areaMixChart.data.datasets[1].data = filteredStats.map(s => s.promedio_diario_cm || 0);
-        window.areaMixChart.update();
-    }
+    // 3. Filter Trellis Charts (Small Multiples)
+    document.querySelectorAll('#sla-trellis-container > div[data-area]').forEach(wrapper => {
+        const area = wrapper.getAttribute('data-area');
+        wrapper.style.display = selected.includes(area) ? '' : 'none';
+    });
+    
+    document.querySelectorAll('#sla-monthly-trellis-container > div[data-area]').forEach(wrapper => {
+        const area = wrapper.getAttribute('data-area');
+        wrapper.style.display = selected.includes(area) ? '' : 'none';
+    });
 
-    // 5. Update Week Heat Chart
-    const weekdayRaw = getData('data_weekday_raw') || [];
-    if (window.weekHeatChart && weekdayRaw.length > 0) {
-        const daysMap = {0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'};
-        const sums = {'Lunes':0, 'Martes':0, 'Miércoles':0, 'Jueves':0, 'Viernes':0};
-        const counts = {'Lunes':0, 'Martes':0, 'Miércoles':0, 'Jueves':0, 'Viernes':0};
-        const sumsCM = {'Lunes':0, 'Martes':0, 'Miércoles':0, 'Jueves':0, 'Viernes':0};
-        const countsCM = {'Lunes':0, 'Martes':0, 'Miércoles':0, 'Jueves':0, 'Viernes':0};
-        
-        const currentMonth = new Date().getMonth() + 1;
-
-        weekdayRaw.forEach(r => {
-            if (selected.includes(r.area)) {
-                try {
-                    const p = r.fe_carga.split('-');
-                    const d = new Date(p[2], p[1]-1, p[0]);
-                    let wd = (d.getDay() + 6) % 7; 
-                    let dayName = daysMap[wd];
-                    if (dayName === 'Sábado' || dayName === 'Domingo') dayName = 'Lunes';
-                    if (sums[dayName] !== undefined) {
-                        sums[dayName] += r.count;
-                        counts[dayName]++;
-                        if (parseInt(p[1]) === currentMonth) {
-                            sumsCM[dayName] += r.count;
-                            countsCM[dayName]++;
-                        }
-                    }
-                } catch(e){}
+    // 4. Update Global Trend Charts
+    const monthlyRaw = getData('data_monthly_raw_json') || [];
+    if (window.monthlyTrendChart && monthlyRaw.length > 0) {
+        const aggregated = {};
+        monthlyRaw.forEach(row => {
+            if (selected.includes(row.area)) {
+                aggregated[row.label] = (aggregated[row.label] || 0) + (row.entregas || 0);
             }
         });
-        
-        const labels = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
-        window.weekHeatChart.data.datasets[0].data = labels.map(l => counts[l] > 0 ? Math.round(sums[l]/counts[l]) : 0);
-        window.weekHeatChart.data.datasets[1].data = labels.map(l => countsCM[l] > 0 ? Math.round(sumsCM[l]/countsCM[l]) : 0);
-        window.weekHeatChart.update();
+        const labels = window.monthlyTrendChart.data.labels;
+        const newData = labels.map(lbl => aggregated[lbl] || 0);
+        window.monthlyTrendChart.data.datasets[0].data = newData;
+        window.monthlyTrendChart.update();
     }
 
-    // 6. Filter Locations List
-    document.querySelectorAll('.rank-list li[data-area]').forEach(li => {
-        const area = li.getAttribute('data-area');
-        // Solicitadores list also has data-area, this handles both
-        li.style.display = (selected.includes(area) || area === 'MIXTO') ? '' : 'none';
-    });
+    const slaAreaMonthlyRaw = getData('data_sla_area_monthly_raw_json') || [];
+    if (window.slaMonthlyTrendChart && slaAreaMonthlyRaw.length > 0) {
+        const aggSla = {};
+        slaAreaMonthlyRaw.forEach(row => {
+            if (selected.includes(row.area)) {
+                if (!aggSla[row.label]) aggSla[row.label] = {ontime: 0, total: 0};
+                aggSla[row.label].ontime += (row.ontime_count || 0);
+                aggSla[row.label].total += (row.total_count || 0);
+            }
+        });
+        const labels = window.slaMonthlyTrendChart.data.labels;
+        const newData = labels.map(lbl => {
+            const d = aggSla[lbl];
+            if (!d || d.total === 0) return 0;
+            return parseFloat(((d.ontime / d.total) * 100).toFixed(1));
+        });
+        const newTotalData = labels.map(lbl => {
+            const d = aggSla[lbl];
+            if (!d) return 0;
+            return d.total;
+        });
+        window.slaMonthlyTrendChart.data.datasets[0].data = newData;
+        if (window.slaMonthlyTrendChart.data.datasets.length > 1) {
+            window.slaMonthlyTrendChart.data.datasets[1].data = newTotalData;
+        }
+        window.slaMonthlyTrendChart.update();
+    }
+
+    const weeklyRaw = getData('data_weekly_raw_json') || [];
+    if (window.weeklyTrendChart && weeklyRaw.length > 0) {
+        const aggregated = {};
+        weeklyRaw.forEach(row => {
+            if (selected.includes(row.area)) {
+                aggregated[row.label] = (aggregated[row.label] || 0) + (row.entregas || 0);
+            }
+        });
+        const labels = window.weeklyTrendChart.data.labels;
+        const newData = labels.map(lbl => aggregated[lbl] || 0);
+        window.weeklyTrendChart.data.datasets[0].data = newData;
+        window.weeklyTrendChart.update();
+    }
+
+    const slaAreaWeeklyRaw = getData('data_sla_area_trend_raw_json') || [];
+    if (window.slaTrendChart && slaAreaWeeklyRaw.length > 0) {
+        const aggSla = {};
+        slaAreaWeeklyRaw.forEach(row => {
+            if (selected.includes(row.area)) {
+                if (!aggSla[row.label]) aggSla[row.label] = {ontime: 0, total: 0};
+                aggSla[row.label].ontime += (row.ontime_count || 0);
+                aggSla[row.label].total += (row.total_count || 0);
+            }
+        });
+        const labels = window.slaTrendChart.data.labels;
+        const newData = labels.map(lbl => {
+            const d = aggSla[lbl];
+            if (!d || d.total === 0) return 0;
+            return parseFloat(((d.ontime / d.total) * 100).toFixed(1));
+        });
+        const newTotalData = labels.map(lbl => {
+            const d = aggSla[lbl];
+            if (!d) return 0;
+            return d.total;
+        });
+        window.slaTrendChart.data.datasets[0].data = newData;
+        if (window.slaTrendChart.data.datasets.length > 1) {
+            window.slaTrendChart.data.datasets[1].data = newTotalData;
+        }
+        window.slaTrendChart.update();
+    }
 }
 
 

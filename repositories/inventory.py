@@ -40,16 +40,19 @@ class InventoryRepository(BaseRepository):
     )
 
     _SQL_AREA_STATS_PROD = (
-        "SELECT COALESCE(ce_coste, 'OTRO') as area, COUNT(material) as num_tx, "
-        "SUM(cantidad) as sum_qty, COUNT(DISTINCT fe_contab) as active_days "
-        "FROM inventory_movements WHERE cmv = ? GROUP BY area ORDER BY num_tx DESC"
+        "SELECT COALESCE(m.business_area, i.ce_coste, 'MIXTO') as area, COUNT(i.material) as num_tx, "
+        "SUM(i.cantidad) as sum_qty, COUNT(DISTINCT i.fe_contab) as active_days "
+        "FROM inventory_movements i "
+        "LEFT JOIN config_cost_center_mapping m ON i.ce_coste LIKE m.center_code || '%' "
+        "WHERE i.cmv = ? GROUP BY area ORDER BY num_tx DESC"
     )
 
     _SQL_CONSUMOS_ABC = (
-        "SELECT material as cod_mat, texto_breve_material as material, "
-        "COUNT(material) as qty FROM inventory_movements "
-        "WHERE cmv IN (?, ?) AND material IS NOT NULL AND material != '' "
-        "GROUP BY cod_mat, material ORDER BY qty DESC"
+        "SELECT COALESCE(m.business_area, i.ce_coste, 'MIXTO') as area, i.material as cod_mat, i.texto_breve_material as material, "
+        "COUNT(i.material) as qty FROM inventory_movements i "
+        "LEFT JOIN config_cost_center_mapping m ON i.ce_coste LIKE m.center_code || '%' "
+        "WHERE i.cmv IN (?, ?) AND i.material IS NOT NULL AND i.material != '' "
+        "GROUP BY area, cod_mat, material ORDER BY qty DESC"
     )
 
     _SQL_DOW_STATS = (
@@ -93,7 +96,7 @@ class InventoryRepository(BaseRepository):
 
     def get_top_users(self, start_year: str = '2026') -> pd.DataFrame:
         query = f"""
-            SELECT usuario as user,
+            SELECT i.usuario as user, COALESCE(m.business_area, i.ce_coste, 'MIXTO') as area,
             SUM(CASE WHEN cmv IN (?, ?) THEN 1 ELSE 0 END) as qty,
             SUM(CASE WHEN cmv IN (?, ?, ?, ?, ?) 
                 AND NOT (
@@ -108,7 +111,8 @@ class InventoryRepository(BaseRepository):
                     UPPER(COALESCE(referencia, '')) LIKE '%ERROR%' OR
                     UPPER(COALESCE(referencia, '')) LIKE '%ANUL%'
                 ) THEN 1 ELSE 0 END) as anulaciones
-            FROM inventory_movements 
+            FROM inventory_movements i
+            LEFT JOIN config_cost_center_mapping m ON i.ce_coste LIKE m.center_code || '%'
             WHERE usuario IS NOT NULL AND usuario != '' AND substr(fe_contab, 7, 4) >= ?
             AND NOT (
                 UPPER(COALESCE(texto_cab_documento, '')) LIKE '%CIERRE%' OR
@@ -122,7 +126,7 @@ class InventoryRepository(BaseRepository):
                 UPPER(COALESCE(referencia, '')) LIKE '%ERROR%' OR
                 UPPER(COALESCE(referencia, '')) LIKE '%ANUL%'
             )
-            GROUP BY user HAVING qty > 0 ORDER BY qty DESC LIMIT 10
+            GROUP BY user, COALESCE(m.business_area, i.ce_coste, 'MIXTO') HAVING qty > 0 ORDER BY qty DESC LIMIT 10
         """
         params = self.get_cmv_consumos() + self.get_cmv_reversas() + (start_year,)
         return pd.read_sql(query, self.session.connection(), params=params)

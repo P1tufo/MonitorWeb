@@ -22,7 +22,7 @@ from core.auth import (
     hash_password, verify_password,
     create_access_token, require_auth, require_admin,
     get_current_user,
-    TokenResponse, UserCreate, UserPublic,
+    TokenResponse, UserCreate, UserPublic, ChangePasswordRequest
 )
 from core.app_instance import templates
 from core.state import AppState, get_app_state
@@ -100,6 +100,20 @@ def get_me(user: User = Depends(require_auth), state: AppState = Depends(get_app
         "is_active": user.is_active,
         "created_at": str(user.created_at),
     }
+
+@router.post("/api/auth/change-password")
+def change_password(data: ChangePasswordRequest, db: DBSession, user: User = Depends(require_auth)):
+    """Cambia la contraseña del usuario autenticado."""
+    if not verify_password(data.current_password, user.password_hash):
+        raise HTTPException(status_code=400, detail="La contraseña actual es incorrecta")
+        
+    if len(data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="La nueva contraseña debe tener al menos 6 caracteres")
+        
+    user.password_hash = hash_password(data.new_password)
+    db.commit()
+    logger.info(f"El usuario {user.username} cambió su contraseña.")
+    return {"status": "success", "message": "Contraseña actualizada exitosamente"}
 
 
 # ─── Registro de usuarios (solo admin) ────────────────────────────────────────

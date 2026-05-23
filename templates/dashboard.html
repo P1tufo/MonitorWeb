@@ -34,52 +34,29 @@
                     style="display:none; margin-right:8px;">
                     🔍 Filtros
                 </button>
-                <a href="/analytics" class="btn"
-                    style="background:rgba(93,186,169,0.2); color: #5DBAA9; border:1px solid rgba(93,186,169,0.5); text-decoration: none;">
-                    📊 Entregas
-                </a>
-                <a href="/analytics?tab=inventory" class="btn"
-                    style="background:rgba(191,184,0,0.1); color: #BFB800; border:1px solid rgba(191,184,0,0.3); text-decoration: none;">
-                    📦 Movimientos
-                </a>
-                <a href="/analytics?tab=ots" class="btn"
-                    style="background:rgba(14,165,233,0.15); color: #38bdf8; border:1px solid rgba(14,165,233,0.3); text-decoration: none;">
-                    📑 Monitor OTs
-                </a>
-                <a href="/analytics?tab=ia" class="btn"
-                    style="background:rgba(234,118,0,0.1); color: #EA7600; border:1px solid rgba(234,118,0,0.3); text-decoration: none;">
-                    🧠 IA Insomnio y Ansiedad
-                </a>
-                <a href="/analytics?tab=historial" class="btn"
-                    style="background:rgba(139,92,246,0.15); color: #a78bfa; border:1px solid rgba(139,92,246,0.3); text-decoration: none;">
-                    📍 Ubicaciones de materiales
-                </a>
-                <button class="btn hide-mobile"
-                    style="background:rgba(255,255,255,0.1); border:1px solid var(--border);"
-                    onclick="document.getElementById('authorModal').classList.add('active')">
-                    👥 Usuarios
-                </button>
-                <a href="/analytics?tab=docs" class="btn"
-                    style="background:rgba(58,90,171,0.15); color: #8ea1ff; border:1px solid rgba(58,90,171,0.3); text-decoration: none;">
-                    📚 Documentación
-                </a>
+                <div class="dropdown">
+                    <button class="dropdown-btn">🚀 Ir a Módulo ▼</button>
+                    <div class="dropdown-content">
+                        <a href="/analytics">📊 Entregas</a>
+                        <a href="/analytics?tab=inventory">📦 Movimientos</a>
+                        <a href="/analytics?tab=ots">📑 Monitor OTs</a>
+                        <a href="/analytics?tab=ia">🧠 IA Insomnio y Ansiedad</a>
+                        <a href="/analytics?tab=historial">📍 Ubicaciones de materiales</a>
+                        <a href="#" onclick="document.getElementById('authorModal').classList.add('active')">👥 Usuarios</a>
+                        <a href="/analytics?tab=docs">📚 Documentación</a>
+                    </div>
+                </div>
 
-                {% if user.username != "invitado" %}
-                <span style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px;">👤 {{ user.username }} ({{
-                    user.role }})</span>
-                <button class="btn"
-                    style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);"
-                    onclick="logout()">
-                    🚪 Salir
-                </button>
-                {% if user.role == 'admin' %}
-                <a href="/settings" class="btn" title="Configuración SaaS">⚙️</a>
-                <button class="btn" onclick="syncData(event)">🚀 Sync</button>
-                {% endif %}
-                {% else %}
-                <a href="/login" class="btn" style="background:#5DBAA9; color:#0f172a; text-decoration:none;">🔑
-                    Entrar</a>
-                {% endif %}
+                <!-- Guest View -->
+                <button id="btn-login-trigger" class="btn" style="background:#5DBAA9; color:#0f172a; text-decoration:none; {% if user.username != 'invitado' %}display:none;{% endif %}" onclick="document.getElementById('quickLoginModal').classList.add('active')">🔑 Entrar</button>
+
+                <!-- Authenticated View -->
+                <span id="user-greeting" style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px; {% if user.username == 'invitado' %}display:none;{% endif %}">👤 <span id="user-name-display">{{ user.username }}</span></span>
+                
+                <button id="btn-logout-trigger" class="btn" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); {% if user.username == 'invitado' %}display:none;{% endif %}" onclick="logout()">🚪 Salir</button>
+                
+                <a href="/settings" id="btn-settings-trigger" class="btn" title="Configuración SaaS" style="{% if user.role != 'admin' %}display:none;{% endif %}">⚙️</a>
+                <button id="btn-sync-trigger" class="btn" onclick="syncData(event)" style="{% if user.role != 'admin' %}display:none;{% endif %}">🚀 Sync</button>
             </div>
         </header>
 
@@ -146,7 +123,6 @@
         <div class="grid">
             {% include "partials/_sidebar.html" %}
             {% include "partials/_table.html" %}
-        </div>
     </div>
 
     {% include "partials/_scripts.html" %}

@@ -14,7 +14,7 @@
         localStorage.removeItem('monitorweb_role');
         localStorage.clear(); // Limpieza total por seguridad
         
-        // Redirigir al Dashboard (el sistema lo tratará como invitado)
-        window.location.href = '/';
+        // Recargar la página actual para reflejar la sesión cerrada (modo invitado)
+        window.location.reload();
     }
 </script>

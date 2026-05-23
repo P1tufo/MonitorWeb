@@ -408,9 +408,8 @@ def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
                 }
                 sql_op = op_map.get(diff_op, "<=")
 
-                # Columnas SAP en formato ISO que julianday() acepta directamente
-                _ISO_COLS = {"registrado", "fe_contab", "fe_creac", "fecha_carga",
-                             "fecha_sm_real", "creado_el", "fecha_conf", "ingested_at"}
+                # Solo estas columnas guardan fecha ISO real
+                _ISO_COLS = {"ingested_at", "created_at", "updated_at"}
 
                 def _date_expr(col: str) -> str:
                     if col == "today":

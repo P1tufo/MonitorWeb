@@ -61,6 +61,10 @@ class UserCreate(BaseModel):
     password: str
     role: str = "viewer"
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
 class UserPublic(BaseModel):
     id: int
     username: str

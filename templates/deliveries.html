@@ -67,18 +67,15 @@
                 </div>
                 <div class="actions">
                     <a href="/" class="btn btn-secondary">🏠 Dashboard</a>
-                    {% if user.username != "invitado" %}
-                    <span style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px;">👤 {{ user.username }}</span>
-                    <button class="btn btn-secondary" style="background:rgba(239,68,68,0.1); color:#ef4444;"
-                        onclick="logout()">🚪 Salir</button>
-                    {% if user.role == 'admin' %}
-                    <a href="/settings" class="btn btn-secondary"
-                        style="background: rgba(93, 186, 169, 0.1); border-color: rgba(93, 186, 169, 0.3); color: #5DBAA9;">⚙️
-                        Configuración</a>
-                    {% endif %}
-                    {% else %}
-                    <a href="/login" class="btn btn-secondary" style="background:#5DBAA9; color:#0f172a;">🔑 Entrar</a>
-                    {% endif %}
+                    <!-- Guest View -->
+                    <button id="btn-login-trigger" class="btn btn-secondary" style="background:#5DBAA9; color:#0f172a; text-decoration:none; {% if user.username != 'invitado' %}display:none;{% endif %}" onclick="document.getElementById('quickLoginModal').classList.add('active')">🔑 Entrar</button>
+
+                    <!-- Authenticated View -->
+                    <span id="user-greeting" style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px; {% if user.username == 'invitado' %}display:none;{% endif %}">👤 <span id="user-name-display">{{ user.username }}</span></span>
+                    
+                    <button id="btn-logout-trigger" class="btn btn-secondary" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); {% if user.username == 'invitado' %}display:none;{% endif %}" onclick="logout()">🚪 Salir</button>
+                    
+                    <a href="/settings" id="btn-settings-trigger" class="btn btn-secondary" style="background: rgba(93, 186, 169, 0.1); border-color: rgba(93, 186, 169, 0.3); color: #5DBAA9; {% if user.role != 'admin' %}display:none;{% endif %}">⚙️ Configuración</a>
                 </div>
             </div>
         </header>
@@ -122,6 +119,12 @@
                 }
 
                 if (btnElement) btnElement.classList.add('active');
+                
+                // Actualizar la URL sin recargar para que al hacer reload (ej. Login) se mantenga la sección
+                const newUrl = new URL(window.location);
+                newUrl.searchParams.set('tab', tabId);
+                window.history.replaceState({}, '', newUrl);
+                
                 window.scrollTo({ top: 0, behavior: 'auto' });
                 window.dispatchEvent(new Event('resize'));
             }
@@ -414,7 +417,12 @@
             id="data_sla_area_monthly_labels">{{ (sla_area_monthly_labels or []) | tojson | safe }}</script>
         <script type="application/json"
             id="data_sla_area_monthly_datasets">{{ (sla_area_monthly_datasets or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_monthly_raw_json">{{ (monthly_raw_json or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_sla_area_monthly_raw_json">{{ (sla_area_monthly_raw_json or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_weekly_raw_json">{{ (weekly_raw_json or []) | tojson | safe }}</script>
+        <script type="application/json" id="data_sla_area_trend_raw_json">{{ (sla_area_trend_raw_json or []) | tojson | safe }}</script>
         <script type="application/json" id="data_avg_mensual_año">{{ (avg_mensual_año or 0) | tojson | safe }}</script>
+        <script src="{{ url_for('static', path='js/core_ui.js') }}?v=1"></script>
         <script src="{{ url_for('static', path='js/deliveries.js') }}?v=15"></script>
         <script type="application/json" id="data_volumen">{{ (volumen_data or []) | tojson | safe }}</script>
         <script type="application/json"
@@ -489,6 +497,7 @@
         {% include "partials/_inventory_modals.html" %}
         {% include "partials/_analytics_proyecciones_modals.html" %}
         {% include "partials/_edit_query_modal.html" %}
+        {% include "partials/_quick_login_modal.html" %}
         {% include "partials/_logout.html" %}
 </body>
 

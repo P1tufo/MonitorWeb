@@ -4,14 +4,18 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <h2 style="color: #f8f9fa; font-size: 1.8rem; font-weight: 800; margin: 0;">📦 Análisis de Movimientos</h2>
 
-        <div class="view-selector-group"
-            style="display: flex; align-items: center; gap: 1rem; background: var(--glass); padding: 5px 15px; border-radius: 12px; border: 1px solid var(--border);">
-            <i class="fas fa-layer-group" style="color: var(--primary);"></i>
-            <select id="inv-view-select" onchange="switchInventarioView(this.value)"
-                style="background: transparent; border: none; color: #f8f9fa; font-weight: 600; cursor: pointer; outline: none; padding: 5px;">
-                <option value="operative">Vista Operativa (Anual)</option>
-                <option value="historical">Vista Semanal (Histórico)</option>
-            </select>
+        <div style="display: flex; gap: 1rem;">
+
+
+            <div class="view-selector-group"
+                style="display: flex; align-items: center; gap: 1rem; background: var(--glass); padding: 5px 15px; border-radius: 12px; border: 1px solid var(--border);">
+                <i class="fas fa-layer-group" style="color: var(--primary);"></i>
+                <select id="inv-view-select" onchange="switchInventarioView(this.value)"
+                    style="background: transparent; border: none; color: #f8f9fa; font-weight: 600; cursor: pointer; outline: none; padding: 5px;">
+                    <option value="operative">Vista Operativa (Anual)</option>
+                    <option value="historical">Vista Semanal (Histórico)</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -197,7 +201,7 @@
             </div>
             <ul class="rank-list" style="max-height: 280px; overflow-y: hidden;">
                 {% for mat in top_materials_quick %}
-                <li>
+                <li data-area="{{ mat.area or 'MIXTO' }}">
                     <div>
                         <div class="name" style="font-size: 0.95rem;"><span style="color:var(--primario);font-size:0.8rem;">[{{ mat.cod_mat }}]</span> {{ mat.material[:25] }}{% if mat.material|length > 25 %}...{% endif %}</div>
                     </div>
@@ -223,7 +227,7 @@
             <h3>Top Asistentes de Bodega (Frecuencia de Despachos)</h3>
             <ul class="rank-list" style="max-height: 280px; overflow-y: auto;">
                 {% for u in top_users %}
-                <li style="cursor: pointer; transition: background 0.2s;"
+                <li data-area="{{ u.area or 'MIXTO' }}" style="cursor: pointer; transition: background 0.2s;"
                     onclick="openModalUserInventario('{{ u.user }}')"
                     onmouseover="this.style.background='rgba(255,255,255,0.05)'"
                     onmouseout="this.style.background='transparent'">
