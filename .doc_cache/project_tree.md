@@ -2,9 +2,11 @@
 
 ```text
 ./
+    app.log
     app.py
     config.py
     main.py
+    test_deliveries.py
     core/
         __init__.py
         app_instance.py
@@ -17,6 +19,7 @@
         pdf_engine.py
         pdf_queries.py
         pdf_reports.py
+        query_engine.py
         schemas.py
         security.py
         state.py
@@ -64,6 +67,12 @@
         raiz/
             documentacion.md
             mejoras.md
+        tests/
+            documentacion.md
+            mejoras.md
+        repositories/
+            documentacion.md
+            mejoras.md
         static/
             css/
                 documentacion.md
@@ -89,6 +98,9 @@
         services/
             documentacion.md
             mejoras.md
+            etl/
+                documentacion.md
+                mejoras.md
     DELIVERIES_cleansed/
         clean_20-02-2026_VL06o.txt.xlsx
         clean_23-02-2026_VL06o.txt.xlsx
@@ -108,6 +120,7 @@
         js/
             analytics_proyecciones.js
             analytics_studio.js
+            core_ui.js
             dashboard.js
             dashboard_charts.js
             deliveries.js
@@ -120,7 +133,6 @@
         doc_generator.py
         free_ram.py
         main_processor.py
-        migrate_table_names.py
     db/
         __init__.py
         consolidator.py
@@ -145,6 +157,7 @@
             _inventory_modals.html
             _logout.html
             _modals.html
+            _quick_login_modal.html
             _scripts.html
             _sidebar.html
             _styles.html
@@ -156,7 +169,6 @@
             _tab_ots.html
             _table.html
     data/
-        database.sqlite
         wms_transactions.db
         wms_transactions.db-shm
         wms_transactions.db-wal

@@ -1,20 +1,26 @@
 ## Archivo: ./repositories/base.py
 
 ### Resumen Funcional
-Clase base para todos los repositorios de datos que proporciona una sesión de SQLAlchemy y un método para obtener consultas SQL desde una configuración.
+La clase `BaseRepository` proporciona una estructura base para interactuar con bases de datos mediante SQLAlchemy. Define métodos para obtener consultas SQL y verificar el estado visual de las mismas.
 
 ### Catálogo de Funciones y Clases
-- `BaseRepository(session: Session)` - Inicializa la clase con una sesión de SQLAlchemy.
-- `_sql(query_id: str, fallback: str) -> str` - Obtiene un SQL desde la BD de configuración, con fallback.
+- `__init__(self, session: Session)` - Inicializa la instancia con una sesión de SQLAlchemy.
+- `_sql(self, query_id: str, fallback: str) -> str` - Obtiene un SQL desde la base de datos de configuración o devuelve un fallback hardcodeado si no existe.
+- `_has_visual_state(self, query_id: str) -> bool` - Verifica si una consulta tiene un estado visual JSON almacenado.
 
 ### Interacción con Base de Datos
-- Motor: No aplica (no hay consultas SQL crudas o llamadas a ORM explícitas).
-- Tablas y Columnas: No aplica (no interactúa directamente con tablas).
+- Motor: SQLAlchemy
+- Tablas: `config_queries`
+- Columnas: `query_id`, `sql_text`
 
 ### Estado y Variables Globales
-- No aplica (no define variables globales, de sesión, de entorno o diccionarios quemados en código que almacenan estado crítico).
+No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `sqlalchemy.orm.Session`, `core.wms_config.get_query`.
-- Comunicación con otros archivos del proyecto: No aplica (no comunica con otros archivos).
+- Librerías externas utilizadas:
+  - `sqlalchemy.orm.Session`
+  - `core.wms_config.get_query`
+  - `core.db_config_manager.get_query_visual_state`
+- Comunicación con otros archivos del proyecto:
+  - `core/query_engine.build_sql_from_payload()` (mencionado en la documentación, pero no implementado)
 

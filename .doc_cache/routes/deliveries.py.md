@@ -45,13 +45,14 @@ No aplica
   - `services.deliveries_service`
 
 - Flujo hacia otros archivos del proyecto:
-  - `core.database`
-  - `core.state`
-  - `core.app_instance`
-  - `repositories`
-  - `routes.inventory`
-  - `routes.tasks`
-  - `routes.analytics_proyecciones`
-  - `core.auth`
-  - `services.deliveries_service`
+  - `core.database.get_session_dep`
+  - `core.state.get_app_state`
+  - `templates.TemplateResponse`
+  - `DeliveriesRepository`
+  - `get_inventory_context`
+  - `get_tasks_context`
+  - `get_proyecciones_context`
+  - `get_current_user`
+  - `sanitize_for_json`
+  - `DeliveriesService`
 

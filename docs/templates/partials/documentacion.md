@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: templates/partials
-Compilado el: 2026-05-22 16:53:13
+Compilado el: 2026-05-23 00:11:14
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -55,10 +55,10 @@ Flujo: Este archivo no interactúa directamente con otros archivos del proyecto,
 ## Archivo: ./templates/partials/_edit_query_modal.html
 
 ### Resumen Funcional
-Este archivo contiene el código HTML para un modal de edición de consultas SQL en una interfaz de usuario, que incluye un constructor visual interactivo y un panel de vista previa del gráfico resultante.
+Este archivo contiene el código HTML para un modal de edición de consultas en Analytics Studio, que incluye un constructor visual interactivo y una vista previa del gráfico resultante.
 
 ### Catálogo de Funciones y Clases
-No se detectaron funciones o clases definidas explícitamente en este fragmento de código HTML.
+No se detectaron funciones o clases definidas explícitamente en este fragmento de código.
 
 ### Interacción con Base de Datos
 No aplica
@@ -67,10 +67,8 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- **Dependencias**: No hay dependencias directas mencionadas. El archivo incluye un script externo `analytics_studio.js` que se carga desde la carpeta `static/js`.
-- **Flujo**: Este fragmento de código HTML no interactúa con otros archivos del proyecto o realiza ninguna operación específica en términos de flujo de control.
-
-Este modal es principalmente una interfaz de usuario para editar consultas SQL y visualizar el resultado, pero no contiene lógica de negocio ni interacción directa con la base de datos.
+- **Dependencias**: No hay dependencias externas directamente mencionadas.
+- **Flujo**: El archivo se comunica con el backend a través de funciones JavaScript que interactúan con elementos del DOM, como `onBaseTableChange`, `addJoin`, `addFilter`, etc.
 
 
 ---
@@ -99,20 +97,20 @@ No aplica
 ## Archivo: ./templates/partials/_logout.html
 
 ### Resumen Funcional
-Este fragmento de código HTML contiene un script que define una función `logout` para cerrar la sesión del usuario. La función intenta notificar al backend mediante una solicitud POST a la ruta `/api/auth/logout`, limpia el almacenamiento local (tokens y datos de usuario) y redirige al usuario al Dashboard.
+Este fragmento de código HTML contiene un script que define una función `logout` asíncrona. La función se encarga de cerrar la sesión del usuario, notificando al backend y limpiando el almacenamiento local.
 
 ### Catálogo de Funciones y Clases
-- `logout()` - Limpia el estado del usuario y cierra sesión.
+- `logout()` - Realiza el proceso de cierre de sesión.
 
 ### Interacción con Base de Datos
 No aplica. El archivo no realiza ninguna interacción con una base de datos.
 
 ### Estado y Variables Globales
-No aplica. No se definen variables globales en este fragmento de código.
+No aplica. No se definen variables globales, de sesión o diccionarios quemados en código que almacenen estado crítico.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `fetch` (navegador).
-- **Flujo Interno**: La función `logout` no depende de otros archivos del proyecto directamente, pero interactúa con el backend a través de una solicitud HTTP.
+- **Librerías externas utilizadas**: `fetch` (API web para hacer solicitudes HTTP).
+- **Flujo hacia otros archivos del proyecto**: No se comunica con otros archivos específicos dentro del proyecto.
 
 
 ---
@@ -137,23 +135,50 @@ No se detectan dependencias externas ni llamadas a otros archivos del proyecto.
 
 ---
 
+## Archivo: ./templates/partials/_quick_login_modal.html
+
+### Resumen Funcional
+El archivo `_quick_login_modal.html` define un modal de inicio rápido para la sesión, que permite a los usuarios iniciar sesión sin perder sus filtros actuales. El formulario envía las credenciales al servidor y maneja la respuesta para actualizar el estado del usuario en el almacenamiento local o recargar la página según sea necesario.
+
+### Catálogo de Funciones y Clases
+- `handleQuickLogin(event)` - Maneja el evento de envío del formulario de inicio rápido, realiza una solicitud POST a la API de autenticación y actualiza el estado del usuario según la respuesta.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+No aplica
+
+### Dependencias y Flujo
+- **Librerías Externas**: No se utilizan librerías externas.
+- **Flujo Interno**: El archivo interactúa con el servidor a través de una solicitud POST al endpoint `/api/auth/login`. La respuesta del servidor se utiliza para actualizar el estado del usuario en el almacenamiento local (`localStorage`) y para determinar si la página debe recargarse o no.
+
+
+---
+
 ## Archivo: ./templates/partials/_scripts.html
 
 ### Resumen Funcional
-Este fragmento HTML incluye scripts para Chart.js y una lógica de negocio y ayuda de interfaz de usuario para el panel de control.
+Este archivo contiene fragmentos de HTML que incluyen scripts para Chart.js, modales rápidos de inicio de sesión y cierre, así como lógica empresarial y ayudantes de interfaz de usuario para el panel de control.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este archivo.
+No se detectaron funciones o métodos específicos en este fragmento de HTML. Solo se incluyen referencias a scripts externos.
 
 ### Interacción con Base de Datos
-Ninguna.
+Ninguna
 
 ### Estado y Variables Globales
-No aplica.
+No aplica
 
 ### Dependencias y Flujo
-- **Librerías externas utilizadas**: Chart.js.
-- **Flujo hacia otros archivos del proyecto**: Se incluye un fragmento HTML (`_logout.html`) y se carga un script JavaScript (`dashboard.js`).
+- **Librerías Externas**: Chart.js (https://cdn.jsdelivr.net/npm/chart.js)
+- **Archivos Internos**: 
+  - `partials/_quick_login_modal.html`
+  - `partials/_logout.html`
+  - `js/core_ui.js` (versión 1)
+  - `js/dashboard.js` (versión 7)
+
+Este fragmento de HTML se encarga principalmente de incluir scripts y modales que son utilizados en diferentes partes del proyecto, pero no realiza ninguna operación específica relacionada con la base de datos o el estado global.
 
 
 ---
@@ -190,7 +215,7 @@ Flujo: Este archivo se comunica con otros archivos JavaScript para manejar event
 ## Archivo: ./templates/partials/_styles.html
 
 ### Resumen Funcional
-Este archivo contiene estilos CSS para una interfaz web, definiendo colores, layout y animaciones.
+El archivo `_styles.html` contiene estilos CSS para una interfaz web, definiendo colores, layout y animaciones.
 
 ### Catálogo de Funciones y Clases
 No aplica
@@ -306,26 +331,25 @@ Ninguna.
 ## Archivo: ./templates/partials/_tab_inventory.html
 
 ### Resumen Funcional
-Este fragmento HTML es una pestaña que muestra un análisis de movimientos en una interfaz web, incluyendo estadísticas clave y gráficos interactivos.
+Este fragmento HTML es una pestaña que muestra un análisis de movimientos en una interfaz web, incluyendo estadísticas clave y gráficos interactivos. Permite a los usuarios cambiar la vista entre "Vista Operativa (Anual)" y "Vista Semanal (Histórico)", y proporciona detalles sobre diferentes KPIs como ingresos, consumos de producción, mantenimiento, tasa de reabastecimiento, traspasos, devoluciones y eficiencia de bodega. También incluye gráficos que muestran la distribución de materiales según la curva ABC, tendencias de consumo, volumen operacional y carga semanal.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este fragmento HTML. Todas las interacciones son realizadas a través de JavaScript y eventos del usuario.
+- `switchInventarioView(value)` - Cambia la vista del inventario según el valor seleccionado.
+- `openEditQueryModal(id, title)` - Abre un modal para editar una consulta SQL específica.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `user.role`: Rol del usuario actual.
-- `kpi_ingresos`, `kpi_consumos_prod`, `kpi_consumos_mant`, `rate_reabast`, `kpi_traspasos`, `rate_devolucion`, `rate_eficiencia`: Valores de KPIs que se muestran en la interfaz.
-- `top_materials_quick`: Lista de materiales más consumidos (Top Consumidos).
-- `top_users`: Lista de usuarios con mayor frecuencia de despachos.
+- `user.role` - Rol del usuario actual.
+- `kpi_ingresos`, `kpi_consumos_prod`, `kpi_consumos_mant`, `rate_reabast`, `kpi_traspasos`, `rate_devolucion`, `rate_eficiencia` - Valores de KPIs calculados.
+- `top_materials_quick` - Lista de materiales más consumidos.
+- `top_users` - Lista de usuarios con mayor frecuencia de despachos.
 
 ### Dependencias y Flujo
-Dependencias:
-- JavaScript: Se utilizan funciones como `switchInventarioView`, `openEditQueryModal`, `openModal`, `openModalUserInventario`.
-
-Flujo:
-Este fragmento HTML se comunica con otros archivos a través de llamadas a funciones JavaScript que pueden estar definidas en otros archivos del proyecto. No hay interacción directa con bases de datos ni dependencias externas adicionales mencionadas.
+- Librerías utilizadas: `FontAwesome` para iconos.
+- Comunicación con otros archivos del proyecto:
+  - `_tab_inventory.js` (posiblemente contiene la lógica detrás de las funciones `switchInventarioView` y `openEditQueryModal`).
 
 
 ---

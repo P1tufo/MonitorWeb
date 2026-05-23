@@ -1,26 +1,29 @@
 ## Archivo: ./static/js/inventory.js
 
 ### Resumen Funcional
-El archivo `inventory.js` contiene lógica para el análisis de movimientos en un inventario, con funcionalidades como la visualización de gráficos y modales interactivos. Incluye manejo de datos desde elementos HTML, renderizado de gráficos usando Chart.js, y funciones para abrir y cerrar modales.
+El archivo `inventory.js` contiene lógica para el análisis de inventario, incluyendo la visualización de gráficos y la interacción con modales. Se utilizan Chart.js para crear gráficos de doughnut y lineas, y se manejan eventos de entrada para buscar ubicaciones dinámicamente.
 
 ### Catálogo de Funciones y Clases
-- `log(msg, data = null)` - Registra mensajes en la consola con un formato específico.
-- `UI.openModal(id)` - Abre un modal identificado por `id`.
-- `UI.closeModal(id)` - Cierra un modal identificado por `id`.
-- `UI.renderMaterialModal(options)` - Renderiza un modal con detalles de materiales, incluyendo una lista de elementos y estadísticas.
-- `getData(id)` - Obtiene datos desde un elemento HTML con el ID especificado.
-- `parseFormattedInt(val)` - Convierte una cadena formateada en un número entero.
-- `window.openModalUbicacion(name)` - Abre un modal con la ubicación de un material específico.
-- `window.openModalUserInv(name)` - Abre un modal con los detalles del inventario de un usuario específico.
-- `window.switchInventarioView(view)` - Cambia la vista del gráfico de tendencias entre históricos y actuales.
+- `log(msg, data = null)` - Registra mensajes en la consola.
+- `UI.openModal(id)` - Abre un modal utilizando CoreUI.
+- `UI.closeModal(id)` - Cierra un modal utilizando CoreUI.
+- `UI.renderMaterialModal(opts)` - Renderiza un modal de material utilizando CoreUI.
+- `getData(id)` - Obtiene datos desde el DOM utilizando CoreUI.
+- `parseFormattedInt(val)` - Convierte una cadena a un número entero, eliminando caracteres no numéricos.
+- `window.openModalUbicacion(name)` - Abre un modal con información de ubicación.
+- `window.openModalUserInv(name)` - Abre un modal con información de usuario.
+- `window.switchInventarioView(view)` - Cambia la vista del gráfico de tendencias según el parámetro `view`.
+- `window.toggleMultiInv(id)` - Alterna la visibilidad de un elemento según su ID.
+- `window.toggleAllInvAreas(checkbox)` - Alterna la selección de todas las áreas y actualiza los KPIs.
+- `window.updateInventoryAnalytics()` - Actualiza los KPIs y filtra listas según las áreas seleccionadas.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no realiza ninguna interacción con una base de datos.
+No aplica
 
 ### Estado y Variables Globales
-No aplica. No se definen variables globales en este archivo.
+No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `Chart.js`, `ChartDataLabels`.
-- **Flujo Interno**: El archivo interactúa con elementos HTML para obtener datos, renderizar modales y actualizar gráficos de Chart.js. No hay interacción directa con otros archivos del proyecto a menos que se invoquen las funciones globales definidas (`window.openModalUbicacion`, `window.openModalUserInv`, `window.switchInventarioView`).
+- **Librerías Externas**: Chart.js, CoreUI.
+- **Flujo Interno**: El archivo interactúa con el DOM para obtener datos y renderizar gráficos. Utiliza funciones de CoreUI para abrir y cerrar modales.
 

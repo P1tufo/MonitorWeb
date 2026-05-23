@@ -1,15 +1,15 @@
 ## Archivo: ./db/consolidator.py
 
 ### Resumen Funcional
-El archivo `consolidator.py` es un orquestador de consolidación de datos que opera sobre una base de datos SQLite. Se encarga de procesar archivos WMS, realizar operaciones UPSERT y sincronizar información entre diferentes tablas.
+El archivo `consolidator.py` es un orquestador de consolidación de datos que opera sobre una base de datos SQLite. Se encarga de procesar archivos WMS, actualizar tablas con los datos más recientes y realizar diversas operaciones de enriquecimiento y sincronización.
 
 ### Catálogo de Funciones y Clases
-- **DataConsolidator(db_path: str)** - Gestiona la conexión a la base de datos y el proceso de consolidación.
-  - `__init__(self, db_path: str)` - Inicializa el objeto con la ruta de la base de datos.
+- `DataConsolidator(db_path: str)` - Gestiona la consolidación de archivos WMS en SQLite.
+  - `__init__(self, db_path: str)` - Inicializa el objeto con la ruta a la base de datos.
   - `__enter__(self)` - Establece la conexión a la base de datos.
   - `__exit__(self, exc_type, exc_val, exc_tb)` - Cierra la conexión a la base de datos.
-  - `connect(self)` - Establece y configura la conexión a SQLite.
-  - `_parse_file_date(self, file_path: Path) -> datetime` - Extrae la fecha del nombre del archivo.
+  - `connect(self)` - Establece la conexión y configura optimizaciones de SQLite.
+  - `_parse_file_date(self, file_path: Path) -> datetime` - Extrae la fecha del nombre del archivo (dd-mm-yyyy).
   - `consolidate_folder(self, folder_path: str, table_name: str = TABLE_DELIVERIES)` - Consolida archivos cronológicamente mediante lógica UPSERT.
   - `overwrite_with_latest(self, folder_path: str, table_name: str = TABLE_STOCK)` - Reemplaza la tabla con los datos del archivo más reciente.
   - `enrich_deliveries_with_stock(self)` - Enriquece las transacciones con información de stock actual.
@@ -19,24 +19,22 @@ El archivo `consolidator.py` es un orquestador de consolidación de datos que op
   - `close(self)` - Cierra la conexión de forma segura.
 
 ### Interacción con Base de Datos
-- **Motor**: SQLite
-- **Tablas**:
+- Motor: SQLite
+- Tablas:
   - `outbound_deliveries`
   - `stock_levels`
-- **Columnas**: No especificadas explícitamente, pero se asume que las tablas tienen columnas necesarias para los procesos descritos.
+- Columnas y Operaciones:
+  - Lectura y escritura en las tablas mencionadas.
+  - Uso de consultas SQL para procesar y actualizar datos.
 
 ### Estado y Variables Globales
-- **Variables Globales**: No aplica
+No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**:
-  - `sqlite3`
-  - `logging`
-  - `re`
-  - `pathlib`
-  - `datetime`
-  - `typing`
-  - `services.etl.OutboundDeliveryAdapter`
-  - `db_enrichment` (varias funciones)
-- **Flujo**: El archivo interactúa con el resto del proyecto a través de llamadas a funciones y clases definidas en otros archivos, como `etl.py`, `db_enrichment.py`, y `wms_utils.py`.
+- Librerías Externas: `sqlite3`, `logging`, `re`, `pathlib`, `datetime`, `typing`
+- Comunicación con otros archivos:
+  - `services.etl.OutboundDeliveryAdapter` y `services.etl.StockLevelAdapter` para procesar y guardar datos.
+  - `db_enrichment` para funciones de enriquecimiento y sincronización.
+  - `core.security.validate_table` para validar tablas.
+  - `core.wms_utils.is_file_changed` y `core.wms_utils.mark_file_processed` para gestionar archivos procesados.
 

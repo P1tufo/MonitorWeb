@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: templates
-Compilado el: 2026-05-22 16:53:13
+Compilado el: 2026-05-23 00:11:14
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -7,26 +7,29 @@ Modelo: qwen2.5-coder:7b | Separado por Carpetas
 ## Archivo: ./templates/analytics_proyecciones.html
 
 ### Resumen Funcional
-El archivo `analytics_proyecciones.html` es una plantilla HTML para la interfaz de usuario de un sistema de análisis predictivo, que muestra información sobre desplanificaciones y correlaciones entre materiales. Incluye gráficos interactivos y tablas para visualizar datos relevantes.
+El archivo `analytics_proyecciones.html` es una plantilla HTML para la interfaz de usuario de un módulo de análisis predictivo, que muestra información sobre desplanificaciones y predicciones de demanda. Incluye gráficos interactivos y tablas para visualizar datos relevantes.
 
 ### Catálogo de Funciones y Clases
 No se detectan funciones o clases definidas en este archivo HTML.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna.
 
 ### Estado y Variables Globales
-No aplica
+- `user.username`: Almacena el nombre de usuario actual.
+- `error_msg`: Almacena un mensaje de error si ocurre algún problema.
+- `alerts`: Lista de alertas de desplanificación.
+- `scatter_data`: Datos para el gráfico de dispersión "Frecuencia vs Volumen".
+- `combos`: Datos para la visualización de combinaciones frecuentes (Market Basket Analysis).
 
 ### Dependencias y Flujo
 - **Librerías Externas**: 
-  - `Chart.js` para gráficos.
-  
+  - `Chart.js` para crear gráficos interactivos.
 - **Archivos del Proyecto**:
-  - `_styles.html`: Incluye estilos CSS.
-  - `_analytics_proyecciones_modals.html`: Contiene modales interactivos.
-  - `_scripts.html`: Incluye scripts JavaScript adicionales.
-  - `analytics_proyecciones.js`: Script personalizado para la funcionalidad específica de esta página.
+  - `_styles.html`: Incluye estilos CSS adicionales.
+  - `_analytics_proyecciones_modals.html`: Contiene modales adicionales.
+  - `_scripts.html`: Incluye scripts adicionales.
+  - `analytics_proyecciones.js`: Script personalizado para el módulo de análisis predictivo.
 
 
 ---
@@ -34,34 +37,26 @@ No aplica
 ## Archivo: ./templates/dashboard.html
 
 ### Resumen Funcional
-El archivo `dashboard.html` es una plantilla HTML para el panel de control del proyecto Onedrive, que muestra indicadores clave (KPIs) y permite navegar entre diferentes secciones de análisis.
+El archivo `dashboard.html` es una plantilla HTML para el panel de control del proyecto Onedrive, que muestra indicadores clave (KPIs) y proporciona acceso a diferentes módulos y funciones.
 
 ### Catálogo de Funciones y Clases
-No aplica
+No se detectan funciones o clases definidas en este archivo. Todo el contenido es estructura HTML y Jinja2 templating.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `is_syncing`: Un booleano que indica si la sincronización está en curso.
-- `kpi_deliveries`: Cantidad total de entregas generadas.
-- `sub_del_abierta`: Cantidad de entregas en curso.
-- `sub_del_no_tratada`: Cantidad de entregas no tratadas.
-- `sub_del_reunido`: Cantidad de entregas reunidas a tiempo.
-- `sub_del_atrasado`: Cantidad de entregas reunidas atrasadas.
-- `sub_del_critico`: Cantidad de entregas críticas (OT abierta atrasada).
-- `kpi_materials`: Cantidad total de materiales solicitados.
-- `sub_mat_abierta`: Cantidad de picking en curso.
-- `sub_mat_no_tratada`: Cantidad de pendientes por generar OT.
-- `sub_mat_reunido`: Cantidad de materiales reunidos a tiempo.
-- `sub_mat_atrasado`: Cantidad de materiales reunidos atrasados.
-- `sub_mat_critico`: Cantidad de materiales críticos (OT abierta atrasada).
-- `user.username`: Nombre de usuario actual.
+- `is_syncing`: Variable que indica si la sincronización está en curso.
+- `user.username`: Nombre del usuario actual.
 - `user.role`: Rol del usuario actual.
+- `kpi_deliveries`: Número total de entregas generadas.
+- `sub_del_abierta`, `sub_del_no_tratada`, `sub_del_reunido`, `sub_del_atrasado`, `sub_del_critico`: Contadores para diferentes estados de entregas.
+- `kpi_materials`: Número total de materiales solicitados.
+- `sub_mat_abierta`, `sub_mat_no_tratada`, `sub_mat_reunido`, `sub_mat_atrasado`, `sub_mat_critico`: Contadores para diferentes estados de materiales.
 
 ### Dependencias y Flujo
-- Utiliza plantillas parciales (`_styles.html`, `_modals.html`, `_sidebar.html`, `_table.html`, `_scripts.html`).
-- No depende de ninguna librería externa específica.
+- **Librerías externas**: No se detectan librerías externas específicas.
+- **Flujo interno**: El archivo incluye varios parciales HTML (`_styles.html`, `_modals.html`, `_sidebar.html`, `_table.html`, `_scripts.html`) que probablemente contienen el contenido específico para estos elementos.
 
 
 ---
@@ -71,11 +66,10 @@ No aplica
 #### --- PARTE 1 de 1 ---
 
 ### Resumen Funcional
-El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario del proyecto, que incluye elementos como encabezado, pestañas para diferentes secciones (Entregas, Movimientos, Gestión de OTs, IA Insomnio y Ansiedad, Documentación, Historial de Ubicaciones), y scripts JavaScript para manejar el comportamiento de las pestañas, filtros y modales.
+El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario del proyecto, que incluye elementos como encabezados, botones de pestañas y scripts JavaScript para manejar el comportamiento de las pestañas y cargar datos dinámicamente.
 
 ### Catálogo de Funciones y Clases
 - `switchTab(tabId, btnElement)` - Cambia la pestaña activa.
-- `switchSubTab(subTabId, btnElement)` - Cambia la subpestaña activa.
 - `openNonPalletizedDetails(user, claseMov)` - Abre un modal con detalles no paletizados.
 - `initTableFilters()` - Inicializa los filtros de tablas.
 - `filterOTTable()` - Filtra la tabla de OTs según los criterios seleccionados.
@@ -89,32 +83,21 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- **Librerías externas utilizadas:**
+- **Librerías externas**: 
   - Chart.js
   - Chartjs-plugin-datalabels
   - Font Awesome
   - marked
-
-- **Archivos JavaScript incluidos:**
+- **Archivos JavaScript**:
+  - `core_ui.js`
   - `deliveries.js`
-  - `tasks.js`
   - `inventory.js`
   - `analytics_proyecciones.js`
   - `docs_explorer.js`
-
-- **Archivos HTML parciales incluidos:**
-  - `_styles.html`
-  - `_tab_docs.html`
-  - `_tab_historial.html`
-  - `_tab_ia.html`
-  - `_tab_deliveries.html`
-  - `_tab_inventory.html`
-  - `_tab_ots.html`
-  - `_deliveries_modals.html`
-  - `_inventory_modals.html`
-  - `_analytics_proyecciones_modals.html`
-  - `_edit_query_modal.html`
-  - `_logout.html`
+- **Archivos CSS**:
+  - Estilos definidos en el archivo y referencias a archivos externos
+- **Datos JSON**: 
+  - Datos inyectados desde variables de contexto del servidor (por ejemplo, `area_stats_json`, `weekdays`, etc.)
 
 
 ---
@@ -122,15 +105,16 @@ No aplica
 ## Archivo: ./templates/inventory.html
 
 ### Resumen Funcional
-El archivo `inventory.html` es una plantilla HTML para la interfaz de usuario del módulo de inventario, que muestra estadísticas y gráficos relacionados con el análisis del inventario. Incluye información sobre ingresos, consumos, traspasos y otras métricas clave.
+El archivo `inventory.html` es una plantilla HTML para la interfaz de usuario del módulo de inventario, que muestra análisis y gráficos relacionados con las entradas, consumos y traspasos de materiales.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este archivo HTML.
+No se detectan funciones o clases definidas en este archivo. Todo el contenido es estructura HTML y JavaScript.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
+- `user.username`: Nombre del usuario actual.
 - `kpi_ingresos`: Total de ingresos.
 - `kpi_consumos_prod`: Consumo de producción.
 - `kpi_consumos_mant`: Consumo de mantenimiento.
@@ -140,32 +124,35 @@ No aplica
 - `kpi_devoluciones`: Cantidad de devoluciones.
 - `volumen_data`: Datos de volumen.
 - `area_stats_json`: Estadísticas por área.
-- `trend_labels`: Etiquetas para los gráficos de tendencia.
-- `trend_entradas`: Datos de entradas para el gráfico de tendencia.
-- `trend_salidas_prod`: Datos de salidas de producción para el gráfico de tendencia.
-- `trend_salidas_mant`: Datos de salidas de mantenimiento para el gráfico de tendencia.
+- `trend_labels`: Etiquetas para gráficos de tendencia.
+- `trend_entradas`: Datos de entradas para gráficos de tendencia.
+- `trend_salidas_prod`: Datos de salidas de producción para gráficos de tendencia.
+- `trend_salidas_mant`: Datos de salidas de mantenimiento para gráficos de tendencia.
 - `abc_counts`: Conteo de elementos ABC.
 - `abc_mapping`: Mapeo de elementos ABC.
-- `dow_distribution`: Distribución semanal de BMRI.
+- `kpi_consumos_prod`: Consumo de producción (repetido).
+- `kpi_consumos_mant`: Consumo de mantenimiento (repetido).
+- `dow_distribution`: Distribución diaria.
 - `ubicaciones_mapping`: Mapeo de ubicaciones.
 - `area_material_mapping`: Mapeo de materiales por área.
 - `user_material_mapping`: Mapeo de materiales por usuario.
-- `dow_material_mapping`: Mapeo de materiales por distribución semanal.
-- `pm_material_mapping`: Mapeo de materiales por producción vs mantenimiento.
+- `dow_material_mapping`: Mapeo de materiales por distribución diaria.
+- `pm_material_mapping`: Mapeo de materiales para producción vs mantenimiento.
 
 ### Dependencias y Flujo
 - **Librerías externas**: 
   - Chart.js
   - Chartjs-plugin-datalabels
 
-- **Archivos CSS**:
-  - `https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap`
-  - Archivo local: `css/inventory.css`
+- **Archivos JavaScript**:
+  - `core_ui.js`
+  - `inventory.js`
 
-- **Archivos JS**:
-  - `https://cdn.jsdelivr.net/npm/chart.js`
-  - `https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0`
-  - Archivo local: `js/inventory.js`
+- **Modales y parciales HTML incluidos**:
+  - `_styles.html`
+  - `_inventory_modals.html`
+  - `_quick_login_modal.html`
+  - `_logout.html`
 
 
 ---
@@ -176,7 +163,7 @@ No aplica
 El archivo `login.html` es una página de inicio de sesión para la aplicación MonitorWeb. Permite a los usuarios ingresar sus credenciales y autenticarse en el sistema.
 
 ### Catálogo de Funciones y Clases
-- `handleLogin(event)` - Maneja el evento de envío del formulario de inicio de sesión, realiza la autenticación y redirige al usuario si es exitosa.
+- `handleLogin(event)` - Maneja el evento de envío del formulario de inicio de sesión, realiza la autenticación y redirige al usuario según sea necesario.
 
 ### Interacción con Base de Datos
 No aplica
@@ -186,7 +173,7 @@ No aplica
 
 ### Dependencias y Flujo
 - **Librerías Externas**: No se utilizan librerías externas.
-- **Flujo Interno**: El archivo interactúa con el servidor a través del endpoint `/api/auth/login` para autenticar al usuario. Los datos de inicio de sesión se envían mediante una solicitud POST en formato `application/x-www-form-urlencoded`. Si la autenticación es exitosa, los tokens y detalles del usuario se almacenan en `localStorage`, y el usuario es redirigido a la página principal. En caso de error, se muestra un mensaje de error en la interfaz.
+- **Flujo Interno**: El archivo interactúa con el backend a través de una solicitud POST a la ruta `/api/auth/login`. La respuesta del servidor es manejada para determinar si la autenticación fue exitosa o no, y en consecuencia, se redirige al usuario.
 
 
 ---
@@ -194,20 +181,23 @@ No aplica
 ## Archivo: ./templates/settings.html
 
 ### Resumen Funcional
-El archivo `settings.html` es una página web que permite la configuración dinámica de parámetros globales del sistema, mapeos de estados de entrega y centros de costo a áreas de negocio, así como el manejo de feriados. Permite visualizar, editar y guardar cambios en estos elementos.
+El archivo `settings.html` es una página web que permite la gestión dinámica de parámetros globales del sistema, mapeos de estados de entrega y centros de costo a áreas de negocio, así como la sincronización de feriados. La interfaz presenta tablas interactivas para editar y guardar cambios en estos elementos.
 
 ### Catálogo de Funciones y Clases
-- `updateSetting(key)` - Actualiza un parámetro global.
-- `updateStatus(code)` - Actualiza una etiqueta de estado de entrega.
-- `addStatus()` - Añade un nuevo mapeo de estado de entrega.
-- `deleteStatus(code)` - Elimina un mapeo de estado de entrega.
-- `updateCostCenter(code)` - Actualiza el área de negocio asociada a un centro de costo.
-- `addCostCenter()` - Añade un nuevo mapeo de centro de costo a área de negocio.
-- `deleteCostCenter(code)` - Elimina un mapeo de centro de costo a área de negocio.
+- `openPasswordModal()` - Abre el modal para cambiar la contraseña.
+- `closePasswordModal()` - Cierra el modal para cambiar la contraseña.
+- `changePassword()` - Maneja el cambio de contraseña, validando los campos y haciendo una solicitud a la API.
+- `updateSetting(key)` - Actualiza un parámetro global en la base de datos.
+- `updateStatus(code)` - Actualiza un mapeo de estado de entrega en la base de datos.
+- `addStatus()` - Añade un nuevo mapeo de estado de entrega a la base de datos.
+- `deleteStatus(code)` - Elimina un mapeo de estado de entrega de la base de datos.
+- `updateCostCenter(code)` - Actualiza un mapeo de centro de costo a área de negocio en la base de datos.
+- `addCostCenter()` - Añade un nuevo mapeo de centro de costo a área de negocio a la base de datos.
+- `deleteCostCenter(code)` - Elimina un mapeo de centro de costo a área de negocio de la base de datos.
 - `syncHolidays()` - Sincroniza los feriados nacionales de Chile para el año actual y el próximo.
-- `addHoliday()` - Añade una nueva fecha de feriado manual.
-- `deleteHoliday(date_str)` - Elimina una fecha de feriado.
-- `updateQuery(id)` - Actualiza un query almacenado.
+- `addHoliday()` - Añade una nueva fecha de feriado manualmente.
+- `deleteHoliday(date_str)` - Elimina una fecha de feriado de la base de datos.
+- `updateQuery(id)` - No se menciona en el código proporcionado.
 
 ### Interacción con Base de Datos
 No aplica
@@ -217,12 +207,11 @@ No aplica
 
 ### Dependencias y Flujo
 Dependencias:
-- `fetch` (API para hacer solicitudes HTTP)
-- `async/await` (para manejar operaciones asíncronas)
+- `fetch` para hacer solicitudes HTTP a la API.
+- `apiCall(url, method, data = null)` - Función auxiliar para manejar las solicitudes HTTP.
 
 Flujo:
-- La página interactúa con el backend a través de endpoints como `/api/settings/update`, `/api/settings/status`, etc., utilizando la función `apiCall`.
-- Los cambios en los inputs son enviados al servidor para ser procesados y guardados.
+- La página interactúa con el backend a través de endpoints como `/api/auth/change-password`, `/api/settings/update`, `/api/settings/status`, etc., para realizar operaciones CRUD en los parámetros globales, mapeos y feriados.
 
 
 ---

@@ -8,7 +8,7 @@ Este archivo contiene rutas para generar reportes PDF en un sistema WMS (Warehou
 - `generate_pdf_bulk(date: Optional[str] = None, entrega_query: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, include_logo: bool = False, action: str = "previsualizar", session: Session = Depends(get_session_dep))` - Genera un reporte masivo con índice y picking list.
 
 ### Interacción con Base de Datos
-- Motor: SQLite (deducido del uso de `get_session_dep()` que probablemente se refiere a una función que proporciona una sesión de base de datos).
+- Motor: SQLite (deducido del uso de `get_session_dep()` que probablemente se conecta a una base de datos SQLite).
 - Tablas:
   - `outbound_deliveries`
   - `area_lookup`

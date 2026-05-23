@@ -4,33 +4,51 @@
 El archivo `base.py` define una clase abstracta `BaseWMSProcessor` que proporciona funcionalidades para procesar archivos WMS (TXT/CSV/XLSX) y cargarlos en una base de datos SQLite. Incluye métodos para validar archivos, leer y limpiar datos, realizar operaciones UPSERT atómicas, y procesar directorios de archivos.
 
 ### Catálogo de Funciones y Clases
-- `BaseWMSProcessor(encodings=None, chunk_size=50000)` - Clase abstracta para procesar archivos WMS.
-  - `validate_file(file_path: Path) -> bool` - Verifica si el archivo es válido para este procesador.
-  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma un chunk de datos crudos (Implementado por cada hijo).
-  - `_detect_file_params(file_path: Path, required_columns: List[str]) -> Tuple[int, str]` - Detecta la fila de encabezado y codificación buscando columnas clave.
-  - `read_and_clean_data(file_path: Path) -> pd.DataFrame` - Lee el archivo completo (para testing o archivos pequeños).
-  - `_get_required_columns() -> List[str]` - Lista de strings que deben estar en el header para detectar el inicio. Por defecto vacía.
-  - `_get_primary_keys() -> List[str]` - Devuelve las columnas que actúan como clave primaria para deduplicación. Por defecto vacía.
-  - `process_and_save(file_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int` - Orquestador unificado de procesamiento Chunked + Upsert SQLite.
-  - `_upsert_chunk(conn: sqlite3.Connection, df: pd.DataFrame, table_name: str)` - Lógica de Upsert atómico.
-  - `process_directory(folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int` - Escanea un directorio y procesa todos los archivos compatibles con Upsert acumulativo.
+- `BaseWMSProcessor(encodings=None, chunk_size=50000)` - Constructor que inicializa los parámetros de codificación y tamaño de chunk.
+  - Propósito: Configura las opciones iniciales para el procesamiento del archivo.
+
+- `validate_file(file_path)` - Método abstracto que verifica si el archivo es válido para este procesador.
+  - Propósito: Implementado por cada hijo para validar archivos específicos.
+
+- `_clean_dataframe(df)` - Método abstracto que limpia y transforma un chunk de datos crudos.
+  - Propósito: Implementado por cada hijo para realizar la limpieza específica del archivo.
+
+- `_detect_file_params(file_path, required_columns)` - Detecta la fila de encabezado y codificación buscando columnas clave.
+  - Propósito: Identifica los parámetros necesarios para leer el archivo correctamente.
+
+- `read_and_clean_data(file_path)` - Lee el archivo completo (para testing o archivos pequeños).
+  - Propósito: Carga y limpia un archivo en su totalidad.
+
+- `_get_required_columns()` - Devuelve una lista de columnas requeridas en el encabezado.
+  - Propósito: Implementado por cada hijo para especificar las columnas necesarias.
+
+- `_get_primary_keys()` - Devuelve las columnas que actúan como clave primaria para deduplicación.
+  - Propósito: Implementado por cada hijo para especificar las claves primarias.
+
+- `process_and_save(file_path, db_path, table_name, conn=None)` - Orquestador unificado de procesamiento Chunked + Upsert SQLite.
+  - Propósito: Procesa archivos en chunks y realiza operaciones UPSERT atómicas en la base de datos.
+
+- `_upsert_chunk(conn, df, table_name)` - Lógica de Upsert atómico por chunk.
+  - Propósito: Realiza una operación UPSERT atómica para un chunk de datos.
+
+- `process_directory(folder_path, db_path, table_name, conn=None)` - Escanea un directorio y procesa todos los archivos compatibles con Upsert acumulativo.
+  - Propósito: Procesa múltiples archivos en un directorio y realiza operaciones UPSERT atómicas.
 
 ### Interacción con Base de Datos
-- Motor: SQLite.
-- Tablas: No aplica (se espera que las tablas sean proporcionadas como parámetros).
-- Columnas: No aplica (se espera que las columnas sean proporcionadas como parámetros).
+- Motor: SQLite
+- Tablas: No aplica (se espera que las tablas sean proporcionadas como parámetros)
+- Columnas: No aplica (se espera que las columnas sean proporcionadas como parámetros)
 
 ### Estado y Variables Globales
 - `logger` - Variable global para el registro de eventos.
 
 ### Dependencias y Flujo
 - Librerías externas utilizadas:
-  - `abc`: Para definir clases abstractas.
-  - `pandas`: Para manipulación de datos.
-  - `pathlib`: Para manejo de rutas de archivos.
-  - `sqlite3`: Para interacción con la base de datos SQLite.
-  - `typing`: Para tipos de datos anotados.
-  - `logging`: Para registro de eventos.
+  - `pandas`
+  - `pathlib`
+  - `sqlite3`
+  - `typing`
+  - `logging`
 
-- Flujo: El archivo interactúa con clases y funciones definidas en otros módulos, como `core.security.validate_table`, para validar tablas antes de procesar archivos.
+- Flujo: El archivo interactúa con clases y funciones definidas en otros archivos del proyecto, como `core.security.validate_table`.
 

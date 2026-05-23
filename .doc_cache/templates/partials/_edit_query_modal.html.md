@@ -1,10 +1,10 @@
 ## Archivo: ./templates/partials/_edit_query_modal.html
 
 ### Resumen Funcional
-Este archivo contiene el código HTML para un modal de edición de consultas SQL en una interfaz de usuario, que incluye un constructor visual interactivo y un panel de vista previa del gráfico resultante.
+Este archivo contiene el código HTML para un modal de edición de consultas en Analytics Studio, que incluye un constructor visual interactivo y una vista previa del gráfico resultante.
 
 ### Catálogo de Funciones y Clases
-No se detectaron funciones o clases definidas explícitamente en este fragmento de código HTML.
+No se detectaron funciones o clases definidas explícitamente en este fragmento de código.
 
 ### Interacción con Base de Datos
 No aplica
@@ -13,8 +13,6 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- **Dependencias**: No hay dependencias directas mencionadas. El archivo incluye un script externo `analytics_studio.js` que se carga desde la carpeta `static/js`.
-- **Flujo**: Este fragmento de código HTML no interactúa con otros archivos del proyecto o realiza ninguna operación específica en términos de flujo de control.
-
-Este modal es principalmente una interfaz de usuario para editar consultas SQL y visualizar el resultado, pero no contiene lógica de negocio ni interacción directa con la base de datos.
+- **Dependencias**: No hay dependencias externas directamente mencionadas.
+- **Flujo**: El archivo se comunica con el backend a través de funciones JavaScript que interactúan con elementos del DOM, como `onBaseTableChange`, `addJoin`, `addFilter`, etc.
 

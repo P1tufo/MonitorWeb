@@ -1,5 +1,5 @@
 # Documentación Técnica Global - MonitorWeb
-Compilado el: 2026-05-22 16:53:13
+Compilado el: 2026-05-23 00:11:13
 Modelo: qwen2.5-coder:7b | Hardware: M1 Pro Optimized
 
 ---
@@ -8,37 +8,71 @@ Modelo: qwen2.5-coder:7b | Hardware: M1 Pro Optimized
 
 ### Arquitectura General Detectada
 
-La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que separan diferentes aspectos del sistema, como el código principal (`app.py`, `config.py`, `main.py`), las funcionalidades principales (`core/`), las pruebas unitarias (`tests/`), las dependencias (`setup/`), los documentos (`docs/`), los datos (`data/`), las rutas (`routes/`) y los servicios (`services/`). 
+La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que separan diferentes aspectos del sistema, como el código principal (`app.py`), las configuraciones (`config.py`), las rutas (`routes/`), los modelos (`core/models.py`), las tareas (`core/task_manager.py`), las pruebas (`tests/`), etc.
 
 ### Propósito Probable de las Carpetas Principales
 
-- **app.py, config.py, main.py**: Contienen el código principal del sistema, la configuración y la inicialización.
-- **core/**: Contiene el núcleo del sistema, incluyendo funcionalidades como autenticación, base de datos, modelos, PDFs, seguridad, etc.
-- **bin/**: Almacena herramientas adicionales como `ngrok`.
-- **deploy/**: Contiene archivos para la despliegue del sistema, como Dockerfiles y configuraciones de entorno.
-- **setup/**: Incluye archivos de configuración y scripts para el desarrollo y pruebas.
-- **tests/**: Almacena las pruebas unitarias y de integración.
-- **repositories/**: Define los repositorios de datos.
-- **docs/**: Contiene la documentación del sistema, incluyendo documentos globales y específicos por módulo.
-- **DELIVERIES_cleansed/**: Almacena archivos limpios de entregas.
-- **static/**: Contiene recursos estáticos como CSS y JavaScript.
-- **scripts/**: Incluye scripts adicionales para procesamiento y mantenimiento del sistema.
-- **db/**: Contiene archivos relacionados con la base de datos, incluyendo archivos SQLite y scripts de consolidación.
-- **templates/**: Almacena los plantillas HTML.
-- **data/**: Contiene archivos de datos y bases de datos.
-- **routes/**: Define las rutas del sistema web.
-- **services/**: Incluye servicios adicionales como ETL.
+- **`app.py`**: Punto de entrada principal del aplicativo.
+- **`config.py`**: Archivo de configuración general del sistema.
+- **`main.py`**: Posiblemente un archivo auxiliar para la ejecución principal del proyecto.
+- **`test_deliveries.py`**: Pruebas específicas relacionadas con las entregas.
+- **`core/`**: Contiene el código central y fundamental del sistema, incluyendo modelos, lógica de negocio, seguridad, etc.
+  - **`models.py`, `models_auth.py`, `models_transaccional.py`**: Definen los modelos de datos.
+  - **`auth.py`, `security.py`**: Manejo de autenticación y seguridad.
+  - **`database.py`, `db_config_manager.py`**: Configuración y gestión de la base de datos.
+  - **`pdf_engine.py`, `pdf_queries.py`, `pdf_reports.py`**: Generación de PDFs.
+  - **`query_engine.py`**: Motor de consultas.
+  - **`schemas.py`**: Esquemas para validaciones de datos.
+  - **`state.py`**: Gestión del estado del sistema.
+  - **`task_manager.py`**: Administrador de tareas.
+  - **`utils.py`**: Funciones utilitarias.
+  - **`wms_config.py`, `wms_utils.py`**: Configuración y utilidades específicas para el WMS (Warehouse Management System).
+- **`bin/`**: Contiene herramientas binarias, como `ngrok`.
+- **`deploy/`**: Archivos relacionados con la implementación del sistema.
+  - **`Dockerfile`, `docker-compose.dev.yml`, `docker-compose.yml`**: Configuraciones para Docker y Compose.
+- **`setup/`**: Contiene archivos de configuración y scripts para el entorno de desarrollo.
+  - **`package-lock.json`, `package.json`, `pytest.ini`, `requirements.txt`, `run_tests.sh`**: Dependencias, configuración de pruebas y scripts de instalación.
+- **`tests/`**: Archivos de prueba unitaria y de integración.
+  - **`conftest.py`, `test_api.py`, `test_auth.py`, etc.**: Pruebas específicas para diferentes componentes del sistema.
+- **`repositories/`**: Contiene la lógica de acceso a datos (DAOs).
+  - **`base.py`, `deliveries.py`, `inventory.py`, `tasks.py`**: Implementaciones de DAOs.
+- **`docs/`**: Documentación del proyecto y sus componentes.
+  - **`documentacion_global.md`, `mejoras_global.md`, `plan_maestro.md`**: Documentación general.
+  - **`core/`, `raiz/`, `tests/`, `repositories/`, etc.**: Documentación específica por módulo.
+- **`DELIVERIES_cleansed/`**: Archivos limpios de entregas.
+- **`static/`**: Recursos estáticos del frontend, como CSS y JavaScript.
+  - **`css/`, `js/`**: Estilos y scripts.
+- **`scripts/`**: Scripts auxiliares y procesos.
+  - **`doc_generator.py`, `free_ram.py`, `main_processor.py`**: Scripts específicos para el proyecto.
+- **`db/`**: Archivos relacionados con la base de datos.
+  - **`consolidator.py`, `data.db`, `monitor.db`, etc.**: Scripts y archivos de base de datos.
+- **`templates/`**: Plantillas HTML del frontend.
+  - **`analytics_proyecciones.html`, `dashboard.html`, etc.**: Plantillas específicas para diferentes vistas.
+  - **`partials/`**: Fragmentos de plantilla reutilizables.
+- **`data/`**: Archivos de datos y backups.
+  - **`wms_transactions.db`, `wms_transactions.db-shm`, etc.**: Archivos de base de datos del WMS.
+- **`routes/`**: Definición de rutas y endpoints del API.
+  - **`analytics_proyecciones.py`, `auth.py`, etc.**: Rutas específicas para diferentes funcionalidades.
+- **`services/`**: Implementación de servicios de negocio.
+  - **`dashboard_service.py`, `deliveries_service.py`, etc.**: Servicios específicos para diferentes partes del sistema.
+  - **`etl/`**: Implementación de ETL (Extract, Transform, Load).
 
 ### Organización Lógica de las Dependencias
 
-La organización lógica de las dependencias se refleja en la estructura de carpetas. Por ejemplo:
+- **Dependencias Internas**:
+  - El código dentro de `core/` depende de otros módulos dentro de la misma carpeta para su funcionamiento.
+  - Los servicios (`services/`) utilizan los modelos y DAOs definidos en `core/`.
+  - Las rutas (`routes/`) interactúan con los servicios.
 
-- **core/** es el núcleo del sistema, donde se definen los modelos, base de datos y funcionalidades principales.
-- **routes/** define cómo se manejan las solicitudes web, lo que implica una fuerte dependencia con **core/** para acceder a los servicios y modelos necesarios.
-- **services/** proporciona una capa de abstracción entre el núcleo del sistema y la lógica de negocio, lo que facilita la mantenibilidad y escalabilidad.
-- **tests/** está separado del código principal, lo que asegura que las pruebas no interfieran con el funcionamiento normal del sistema.
+- **Dependencias Externas**:
+  - El proyecto utiliza bibliotecas externas como Flask para el framework web, SQLAlchemy para ORM, PyPDF2 para generación de PDFs, etc.
+  - Dependencias gestionadas a través de `requirements.txt`.
 
-Esta estructura modular permite una mejor organización y escalabilidad del proyecto, facilitando el mantenimiento y la colaboración entre equipos.
+- **Pruebas**:
+  - Las pruebas (`tests/`) dependen del código principal y de las configuraciones definidas en `setup/`.
+  - Utilizan bibliotecas como pytest para ejecutar pruebas unitarias y de integración.
+
+La estructura modular permite una separación clara de responsabilidades, facilitando el mantenimiento y la escalabilidad del proyecto.
 
 
 ---
@@ -49,26 +83,26 @@ Esta estructura modular permite una mejor organización y escalabilidad del proy
 El archivo `app.py` es el punto de entrada para la configuración y ejecución de una aplicación FastAPI. Se encarga de montar rutas, recursos estáticos y gestionar el ciclo de vida de la aplicación, incluyendo la inicialización de bases de datos y la carga de snapshots.
 
 ### Catálogo de Funciones y Clases
-- `lifespan(fastapi_app: FastAPI)` - Manejador del ciclo de vida de la aplicación, que se ejecuta al inicio y finalizar el servidor.
+- `lifespan(fastapi_app: FastAPI)` - Manejador del ciclo de vida de la aplicación, que se ejecuta al iniciar y detener el servidor.
 - `initialize_app(fastapi_app: FastAPI) -> None` - Configura y prepara la aplicación FastAPI.
 
 ### Interacción con Base de Datos
 - Motor de BD: SQLite (implicado en las consultas SQL crudas).
 - Tablas modificadas/leídas:
   - `analytics_snapshots`
-- Columnas leídas/modificadas:
-  - `data` en la tabla `analytics_snapshots`
+- Columnas modificadas/leídas:
+  - `data`
 
 ### Estado y Variables Globales
 - No aplica.
 
 ### Dependencias y Flujo
-- Librerías utilizadas: `fastapi`, `logging`, `asyncio`, `sqlalchemy`.
+- Librerías utilizadas: FastAPI, SQLAlchemy, pandas.
 - Comunicación con otros archivos del proyecto:
-  - `config.py` (para configuraciones globales).
-  - `core.app_instance` (para la instancia de FastAPI).
-  - `routes.config` (para el registro de rutas).
-  - `core.auth`, `core.db_config_manager`, `core.state`, `core.task_manager`, `routes.tasks`, `services.deliveries_service`, `services.inventory_service` (varias partes del sistema para inicialización y gestión).
+  - `config.py`: Para configuraciones globales.
+  - `core.app_instance`: Para la instancia de la aplicación FastAPI.
+  - `routes.config`: Para el registro de rutas.
+  - `core.auth`, `core.db_config_manager`, `core.state`, `core.task_manager`, `routes.tasks`, `services.deliveries_service`, `services.inventory_service`: Para la inicialización y gestión del estado global, tareas asíncronas y servicios.
 
 
 ---
@@ -144,7 +178,7 @@ No aplica
 ## Archivo: ./core/auth.py
 
 ### Resumen Funcional
-El archivo `auth.py` proporciona funcionalidades de autenticación y seguridad utilizando JSON Web Tokens (JWT) y OAuth2, con soporte para roles de usuario ('admin' y 'viewer'). Incluye funciones para crear tokens, verificar usuarios, manejar dependencias FastAPI para proteger endpoints y gestionar la base de datos de usuarios.
+El archivo `auth.py` proporciona funcionalidades de autenticación y seguridad utilizando JSON Web Tokens (JWT) y OAuth2, con soporte para roles de usuario ('admin' y 'viewer'). Incluye funciones para crear tokens, verificar contraseñas, manejar sesiones de usuarios y proteger endpoints en una aplicación FastAPI.
 
 ### Catálogo de Funciones y Clases
 - `hash_password(plain: str) -> str` - Genera un hash bcrypt del password.
@@ -158,9 +192,15 @@ El archivo `auth.py` proporciona funcionalidades de autenticación y seguridad u
 - `ensure_admin_exists()` - Crea el usuario admin por defecto si no existe ningún usuario.
 
 ### Interacción con Base de Datos
-- Motor: No aplica (No hay consultas SQL crudas o llamadas a ORM).
+- Motor: SQLAlchemy
 - Tablas: `User`
-- Columnas: `id`, `username`, `password_hash`, `role`, `is_active`, `created_at`
+- Columnas:
+  - `id` (int)
+  - `username` (str)
+  - `password_hash` (str)
+  - `role` (str)
+  - `is_active` (bool)
+  - `created_at` (datetime)
 
 ### Estado y Variables Globales
 - `SECRET_KEY`: Clave secreta para firmar JWT.
@@ -168,8 +208,10 @@ El archivo `auth.py` proporciona funcionalidades de autenticación y seguridad u
 - `ACCESS_TOKEN_EXPIRE_MINUTES`: Tiempo de expiración del token JWT.
 
 ### Dependencias y Flujo
-- Librerías externas: `bcrypt`, `jwt`, `fastapi`.
-- Comunicaciones internas: No aplica (No se comunica con otros archivos del proyecto).
+- Librerías externas: `bcrypt`, `jwt`, `fastapi`
+- Comunicaciones internas:
+  - Conecta con el archivo `database.py` para obtener sesiones de base de datos.
+  - Utiliza el modelo `User` definido en `models_auth.py`.
 
 
 ---
@@ -207,11 +249,12 @@ Este archivo define una fábrica de sesiones SQLAlchemy para interactuar con bas
 #### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-Este archivo `db_config_manager.py` es el administrador de configuraciones dinámicas SaaS. Se encarga de la inicialización, carga y mantenimiento de tablas en una base de datos utilizando SQLAlchemy, así como la inserción de valores por defecto si las tablas están vacías.
+Este archivo `db_config_manager.py` es el administrador de configuraciones dinámicas SaaS. Se encarga de la inicialización, semillas y carga de configuraciones en memoria para mejorar el rendimiento.
 
 ### Catálogo de Funciones y Clases
 - `init_config_db()` - Crea las tablas de configuración SaaS via SQLAlchemy si no existen.
-- `seed_initial_config()` - Inserta los valores por defecto si las tablas están vacías.
+- `seed_initial_config()` - Inserta valores por defecto si las tablas están vacías.
+- `load_config_to_memory()` - No definida en el fragmento.
 
 ### Interacción con Base de Datos
 - Motor: SQLAlchemy
@@ -222,39 +265,34 @@ Este archivo `db_config_manager.py` es el administrador de configuraciones diná
   - `Holiday`
   - `ConfigQuery`
 - Columnas:
-  - `StatusMapping.code`, `label`
-  - `CostCenterMapping.center_code`, `business_area`
-  - `AppSetting.key`, `value`, `type`
-  - `Holiday.date_str`
-  - `ConfigQuery.query_id`, `sql_text`
+  - `config_queries` → `visual_state`
 
 ### Estado y Variables Globales
-- No aplica
+No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: SQLAlchemy, logging
-- Comunicación con otros archivos del proyecto:
-  - `database.py` (para obtener el motor de base de datos y la sesión)
-  - `models.py` (para definir las clases de modelos)
+- Librerías externas: SQLAlchemy, logging
+- Comunicación con otros archivos del proyecto: No mencionado
 
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-El archivo `db_config_manager.py` contiene configuraciones de consultas SQL y funciones para cargar estas configuraciones en una sesión de base de datos. También incluye funciones públicas para obtener diferentes tipos de configuración desde la base de datos.
+El archivo `db_config_manager.py` contiene configuraciones de consultas SQL y funciones para cargar estas configuraciones en una sesión de base de datos. También incluye funciones para recuperar diferentes tipos de configuración desde la base de datos.
 
 ### Catálogo de Funciones y Clases
 - `ConfigQuery(query_id, sql_text, visual_state)` - Define una consulta con un ID único, texto SQL y estado visual.
-- `initial_queries` - Lista de instancias de `ConfigQuery`.
-- `load_config_to_memory(session=None)` - Carga las consultas iniciales en la sesión de base de datos. Esta función está obsoleta y no realiza ninguna operación.
-- `_ensure_loaded()` - Función interna que no hace nada.
-- `get_setting(key, default=None)` - Obtiene un valor de configuración basado en una clave, con un valor predeterminado opcional.
-- `get_status_mapping()` - Devuelve un mapeo de códigos de estado a etiquetas.
-- `get_cost_center_mapping()` - Devuelve un mapeo de códigos de centro de costo a áreas de negocio.
-- `get_holidays()` - Devuelve una lista de fechas festivas.
-- `get_query(query_id)` - Obtiene el texto SQL de una consulta basada en su ID.
+- `initial_queries` - Lista de consultas iniciales a cargar en la sesión.
+- `load_config_to_memory(session=None)` - Carga las configuraciones iniciales en la sesión. Esta función está obsoleta y no realiza ninguna operación.
+- `_ensure_loaded()` - No hace nada, es una función auxiliar que no se utiliza.
+- `get_setting(key: str, default: Any = None) -> Any` - Recupera un valor de configuración basado en su clave.
+- `get_status_mapping() -> Dict[str, str]` - Devuelve un mapeo de códigos de estado a etiquetas.
+- `get_cost_center_mapping() -> Dict[str, str]` - Devuelve un mapeo de códigos de centro de costo a áreas de negocio.
+- `get_holidays() -> List[str]` - Devuelve una lista de fechas festivas.
+- `get_query(query_id: str) -> str` - Recupera el texto SQL asociado a un ID de consulta. Esta función es obsoleta y se recomienda usar `get_query_visual_state()` en su lugar.
+- `get_query_visual_state(query_id: str) -> str` - Recupera el estado visual JSON de una consulta.
 
 ### Interacción con Base de Datos
-- Motor: No especificado (se infiere que es SQLAlchemy).
+- Motor de base de datos: No especificado.
 - Tablas:
   - `inventory_movements`
   - `warehouse_tasks`
@@ -264,7 +302,7 @@ El archivo `db_config_manager.py` contiene configuraciones de consultas SQL y fu
   - `Holiday`
 - Columnas:
   - `inventory_movements.cmv`, `inventory_movements.fe_contab`, `inventory_movements.material`, `inventory_movements.tipo_operacion`, `inventory_movements.registrado`
-  - `warehouse_tasks.usuario`, `warehouse_tasks.fe_creac`, `warehouse_tasks.fecha_conf`
+  - `warehouse_tasks.usuario`, `warehouse_tasks.fecha_conf`, `warehouse_tasks.fe_creac`
   - `AppSetting.key`, `AppSetting.typed_value()`
   - `StatusMapping.code`, `StatusMapping.label`
   - `CostCenterMapping.center_code`, `CostCenterMapping.business_area`
@@ -274,9 +312,9 @@ El archivo `db_config_manager.py` contiene configuraciones de consultas SQL y fu
 No aplica.
 
 ### Dependencias y Flujo
-- Librerías externas: SQLAlchemy.
+- Librerías externas utilizadas: No especificado.
 - Comunicación con otros archivos del proyecto:
-  - No se menciona ninguna comunicación específica entre este archivo y otros.
+  - `get_session()` - Se utiliza para obtener una sesión de base de datos.
 
 
 ---
@@ -284,15 +322,14 @@ No aplica.
 ## Archivo: ./core/models.py
 
 ### Resumen Funcional
-Este archivo define modelos ORM SQLAlchemy para el esquema de configuración SaaS, incluyendo mapeos de estados WMS, centros de costo, parámetros globales, feriados y consultas SQL gestionadas via UI.
+Este archivo define modelos ORM SQLAlchemy para el esquema de configuración SaaS, incluyendo mapeos de estados WMS a etiquetas visuales, centros de costo a áreas de negocio, parámetros de procesamiento configurables, feriados para cálculo de SLA y consultas SQL gestionadas via UI.
 
 ### Catálogo de Funciones y Clases
 - `StatusMapping(code: str, label: str)` - Mapea códigos internos del WMS a etiquetas legibles por humanos.
 - `CostCenterMapping(center_code: str, business_area: str)` - Asocia un código de centro de costo del WMS con un Área de Negocio.
 - `AppSetting(key: str, value: str, type: str = "str")` - Parámetros de comportamiento del sistema.
-  - `typed_value()` - Retorna el valor con el tipo Python correcto.
-- `Holiday(date_str: str)` - Días no hábiles para el cálculo de SLA (días de retraso).
-- `ConfigQuery(query_id: str, sql_text: str, visual_state: str = None)` - Almacena queries SQL nombradas para el dominio de inventario/entregas.
+- `Holiday(date_str: str)` - Días no hábiles para el cálculo de SLA.
+- `ConfigQuery(query_id: str, sql_text: str = None, visual_state: str = None)` - Almacena el estado visual (JSON) de las consultas del Analytics Studio.
 
 ### Interacción con Base de Datos
 - Motor: SQLAlchemy
@@ -503,6 +540,41 @@ Uso indirecto de una biblioteca de PDF (no especificada en el fragmento)
 
 ---
 
+## Archivo: ./core/query_engine.py
+
+### Resumen Funcional
+Este archivo `query_engine.py` es el motor de construcción de consultas SQL seguras para el Analytics Studio. Centraliza la validación de identificadores (tablas y columnas) contra una lista blanca y construye consultas parametrizadas dinámicamente a partir de un `VisualQueryBuilderPayload`.
+
+### Catálogo de Funciones y Clases
+- `validate_identifier(name: str, db: Session)` - Valida que un identificador (tabla o tabla.columna) pertenezca a la lista blanca.
+- `validate_column(table: str, column: str, db: Session)` - Valida que una columna pertenezca a una tabla permitida.
+- `get_table_columns(table: str, db: Session)` - Retorna la lista de columnas de una tabla permitida.
+- `get_bound_params_from_visual_state(visual_state_str: str)` - Extrae los bind params (?) de un visual_state JSON serializado.
+- `extract_metric_value(df, active_year: str = None)` - Extrae el valor numérico principal de un DataFrame de resultado de query.
+- `build_sql_from_payload(payload, db: Session)` - Compila un VisualQueryBuilderPayload validado en una tupla (sql_text, bound_params).
+
+### Interacción con Base de Datos
+- Motor de base de datos: SQLAlchemy
+- Tablas permitidas:
+  - `outbound_deliveries`
+  - `stock_levels`
+  - `warehouse_tasks`
+  - `inventory_movements`
+- Consultas SQL dinámicas que utilizan bind params para evitar inyección SQL.
+
+### Estado y Variables Globales
+No aplica
+
+### Dependencias y Flujo
+- Librerías externas: `sqlalchemy`, `fastapi`
+- Comunicación con otros archivos:
+  - `routes/settings.py::api_build_sql` → llama a `build_sql_from_payload()`
+  - `core/security.py::validate_table` → valida nombres de tabla en ETL (sin cambios)
+  - `core/utils.py` → utilidades JSON y métricas (sin cambios)
+
+
+---
+
 ## Archivo: ./core/schemas.py
 
 ### Resumen Funcional
@@ -618,28 +690,24 @@ No aplica. El archivo no interactúa con ninguna base de datos.
 ## Archivo: ./core/utils.py
 
 ### Resumen Funcional
-Este archivo contiene utilidades transversales y gestión de señales del sistema. Incluye funciones para configurar manejadores de señales, registrar mensajes de inicio y limpiar datos para su serialización JSON segura.
+Este archivo contiene utilidades transversales y gestión de señales del sistema. Incluye funciones para configurar manejadores de señales, registrar un banner de inicio y limpiar datos para su serialización JSON segura.
 
 ### Catálogo de Funciones y Clases
 - `setup_signal_handlers()` - Configura los manejadores de señales (SIGINT, SIGTERM) para un cierre limpio.
-- `log_startup_banner()` - Registra un mensaje de inicio del módulo de utilidades del sistema.
+- `log_startup_banner()` - Registra un banner de inicio del módulo de utilidades del sistema.
 - `sanitize_for_json(data: Any) -> Any` - Limpia datos para su serialización JSON segura.
-- `_get_bound_params_from_visual_state(visual_state_str: str) -> list` - Extrae parámetros limitados desde una cadena de estado visual.
-- `_extract_metric_value(df, active_year: str = None) -> Any` - Extrae el valor numérico de la métrica de un DataFrame de forma segura.
+- `_get_bound_params_from_visual_state(visual_state_str: str) -> list` - Alias de compatibilidad para obtener parámetros enlazados desde un estado visual.
+- `_extract_metric_value(df, active_year: str = None) -> Any` - Alias de compatibilidad para extraer un valor métrico de un DataFrame.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `_handlers_registered` (boolean): Flag interno para evitar registros múltiples de manejadores de señales.
+- `_handlers_registered` - Flag interno para evitar registros múltiples de manejadores de señales.
 
 ### Dependencias y Flujo
-- `signal`: Para manejar señales del sistema.
-- `sys`: Para salir del programa.
-- `logging`: Para registrar mensajes.
-- `pandas`: Para manipular datos en formato DataFrame.
-- `math`: Para manejar valores numéricos especiales (NaN, Inf).
-- `typing.Final`, `typing.Any`: Para anotaciones de tipos.
+- `signal`, `sys`, `logging`, `pandas`, `math`
+- Importa funciones desde `services.tunnel` y `core.query_engine`
 
 
 ---
@@ -669,7 +737,7 @@ Dependencia directa:
 ## Archivo: ./core/wms_utils.py
 
 ### Resumen Funcional
-Este archivo contiene funciones utilitarias vectorizadas para transformación de datos WMS, incluyendo limpieza de datos, mapeos de negocio, normalización y cálculos métricos.
+Este archivo contiene funciones utilitarias vectorizadas para transformación de datos en un sistema WMS (Warehouse Management System). Incluye operaciones como limpieza de cadenas, mapeos de estados y centros de costo, normalización de fechas y cálculos de retraso.
 
 ### Catálogo de Funciones y Clases
 - `sanitize_string(text: str) -> str` - Normaliza un string para usarlo como encabezado de columna.
@@ -678,24 +746,23 @@ Este archivo contiene funciones utilitarias vectorizadas para transformación de
 - `normalize_date_columns(df: pd.DataFrame) -> pd.DataFrame` - Estandariza formatos de fecha WMS a dd-mm-yyyy de forma eficiente.
 - `calculate_sla_delays(df: pd.DataFrame) -> pd.DataFrame` - Calcula días hábiles de retraso usando lógica vectorizada de NumPy.
 - `generate_time_labels(df: pd.DataFrame) -> pd.DataFrame` - Genera etiquetas de semana ISO para visualización y analítica.
-- `is_file_changed(session: Session, file_path: Path) -> bool` - Verifica si un archivo ha cambiado desde la última sincronización.
-- `mark_file_processed(session: Session, file_path: Path, row_count: Optional[int] = None)` - Marca un archivo como procesado exitosamente en el manifiesto.
+- `_manifest_execute(session_or_conn, sql: str, params: dict)` - Ejecuta una query de manifiesto sobre Session SQLAlchemy o sqlite3.Connection.
+- `is_file_changed(session_or_conn, file_path: Path) -> bool` - Verifica si un archivo ha cambiado desde la última sincronización.
+- `mark_file_processed(session_or_conn, file_path: Path, row_count: Optional[int] = None)` - Marca un archivo como procesado en el manifiesto.
 
 ### Interacción con Base de Datos
-- Motor: SQLAlchemy ORM
+- Motor: SQLAlchemy (puede interactuar con SQLite o otras bases de datos compatibles).
 - Tablas:
-  - `sync_manifest`
-- Columnas:
-  - `file_path`, `last_modified`, `file_size`, `processed_at`, `row_count`
+  - `sync_manifest` (Tabla utilizada para almacenar información sobre archivos procesados, incluyendo su ruta, tamaño, última modificación y número de filas procesadas).
 
 ### Estado y Variables Globales
-No aplica
+No aplica.
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `re`, `logging`, `numpy`, `pandas`, `datetime`, `pathlib`, `typing`
-- Comunicación con otros archivos del proyecto:
-  - `core.wms_config`: Para mapeos de estado y centro de costo.
-  - `core.db_config_manager`: Para obtener feriados.
+- Librerías externas: `re`, `logging`, `numpy`, `pandas`, `datetime`, `pathlib`, `typing`.
+- Comunicación con otros archivos:
+  - `core.wms_config`: Para mapeos de estados y centros de costo.
+  - `core.db_config_manager`: Para obtener información sobre feriados.
 
 
 ---
@@ -710,15 +777,15 @@ Este archivo está vacío o solo contiene espacios en blanco. No se requiere an�
 ## Archivo: ./db/consolidator.py
 
 ### Resumen Funcional
-El archivo `consolidator.py` es un orquestador de consolidación de datos que opera sobre una base de datos SQLite. Se encarga de procesar archivos WMS, realizar operaciones UPSERT y sincronizar información entre diferentes tablas.
+El archivo `consolidator.py` es un orquestador de consolidación de datos que opera sobre una base de datos SQLite. Se encarga de procesar archivos WMS, actualizar tablas con los datos más recientes y realizar diversas operaciones de enriquecimiento y sincronización.
 
 ### Catálogo de Funciones y Clases
-- **DataConsolidator(db_path: str)** - Gestiona la conexión a la base de datos y el proceso de consolidación.
-  - `__init__(self, db_path: str)` - Inicializa el objeto con la ruta de la base de datos.
+- `DataConsolidator(db_path: str)` - Gestiona la consolidación de archivos WMS en SQLite.
+  - `__init__(self, db_path: str)` - Inicializa el objeto con la ruta a la base de datos.
   - `__enter__(self)` - Establece la conexión a la base de datos.
   - `__exit__(self, exc_type, exc_val, exc_tb)` - Cierra la conexión a la base de datos.
-  - `connect(self)` - Establece y configura la conexión a SQLite.
-  - `_parse_file_date(self, file_path: Path) -> datetime` - Extrae la fecha del nombre del archivo.
+  - `connect(self)` - Establece la conexión y configura optimizaciones de SQLite.
+  - `_parse_file_date(self, file_path: Path) -> datetime` - Extrae la fecha del nombre del archivo (dd-mm-yyyy).
   - `consolidate_folder(self, folder_path: str, table_name: str = TABLE_DELIVERIES)` - Consolida archivos cronológicamente mediante lógica UPSERT.
   - `overwrite_with_latest(self, folder_path: str, table_name: str = TABLE_STOCK)` - Reemplaza la tabla con los datos del archivo más reciente.
   - `enrich_deliveries_with_stock(self)` - Enriquece las transacciones con información de stock actual.
@@ -728,26 +795,24 @@ El archivo `consolidator.py` es un orquestador de consolidación de datos que op
   - `close(self)` - Cierra la conexión de forma segura.
 
 ### Interacción con Base de Datos
-- **Motor**: SQLite
-- **Tablas**:
+- Motor: SQLite
+- Tablas:
   - `outbound_deliveries`
   - `stock_levels`
-- **Columnas**: No especificadas explícitamente, pero se asume que las tablas tienen columnas necesarias para los procesos descritos.
+- Columnas y Operaciones:
+  - Lectura y escritura en las tablas mencionadas.
+  - Uso de consultas SQL para procesar y actualizar datos.
 
 ### Estado y Variables Globales
-- **Variables Globales**: No aplica
+No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**:
-  - `sqlite3`
-  - `logging`
-  - `re`
-  - `pathlib`
-  - `datetime`
-  - `typing`
-  - `services.etl.OutboundDeliveryAdapter`
-  - `db_enrichment` (varias funciones)
-- **Flujo**: El archivo interactúa con el resto del proyecto a través de llamadas a funciones y clases definidas en otros archivos, como `etl.py`, `db_enrichment.py`, y `wms_utils.py`.
+- Librerías Externas: `sqlite3`, `logging`, `re`, `pathlib`, `datetime`, `typing`
+- Comunicación con otros archivos:
+  - `services.etl.OutboundDeliveryAdapter` y `services.etl.StockLevelAdapter` para procesar y guardar datos.
+  - `db_enrichment` para funciones de enriquecimiento y sincronización.
+  - `core.security.validate_table` para validar tablas.
+  - `core.wms_utils.is_file_changed` y `core.wms_utils.mark_file_processed` para gestionar archivos procesados.
 
 
 ---
@@ -869,22 +934,28 @@ No aplica
 ## Archivo: ./repositories/base.py
 
 ### Resumen Funcional
-Clase base para todos los repositorios de datos que proporciona una sesión de SQLAlchemy y un método para obtener consultas SQL desde una configuración.
+La clase `BaseRepository` proporciona una estructura base para interactuar con bases de datos mediante SQLAlchemy. Define métodos para obtener consultas SQL y verificar el estado visual de las mismas.
 
 ### Catálogo de Funciones y Clases
-- `BaseRepository(session: Session)` - Inicializa la clase con una sesión de SQLAlchemy.
-- `_sql(query_id: str, fallback: str) -> str` - Obtiene un SQL desde la BD de configuración, con fallback.
+- `__init__(self, session: Session)` - Inicializa la instancia con una sesión de SQLAlchemy.
+- `_sql(self, query_id: str, fallback: str) -> str` - Obtiene un SQL desde la base de datos de configuración o devuelve un fallback hardcodeado si no existe.
+- `_has_visual_state(self, query_id: str) -> bool` - Verifica si una consulta tiene un estado visual JSON almacenado.
 
 ### Interacción con Base de Datos
-- Motor: No aplica (no hay consultas SQL crudas o llamadas a ORM explícitas).
-- Tablas y Columnas: No aplica (no interactúa directamente con tablas).
+- Motor: SQLAlchemy
+- Tablas: `config_queries`
+- Columnas: `query_id`, `sql_text`
 
 ### Estado y Variables Globales
-- No aplica (no define variables globales, de sesión, de entorno o diccionarios quemados en código que almacenan estado crítico).
+No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `sqlalchemy.orm.Session`, `core.wms_config.get_query`.
-- Comunicación con otros archivos del proyecto: No aplica (no comunica con otros archivos).
+- Librerías externas utilizadas:
+  - `sqlalchemy.orm.Session`
+  - `core.wms_config.get_query`
+  - `core.db_config_manager.get_query_visual_state`
+- Comunicación con otros archivos del proyecto:
+  - `core/query_engine.build_sql_from_payload()` (mencionado en la documentación, pero no implementado)
 
 
 ---
@@ -892,49 +963,50 @@ Clase base para todos los repositorios de datos que proporciona una sesión de S
 ## Archivo: ./repositories/deliveries.py
 
 ### Resumen Funcional
-El archivo `deliveries.py` contiene una clase `DeliveriesRepository` que proporciona métodos para obtener estadísticas y datos relacionados con las entregas. Estos métodos interactúan con una base de datos para recuperar información sobre áreas, retrasos, autores, ubicaciones y materiales.
+El archivo `deliveries.py` contiene una clase `DeliveriesRepository` que proporciona métodos para obtener estadísticas y datos relacionados con las entregas (`outbound_deliveries`). Estos métodos realizan consultas SQL en una base de datos utilizando SQLAlchemy y pandas para procesar los resultados.
 
 ### Catálogo de Funciones y Clases
-- `DeliveriesRepository(BaseRepository)` - Repositorio para el dominio de Entregas.
-  - `_sql(query_id: str, fallback: str) -> str` - Reemplaza `{AREA_EXPR}` en la consulta SQL con una expresión CASE que determina el área basada en diferentes campos.
-  - `_get_sla_threshold() -> int` - Obtiene el umbral de SLA (Service Level Agreement) desde las configuraciones del sistema.
-  - `get_area_stats(year: str) -> pd.DataFrame` - Devuelve estadísticas por área, incluyendo el número total de entregas y días activos.
-  - `get_total_active_days(year: str) -> int` - Calcula el número total de días activos en un año específico.
-  - `get_sla_stats(year: str) -> pd.DataFrame` - Devuelve estadísticas sobre el cumplimiento del SLA por entrega.
-  - `get_top_authors(year: str) -> pd.DataFrame` - Obtiene los autores con más entregas y su área asociada.
-  - `get_dates_counts(year: str) -> pd.DataFrame` - Cuenta las entregas por fecha y área.
-  - `get_top_locations(year: str) -> pd.DataFrame` - Devuelve las ubicaciones con más materiales y su área asociada.
-  - `get_top_materials_by_area(year: str) -> pd.DataFrame` - Muestra los materiales más frecuentes por área.
-  - `get_area_material_mapping(year: str) -> pd.DataFrame` - Mapea el material por área y cantidad.
-  - `get_user_material_mapping(year: str) -> pd.DataFrame` - Mapea el material por usuario y cantidad.
-  - `get_sla_audit_records(year: str, late: bool = True, limit: int = 500) -> pd.DataFrame` - Devuelve registros de auditoría del SLA basados en retrasos.
-  - `get_monthly_evolution() -> pd.DataFrame` - Muestra la evolución mensual de entregas y días activos.
-  - `get_weekly_evolution() -> pd.DataFrame` - Muestra la evolución semanal de entregas.
-  - `get_wms_status_distribution(year: str) -> pd.DataFrame` - Distribución del estado WMS (Warehouse Management System).
-  - `get_lead_time_by_area(year: str) -> pd.DataFrame` - Tiempo promedio de entrega por área.
-  - `get_sla_trend() -> pd.DataFrame` - Tendencia del SLA a lo largo del tiempo.
-  - `get_author_sla_correlation() -> pd.DataFrame` - Correlación entre el autor y el retraso en el SLA.
-  - `get_volume_delay_trend() -> pd.DataFrame` - Tendencia de volumen y retardo.
-  - `get_sla_trend_by_area() -> pd.DataFrame` - Tendencia del SLA por área a lo largo del tiempo.
-  - `get_sla_monthly_trend() -> pd.DataFrame` - Tendencia mensual del SLA.
-  - `get_sla_monthly_trend_by_area() -> pd.DataFrame` - Tendencia mensual del SLA por área.
+- `DeliveriesRepository(BaseRepository)` - Repositorio para el dominio de Entregas (outbound_deliveries).
+  - `_sql(query_id: str, fallback: str) -> str` - Obtiene SQL desde config_queries con fallback explícito.
+  - `_get_sla_threshold() -> int` - Retorna el umbral SLA configurado en las variables de entorno.
+  - `get_area_stats(year: str) -> pd.DataFrame` - Obtiene estadísticas por área para un año dado.
+  - `get_total_active_days(year: str) -> int` - Cuenta los días activos de entrega para un año dado.
+  - `get_sla_stats(year: str) -> pd.DataFrame` - Obtiene estadísticas de SLA para un año dado.
+  - `get_top_authors(year: str) -> pd.DataFrame` - Obtiene los autores con más entregas en un año dado.
+  - `get_dates_counts(year: str) -> pd.DataFrame` - Obtiene el conteo de entregas por fecha y área para un año dado.
+  - `get_top_locations(year: str) -> pd.DataFrame` - Obtiene las ubicaciones con más entregas en un año dado.
+  - `get_top_materials_by_area(year: str) -> pd.DataFrame` - Obtiene los materiales con mayor frecuencia por área para un año dado.
+  - `get_area_material_mapping(year: str) -> pd.DataFrame` - Mapea el material por área y cantidad para un año dado.
+  - `get_user_material_mapping(year: str) -> pd.DataFrame` - Mapea el material por usuario y cantidad para un año dado.
+  - `get_sla_audit_records(year: str, late: bool = True, limit: int = 500) -> pd.DataFrame` - Obtiene registros de auditoría de SLA para un año dado.
+  - `get_monthly_evolution() -> pd.DataFrame` - Obtiene la evolución mensual de entregas y días activos.
+  - `get_weekly_evolution() -> pd.DataFrame` - Obtiene la evolución semanal de entregas.
+  - `get_wms_status_distribution(year: str) -> pd.DataFrame` - Distribución del estado WMS para un año dado.
+  - `get_lead_time_by_area(year: str) -> pd.DataFrame` - Tiempo promedio de entrega por área para un año dado.
+  - `get_sla_trend() -> pd.DataFrame` - Tendencia de SLA semanal.
+  - `get_author_sla_correlation() -> pd.DataFrame` - Correlación entre el autor y el SLA.
+  - `get_volume_delay_trend() -> pd.DataFrame` - Tendencia del volumen y retraso por semana.
+  - `get_sla_trend_by_area() -> pd.DataFrame` - Tendencia de SLA semanal por área.
+  - `get_sla_monthly_trend() -> pd.DataFrame` - Tendencia mensual de SLA.
+  - `get_sla_monthly_trend_by_area() -> pd.DataFrame` - Tendencia mensual de SLA por área.
 
 ### Interacción con Base de Datos
-- Motor: SQLite (inferred from the use of SQLAlchemy's `text` function).
+- Motor: SQLAlchemy (no especificado el motor exacto).
 - Tablas:
   - `outbound_deliveries`
+  - `warehouse_tasks`
 - Columnas:
-  - `area`, `entrega`, `fecha_carga`, `dias_retraso`, `autor`, `creado_el`, `fecha_sm_real`, `material`, `denominacion`, `estado_wms`, `week_sort`, `week_label`
+  - `entrega`, `fecha_carga`, `dias_retraso`, `autor`, `material`, `denominacion`, `estado_wms`, `creado_el`, `fecha_sm_real`, `ubicacion_bin`, `business_area`, `week_sort`, `week_label`
+- Consultas SQL crudas:
+  - Todas las consultas SQL utilizan parámetros de enlace (`?`) para evitar inyecciones SQL.
 
 ### Estado y Variables Globales
-- No aplica.
+No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
-  - `pandas`
-  - `sqlalchemy`
+- Librerías externas: pandas, sqlalchemy.
 - Comunicación con otros archivos del proyecto:
-  - `core.db_config_manager` (para obtener configuraciones)
+  - `core.db_config_manager` (para obtener configuraciones de variables de entorno).
 
 
 ---
@@ -942,44 +1014,48 @@ El archivo `deliveries.py` contiene una clase `DeliveriesRepository` que proporc
 ## Archivo: ./repositories/inventory.py
 
 ### Resumen Funcional
-El archivo `inventory.py` contiene una clase `InventoryRepository` que proporciona métodos para obtener estadísticas y datos de inventario desde una base de datos SQLite. Los métodos incluyen consultas para volumen, área, materiales consumidos, usuarios activos, tendencias temporales, días hábiles y tipos de material.
+El archivo `inventory.py` contiene una clase `InventoryRepository` que se encarga de interactuar con la base de datos para obtener estadísticas y datos relacionados con el inventario, utilizando SQL queries y pandas DataFrames.
 
 ### Catálogo de Funciones y Clases
-- `InventoryRepository(BaseRepository)` - Repositorio para el dominio de Inventario (ex-Movimientos).
-  - `get_cmv_prod()` - Devuelve el valor de la configuración "CMV_PROD".
-  - `get_cmv_mant()` - Devuelve el valor de la configuración "CMV_MANT".
-  - `get_cmv_consumos()` - Devuelve una tupla con los valores de "CMV_PROD" y "CMV_MANT".
-  - `get_cmv_reversas()` - Devuelve una tupla con los valores de "CMV_REVERSAS".
-  - `check_table_exists()` - Verifica si la tabla 'inventory_movements' existe en la base de datos.
-  - `_FALLBACK_QUERIES` - Diccionario con consultas SQL para diferentes estadísticas.
-  - `_sql(query_id: str, fallback: str = "") -> str` - Obtiene una consulta SQL a partir del diccionario o devuelve una consulta de respaldo si no se encuentra.
-  - `get_volumen_stats()` - Devuelve un DataFrame con las estadísticas de volumen de movimientos.
-  - `get_area_stats_prod()` - Devuelve un DataFrame con las estadísticas de área para materiales de producción.
-  - `get_material_consumos_abc()` - Devuelve un DataFrame con las estadísticas de consumo ABC.
-  - `get_top_users(start_year: str = '2026') -> pd.DataFrame` - Devuelve un DataFrame con los usuarios más activos.
-  - `get_trend_stats(start_year: str = '2025') -> pd.DataFrame` - Devuelve un DataFrame con las tendencias temporales de movimientos.
-  - `get_dow_stats()` - Devuelve un DataFrame con las estadísticas de días hábiles.
-  - `get_pm_type_material_records()` - Devuelve un DataFrame con los tipos de material según el tipo de mantenimiento.
-  - `get_area_material_mapping_201()` - Devuelve un DataFrame con la asignación de materiales por área para CMV 201.
-  - `get_user_material_mapping(users: Tuple[str, ...]) -> pd.DataFrame` - Devuelve un DataFrame con la asignación de materiales por usuario y tipo de movimiento.
-  - `get_location_material_summary()` - Devuelve un DataFrame con las estadísticas de resumen de ubicaciones de materiales.
-  - `get_total_active_days()` - Devuelve el número total de días activos en los movimientos.
+- **Clase:** `InventoryRepository`
+  - **Métodos:**
+    - `get_cmv_prod()`: Devuelve el valor configurado para CMV_PROD.
+    - `get_cmv_mant()`: Devuelve el valor configurado para CMV_MANT.
+    - `get_cmv_consumos()`: Devuelve una tupla con los valores de CMV_PROD y CMV_MANT.
+    - `get_cmv_reversas()`: Devuelve una tupla con los valores configurados para CMV_REVERSAS.
+    - `check_table_exists()`: Verifica si la tabla 'inventory_movements' existe en la base de datos.
+    - `get_volumen_stats()`: Obtiene estadísticas de volumen del inventario.
+    - `get_area_stats_prod()`: Obtiene estadísticas por área para el producto.
+    - `get_material_consumos_abc()`: Obtiene estadísticas de materiales consumidos en ABC.
+    - `get_top_users(start_year='2026')`: Obtiene los usuarios con más movimientos.
+    - `get_trend_stats(start_year='2025')`: Obtiene tendencias de movimientos por período.
+    - `get_dow_stats()`: Obtiene estadísticas diarias de movimiento.
+    - `get_pm_type_material_records()`: Obtiene registros de tipo PM y material.
+    - `get_area_material_mapping_201()`: Obtiene mapeo de área para el producto 201.
+    - `get_user_material_mapping(users: Tuple[str, ...])`: Obtiene mapeo de usuario y material.
+    - `get_location_material_summary()`: Obtiene resumen de materiales por ubicación.
+    - `get_total_active_days()`: Obtiene el número total de días activos en los movimientos.
 
 ### Interacción con Base de Datos
-- Motor: SQLite
-- Tablas:
-  - `inventory_movements`
-- Columnas:
-  - `tipo_operacion`, `material`, `cantidad`, `fe_contab`, `usuario`, `alm`, `cmv`, `ce_coste`, `texto_breve_material`, `texto_cab_documento`, `referencia`
+- **Motor:** SQLite (inferred from the use of `sqlite_master`).
+- **Tablas:** `inventory_movements`.
+- **Columnas:**
+  - `tipo_operacion`
+  - `material`
+  - `num_tx`
+  - `business_area`
+  - `ce_coste`
+  - `cmv`
+  - `fe_contab`
+  - `alm`
+  - `usuario`
 
 ### Estado y Variables Globales
-No aplica
+No aplica.
 
 ### Dependencias y Flujo
-- Librerías externas:
-  - `pandas`
-  - `sqlalchemy`
-- Flujo interno: La clase interactúa con una instancia de `BaseRepository` para obtener la sesión de base de datos y ejecutar consultas SQL.
+- **Librerías Externas:** pandas, sqlalchemy.
+- **Flujo Interno:** Utiliza métodos de la clase base `BaseRepository` para interactuar con la base de datos.
 
 
 ---
@@ -1068,12 +1144,13 @@ Este archivo define rutas para obtener analíticas de proyecciones utilizando Fa
 ## Archivo: ./routes/auth.py
 
 ### Resumen Funcional
-Este archivo contiene endpoints para autenticación y gestión de usuarios, incluyendo login, registro, obtención de información del usuario autenticado y listado de usuarios (solo accesible por administradores). También proporciona una vista HTML para el formulario de login.
+Este archivo contiene endpoints para autenticación y gestión de usuarios, incluyendo login, registro, cambio de contraseña, obtención de información del usuario autenticado y listado de usuarios (solo accesible por administradores). También proporciona una vista HTML para el formulario de login.
 
 ### Catálogo de Funciones y Clases
 - `login(response: Response, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_session_dep))` - Autentica un usuario con username/password y retorna un JWT.
 - `logout(response: Response, state: AppState = Depends(get_app_state))` - Limpia la cookie de autenticación.
 - `get_me(user: User = Depends(require_auth), state: AppState = Depends(get_app_state))` - Retorna la información del usuario autenticado.
+- `change_password(data: ChangePasswordRequest, db: DBSession, user: User = Depends(require_auth))` - Cambia la contraseña del usuario autenticado.
 - `register_user(data: UserCreate, db: DBSession, admin: User = Depends(require_admin), state: AppState = Depends(get_app_state))` - Crea un nuevo usuario. Solo accesible por administradores.
 - `list_users(db: DBSession, admin: User = Depends(require_admin), state: AppState = Depends(get_app_state))` - Lista todos los usuarios del sistema.
 - `login_page(request: Request, state: AppState = Depends(get_app_state))` - Renderiza la página de login.
@@ -1089,13 +1166,12 @@ Este archivo contiene endpoints para autenticación y gestión de usuarios, incl
 No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: FastAPI, SQLAlchemy ORM
+- Librerías externas utilizadas: FastAPI, SQLAlchemy ORM.
 - Comunicación con otros archivos del proyecto:
-  - `core.database.get_session_dep`
-  - `core.models_auth.User`
-  - `core.auth.hash_password`, `verify_password`, `create_access_token`, `require_auth`, `require_admin`, `get_current_user`, `TokenResponse`, `UserCreate`, `UserPublic`
-  - `core.app_instance.templates`
-  - `core.state.get_app_state`
+  - `core.database.get_session_dep` para obtener la sesión de base de datos.
+  - `core.models_auth.User` para definir el modelo de usuario.
+  - `core.auth` para funciones de autenticación y gestión de usuarios.
+  - `core.app_instance.templates` para renderizar vistas HTML.
 
 
 ---
@@ -1127,22 +1203,22 @@ El archivo no depende de ninguna base de datos ni variables globales.
 ## Archivo: ./routes/dashboard.py
 
 ### Resumen Funcional
-El archivo `dashboard.py` define rutas para un panel de control (dashboard) que incluye endpoints para obtener ubicaciones de materiales y cargar la vista principal del dashboard con KPIs y búsqueda rápida.
+El archivo `dashboard.py` define rutas para un panel de control (dashboard) que incluye endpoints para obtener ubicaciones de materiales y cargar la vista principal del dashboard con KPIs y búsqueda rápida. También proporciona una API JSON para el mismo propósito.
 
 ### Catálogo de Funciones y Clases
 - `get_ubicaciones(material: str, user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - Obtiene las ubicaciones de un material específico.
-- `dashboard(request: Request, user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - Vista principal del Dashboard con KPIs y búsqueda rápida.
-- `dashboard_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - API JSON para el Dashboard con KPIs y búsqueda rápida.
+- `dashboard(request: Request, user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - Vista principal del dashboard con KPIs y búsqueda rápida.
+- `dashboard_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - API JSON para el dashboard con KPIs y búsqueda rápida.
 
 ### Interacción con Base de Datos
-- Motor: SQLite (deducido del uso de `sqlite3`)
+- Motor de base de datos: SQLite
 - Tablas:
   - `stock_levels`
   - `warehouse_tasks`
 - Columnas:
-  - `ubicacion_bin`, `ubicacin`, `ubicacion` en `stock_levels`
-  - `denominacion`, `texto_breve_de_material` en `stock_levels`
-  - `material`, `fecha_conf`, `fe_creac`, `texto_breve_material`, `stock_disp`, `umb`, `ubic_dest`, `ubic_actual` en `warehouse_tasks`
+  - `ubicacion_bin`, `ubicacin`, `ubicacion` (dependiendo del origen de la importación)
+  - `denominacion`, `texto_breve_de_material`
+  - `fecha_conf`, `fe_creac`, `material`, `tp_dest`, `ubic_dest`, `stock_disp`, `umb`, `ubic_actual`
 
 ### Estado y Variables Globales
 - No aplica
@@ -1153,7 +1229,8 @@ El archivo `dashboard.py` define rutas para un panel de control (dashboard) que 
   - `sqlite3`
   - `itertools`
   - `pandas`
-  - `datetime`, `timedelta`
+  - `datetime`
+  - `timedelta`
   - `typing`
   - `fastapi`
   - `sqlalchemy`
@@ -1220,15 +1297,16 @@ No aplica
   - `services.deliveries_service`
 
 - Flujo hacia otros archivos del proyecto:
-  - `core.database`
-  - `core.state`
-  - `core.app_instance`
-  - `repositories`
-  - `routes.inventory`
-  - `routes.tasks`
-  - `routes.analytics_proyecciones`
-  - `core.auth`
-  - `services.deliveries_service`
+  - `core.database.get_session_dep`
+  - `core.state.get_app_state`
+  - `templates.TemplateResponse`
+  - `DeliveriesRepository`
+  - `get_inventory_context`
+  - `get_tasks_context`
+  - `get_proyecciones_context`
+  - `get_current_user`
+  - `sanitize_for_json`
+  - `DeliveriesService`
 
 
 ---
@@ -1261,34 +1339,24 @@ El archivo interactúa con el sistema de archivos para leer directorios y archiv
 ## Archivo: ./routes/filters.py
 
 ### Resumen Funcional
-El archivo `filters.py` contiene funciones y rutas para filtrar entregas y calcular KPIs basados en múltiples criterios. Ofrece endpoints para obtener datos filtrados y estadísticas dinámicas.
+El archivo `filters.py` contiene funciones para filtrar y calcular KPIs basados en múltiples criterios. Ofrece endpoints para obtener datos filtrados de entregas y calcular indicadores clave de rendimiento (KPIs) dinámicos.
 
 ### Catálogo de Funciones y Clases
-- `_build_unified_where(date: str, area: str, centro: str, has_ots_filter: str, min_week: str)` - Construye la cláusula WHERE a nivel de MATERIAL.
-- `filter_transactions(request: Request, date: Optional[str] = None, entrega: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, session: Session = Depends(get_session_dep))` - Filtra entregas basándose en múltiples criterios.
+- `_build_unified_where(date: str, area: str, centro: str, has_ots_filter: str, min_week: str)` - Construye la cláusula WHERE a nivel de MATERIAL con seguridad contra SQL Injection.
+- `filter_transactions(request: Request, date: Optional[str] = None, entrega: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, session: Session = Depends(get_session_dep))` - Filtra entregas basándose en múltiples criterios y devuelve los resultados como un DataFrame.
 - `get_kpis(date: Optional[str] = None, entrega: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, session: Session = Depends(get_session_dep))` - Calcula KPIs dinámicos filtrados por área para el dashboard.
 
 ### Interacción con Base de Datos
-- Motor de BD: SQLite (deducido del import `from core.database import get_session_dep`)
+- Motor de BD: No especificado.
 - Tablas:
   - `outbound_deliveries`
   - `config_cost_center_mapping`
 - Columnas:
-  - `v.entrega`
-  - `v.week_sort`
-  - `v.fecha_carga`
-  - `v.fecha_sm_real`
-  - `v.creado_el`
-  - `v.area_negocio`
-  - `v.ubicacion_area`
-  - `v.ubicacion_bin_1`
-  - `v.ubicacion_bin`
-  - `v.estado_wms`
-  - `v.material`
-  - `v.dias_retraso`
+  - `outbound_deliveries`: `entrega`, `fecha_carga`, `fecha_sm_real`, `creado_el`, `estado_wms`, `material`, `dias_retraso`.
+  - `config_cost_center_mapping`: `center_code`, `business_area`.
 
 ### Estado y Variables Globales
-- No aplica
+- No aplica.
 
 ### Dependencias y Flujo
 - Librerías externas utilizadas:
@@ -1297,8 +1365,7 @@ El archivo `filters.py` contiene funciones y rutas para filtrar entregas y calcu
   - `pandas`
   - `fastapi`
 - Comunicación con otros archivos del proyecto:
-  - `core.database` (para obtener la sesión de base de datos)
-  - `config` (para obtener el camino a la base de datos)
+  - Depende de `core.database.get_session_dep` para obtener una sesión de base de datos.
 
 
 ---
@@ -1337,7 +1404,7 @@ Este archivo contiene rutas para generar reportes PDF en un sistema WMS (Warehou
 - `generate_pdf_bulk(date: Optional[str] = None, entrega_query: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, include_logo: bool = False, action: str = "previsualizar", session: Session = Depends(get_session_dep))` - Genera un reporte masivo con índice y picking list.
 
 ### Interacción con Base de Datos
-- Motor: SQLite (deducido del uso de `get_session_dep()` que probablemente se refiere a una función que proporciona una sesión de base de datos).
+- Motor: SQLite (deducido del uso de `get_session_dep()` que probablemente se conecta a una base de datos SQLite).
 - Tablas:
   - `outbound_deliveries`
   - `area_lookup`
@@ -1359,60 +1426,62 @@ No aplica.
 
 ---
 
-## Archivo: ./routes/settings.py (Procesado en 1 partes)
-
-#### --- PARTE 1 de 1 ---
+## Archivo: ./routes/settings.py
 
 ### Resumen Funcional
-El archivo `settings.py` proporciona una API para la gestión dinámica de configuraciones SaaS, utilizando SQLAlchemy ORM para todas las operaciones de escritura. Incluye endpoints para obtener y actualizar configuraciones generales, estados, centros de costo, feriados y consultas SQL.
+El archivo `settings.py` define una API para la gestión dinámica de configuraciones SaaS utilizando SQLAlchemy ORM. Permite crear, actualizar y eliminar configuraciones como estados, centros de costo y feriados, así como consultar y ejecutar consultas SQL.
 
 ### Catálogo de Funciones y Clases
 - `invalidate_caches(db: Session)` - Limpia el caché global en memoria y elimina todos los snapshots de base de datos.
-- `SettingUpdate(key: str, value: str)` - Modelo Pydantic para actualizar configuraciones generales.
-- `StatusMappingUpdate(code: str, label: str)` - Modelo Pydantic para actualizar estados.
-- `CostCenterMappingUpdate(center_code: str, business_area: str)` - Modelo Pydantic para actualizar centros de costo.
-- `HolidayAdd(date_str: str)` - Modelo Pydantic para añadir feriados.
-- `QueryUpdate(query_id: str, sql_text: str, params: Optional[List[Any]] = None, visual_state: Optional[str] = None)` - Modelo Pydantic para actualizar consultas SQL.
-- `JoinDef(table: str, onLeft: str, onRight: str)` - Modelo Pydantic para definir joins en consultas SQL.
-- `FilterDef(column: str, operator: str, value: Optional[str] = "", valueType: Optional[str] = "value", compareColumn: Optional[str] = None, offsetValue: Optional[str] = None)` - Modelo Pydantic para definir filtros en consultas SQL.
-- `MetricDef(column: str, aggregation: str, format: Optional[str] = "number")` - Modelo Pydantic para definir métricas en consultas SQL.
-- `TimeAxisDef(column: str, granularity: str)` - Modelo Pydantic para definir el eje de tiempo en consultas SQL.
-- `SecondMetricDef(column: str = "", aggregation: str = "", label: str = "")` - Modelo Pydantic para definir una segunda métrica adicional en consultas SQL.
-- `VisualQueryBuilderPayload(baseTable: str, joins: list[JoinDef] = [], filters: list[FilterDef] = [], metric: MetricDef, timeAxis: TimeAxisDef, breakdown: str | None = None, secondMetric: Optional[SecondMetricDef] = None)` - Modelo Pydantic para construir consultas SQL dinámicamente.
-- `settings_view(request: Request, db: DBSession, state: AppState = Depends(get_app_state))` - Vista (UI) que renderiza el panel de control de configuraciones SaaS.
-- `api_get_settings(state: AppState = Depends(get_app_state))` - Endpoint para obtener configuraciones generales.
-- `api_update_setting(update: SettingUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Endpoint para actualizar una configuración general.
-- `api_upsert_status(update: StatusMappingUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Endpoint para actualizar o insertar un estado.
-- `api_delete_status(code: str, db: DBSession, state: AppState = Depends(get_app_state))` - Endpoint para eliminar un estado.
-- `api_upsert_cost_center(update: CostCenterMappingUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Endpoint para actualizar o insertar un centro de costo.
-- `api_delete_cost_center(code: str, db: DBSession, state: AppState = Depends(get_app_state))` - Endpoint para eliminar un centro de costo.
-- `api_add_holiday(h: HolidayAdd, db: DBSession, state: AppState = Depends(get_app_state))` - Endpoint para añadir un feriado.
-- `api_sync_holidays(db: DBSession, state: AppState = Depends(get_app_state))` - Endpoint para sincronizar automáticamente los feriados nacionales (Chile).
-- `api_delete_holiday(date_str: str, db: DBSession, state: AppState = Depends(get_app_state))` - Endpoint para eliminar un feriado.
-- `api_get_query(query_id: str, db: DBSession, state: AppState = Depends(get_app_state))` - Endpoint para obtener una consulta SQL.
-- `api_update_query(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Endpoint para actualizar una consulta SQL.
-- `api_get_schema(db: DBSession, state: AppState = Depends(get_app_state))` - Endpoint que retorna el listado de tablas y sus columnas para el editor.
-- `api_query_preview(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Endpoint para ejecutar una consulta temporal y retornar datos para previsualización.
-- `validate_identifier(name: str, db: Session) -> bool` - Función que valida de manera segura que un identificador (tabla o columna) pertenezca a la lista blanca.
-- `api_build_sql(payload: VisualQueryBuilderPayload, db: DBSession, state: AppState = Depends(get_app_state))` - Endpoint para compilar dinámicamente un objeto JSON del constructor visual en SQL parametrizado seguro.
+- `SettingUpdate(key: str, value: str)` - Modelo Pydantic para actualizar una configuración.
+- `StatusMappingUpdate(code: str, label: str)` - Modelo Pydantic para actualizar un estado.
+- `CostCenterMappingUpdate(center_code: str, business_area: str)` - Modelo Pydantic para actualizar un centro de costo.
+- `HolidayAdd(date_str: str)` - Modelo Pydantic para agregar un feriado.
+- `QueryUpdate(query_id: str, sql_text: Optional[str], params: Optional[List[Any]], visual_state: Optional[str])` - Modelo Pydantic para actualizar una consulta.
+- `JoinDef(table: str, onLeft: str, onRight: str)` - Modelo Pydantic para definir una unión de tablas.
+- `FilterDef(column: str, operator: str, value: Optional[str], valueType: Optional[str], compareColumn: Optional[str], offsetValue: Optional[str])` - Modelo Pydantic para definir un filtro.
+- `MetricDef(column: str, aggregation: str, format: Optional[str])` - Modelo Pydantic para definir una métrica.
+- `TimeAxisDef(column: str, granularity: str)` - Modelo Pydantic para definir el eje de tiempo.
+- `SecondMetricDef(column: str = "", aggregation: str = "", label: str = "")` - Modelo Pydantic para definir una segunda métrica.
+- `VisualQueryBuilderPayload(baseTable: str, joins: list[JoinDef], filters: list[FilterDef], metric: MetricDef, timeAxis: TimeAxisDef, breakdown: str | None, secondMetric: Optional[SecondMetricDef])` - Modelo Pydantic para definir el payload del constructor de consultas visuales.
+- `settings_view(request: Request, db: DBSession, state: AppState = Depends(get_app_state))` - Vista que renderiza el panel de control de configuraciones SaaS.
+- `api_get_settings(state: AppState = Depends(get_app_state))` - API para obtener las configuraciones generales.
+- `api_update_setting(update: SettingUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - API para actualizar una configuración.
+- `api_upsert_status(update: StatusMappingUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - API para insertar o actualizar un estado.
+- `api_delete_status(code: str, db: DBSession, state: AppState = Depends(get_app_state))` - API para eliminar un estado.
+- `api_upsert_cost_center(update: CostCenterMappingUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - API para insertar o actualizar un centro de costo.
+- `api_delete_cost_center(code: str, db: DBSession, state: AppState = Depends(get_app_state))` - API para eliminar un centro de costo.
+- `api_add_holiday(h: HolidayAdd, db: DBSession, state: AppState = Depends(get_app_state))` - API para agregar un feriado.
+- `api_sync_holidays(db: DBSession, state: AppState = Depends(get_app_state))` - API para sincronizar automáticamente los feriados nacionales (Chile).
+- `api_delete_holiday(date_str: str, db: DBSession, state: AppState = Depends(get_app_state))` - API para eliminar un feriado.
+- `api_get_query(query_id: str, db: DBSession, state: AppState = Depends(get_app_state))` - API para obtener el estado visual de una consulta del Analytics Studio.
+- `api_update_query(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - API para actualizar el estado visual de una consulta.
+- `api_get_schema(db: DBSession, state: AppState = Depends(get_app_state))` - API para obtener el listado de tablas y sus columnas para el editor.
+- `api_query_preview(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - API para ejecutar una consulta temporal y retornar datos para previsualización.
+- `api_build_sql(payload: VisualQueryBuilderPayload, db: DBSession, state: AppState = Depends(get_app_state))` - API para compilar el estado visual del constructor en SQL parametrizado seguro.
 
 ### Interacción con Base de Datos
-El archivo interactúa con la base de datos utilizando SQLAlchemy ORM. Las tablas y columnas que se están leyendo o modificando son:
-- Tablas: `AppSetting`, `StatusMapping`, `CostCenterMapping`, `Holiday`, `ConfigQuery`
-- Columnas: Todas las columnas correspondientes a estas tablas.
+El archivo interactúa con la base de datos utilizando SQLAlchemy ORM. Las tablas y columnas afectadas incluyen:
+- `AppSetting`
+- `StatusMapping`
+- `CostCenterMapping`
+- `Holiday`
+- `ConfigQuery`
+
+No hay consultas SQL crudas explícitas.
 
 ### Estado y Variables Globales
-No aplica
+No aplica.
 
 ### Dependencias y Flujo
 Dependencias externas utilizadas:
-- SQLAlchemy ORM
-- FastAPI
-- Pydantic
-- Pandas
-- SQLite (a través de SQLAlchemy)
+- `fastapi`
+- `pydantic`
+- `sqlalchemy`
+- `pandas`
+- `holidays`
 
-El archivo se comunica con otros archivos del proyecto a través de dependencias como `get_session_dep`, `require_admin`, `load_config_to_memory`, `get_setting`, `get_status_mapping`, `get_cost_center_mapping`, `get_holidays`, y `templates`.
+El archivo se comunica con otros archivos del proyecto a través de dependencias como `get_session_dep`, `require_admin`, `load_config_to_memory`, `get_setting`, `get_status_mapping`, `get_cost_center_mapping`, `get_holidays`, y `sanitize_for_json`.
 
 
 ---
@@ -1420,38 +1489,26 @@ El archivo se comunica con otros archivos del proyecto a través de dependencias
 ## Archivo: ./routes/sync.py
 
 ### Resumen Funcional
-Este archivo contiene rutas para la sincronización de datos con gestión de concurrencia. Utiliza `TaskManager` para ejecutar tareas en segundo plano y proporciona endpoints para iniciar, monitorear y obtener el estado de las sincronizaciones.
+El archivo `sync.py` contiene rutas para la gestión de sincronización de datos en una aplicación web. Permite iniciar y monitorear procesos de sincronización asíncrona utilizando un `TaskManager`, y proporciona endpoints para obtener la URL del túnel, el estado de la sincronización actual y detalles sobre las tareas en ejecución.
 
 ### Catálogo de Funciones y Clases
 - `get_tunnel_url(state: AppState = Depends(get_app_state))` - Retorna la URL pública del túnel (Ngrok).
 - `get_sync_status(state: AppState = Depends(get_app_state))` - Retorna el estado actual de la sincronización.
-- `sync_data(state: AppState = Depends(get_app_state))` - Inicia el proceso de sincronización de datos y lo encola en `TaskManager`.
-- `list_tasks(limit: int = 20, state: AppState = Depends(get_app_state))` - Lista las tareas recientes del sistema.
-- `get_task(task_id: str, state: AppState = Depends(get_app_state))` - Consulta el estado de una tarea específica por su ID.
+- `sync_data(state: AppState = Depends(get_app_state), admin=Depends(require_auth))` - Inicia el proceso de sincronización de datos y lo encola en el `TaskManager`.
+- `list_tasks(limit: int = 20, state: AppState = Depends(get_app_state), admin=Depends(require_auth))` - Lista las tareas recientes del sistema.
+- `get_task(task_id: str, state: AppState = Depends(get_app_state), admin=Depends(require_auth))` - Consulta el estado de una tarea específica por su ID.
 - `_run_sync_pipeline()` - Ejecuta el pipeline completo de limpieza y consolidación.
 
 ### Interacción con Base de Datos
-- Motor: No aplica (No hay consultas SQL crudas o llamadas a ORM explícitas).
-- Tablas: `analytics_snapshots` (se borra en `_run_sync_pipeline()`).
+El archivo interactúa con la base de datos a través del módulo `db.consolidator.DataConsolidator`. Se realizan operaciones en las tablas `stock_levels` y otras dependiendo de los archivos procesados. No se especifica el motor de base de datos.
 
 ### Estado y Variables Globales
 - `state.is_syncing`: Indica si la sincronización está en curso.
-- `state.sync_lock`: Bloqueo para evitar ejecuciones duplicadas de la sincronización.
+- `state.sync_lock`: Un bloqueo para evitar ejecuciones duplicadas de la sincronización.
 
 ### Dependencias y Flujo
-- Librerías externas: `fastapi`, `logging`, `shutil`, `pathlib`, `typing`.
-- Comunicación con otros archivos:
-  - `core.auth.require_auth` (autenticación).
-  - `config` (variables de configuración).
-  - `core.state.AppState` y `get_app_state()` (estado global).
-  - `core.task_manager.task_manager` (gestión de tareas).
-  - `db.consolidator.DataConsolidator` (consolidación de datos).
-  - `core.database.get_session` (obtención de sesión de base de datos).
-  - `core.wms_utils.is_file_changed` y `mark_file_processed` (utilidades para archivos).
-  - `services.etl.OutboundDeliveryAdapter` (adaptador ETL).
-  - `db.inventory_processor.process_inventory_file` (procesamiento de inventario).
-  - `db.warehouse_tasks_processor.process_tasks_file` (procesamiento de tareas de bodega).
-  - `db.lx02_processor.process_lx02_pendientes` (procesamiento de documentos no paletizados).
+- **Librerías Externas**: `fastapi`, `logging`, `shutil`, `pathlib`, `typing`.
+- **Flujo Interno**: El archivo se comunica con otros módulos como `core.auth`, `config`, `core.state`, `core.task_manager`, `db.consolidator`, `core.database`, `core.wms_utils`, y `services.etl`.
 
 
 ---
@@ -1536,33 +1593,6 @@ El archivo `main_processor.py` es el punto de entrada para un proceso automatiza
 
 ---
 
-## Archivo: ./scripts/migrate_table_names.py
-
-### Resumen Funcional
-El archivo `migrate_table_names.py` es un script que renombra las tablas de una base de datos SQLite de producción, reemplazando nombres específicos del sistema WMS por nombres genéricos. El objetivo es hacer la base de datos agnóstica al sistema WMS original.
-
-### Catálogo de Funciones y Clases
-- `migrate_tables(db_path: str, dry_run: bool = False)` - Ejecuta la migración de nombres de tablas.
-
-### Interacción con Base de Datos
-- Motor: SQLite
-- Tablas modificadas:
-  - `vl06o_transactions` → `outbound_deliveries`
-  - `mb51_transactions` → `inventory_movements`
-  - `lx02_stock` → `stock_levels`
-  - `lt22_transactions` → `warehouse_tasks`
-
-### Estado y Variables Globales
-- No aplica
-
-### Dependencias y Flujo
-- Librerías utilizadas:
-  - `sys`, `os`, `sqlite3`, `logging`, `shutil`, `pathlib`
-- Comunicación con otros archivos del proyecto: Utiliza `config.DB_PATH` para obtener la ruta de la base de datos.
-
-
----
-
 ## Archivo: ./services/__init__.py
 
 Este archivo está vacío o solo contiene espacios en blanco. No se requiere análisis de IA.
@@ -1573,36 +1603,39 @@ Este archivo está vacío o solo contiene espacios en blanco. No se requiere an�
 ## Archivo: ./services/dashboard_service.py
 
 ### Resumen Funcional
-El archivo `dashboard_service.py` contiene una clase `DashboardService` que se encarga de cargar y preparar los datos necesarios para un dashboard. Esta clase interactúa con una base de datos SQL utilizando SQLAlchemy y pandas para procesar los datos.
+Este archivo contiene el servicio `DashboardService` que se encarga de cargar la página principal del dashboard. Orquesta la carga de todos los datos necesarios para el dashboard, incluyendo gráficos, indicadores clave de rendimiento (KPIs) y listas únicas de fechas y áreas.
 
 ### Catálogo de Funciones y Clases
-- **DashboardService(session: Session)** - Inicializa la instancia con una sesión de base de datos.
-- **get_full_context()** - Orquesta la carga de todos los datos necesarios para el dashboard, incluyendo gráficos, KPIs, selectores y transacciones recientes.
-- **_prepare_weekly_chart(year: int)** - Prepara los datos para el gráfico de intensidad semanal.
-- **_calculate_dashboard_kpis(start_week: str, year_str: str)** - Calcula los indicadores clave de rendimiento (KPIs) desde una semana base.
-- **_prepare_selectors(min_week: str)** - Obtiene listas únicas de fechas y áreas, además de mapeos de autores y centros.
-- **_get_recent_transactions(week_str: str)** - Obtiene el listado de las últimas entregas para la tabla principal.
+- `DashboardService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
+- `get_full_context()` - Orquesta la carga de todos los datos necesarios para el dashboard.
+- `_prepare_weekly_chart(year: int)` - Prepara los datos para el gráfico de intensidad semanal.
+- `_calculate_dashboard_kpis(start_week: str, year_str: str)` - Calcula los indicadores clave de rendimiento (KPIs) desde una semana base.
+- `_prepare_selectors(min_week: str)` - Obtiene listas únicas de fechas y áreas, además de mapeos de autores y centros.
+- `_get_recent_transactions(week_str: str)` - Obtiene el listado de las últimas entregas para la tabla principal.
 
 ### Interacción con Base de Datos
-El archivo interactúa con una base de datos SQL utilizando SQLAlchemy. Las tablas utilizadas son:
-- `outbound_deliveries`
-- `config_cost_center_mapping`
-- `autor_area_mapping`
-
-Las columnas específicas que se están leyendo o modificando incluyen:
-- `week_sort`, `week_label`, `area_negocio` y otras columnas de `outbound_deliveries`.
-- `business_area`, `center_code` y otras columnas de `config_cost_center_mapping`.
-- `autor`, `area_negocio` y otras columnas de `autor_area_mapping`.
+- Motor: SQLite (inferred from `pd.read_sql`)
+- Tablas:
+  - `outbound_deliveries`
+  - `config_cost_center_mapping`
+  - `autor_area_mapping`
+- Columnas:
+  - `outbound_deliveries`: `week_sort`, `week_label`, `area_negocio`, `entrega`, `material`, `estado_wms`, `dias_retraso`, `fecha_carga`, `fecha_sm_real`, `creado_el`
+  - `config_cost_center_mapping`: `center_code`, `business_area`
+  - `autor_area_mapping`: `autor`, `area_negocio`
 
 ### Estado y Variables Globales
-No aplica.
+No aplica
 
 ### Dependencias y Flujo
-Las dependencias externas utilizadas son:
-- `sqlalchemy`
-- `pandas`
-
-El archivo se comunica con otros archivos del proyecto a través de la clase `DashboardService`, que es instanciada y utilizada para obtener los datos necesarios para el dashboard.
+- Librerías externas utilizadas:
+  - `logging`
+  - `sqlalchemy.orm.Session`
+  - `pandas as pd`
+  - `itertools`
+  - `typing`
+  - `datetime`
+- No comunica con otros archivos del proyecto directamente.
 
 
 ---
@@ -1610,13 +1643,11 @@ El archivo se comunica con otros archivos del proyecto a través de la clase `Da
 ## Archivo: ./services/deliveries_service.py
 
 ### Resumen Funcional
-El archivo `deliveries_service.py` contiene una clase `DeliveriesService` que se encarga de generar un contexto completo para las entregas, incluyendo estadísticas, KPIs y datos relacionados con áreas, autores, ubicaciones y materiales. Utiliza SQLAlchemy para interactuar con la base de datos y pandas para procesar los datos.
+El archivo `deliveries_service.py` contiene una clase `DeliveriesService` que se encarga de generar un contexto completo para las entregas, incluyendo estadísticas, KPIs y datos relacionados con autores, ubicaciones y materiales. Utiliza SQLAlchemy para interactuar con la base de datos y pandas para procesar los datos.
 
 ### Catálogo de Funciones y Clases
 - `DeliveriesService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
-- `_get_bound_params_from_visual_state(visual_state_str: str) -> list` - Extrae parámetros de un estado visual en formato JSON.
-- `_extract_metric_value(df, active_year: str = None) -> Any` - Extrae el valor numérico de una métrica de un DataFrame de forma segura.
-- `get_full_context() -> Dict[str, Any]` - Genera el contexto completo para Entregas.
+- `get_full_context()` - Genera el contexto completo para las entregas, incluyendo estadísticas, KPIs y datos relacionados.
 - `_prepare_area_stats(year, month_str)` - Prepara el DataFrame de estadísticas por área.
 - `_calculate_kpis(sla_df, area_stats_df, total_dias)` - Calcula el diccionario de KPIs globales de forma segura.
 - `_prepare_authors(year, month_str)` - Obtiene ranking de autores con comparativa mensual.
@@ -1625,21 +1656,42 @@ El archivo `deliveries_service.py` contiene una clase `DeliveriesService` que se
 
 ### Interacción con Base de Datos
 El archivo interactúa con una base de datos utilizando SQLAlchemy. Las tablas y columnas específicas son:
-- Tablas: `outbound_deliveries`, `config_queries`
-- Columnas: `fecha_carga`, `sql_text`, `visual_state`, `area`, `mes`, `semana`, `autor`, `centro`, `fecha`, `valor`, `total_qty`, `efficiency`, `ontime_qty`, `late_qty`
+- Tabla: `outbound_deliveries`
+  - Columna: `fecha_carga`
+- Tabla: `config_queries`
+  - Columnas: `query_id`, `sql_text`, `visual_state`
+- Tabla: `area_stats`
+  - Columnas: `area`, `total_entregas`, `dias_activos`
+- Tabla: `top_authors`
+  - Columnas: `name`, `entregas`
+- Tabla: `top_locations`
+  - Columnas: `ubicacion`, `num_items`
+- Tabla: `top_materials_by_area`
+  - Columnas: `area`, `material`, `frequency`
 
 ### Estado y Variables Globales
 No aplica.
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `sqlalchemy`, `pandas`, `logging`, `datetime`, `typing`.
-- Comunicación con otros archivos del proyecto:
-  - `core.utils.sanitize_for_json`
-  - `core.state.get_app_state`
-  - `repositories.DeliveriesRepository`
-  - `routes.inventory.get_inventory_context`
-  - `routes.tasks.get_tasks_context`
-  - `routes.analytics_proyecciones.get_proyecciones_context`
+Dependencias:
+- `sqlalchemy.orm.Session` - Para la sesión de base de datos.
+- `pandas` - Para procesar los datos.
+- `logging` - Para el registro de errores.
+- `datetime` - Para manejar fechas.
+- `typing` - Para tipos de datos.
+- `core.utils.sanitize_for_json` - Para sanitizar datos para JSON.
+- `core.state.get_app_state` - Para obtener el estado de la aplicación.
+- `repositories.DeliveriesRepository` - Para interactuar con la base de datos.
+- `core.query_engine.get_bound_params_from_visual_state` - Para obtener parámetros de consulta.
+- `core.query_engine.extract_metric_value` - Para extraer métricas de los resultados de consulta.
+
+Flujo:
+El archivo se comunica con otros archivos del proyecto a través de las siguientes importaciones:
+- `routes.inventory.get_inventory_context`
+- `routes.tasks.get_tasks_context`
+- `routes.analytics_proyecciones.get_proyecciones_context`
+
+Estas funciones son llamadas para obtener contextos adicionales que se incluyen en el contexto final.
 
 
 ---
@@ -1674,35 +1726,53 @@ No aplica
 El archivo `base.py` define una clase abstracta `BaseWMSProcessor` que proporciona funcionalidades para procesar archivos WMS (TXT/CSV/XLSX) y cargarlos en una base de datos SQLite. Incluye métodos para validar archivos, leer y limpiar datos, realizar operaciones UPSERT atómicas, y procesar directorios de archivos.
 
 ### Catálogo de Funciones y Clases
-- `BaseWMSProcessor(encodings=None, chunk_size=50000)` - Clase abstracta para procesar archivos WMS.
-  - `validate_file(file_path: Path) -> bool` - Verifica si el archivo es válido para este procesador.
-  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma un chunk de datos crudos (Implementado por cada hijo).
-  - `_detect_file_params(file_path: Path, required_columns: List[str]) -> Tuple[int, str]` - Detecta la fila de encabezado y codificación buscando columnas clave.
-  - `read_and_clean_data(file_path: Path) -> pd.DataFrame` - Lee el archivo completo (para testing o archivos pequeños).
-  - `_get_required_columns() -> List[str]` - Lista de strings que deben estar en el header para detectar el inicio. Por defecto vacía.
-  - `_get_primary_keys() -> List[str]` - Devuelve las columnas que actúan como clave primaria para deduplicación. Por defecto vacía.
-  - `process_and_save(file_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int` - Orquestador unificado de procesamiento Chunked + Upsert SQLite.
-  - `_upsert_chunk(conn: sqlite3.Connection, df: pd.DataFrame, table_name: str)` - Lógica de Upsert atómico.
-  - `process_directory(folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int` - Escanea un directorio y procesa todos los archivos compatibles con Upsert acumulativo.
+- `BaseWMSProcessor(encodings=None, chunk_size=50000)` - Constructor que inicializa los parámetros de codificación y tamaño de chunk.
+  - Propósito: Configura las opciones iniciales para el procesamiento del archivo.
+
+- `validate_file(file_path)` - Método abstracto que verifica si el archivo es válido para este procesador.
+  - Propósito: Implementado por cada hijo para validar archivos específicos.
+
+- `_clean_dataframe(df)` - Método abstracto que limpia y transforma un chunk de datos crudos.
+  - Propósito: Implementado por cada hijo para realizar la limpieza específica del archivo.
+
+- `_detect_file_params(file_path, required_columns)` - Detecta la fila de encabezado y codificación buscando columnas clave.
+  - Propósito: Identifica los parámetros necesarios para leer el archivo correctamente.
+
+- `read_and_clean_data(file_path)` - Lee el archivo completo (para testing o archivos pequeños).
+  - Propósito: Carga y limpia un archivo en su totalidad.
+
+- `_get_required_columns()` - Devuelve una lista de columnas requeridas en el encabezado.
+  - Propósito: Implementado por cada hijo para especificar las columnas necesarias.
+
+- `_get_primary_keys()` - Devuelve las columnas que actúan como clave primaria para deduplicación.
+  - Propósito: Implementado por cada hijo para especificar las claves primarias.
+
+- `process_and_save(file_path, db_path, table_name, conn=None)` - Orquestador unificado de procesamiento Chunked + Upsert SQLite.
+  - Propósito: Procesa archivos en chunks y realiza operaciones UPSERT atómicas en la base de datos.
+
+- `_upsert_chunk(conn, df, table_name)` - Lógica de Upsert atómico por chunk.
+  - Propósito: Realiza una operación UPSERT atómica para un chunk de datos.
+
+- `process_directory(folder_path, db_path, table_name, conn=None)` - Escanea un directorio y procesa todos los archivos compatibles con Upsert acumulativo.
+  - Propósito: Procesa múltiples archivos en un directorio y realiza operaciones UPSERT atómicas.
 
 ### Interacción con Base de Datos
-- Motor: SQLite.
-- Tablas: No aplica (se espera que las tablas sean proporcionadas como parámetros).
-- Columnas: No aplica (se espera que las columnas sean proporcionadas como parámetros).
+- Motor: SQLite
+- Tablas: No aplica (se espera que las tablas sean proporcionadas como parámetros)
+- Columnas: No aplica (se espera que las columnas sean proporcionadas como parámetros)
 
 ### Estado y Variables Globales
 - `logger` - Variable global para el registro de eventos.
 
 ### Dependencias y Flujo
 - Librerías externas utilizadas:
-  - `abc`: Para definir clases abstractas.
-  - `pandas`: Para manipulación de datos.
-  - `pathlib`: Para manejo de rutas de archivos.
-  - `sqlite3`: Para interacción con la base de datos SQLite.
-  - `typing`: Para tipos de datos anotados.
-  - `logging`: Para registro de eventos.
+  - `pandas`
+  - `pathlib`
+  - `sqlite3`
+  - `typing`
+  - `logging`
 
-- Flujo: El archivo interactúa con clases y funciones definidas en otros módulos, como `core.security.validate_table`, para validar tablas antes de procesar archivos.
+- Flujo: El archivo interactúa con clases y funciones definidas en otros archivos del proyecto, como `core.security.validate_table`.
 
 
 ---
@@ -1772,47 +1842,35 @@ No aplica. No se definen variables globales, de sesión o de entorno en este arc
 ## Archivo: ./services/etl/stock.py
 
 ### Resumen Funcional
-El archivo `stock.py` contiene una clase `StockLevelAdapter` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos de inventario/stock en formato CSV, TXT, XLS o XLSX, y cargarlos en una base de datos SQLite. Realiza un proceso de limpieza de los datos y sobrescribe el método `process_directory` para combinar múltiples archivos en uno solo y luego realizar un `REPLACE` completo en la tabla especificada.
+El archivo `stock.py` contiene una clase `StockLevelAdapter` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos de inventario/stock en formato LX02, validar su contenido, leer y limpiar los datos, y luego guardarlos en una base de datos SQLite.
 
 ### Catálogo de Funciones y Clases
-- **Clase:** `StockLevelAdapter(BaseWMSProcessor)`
-  - Propósito: Adaptador para procesar Inventario/Stock LX02. Realiza REPLACE completo.
-  
-- **Función:** `validate_file(file_path: Path) -> bool`
-  - Propósito: Valida si el archivo existe y cumple con los requisitos.
-
-- **Función:** `_get_required_columns() -> List[str]`
-  - Propósito: Devuelve una lista de columnas requeridas. Actualmente está vacía.
-
-- **Función:** `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame`
-  - Propósito: Limpia el DataFrame eliminando filas y columnas totalmente vacías y limpia los strings.
-
-- **Función:** `process_directory(folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int`
-  - Propósito: Combina todos los archivos en el directorio especificado, realiza una limpieza y carga los datos en la base de datos SQLite.
+- **StockLevelAdapter(BaseWMSProcessor)** - Adaptador para procesar Inventario/Stock LX02. Realiza REPLACE completo.
+  - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y contiene las columnas requeridas.
+  - `_get_required_columns() -> List[str]` - Devuelve las columnas clave del header SAP LX02.
+  - `read_and_clean_data(file_path: Path) -> pd.DataFrame` - Lee el archivo LX02/Stock, detectando la fila header automáticamente y limpia los datos.
+  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia las filas y columnas vacías y limpia los strings de las columnas de tipo objeto.
+  - `process_directory(folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int` - Combina todos los archivos en el directorio especificado, realiza la limpieza y guarda los datos en una base de datos SQLite.
 
 ### Interacción con Base de Datos
-- **Motor:** SQLite
-- **Tablas:** No aplica (se espera que se proporcione una tabla al llamar a `process_directory`)
-- **Columnas:** Se espera que la columna `otcuanto` esté presente en los archivos procesados. Se crea un índice en esta columna.
+- **Motor**: SQLite
+- **Tablas**: No aplica (No se mencionan tablas específicas).
+- **Columnas**: No aplica (No se mencionan columnas específicas).
 
 ### Estado y Variables Globales
-- **No aplica**
+- **Variables Globales**: No aplica.
 
 ### Dependencias y Flujo
-- **Librerías Externas:**
-  - `pandas`: Para el manejo de DataFrames.
-  - `pathlib`: Para la manipulación de rutas de archivos.
-  - `typing`: Para las anotaciones de tipos.
-  - `sqlite3`: Para la interacción con la base de datos SQLite.
-  - `os`: Para operaciones del sistema operativo.
-  - `datetime`: Para obtener la fecha y hora actual.
-  - `logging`: Para el registro de eventos.
+- **Librerías Externas**:
+  - `pandas` - Para el procesamiento de datos.
+  - `pathlib` - Para manejar rutas de archivos.
+  - `typing` - Para definir tipos de variables.
+  - `sqlite3` - Para interactuar con la base de datos SQLite.
+  - `os` - Para operaciones del sistema.
+  - `datetime` - Para obtener la fecha y hora actual.
+  - `logging` - Para el registro de errores.
 
-- **Flujo Interno:**
-  - El archivo se valida y se limpia.
-  - Los archivos en el directorio se procesan y combinan en un solo DataFrame.
-  - El DataFrame se carga en la base de datos SQLite utilizando `REPLACE`.
-  - Se crea un índice en la columna `otcuanto` si no existe.
+- **Flujo**: El archivo se comunica con otros archivos dentro del proyecto a través de importaciones relativas (`from .base import BaseWMSProcessor`).
 
 
 ---
@@ -1847,35 +1905,27 @@ No aplica
 #### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-El archivo `inventory_service.py` contiene una clase `InventoryService` que proporciona métodos para calcular y preparar diversos KPIs (Indicadores Clave de Desempeño) relacionados con el inventario. Estos KPIs incluyen ingresos, consumos, traspasos, devoluciones, eficiencia de bodega, análisis ABC, estadísticas por área y tendencias de consumo planificado vs desplanificado.
+El archivo `inventory_service.py` contiene una clase `InventoryService` que proporciona métodos para calcular y preparar diversos KPIs (Indicadores Clave de Desempeño) relacionados con el inventario, incluyendo ingresos, consumos, traspasos, devoluciones y eficiencia de bodega. Utiliza una base de datos SQL para obtener los datos necesarios.
 
 ### Catálogo de Funciones y Clases
 - `InventoryService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
 - `_get_latest_data_period()` - Obtiene el período más reciente de datos disponibles en la tabla `inventory_movements`.
-- `_prepare_volume_kpis(anio, mes)` - Calcula KPIs relacionados con el volumen de movimientos de inventario.
-- `_prepare_abc_analytics(anio, mes)` - Realiza análisis ABC para determinar la importancia relativa de los materiales según su consumo.
-- `_prepare_area_analytics(anio, mes)` - Calcula estadísticas de consumo por área.
-- `_prepare_trend_analytics(anio, mes)` - Genera tendencias de consumo a nivel semanal y mensual.
-- `_prepare_user_location_analytics(anio, mes)` - Analiza la actividad de usuarios y ubicaciones según el inventario.
+- `_prepare_volume_kpis(anio, mes)` - Calcula KPIs relacionados con los volúmenes de ingresos y consumos.
+- `_prepare_abc_analytics(anio, mes)` - Realiza análisis ABC para determinar el impacto de diferentes materiales en el inventario.
+- `_prepare_area_analytics(anio, mes)` - Calcula estadísticas de consumo por área con promedios diarios robustos.
+- `_prepare_trend_analytics(anio, mes)` - Genera tendencias de movimientos de inventario a nivel semanal y mensual.
+- `_prepare_user_location_analytics(anio, mes)` - Estadísticas detalladas de usuarios y ubicaciones con actividad mensual.
 - `_prepare_planned_consumption_trend()` - Calcula la tendencia de consumos planificados vs desplanificados.
 
 ### Interacción con Base de Datos
-- Motor: SQLite (inferred from the use of `Session` and `text`)
+- Motor: SQLite (inferred from the use of `text` for SQL queries)
 - Tablas:
   - `inventory_movements`
 - Columnas:
-  - `fe_contab`
-  - `tipo_operacion`
-  - `material`
-  - `cmv`
-  - `usuario`
-  - `alm`
-  - `texto_cab_documento`
-  - `referencia`
-  - `registrado`
+  - `fe_contab`, `cmv`, `tipo_operacion`, `material`, `qty`, `registrado`, `usuario`, `alm`, `texto_cab_documento`, `referencia`
 
 ### Estado y Variables Globales
-- No aplica
+No aplica
 
 ### Dependencias y Flujo
 - Librerías externas utilizadas:
@@ -1883,33 +1933,33 @@ El archivo `inventory_service.py` contiene una clase `InventoryService` que prop
   - `pandas`
   - `logging`
   - `datetime`
-  - `typing`
   - `numpy`
 - Comunicación con otros archivos del proyecto:
-  - `repositories.InventoryRepository` (se importa y se usa para obtener datos)
-  - `core.utils.sanitize_for_json` (se importa y se usa para sanitizar datos JSON)
-  - `core.state.get_app_state` (se importa pero no se usa en el fragmento proporcionado)
-  - `core.wms_config.COST_CENTER_MAPPING` (se importa pero no se usa en el fragmento proporcionado)
+  - `repositories.InventoryRepository` (para obtener datos de inventario)
+  - `core.utils.sanitize_for_json` (para sanitizar datos para JSON)
+  - `core.state.get_app_state` (no se usa en este fragmento)
+  - `core.wms_config.COST_CENTER_MAPPING` (no se usa en este fragmento)
 
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-El archivo `inventory_service.py` contiene funciones para preparar y obtener el contexto de datos necesario para un dashboard de movimientos en una aplicación de inventario. Incluye la generación de indicadores clave (KPIs), análisis de volumen, área, ABC, usuarios, tendencias, proyecciones, mapeos detallados y gráficos planificados vs desplanificados.
+El archivo `inventory_service.py` contiene funciones para preparar y obtener el contexto de datos necesario para un dashboard de movimientos en una aplicación de inventario. Incluye la generación de indicadores clave (KPIs), análisis de volumen, área, ABC, usuarios, tendencias y proyecciones.
 
 ### Catálogo de Funciones y Clases
-- `_prepare_planned_consumption_trend()` - Prepara los datos para el gráfico de tendencia de consumo planificado.
+- `_prepare_planned_consumption_trend()` - Prepara los datos para el gráfico de consumo planificado.
 - `_get_empty_context()` - Devuelve un contexto vacío con valores iniciales.
-- `get_full_context()` - Genera el contexto completo para el dashboard de movimientos, incluyendo KPIs, análisis y mapeos.
+- `get_full_context()` - Genera el contexto completo para el dashboard, incluyendo KPIs, análisis y proyecciones.
 
 ### Interacción con Base de Datos
-El archivo interactúa con una base de datos a través del repositorio `InventoryRepository`. Las tablas y columnas específicas no se mencionan explícitamente en el código proporcionado. Sin embargo, se hacen llamadas a métodos como `check_table_exists()`, `get_location_material_summary()`, `get_area_material_mapping_201()`, `get_user_material_mapping()`, `get_pm_type_material_records()` y otras que implican la lectura de datos.
+No aplica
 
 ### Estado y Variables Globales
-No aplica. El código no define variables globales, de sesión o de entorno.
+No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**: No se mencionan librerías externas específicas en el fragmento proporcionado.
-- **Flujo Interno**: El archivo interactúa con otros archivos del proyecto a través de llamadas como `get_proyecciones_context()` y `save_analytics_snapshot()`.
+- Depende de la clase `InventoryRepository` para interactuar con la base de datos.
+- Comunica con el archivo `routes.analytics_proyecciones.py` para obtener contexto de proyecciones.
+- Utiliza funciones como `get_app_state()`, `set_cache()`, y `save_analytics_snapshot()` que no se muestran en el fragmento.
 
 
 ---
@@ -2088,19 +2138,15 @@ No depende de ninguna librería externa ni comunica con otros archivos del proye
 ## Archivo: ./static/js/analytics_proyecciones.js
 
 ### Resumen Funcional
-El archivo `analytics_proyecciones.js` contiene lógica para manejar la interacción con una interfaz de usuario (UI) y renderizar datos en diferentes modales. Los datos se filtran y presentan según los criterios ingresados por el usuario.
+El archivo `analytics_proyecciones.js` contiene lógica para renderizar y controlar modales de alertas, combinaciones y gráficos de dispersión en una interfaz web. Utiliza funciones para filtrar y mostrar datos basados en criterios de búsqueda y selección.
 
 ### Catálogo de Funciones y Clases
-- `UI.openModal(id)` - Abre un modal identificado por `id`.
-- `UI.closeModal(id)` - Cierra un modal identificado por `id`.
-- `UI.populateAreaSelect(selectId, data, key = 'area')` - Llena un selector de áreas con valores únicos del conjunto de datos proporcionado.
-- `getData(id)` - Obtiene y parsea los datos almacenados en un elemento HTML con el ID especificado.
-- `renderAlerts()` - Renderiza una tabla de alertas basada en los criterios de búsqueda y filtro.
-- `renderCombos(filterText = "")` - Renderiza una lista de combinaciones de materiales basadas en la búsqueda del usuario.
-- `renderScatter()` - Renderiza un gráfico de dispersión basado en los criterios de búsqueda y filtro.
-- `openModalAlerts()` - Abre el modal de alertas, llena el selector de áreas y renderiza las alertas.
-- `openModalCombos()` - Abre el modal de combinaciones, limpia la entrada de búsqueda y renderiza las combinaciones.
-- `openModalScatter()` - Abre el modal de dispersión, llena los selectores de área y categoría, limpia las entradas de búsqueda y renderiza el gráfico.
+- `renderAlerts()` - Renderiza los datos de alertas en un modal.
+- `renderCombos(filterText = "")` - Renderiza los datos de combinaciones en un modal, filtrando por texto.
+- `renderScatter()` - Renderiza los datos de dispersión en un modal, filtrando por texto y categoría.
+- `openModalAlerts()` - Abre el modal de alertas y carga los datos iniciales.
+- `openModalCombos()` - Abre el modal de combinaciones y carga los datos iniciales.
+- `openModalScatter()` - Abre el modal de dispersión y carga los datos iniciales.
 
 ### Interacción con Base de Datos
 No aplica
@@ -2109,8 +2155,7 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `Chart.js` (usado para crear el gráfico de dispersión).
-- **Flujo Interno**: El archivo interactúa con elementos HTML para obtener datos, renderizar contenido en modales y actualizar gráficos.
+Dependencia: `core_ui.js` (carga previa para proporcionar funciones como `CoreUI.openModal`, `CoreUI.closeModal`, `CoreUI.populateAreaSelect`, y `CoreUI.getData`).
 
 
 ---
@@ -2120,16 +2165,14 @@ No aplica
 #### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-El archivo `analytics_studio.js` contiene funciones y variables para gestionar el estado del Studio de Análíticas, incluyendo la carga de esquemas de base de datos, visualización de consultas SQL, generación de gráficos y tarjetas métricas KPI.
+El archivo `analytics_studio.js` contiene funciones y variables para gestionar el estado del Studio de Análíticas, incluyendo la carga de esquemas de base de datos, visualización de consultas SQL y generación de gráficos.
 
 ### Catálogo de Funciones y Clases
-- `openEditQueryModal(queryId, chartTitle)` - Abre el modal para editar una consulta.
+- `openEditQueryModal(queryId, chartTitle)` - Abre un modal para editar una consulta.
 - `loadSchema()` - Carga el esquema de la base de datos.
-- `previewTable(tableName, el)` - Muestra una vista previa de los datos de una tabla.
+- `previewTable(tableName, el)` - Muestra una vista previa de una tabla en la interfaz.
 - `runPreview()` - Ejecuta una consulta SQL y muestra su resultado en un gráfico o tabla.
-- `renderPreviewChart(data)` - Renderiza el gráfico o tabla basado en los datos de la consulta.
-- `closeEditQueryModal()` - Cierra el modal para editar una consulta.
-- `showConfirmPublish()` - Muestra la ventana de confirmación para publicar.
+- `renderPreviewChart(data)` - Renderiza el resultado de una consulta como un gráfico.
 
 ### Interacción con Base de Datos
 No aplica
@@ -2139,63 +2182,106 @@ No aplica
 - `currentSchema` - Esquema de la base de datos actual.
 - `currentQueryId` - ID de la consulta actualmente seleccionada.
 - `studioBoundParams` - Parámetros de la consulta actual.
-- `serverVisualState` - Estado visual del servidor.
-- `visualState` - Estado del constructor visual.
-- `defaultVisualStates` - Mapeos predefinidos para inicialización visual intuitiva.
+- `serverVisualState` - Estado visual guardado en el servidor.
+- `visualState` - Estado del constructor visual actual.
+- `defaultVisualStates` - Mapeo predefinido para inicializar gráficos.
 
 ### Dependencias y Flujo
 Dependencias:
 - `Chart.js` - Librería para renderizar gráficos.
 
 Flujo:
-- El archivo interactúa con el backend a través de endpoints como `/api/queries/{queryId}`, `/api/studio/schema`, y `/api/studio/preview`.
-- Utiliza funciones asíncronas (`async/await`) para cargar datos y ejecutar consultas.
-- Renderiza gráficos utilizando la librería `Chart.js`.
+1. El usuario selecciona una consulta en el Studio de Análíticas.
+2. Se abre un modal con la opción de editar la consulta.
+3. La consulta se carga y se muestra en un editor de texto.
+4. El usuario puede modificar la consulta y ejecutarla para obtener resultados.
+5. Los resultados se renderizan como gráficos o tablas según el tipo de consulta.
+
+El archivo interactúa con una API que proporciona los datos necesarios para cargar esquemas, ejecutar consultas y obtener visualizaciones.
 
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-Este archivo contiene funciones y métodos para gestionar la edición de consultas, publicación de consultas, y construcción de consultas SQL dinámicamente en un entorno de análisis. Permite crear, modificar y ejecutar consultas SQL basadas en una interfaz gráfica de usuario (GUI) interactiva.
+El archivo `analytics_studio.js` contiene funciones y métodos para gestionar la creación, edición y publicación de consultas analíticas. Permite configurar gráficos, filtros y condiciones de búsqueda, y sincroniza estos cambios con un backend que genera y ejecuta consultas SQL.
 
 ### Catálogo de Funciones y Clases
-- `closeEditQueryModal()` - Cierra el modal de edición de consulta.
+- `closeEditQueryModal()` - Cierra el modal para editar una consulta.
 - `showConfirmPublish()` - Muestra la ventana de confirmación para publicar una consulta.
 - `hideConfirmPublish()` - Oculta la ventana de confirmación para publicar una consulta.
-- `executePublishQuery()` - Ejecuta la publicación de una consulta a través de una API y actualiza la interfaz según el resultado.
-- `initVisualQuery(queryId)` - Inicializa la interfaz visual del editor de consultas con los parámetros proporcionados.
+- `executePublishQuery()` - Ejecuta la publicación de una consulta y maneja la respuesta del backend.
+- `initVisualQuery(queryId)` - Inicializa el estado visual de la consulta y carga los datos necesarios.
 - `onBaseTableChange()` - Maneja el cambio en la tabla base seleccionada.
-- `getActiveTables()` - Devuelve una lista de tablas activas basadas en el estado actual.
-- `getActiveColumns()` - Devuelve una lista de columnas activas basadas en las tablas activas.
-- `refreshQbColumns(forceState = false)` - Refresca los selectores de columnas para los ejes Y, X y desglose.
-- `renderJoins()` - Renderiza la interfaz gráfica para gestionar los joins entre tablas.
-- `addJoin()` - Añade un nuevo join a la configuración actual.
-- `updateJoin(index)` - Actualiza el estado de un join específico.
-- `removeJoin(index)` - Elimina un join específico del estado.
-- `renderFilters()` - Renderiza la interfaz gráfica para gestionar los filtros (WHERE).
-- `addFilter()` - Añade un nuevo filtro a la configuración actual.
-- `updateFilterType(index, type)` - Actualiza el tipo de valor para un filtro específico.
-- `updateFilter(index)` - Actualiza el estado de un filtro específico.
-- `removeFilter(index)` - Elimina un filtro específico del estado.
+- `getActiveTables()` - Devuelve las tablas activas en la consulta.
+- `getActiveColumns()` - Devuelve las columnas activas en la consulta.
+- `refreshQbColumns(forceState = false)` - Refresca los selectores de columnas para los ejes y desglose.
+- `renderJoins()` - Renderiza los controles de join en el formulario.
+- `addJoin()` - Añade un nuevo join al estado visual.
+- `updateJoin(index)` - Actualiza un join existente en el estado visual.
+- `removeJoin(index)` - Elimina un join del estado visual.
+- `renderFilters()` - Renderiza los controles de filtro en el formulario.
+- `addFilter()` - Añade un nuevo filtro al estado visual.
+- `updateFilterType(index, type)` - Actualiza el tipo de valor para un filtro.
+- `updateFilter(index)` - Actualiza la configuración de un filtro existente.
+- `removeFilter(index)` - Elimina un filtro del estado visual.
 - `onSecondMetricToggle()` - Maneja el toggle de la segunda métrica.
-- `onQbChange()` - Sincroniza los cambios en la interfaz visual con el estado actual y genera una consulta SQL correspondiente.
-- `syncVisualToSQL()` - Envía el estado actual a través de una API para generar y sincronizar la consulta SQL.
+- `onQbChange()` - Sincroniza los cambios en el formulario con el estado visual y genera SQL.
+- `syncVisualToSQL()` - Envía el estado visual al backend para generar y ejecutar una consulta SQL.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `visualState` - Almacena el estado actual del editor visual, incluyendo tablas, joins, filtros, métricas, etc.
+- `studioChartInstance` - Instancia del gráfico generado por Chart.js.
+- `visualState` - Estado visual actual de la consulta, incluyendo tablas, joins, filtros, métricas, etc.
 - `serverVisualState` - Estado visual proporcionado por el servidor.
 - `defaultVisualStates` - Estados visuales predeterminados para diferentes consultas.
-- `currentSchema` - Esquema de la base de datos actual.
-- `studioBoundParams` - Parámetros vinculados al estudio.
+- `currentSchema` - Esquema de las tablas disponibles en la base de datos.
+- `studioBoundParams` - Parámetros vinculados a la consulta SQL generada.
 
 ### Dependencias y Flujo
 Dependencias:
-- `fetch` - Para hacer solicitudes HTTP a la API del servidor.
+- `Chart.js` - Usado para generar gráficos.
+- `fetch` - Para hacer solicitudes HTTP al backend.
+
+Flujo interno:
+1. El usuario interactúa con el formulario de configuración de consultas (tablas, joins, filtros, métricas).
+2. Los cambios en el formulario se reflejan en el estado visual (`visualState`).
+3. Al cambiar algo en el formulario, se llama a `onQbChange()`, que sincroniza los cambios con el backend y genera SQL.
+4. El backend devuelve la consulta SQL generada, que se muestra en un editor de texto.
+5. Cuando el usuario publica una consulta, se envía el estado visual al backend para ejecutar la consulta.
+
+Flujo externo:
+- La función `executePublishQuery()` se comunica con el backend a través de una solicitud POST a `/api/settings/query` para publicar la consulta.
+- La función `syncVisualToSQL()` se comunica con el backend a través de una solicitud POST a `/api/studio/build_sql` para generar y ejecutar la consulta SQL.
+
+
+---
+
+## Archivo: ./static/js/core_ui.js
+
+### Resumen Funcional
+El archivo `core_ui.js` es un módulo de utilidades de interfaz de usuario compartido por todas las vistas del proyecto. Proporciona funciones para mostrar y ocultar modales, renderizar modales de lista de materiales, poblar selectores con áreas únicas y leer datos JSON embebidos en el DOM.
+
+### Catálogo de Funciones y Clases
+- `CoreUI.openModal(id)` - Muestra un modal por su ID de elemento.
+- `CoreUI.closeModal(id)` - Oculta un modal por su ID de elemento.
+- `CoreUI.renderMaterialModal(opts)` - Rellena y abre un modal de lista de materiales con los ítems proporcionados.
+- `CoreUI.populateAreaSelect(selectId, data, key)` - Rellena un elemento `<select>` con áreas únicas encontradas en un array de datos.
+- `CoreUI.getData(id)` - Lee y parsea JSON embebido en el textContent de un elemento del DOM.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+No aplica
+
+### Dependencias y Flujo
+Dependencias:
+- No se mencionan dependencias externas específicas en este archivo.
 
 Flujo:
-Este archivo interactúa con el backend a través de llamadas a `/api/settings/query` para publicar consultas y `/api/studio/build_sql` para generar consultas SQL. No depende de ninguna base de datos específica, solo utiliza `fetch` para comunicarse con el backend.
+- El módulo expone funciones útiles para la interfaz de usuario.
+- Las funciones pueden ser llamadas directamente desde el DOM o a través de alias globales (`window.openModal` y `window.closeModal`).
 
 
 ---
@@ -2203,38 +2289,15 @@ Este archivo interactúa con el backend a través de llamadas a `/api/settings/q
 ## Archivo: ./static/js/dashboard.js
 
 ### Resumen Funcional
-El archivo `dashboard.js` contiene la lógica principal del dashboard de MonitorWeb. Define funciones para interactuar con una API, manejar la interfaz de usuario (UI), renderizar tablas y aplicar filtros.
+El archivo `dashboard.js` contiene la lógica principal del dashboard de MonitorWeb. Define funciones para interactuar con una API, manejar la interfaz de usuario (UI), aplicar filtros y ordenar tablas, generar PDFs, y sincronizar datos.
 
 ### Catálogo de Funciones y Clases
-- **DashboardAPI**
-  - `_fetch(url, options)` - Realiza solicitudes HTTP a la API.
-  - `fetchKPIs(params)` - Obtiene los KPIs basados en los parámetros proporcionados.
-  - `fetchFilteredData(params)` - Obtiene datos filtrados según los parámetros proporcionados.
-  - `sync()` - Sincroniza los datos del cliente con el servidor.
-  - `checkSyncStatus()` - Verifica el estado de la sincronización.
-  - `logout()` - Cierra sesión y redirige al usuario a la página de inicio de sesión.
-
-- **UI**
-  - `openPdfModal()` - Abre el modal para ver PDFs.
-  - `closePdfModal()` - Cierra el modal y limpia su contenido.
-  - `toggleMulti(id)` - Alterna la visibilidad de un elemento con el ID especificado.
-  - `setBtnLoading(btn, text, isLoading)` - Establece el estado de carga de un botón.
-
-- **Funciones Globales**
-  - `renderTableRow(t)` - Renderiza una fila de tabla para los datos proporcionados.
-  - `executeFilters()` - Ejecuta los filtros y actualiza la tabla y KPIs.
-  - `applyFilters()` - Aplica los filtros cuando se cambia un valor de entrada.
-  - `getCheckboxValues(className)` - Obtiene los valores de las casillas de verificación con el nombre de clase especificado.
-  - `toggleSelectAll(className, isChecked)` - Alterna la selección de todas las casillas de verificación con el nombre de clase especificado.
-  - `handleSmartCheckbox(cb, className, selectAllId, context)` - Maneja la selección inteligente de casillas de verificación.
-  - `filterTable()` - Filtra la tabla según los valores de entrada.
-  - `sortTable(idx)` - Ordena la tabla según el índice de columna especificado.
-  - `updateLogoVal(btn)` - Actualiza el valor del campo oculto para incluir o no el logotipo en el PDF.
-  - `pdfSubmit(btn, frameTarget, preview)` - Envía un formulario para generar y visualizar/descargar PDFs.
-  - `downloadBulk(action, btn)` - Descarga múltiples PDFs según los parámetros proporcionados.
-  - `syncData(e, onlyPoll = false)` - Inicia la sincronización de datos y verifica su estado.
-  - `startSyncPolling(btn)` - Comienza el sondeo para verificar el estado de la sincronización.
-  - `toggleSidebar()` - Alterna la visibilidad del sidebar.
+- `DashboardAPI._fetch(url, options)` - Realiza solicitudes HTTP a la API.
+- `DashboardAPI.fetchKPIs(params)` - Obtiene los KPIs (Indicadores Clave de Desempeño) basados en los parámetros proporcionados.
+- `DashboardAPI.fetchFilteredData(params)` - Obtiene datos filtrados según los parámetros proporcionados.
+- `DashboardAPI.sync()` - Sincroniza los datos del cliente con el servidor.
+- `DashboardAPI.checkSyncStatus()` - Verifica el estado de la sincronización actual.
+- `DashboardAPI.logout()` - Cierra sesión y redirige al usuario a la página de inicio de sesión.
 
 ### Interacción con Base de Datos
 No aplica
@@ -2243,8 +2306,13 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `fetch`
-- **Flujo Interno**: El archivo interactúa con el backend a través de la API definida en `DashboardAPI` para obtener datos, ejecutar filtros y sincronizar información. La UI se actualiza dinámicamente según los resultados obtenidos.
+Dependencias:
+- `fetch` (navegador)
+- `localStorage`
+
+Flujo:
+- El archivo interactúa con la API para obtener datos, renderizar tablas, aplicar filtros, generar PDFs y sincronizar datos.
+- Utiliza funciones globales como `closePdfModal`, `toggleMulti`, `sortTable`, etc., que se definen en el mismo archivo y son accesibles globalmente a través de `window`.
 
 
 ---
@@ -2289,54 +2357,62 @@ No aplica. El archivo no realiza ninguna interacción con una base de datos.
 #### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-El archivo `deliveries.js` contiene lógica para el análisis de entregas, incluyendo la interacción con componentes UI como modales y gráficos. Maneja datos de entrega, calcula indicadores clave (KPIs) y actualiza visualmente los gráficos en función de las selecciones del usuario.
+El archivo `deliveries.js` contiene la lógica para el análisis de entregas, incluyendo la interacción con componentes UI, controladores de modales, inicialización de gráficos y actualizaciones dinámicas del estado.
 
 ### Catálogo de Funciones y Clases
-- `UI.openModal(id)` - Abre un modal con el ID especificado.
-- `UI.closeModal(id)` - Cierra un modal con el ID especificado.
-- `UI.renderMaterialModal({ modalId, titleId, listId, title, items, colorVar, bgColor })` - Renderiza una lista de materiales en un modal.
-- `getData(id)` - Obtiene datos JSON desde elementos del DOM.
-- `openModalWeekday(dayName, isCurrentMonth = false)` - Abre el modal para mostrar detalles diarios.
-- `openModalUbicacion(name)` - Abre el modal para mostrar detalles de ubicación.
-- `openModalArea(name, isCurrentMonth = false)` - Abre el modal para mostrar detalles de área.
-- `openModalUser(name)` - Abre el modal para mostrar detalles del usuario.
+- `openModal(id)` - Abre un modal utilizando CoreUI.
+- `closeModal(id)` - Cierra un modal utilizando CoreUI.
+- `renderMaterialModal(opts)` - Renderiza un modal con opciones específicas.
+- `getData(id)` - Obtiene datos desde una fuente externa.
+- `toggleModalFilter(type, isCurrentMonth)` - Alternativa entre mostrar modales de área y día según el contexto actual.
+- `openModalWeekday(dayName, isCurrentMonth = false)` - Abre un modal para mostrar detalles del día.
+- `openModalUbicacion(name)` - Abre un modal para mostrar detalles de ubicación.
+- `openModalArea(name, isCurrentMonth = false)` - Abre un modal para mostrar detalles de área.
+- `openModalUser(name)` - Abre un modal para mostrar detalles de usuario.
 - `switchVLView(view)` - Cambia la vista entre operativa y histórica.
-- `toggleMulti(id)` - Alterna la visibilidad de un elemento con el ID especificado.
-- `updateDeliveriesAnalytics()` - Actualiza los KPIs y visualización en función de las selecciones del usuario.
+- `toggleMulti(id)` - Alterna la visibilidad de elementos según su ID.
+- `updateDeliveriesAnalytics()` - Actualiza los KPIs y filtra listas y gráficos según las áreas seleccionadas.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `currentModalContext` - Almacena el contexto actual del modal (área o día).
-- `window.openModal`, `window.closeModal`, `window.toggleModalFilter`, `window.openModalArea`, `window.openModalUser`, `window.openModalUbicacion` - Funciones globales para controlar modales y vistas.
-- `window.slaTrendChart`, `window.slaAreaTrendChart`, `window.weeklyTrendChart`, `window.monthlyTrendChart`, `window.slaMonthlyTrendChart`, `window.slaMonthlyTrellisCharts` - Referencias a gráficos.
+- `currentModalContext` - Almacena el contexto actual del modal (área y día).
+- `window.slaTrendChart`, `window.monthlyTrendChart`, etc. - Referencias a gráficos inicializados.
 
 ### Dependencias y Flujo
-- Depende de la librería Chart.js para crear gráficos.
-- Utiliza funciones globales definidas en el mismo archivo para controlar modales y vistas.
+Depende de `core_ui.js` para funciones UI como `openModal`, `closeModal`, y `renderMaterialModal`. Utiliza `getData` para obtener datos desde fuentes externas.
 
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-El archivo `deliveries.js` contiene funciones para actualizar gráficos y listas de áreas seleccionadas en una interfaz web, basándose en datos filtrados.
+El archivo `deliveries.js` contiene funciones para actualizar gráficos de rendimiento diario, semanal y mensual basados en datos seleccionados. Actualiza los datos de las gráficas de SLA (Service Level Agreement) y entrega semanal.
 
 ### Catálogo de Funciones y Clases
-- `updateDeliveriesAnalytics()` - Actualiza los gráficos y la lista de áreas seleccionadas.
-- `toggleChartSelectAll(isChecked)` - Maneja el estado del checkbox "Seleccionar todo" para los gráficos.
-- `handleSmartCheckbox(cb)` - Maneja el comportamiento inteligente de los checkboxes individuales.
+- `updateDeliveriesAnalytics()` - Actualiza los datos de las gráficas de rendimiento.
+- `window.toggleChartSelectAll(isChecked)` - Maneja la selección de todos los elementos en un grupo de checkboxes.
+- `window.handleSmartCheckbox(cb)` - Maneja la selección inteligente de elementos individuales en un grupo de checkboxes.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `window.areaMixChart` - Referencia al gráfico de mezcla de áreas.
-- `window.weekHeatChart` - Referencia al gráfico de calor semanal.
-- `selected` - Array que contiene las áreas seleccionadas.
+No aplica
 
 ### Dependencias y Flujo
-- No depende de ninguna librería externa.
-- Comunica con otros archivos del proyecto a través de funciones globales como `updateDeliveriesAnalytics()`.
+Dependencias:
+- `getData('data_weekly_raw_json')`
+- `getData('data_sla_area_trend_raw_json')`
+
+Flujo:
+1. La función `updateDeliveriesAnalytics()` se ejecuta cuando se necesitan actualizar los datos de las gráficas.
+2. Se filtran los datos según la selección del usuario (`selected`).
+3. Los datos filtrados se agrupan y procesan para calcular SLA y entregas.
+4. Los resultados se actualizan en las gráficas correspondientes.
+
+La función `window.toggleChartSelectAll(isChecked)` maneja la selección de todos los elementos en un grupo de checkboxes, asegurando que no haya una selección vacía.
+
+La función `window.handleSmartCheckbox(cb)` maneja la selección inteligente de elementos individuales, asegurando que si "Todos" está seleccionado y se selecciona uno individualmente, "Todos" se deselecciona.
 
 
 ---
@@ -2366,28 +2442,31 @@ No aplica
 ## Archivo: ./static/js/inventory.js
 
 ### Resumen Funcional
-El archivo `inventory.js` contiene lógica para el análisis de movimientos en un inventario, con funcionalidades como la visualización de gráficos y modales interactivos. Incluye manejo de datos desde elementos HTML, renderizado de gráficos usando Chart.js, y funciones para abrir y cerrar modales.
+El archivo `inventory.js` contiene lógica para el análisis de inventario, incluyendo la visualización de gráficos y la interacción con modales. Se utilizan Chart.js para crear gráficos de doughnut y lineas, y se manejan eventos de entrada para buscar ubicaciones dinámicamente.
 
 ### Catálogo de Funciones y Clases
-- `log(msg, data = null)` - Registra mensajes en la consola con un formato específico.
-- `UI.openModal(id)` - Abre un modal identificado por `id`.
-- `UI.closeModal(id)` - Cierra un modal identificado por `id`.
-- `UI.renderMaterialModal(options)` - Renderiza un modal con detalles de materiales, incluyendo una lista de elementos y estadísticas.
-- `getData(id)` - Obtiene datos desde un elemento HTML con el ID especificado.
-- `parseFormattedInt(val)` - Convierte una cadena formateada en un número entero.
-- `window.openModalUbicacion(name)` - Abre un modal con la ubicación de un material específico.
-- `window.openModalUserInv(name)` - Abre un modal con los detalles del inventario de un usuario específico.
-- `window.switchInventarioView(view)` - Cambia la vista del gráfico de tendencias entre históricos y actuales.
+- `log(msg, data = null)` - Registra mensajes en la consola.
+- `UI.openModal(id)` - Abre un modal utilizando CoreUI.
+- `UI.closeModal(id)` - Cierra un modal utilizando CoreUI.
+- `UI.renderMaterialModal(opts)` - Renderiza un modal de material utilizando CoreUI.
+- `getData(id)` - Obtiene datos desde el DOM utilizando CoreUI.
+- `parseFormattedInt(val)` - Convierte una cadena a un número entero, eliminando caracteres no numéricos.
+- `window.openModalUbicacion(name)` - Abre un modal con información de ubicación.
+- `window.openModalUserInv(name)` - Abre un modal con información de usuario.
+- `window.switchInventarioView(view)` - Cambia la vista del gráfico de tendencias según el parámetro `view`.
+- `window.toggleMultiInv(id)` - Alterna la visibilidad de un elemento según su ID.
+- `window.toggleAllInvAreas(checkbox)` - Alterna la selección de todas las áreas y actualiza los KPIs.
+- `window.updateInventoryAnalytics()` - Actualiza los KPIs y filtra listas según las áreas seleccionadas.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no realiza ninguna interacción con una base de datos.
+No aplica
 
 ### Estado y Variables Globales
-No aplica. No se definen variables globales en este archivo.
+No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `Chart.js`, `ChartDataLabels`.
-- **Flujo Interno**: El archivo interactúa con elementos HTML para obtener datos, renderizar modales y actualizar gráficos de Chart.js. No hay interacción directa con otros archivos del proyecto a menos que se invoquen las funciones globales definidas (`window.openModalUbicacion`, `window.openModalUserInv`, `window.switchInventarioView`).
+- **Librerías Externas**: Chart.js, CoreUI.
+- **Flujo Interno**: El archivo interactúa con el DOM para obtener datos y renderizar gráficos. Utiliza funciones de CoreUI para abrir y cerrar modales.
 
 
 ---
@@ -2440,26 +2519,29 @@ No aplica. No se definen variables globales en este archivo.
 ## Archivo: ./templates/analytics_proyecciones.html
 
 ### Resumen Funcional
-El archivo `analytics_proyecciones.html` es una plantilla HTML para la interfaz de usuario de un sistema de análisis predictivo, que muestra información sobre desplanificaciones y correlaciones entre materiales. Incluye gráficos interactivos y tablas para visualizar datos relevantes.
+El archivo `analytics_proyecciones.html` es una plantilla HTML para la interfaz de usuario de un módulo de análisis predictivo, que muestra información sobre desplanificaciones y predicciones de demanda. Incluye gráficos interactivos y tablas para visualizar datos relevantes.
 
 ### Catálogo de Funciones y Clases
 No se detectan funciones o clases definidas en este archivo HTML.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna.
 
 ### Estado y Variables Globales
-No aplica
+- `user.username`: Almacena el nombre de usuario actual.
+- `error_msg`: Almacena un mensaje de error si ocurre algún problema.
+- `alerts`: Lista de alertas de desplanificación.
+- `scatter_data`: Datos para el gráfico de dispersión "Frecuencia vs Volumen".
+- `combos`: Datos para la visualización de combinaciones frecuentes (Market Basket Analysis).
 
 ### Dependencias y Flujo
 - **Librerías Externas**: 
-  - `Chart.js` para gráficos.
-  
+  - `Chart.js` para crear gráficos interactivos.
 - **Archivos del Proyecto**:
-  - `_styles.html`: Incluye estilos CSS.
-  - `_analytics_proyecciones_modals.html`: Contiene modales interactivos.
-  - `_scripts.html`: Incluye scripts JavaScript adicionales.
-  - `analytics_proyecciones.js`: Script personalizado para la funcionalidad específica de esta página.
+  - `_styles.html`: Incluye estilos CSS adicionales.
+  - `_analytics_proyecciones_modals.html`: Contiene modales adicionales.
+  - `_scripts.html`: Incluye scripts adicionales.
+  - `analytics_proyecciones.js`: Script personalizado para el módulo de análisis predictivo.
 
 
 ---
@@ -2467,34 +2549,26 @@ No aplica
 ## Archivo: ./templates/dashboard.html
 
 ### Resumen Funcional
-El archivo `dashboard.html` es una plantilla HTML para el panel de control del proyecto Onedrive, que muestra indicadores clave (KPIs) y permite navegar entre diferentes secciones de análisis.
+El archivo `dashboard.html` es una plantilla HTML para el panel de control del proyecto Onedrive, que muestra indicadores clave (KPIs) y proporciona acceso a diferentes módulos y funciones.
 
 ### Catálogo de Funciones y Clases
-No aplica
+No se detectan funciones o clases definidas en este archivo. Todo el contenido es estructura HTML y Jinja2 templating.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `is_syncing`: Un booleano que indica si la sincronización está en curso.
-- `kpi_deliveries`: Cantidad total de entregas generadas.
-- `sub_del_abierta`: Cantidad de entregas en curso.
-- `sub_del_no_tratada`: Cantidad de entregas no tratadas.
-- `sub_del_reunido`: Cantidad de entregas reunidas a tiempo.
-- `sub_del_atrasado`: Cantidad de entregas reunidas atrasadas.
-- `sub_del_critico`: Cantidad de entregas críticas (OT abierta atrasada).
-- `kpi_materials`: Cantidad total de materiales solicitados.
-- `sub_mat_abierta`: Cantidad de picking en curso.
-- `sub_mat_no_tratada`: Cantidad de pendientes por generar OT.
-- `sub_mat_reunido`: Cantidad de materiales reunidos a tiempo.
-- `sub_mat_atrasado`: Cantidad de materiales reunidos atrasados.
-- `sub_mat_critico`: Cantidad de materiales críticos (OT abierta atrasada).
-- `user.username`: Nombre de usuario actual.
+- `is_syncing`: Variable que indica si la sincronización está en curso.
+- `user.username`: Nombre del usuario actual.
 - `user.role`: Rol del usuario actual.
+- `kpi_deliveries`: Número total de entregas generadas.
+- `sub_del_abierta`, `sub_del_no_tratada`, `sub_del_reunido`, `sub_del_atrasado`, `sub_del_critico`: Contadores para diferentes estados de entregas.
+- `kpi_materials`: Número total de materiales solicitados.
+- `sub_mat_abierta`, `sub_mat_no_tratada`, `sub_mat_reunido`, `sub_mat_atrasado`, `sub_mat_critico`: Contadores para diferentes estados de materiales.
 
 ### Dependencias y Flujo
-- Utiliza plantillas parciales (`_styles.html`, `_modals.html`, `_sidebar.html`, `_table.html`, `_scripts.html`).
-- No depende de ninguna librería externa específica.
+- **Librerías externas**: No se detectan librerías externas específicas.
+- **Flujo interno**: El archivo incluye varios parciales HTML (`_styles.html`, `_modals.html`, `_sidebar.html`, `_table.html`, `_scripts.html`) que probablemente contienen el contenido específico para estos elementos.
 
 
 ---
@@ -2504,11 +2578,10 @@ No aplica
 #### --- PARTE 1 de 1 ---
 
 ### Resumen Funcional
-El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario del proyecto, que incluye elementos como encabezado, pestañas para diferentes secciones (Entregas, Movimientos, Gestión de OTs, IA Insomnio y Ansiedad, Documentación, Historial de Ubicaciones), y scripts JavaScript para manejar el comportamiento de las pestañas, filtros y modales.
+El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario del proyecto, que incluye elementos como encabezados, botones de pestañas y scripts JavaScript para manejar el comportamiento de las pestañas y cargar datos dinámicamente.
 
 ### Catálogo de Funciones y Clases
 - `switchTab(tabId, btnElement)` - Cambia la pestaña activa.
-- `switchSubTab(subTabId, btnElement)` - Cambia la subpestaña activa.
 - `openNonPalletizedDetails(user, claseMov)` - Abre un modal con detalles no paletizados.
 - `initTableFilters()` - Inicializa los filtros de tablas.
 - `filterOTTable()` - Filtra la tabla de OTs según los criterios seleccionados.
@@ -2522,32 +2595,21 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- **Librerías externas utilizadas:**
+- **Librerías externas**: 
   - Chart.js
   - Chartjs-plugin-datalabels
   - Font Awesome
   - marked
-
-- **Archivos JavaScript incluidos:**
+- **Archivos JavaScript**:
+  - `core_ui.js`
   - `deliveries.js`
-  - `tasks.js`
   - `inventory.js`
   - `analytics_proyecciones.js`
   - `docs_explorer.js`
-
-- **Archivos HTML parciales incluidos:**
-  - `_styles.html`
-  - `_tab_docs.html`
-  - `_tab_historial.html`
-  - `_tab_ia.html`
-  - `_tab_deliveries.html`
-  - `_tab_inventory.html`
-  - `_tab_ots.html`
-  - `_deliveries_modals.html`
-  - `_inventory_modals.html`
-  - `_analytics_proyecciones_modals.html`
-  - `_edit_query_modal.html`
-  - `_logout.html`
+- **Archivos CSS**:
+  - Estilos definidos en el archivo y referencias a archivos externos
+- **Datos JSON**: 
+  - Datos inyectados desde variables de contexto del servidor (por ejemplo, `area_stats_json`, `weekdays`, etc.)
 
 
 ---
@@ -2555,15 +2617,16 @@ No aplica
 ## Archivo: ./templates/inventory.html
 
 ### Resumen Funcional
-El archivo `inventory.html` es una plantilla HTML para la interfaz de usuario del módulo de inventario, que muestra estadísticas y gráficos relacionados con el análisis del inventario. Incluye información sobre ingresos, consumos, traspasos y otras métricas clave.
+El archivo `inventory.html` es una plantilla HTML para la interfaz de usuario del módulo de inventario, que muestra análisis y gráficos relacionados con las entradas, consumos y traspasos de materiales.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este archivo HTML.
+No se detectan funciones o clases definidas en este archivo. Todo el contenido es estructura HTML y JavaScript.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
+- `user.username`: Nombre del usuario actual.
 - `kpi_ingresos`: Total de ingresos.
 - `kpi_consumos_prod`: Consumo de producción.
 - `kpi_consumos_mant`: Consumo de mantenimiento.
@@ -2573,32 +2636,35 @@ No aplica
 - `kpi_devoluciones`: Cantidad de devoluciones.
 - `volumen_data`: Datos de volumen.
 - `area_stats_json`: Estadísticas por área.
-- `trend_labels`: Etiquetas para los gráficos de tendencia.
-- `trend_entradas`: Datos de entradas para el gráfico de tendencia.
-- `trend_salidas_prod`: Datos de salidas de producción para el gráfico de tendencia.
-- `trend_salidas_mant`: Datos de salidas de mantenimiento para el gráfico de tendencia.
+- `trend_labels`: Etiquetas para gráficos de tendencia.
+- `trend_entradas`: Datos de entradas para gráficos de tendencia.
+- `trend_salidas_prod`: Datos de salidas de producción para gráficos de tendencia.
+- `trend_salidas_mant`: Datos de salidas de mantenimiento para gráficos de tendencia.
 - `abc_counts`: Conteo de elementos ABC.
 - `abc_mapping`: Mapeo de elementos ABC.
-- `dow_distribution`: Distribución semanal de BMRI.
+- `kpi_consumos_prod`: Consumo de producción (repetido).
+- `kpi_consumos_mant`: Consumo de mantenimiento (repetido).
+- `dow_distribution`: Distribución diaria.
 - `ubicaciones_mapping`: Mapeo de ubicaciones.
 - `area_material_mapping`: Mapeo de materiales por área.
 - `user_material_mapping`: Mapeo de materiales por usuario.
-- `dow_material_mapping`: Mapeo de materiales por distribución semanal.
-- `pm_material_mapping`: Mapeo de materiales por producción vs mantenimiento.
+- `dow_material_mapping`: Mapeo de materiales por distribución diaria.
+- `pm_material_mapping`: Mapeo de materiales para producción vs mantenimiento.
 
 ### Dependencias y Flujo
 - **Librerías externas**: 
   - Chart.js
   - Chartjs-plugin-datalabels
 
-- **Archivos CSS**:
-  - `https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap`
-  - Archivo local: `css/inventory.css`
+- **Archivos JavaScript**:
+  - `core_ui.js`
+  - `inventory.js`
 
-- **Archivos JS**:
-  - `https://cdn.jsdelivr.net/npm/chart.js`
-  - `https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0`
-  - Archivo local: `js/inventory.js`
+- **Modales y parciales HTML incluidos**:
+  - `_styles.html`
+  - `_inventory_modals.html`
+  - `_quick_login_modal.html`
+  - `_logout.html`
 
 
 ---
@@ -2609,7 +2675,7 @@ No aplica
 El archivo `login.html` es una página de inicio de sesión para la aplicación MonitorWeb. Permite a los usuarios ingresar sus credenciales y autenticarse en el sistema.
 
 ### Catálogo de Funciones y Clases
-- `handleLogin(event)` - Maneja el evento de envío del formulario de inicio de sesión, realiza la autenticación y redirige al usuario si es exitosa.
+- `handleLogin(event)` - Maneja el evento de envío del formulario de inicio de sesión, realiza la autenticación y redirige al usuario según sea necesario.
 
 ### Interacción con Base de Datos
 No aplica
@@ -2619,7 +2685,7 @@ No aplica
 
 ### Dependencias y Flujo
 - **Librerías Externas**: No se utilizan librerías externas.
-- **Flujo Interno**: El archivo interactúa con el servidor a través del endpoint `/api/auth/login` para autenticar al usuario. Los datos de inicio de sesión se envían mediante una solicitud POST en formato `application/x-www-form-urlencoded`. Si la autenticación es exitosa, los tokens y detalles del usuario se almacenan en `localStorage`, y el usuario es redirigido a la página principal. En caso de error, se muestra un mensaje de error en la interfaz.
+- **Flujo Interno**: El archivo interactúa con el backend a través de una solicitud POST a la ruta `/api/auth/login`. La respuesta del servidor es manejada para determinar si la autenticación fue exitosa o no, y en consecuencia, se redirige al usuario.
 
 
 ---
@@ -2675,10 +2741,10 @@ Flujo: Este archivo no interactúa directamente con otros archivos del proyecto,
 ## Archivo: ./templates/partials/_edit_query_modal.html
 
 ### Resumen Funcional
-Este archivo contiene el código HTML para un modal de edición de consultas SQL en una interfaz de usuario, que incluye un constructor visual interactivo y un panel de vista previa del gráfico resultante.
+Este archivo contiene el código HTML para un modal de edición de consultas en Analytics Studio, que incluye un constructor visual interactivo y una vista previa del gráfico resultante.
 
 ### Catálogo de Funciones y Clases
-No se detectaron funciones o clases definidas explícitamente en este fragmento de código HTML.
+No se detectaron funciones o clases definidas explícitamente en este fragmento de código.
 
 ### Interacción con Base de Datos
 No aplica
@@ -2687,10 +2753,8 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- **Dependencias**: No hay dependencias directas mencionadas. El archivo incluye un script externo `analytics_studio.js` que se carga desde la carpeta `static/js`.
-- **Flujo**: Este fragmento de código HTML no interactúa con otros archivos del proyecto o realiza ninguna operación específica en términos de flujo de control.
-
-Este modal es principalmente una interfaz de usuario para editar consultas SQL y visualizar el resultado, pero no contiene lógica de negocio ni interacción directa con la base de datos.
+- **Dependencias**: No hay dependencias externas directamente mencionadas.
+- **Flujo**: El archivo se comunica con el backend a través de funciones JavaScript que interactúan con elementos del DOM, como `onBaseTableChange`, `addJoin`, `addFilter`, etc.
 
 
 ---
@@ -2719,20 +2783,20 @@ No aplica
 ## Archivo: ./templates/partials/_logout.html
 
 ### Resumen Funcional
-Este fragmento de código HTML contiene un script que define una función `logout` para cerrar la sesión del usuario. La función intenta notificar al backend mediante una solicitud POST a la ruta `/api/auth/logout`, limpia el almacenamiento local (tokens y datos de usuario) y redirige al usuario al Dashboard.
+Este fragmento de código HTML contiene un script que define una función `logout` asíncrona. La función se encarga de cerrar la sesión del usuario, notificando al backend y limpiando el almacenamiento local.
 
 ### Catálogo de Funciones y Clases
-- `logout()` - Limpia el estado del usuario y cierra sesión.
+- `logout()` - Realiza el proceso de cierre de sesión.
 
 ### Interacción con Base de Datos
 No aplica. El archivo no realiza ninguna interacción con una base de datos.
 
 ### Estado y Variables Globales
-No aplica. No se definen variables globales en este fragmento de código.
+No aplica. No se definen variables globales, de sesión o diccionarios quemados en código que almacenen estado crítico.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `fetch` (navegador).
-- **Flujo Interno**: La función `logout` no depende de otros archivos del proyecto directamente, pero interactúa con el backend a través de una solicitud HTTP.
+- **Librerías externas utilizadas**: `fetch` (API web para hacer solicitudes HTTP).
+- **Flujo hacia otros archivos del proyecto**: No se comunica con otros archivos específicos dentro del proyecto.
 
 
 ---
@@ -2757,23 +2821,50 @@ No se detectan dependencias externas ni llamadas a otros archivos del proyecto.
 
 ---
 
+## Archivo: ./templates/partials/_quick_login_modal.html
+
+### Resumen Funcional
+El archivo `_quick_login_modal.html` define un modal de inicio rápido para la sesión, que permite a los usuarios iniciar sesión sin perder sus filtros actuales. El formulario envía las credenciales al servidor y maneja la respuesta para actualizar el estado del usuario en el almacenamiento local o recargar la página según sea necesario.
+
+### Catálogo de Funciones y Clases
+- `handleQuickLogin(event)` - Maneja el evento de envío del formulario de inicio rápido, realiza una solicitud POST a la API de autenticación y actualiza el estado del usuario según la respuesta.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+No aplica
+
+### Dependencias y Flujo
+- **Librerías Externas**: No se utilizan librerías externas.
+- **Flujo Interno**: El archivo interactúa con el servidor a través de una solicitud POST al endpoint `/api/auth/login`. La respuesta del servidor se utiliza para actualizar el estado del usuario en el almacenamiento local (`localStorage`) y para determinar si la página debe recargarse o no.
+
+
+---
+
 ## Archivo: ./templates/partials/_scripts.html
 
 ### Resumen Funcional
-Este fragmento HTML incluye scripts para Chart.js y una lógica de negocio y ayuda de interfaz de usuario para el panel de control.
+Este archivo contiene fragmentos de HTML que incluyen scripts para Chart.js, modales rápidos de inicio de sesión y cierre, así como lógica empresarial y ayudantes de interfaz de usuario para el panel de control.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este archivo.
+No se detectaron funciones o métodos específicos en este fragmento de HTML. Solo se incluyen referencias a scripts externos.
 
 ### Interacción con Base de Datos
-Ninguna.
+Ninguna
 
 ### Estado y Variables Globales
-No aplica.
+No aplica
 
 ### Dependencias y Flujo
-- **Librerías externas utilizadas**: Chart.js.
-- **Flujo hacia otros archivos del proyecto**: Se incluye un fragmento HTML (`_logout.html`) y se carga un script JavaScript (`dashboard.js`).
+- **Librerías Externas**: Chart.js (https://cdn.jsdelivr.net/npm/chart.js)
+- **Archivos Internos**: 
+  - `partials/_quick_login_modal.html`
+  - `partials/_logout.html`
+  - `js/core_ui.js` (versión 1)
+  - `js/dashboard.js` (versión 7)
+
+Este fragmento de HTML se encarga principalmente de incluir scripts y modales que son utilizados en diferentes partes del proyecto, pero no realiza ninguna operación específica relacionada con la base de datos o el estado global.
 
 
 ---
@@ -2810,7 +2901,7 @@ Flujo: Este archivo se comunica con otros archivos JavaScript para manejar event
 ## Archivo: ./templates/partials/_styles.html
 
 ### Resumen Funcional
-Este archivo contiene estilos CSS para una interfaz web, definiendo colores, layout y animaciones.
+El archivo `_styles.html` contiene estilos CSS para una interfaz web, definiendo colores, layout y animaciones.
 
 ### Catálogo de Funciones y Clases
 No aplica
@@ -2926,26 +3017,25 @@ Ninguna.
 ## Archivo: ./templates/partials/_tab_inventory.html
 
 ### Resumen Funcional
-Este fragmento HTML es una pestaña que muestra un análisis de movimientos en una interfaz web, incluyendo estadísticas clave y gráficos interactivos.
+Este fragmento HTML es una pestaña que muestra un análisis de movimientos en una interfaz web, incluyendo estadísticas clave y gráficos interactivos. Permite a los usuarios cambiar la vista entre "Vista Operativa (Anual)" y "Vista Semanal (Histórico)", y proporciona detalles sobre diferentes KPIs como ingresos, consumos de producción, mantenimiento, tasa de reabastecimiento, traspasos, devoluciones y eficiencia de bodega. También incluye gráficos que muestran la distribución de materiales según la curva ABC, tendencias de consumo, volumen operacional y carga semanal.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este fragmento HTML. Todas las interacciones son realizadas a través de JavaScript y eventos del usuario.
+- `switchInventarioView(value)` - Cambia la vista del inventario según el valor seleccionado.
+- `openEditQueryModal(id, title)` - Abre un modal para editar una consulta SQL específica.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `user.role`: Rol del usuario actual.
-- `kpi_ingresos`, `kpi_consumos_prod`, `kpi_consumos_mant`, `rate_reabast`, `kpi_traspasos`, `rate_devolucion`, `rate_eficiencia`: Valores de KPIs que se muestran en la interfaz.
-- `top_materials_quick`: Lista de materiales más consumidos (Top Consumidos).
-- `top_users`: Lista de usuarios con mayor frecuencia de despachos.
+- `user.role` - Rol del usuario actual.
+- `kpi_ingresos`, `kpi_consumos_prod`, `kpi_consumos_mant`, `rate_reabast`, `kpi_traspasos`, `rate_devolucion`, `rate_eficiencia` - Valores de KPIs calculados.
+- `top_materials_quick` - Lista de materiales más consumidos.
+- `top_users` - Lista de usuarios con mayor frecuencia de despachos.
 
 ### Dependencias y Flujo
-Dependencias:
-- JavaScript: Se utilizan funciones como `switchInventarioView`, `openEditQueryModal`, `openModal`, `openModalUserInventario`.
-
-Flujo:
-Este fragmento HTML se comunica con otros archivos a través de llamadas a funciones JavaScript que pueden estar definidas en otros archivos del proyecto. No hay interacción directa con bases de datos ni dependencias externas adicionales mencionadas.
+- Librerías utilizadas: `FontAwesome` para iconos.
+- Comunicación con otros archivos del proyecto:
+  - `_tab_inventory.js` (posiblemente contiene la lógica detrás de las funciones `switchInventarioView` y `openEditQueryModal`).
 
 
 ---
@@ -3001,20 +3091,23 @@ Flujo: Este fragmento se comunica con el backend a través de formularios que en
 ## Archivo: ./templates/settings.html
 
 ### Resumen Funcional
-El archivo `settings.html` es una página web que permite la configuración dinámica de parámetros globales del sistema, mapeos de estados de entrega y centros de costo a áreas de negocio, así como el manejo de feriados. Permite visualizar, editar y guardar cambios en estos elementos.
+El archivo `settings.html` es una página web que permite la gestión dinámica de parámetros globales del sistema, mapeos de estados de entrega y centros de costo a áreas de negocio, así como la sincronización de feriados. La interfaz presenta tablas interactivas para editar y guardar cambios en estos elementos.
 
 ### Catálogo de Funciones y Clases
-- `updateSetting(key)` - Actualiza un parámetro global.
-- `updateStatus(code)` - Actualiza una etiqueta de estado de entrega.
-- `addStatus()` - Añade un nuevo mapeo de estado de entrega.
-- `deleteStatus(code)` - Elimina un mapeo de estado de entrega.
-- `updateCostCenter(code)` - Actualiza el área de negocio asociada a un centro de costo.
-- `addCostCenter()` - Añade un nuevo mapeo de centro de costo a área de negocio.
-- `deleteCostCenter(code)` - Elimina un mapeo de centro de costo a área de negocio.
+- `openPasswordModal()` - Abre el modal para cambiar la contraseña.
+- `closePasswordModal()` - Cierra el modal para cambiar la contraseña.
+- `changePassword()` - Maneja el cambio de contraseña, validando los campos y haciendo una solicitud a la API.
+- `updateSetting(key)` - Actualiza un parámetro global en la base de datos.
+- `updateStatus(code)` - Actualiza un mapeo de estado de entrega en la base de datos.
+- `addStatus()` - Añade un nuevo mapeo de estado de entrega a la base de datos.
+- `deleteStatus(code)` - Elimina un mapeo de estado de entrega de la base de datos.
+- `updateCostCenter(code)` - Actualiza un mapeo de centro de costo a área de negocio en la base de datos.
+- `addCostCenter()` - Añade un nuevo mapeo de centro de costo a área de negocio a la base de datos.
+- `deleteCostCenter(code)` - Elimina un mapeo de centro de costo a área de negocio de la base de datos.
 - `syncHolidays()` - Sincroniza los feriados nacionales de Chile para el año actual y el próximo.
-- `addHoliday()` - Añade una nueva fecha de feriado manual.
-- `deleteHoliday(date_str)` - Elimina una fecha de feriado.
-- `updateQuery(id)` - Actualiza un query almacenado.
+- `addHoliday()` - Añade una nueva fecha de feriado manualmente.
+- `deleteHoliday(date_str)` - Elimina una fecha de feriado de la base de datos.
+- `updateQuery(id)` - No se menciona en el código proporcionado.
 
 ### Interacción con Base de Datos
 No aplica
@@ -3024,12 +3117,11 @@ No aplica
 
 ### Dependencias y Flujo
 Dependencias:
-- `fetch` (API para hacer solicitudes HTTP)
-- `async/await` (para manejar operaciones asíncronas)
+- `fetch` para hacer solicitudes HTTP a la API.
+- `apiCall(url, method, data = null)` - Función auxiliar para manejar las solicitudes HTTP.
 
 Flujo:
-- La página interactúa con el backend a través de endpoints como `/api/settings/update`, `/api/settings/status`, etc., utilizando la función `apiCall`.
-- Los cambios en los inputs son enviados al servidor para ser procesados y guardados.
+- La página interactúa con el backend a través de endpoints como `/api/auth/change-password`, `/api/settings/update`, `/api/settings/status`, etc., para realizar operaciones CRUD en los parámetros globales, mapeos y feriados.
 
 
 ---
@@ -3057,6 +3149,33 @@ No aplica
   - `js/sla_table.js`: Script JavaScript asociado a esta página.
 
 El archivo HTML interactúa con el backend a través de formularios que envían solicitudes POST a rutas como `/generate-pdf`, lo que implica que el backend debe manejar estas solicitudes para generar y devolver PDFs.
+
+
+---
+
+## Archivo: ./test_deliveries.py
+
+### Resumen Funcional
+El archivo `test_deliveries.py` es un script de prueba que interactúa con una base de datos para obtener y mostrar el contexto completo de entregas.
+
+### Catálogo de Funciones y Clases
+- `svc.get_full_context()` - Obtiene el contexto completo de entregas.
+
+### Interacción con Base de Datos
+- **Motor:** No especificado.
+- **Tablas:** No aplica.
+- **Columnas:** No aplica.
+- **Consultas SQL Crudas/ORM:** Sí, utiliza `DeliveriesService` que probablemente realiza consultas a la base de datos.
+
+### Estado y Variables Globales
+- `db` - Variable global que almacena una instancia de la sesión de la base de datos.
+
+### Dependencias y Flujo
+- **Librerías Externas:** `sys`, `logging`.
+- **Flujo Interno:** El script crea una instancia de `DeliveriesService`, obtiene el contexto completo de entregas, e imprime las claves del contexto. Si ocurre un error, se imprime la traza de excepción.
+
+### Notas Adicionales
+El archivo no realiza ninguna interacción directa con tablas o columnas específicas en la base de datos; en su lugar, utiliza un servicio para obtener el contexto completo de entregas.
 
 
 ---

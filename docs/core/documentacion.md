@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: core
-Compilado el: 2026-05-22 16:53:13
+Compilado el: 2026-05-23 00:11:14
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -38,7 +38,7 @@ No aplica
 ## Archivo: ./core/auth.py
 
 ### Resumen Funcional
-El archivo `auth.py` proporciona funcionalidades de autenticación y seguridad utilizando JSON Web Tokens (JWT) y OAuth2, con soporte para roles de usuario ('admin' y 'viewer'). Incluye funciones para crear tokens, verificar usuarios, manejar dependencias FastAPI para proteger endpoints y gestionar la base de datos de usuarios.
+El archivo `auth.py` proporciona funcionalidades de autenticación y seguridad utilizando JSON Web Tokens (JWT) y OAuth2, con soporte para roles de usuario ('admin' y 'viewer'). Incluye funciones para crear tokens, verificar contraseñas, manejar sesiones de usuarios y proteger endpoints en una aplicación FastAPI.
 
 ### Catálogo de Funciones y Clases
 - `hash_password(plain: str) -> str` - Genera un hash bcrypt del password.
@@ -52,9 +52,15 @@ El archivo `auth.py` proporciona funcionalidades de autenticación y seguridad u
 - `ensure_admin_exists()` - Crea el usuario admin por defecto si no existe ningún usuario.
 
 ### Interacción con Base de Datos
-- Motor: No aplica (No hay consultas SQL crudas o llamadas a ORM).
+- Motor: SQLAlchemy
 - Tablas: `User`
-- Columnas: `id`, `username`, `password_hash`, `role`, `is_active`, `created_at`
+- Columnas:
+  - `id` (int)
+  - `username` (str)
+  - `password_hash` (str)
+  - `role` (str)
+  - `is_active` (bool)
+  - `created_at` (datetime)
 
 ### Estado y Variables Globales
 - `SECRET_KEY`: Clave secreta para firmar JWT.
@@ -62,8 +68,10 @@ El archivo `auth.py` proporciona funcionalidades de autenticación y seguridad u
 - `ACCESS_TOKEN_EXPIRE_MINUTES`: Tiempo de expiración del token JWT.
 
 ### Dependencias y Flujo
-- Librerías externas: `bcrypt`, `jwt`, `fastapi`.
-- Comunicaciones internas: No aplica (No se comunica con otros archivos del proyecto).
+- Librerías externas: `bcrypt`, `jwt`, `fastapi`
+- Comunicaciones internas:
+  - Conecta con el archivo `database.py` para obtener sesiones de base de datos.
+  - Utiliza el modelo `User` definido en `models_auth.py`.
 
 
 ---
@@ -101,11 +109,12 @@ Este archivo define una fábrica de sesiones SQLAlchemy para interactuar con bas
 #### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-Este archivo `db_config_manager.py` es el administrador de configuraciones dinámicas SaaS. Se encarga de la inicialización, carga y mantenimiento de tablas en una base de datos utilizando SQLAlchemy, así como la inserción de valores por defecto si las tablas están vacías.
+Este archivo `db_config_manager.py` es el administrador de configuraciones dinámicas SaaS. Se encarga de la inicialización, semillas y carga de configuraciones en memoria para mejorar el rendimiento.
 
 ### Catálogo de Funciones y Clases
 - `init_config_db()` - Crea las tablas de configuración SaaS via SQLAlchemy si no existen.
-- `seed_initial_config()` - Inserta los valores por defecto si las tablas están vacías.
+- `seed_initial_config()` - Inserta valores por defecto si las tablas están vacías.
+- `load_config_to_memory()` - No definida en el fragmento.
 
 ### Interacción con Base de Datos
 - Motor: SQLAlchemy
@@ -116,39 +125,34 @@ Este archivo `db_config_manager.py` es el administrador de configuraciones diná
   - `Holiday`
   - `ConfigQuery`
 - Columnas:
-  - `StatusMapping.code`, `label`
-  - `CostCenterMapping.center_code`, `business_area`
-  - `AppSetting.key`, `value`, `type`
-  - `Holiday.date_str`
-  - `ConfigQuery.query_id`, `sql_text`
+  - `config_queries` → `visual_state`
 
 ### Estado y Variables Globales
-- No aplica
+No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: SQLAlchemy, logging
-- Comunicación con otros archivos del proyecto:
-  - `database.py` (para obtener el motor de base de datos y la sesión)
-  - `models.py` (para definir las clases de modelos)
+- Librerías externas: SQLAlchemy, logging
+- Comunicación con otros archivos del proyecto: No mencionado
 
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-El archivo `db_config_manager.py` contiene configuraciones de consultas SQL y funciones para cargar estas configuraciones en una sesión de base de datos. También incluye funciones públicas para obtener diferentes tipos de configuración desde la base de datos.
+El archivo `db_config_manager.py` contiene configuraciones de consultas SQL y funciones para cargar estas configuraciones en una sesión de base de datos. También incluye funciones para recuperar diferentes tipos de configuración desde la base de datos.
 
 ### Catálogo de Funciones y Clases
 - `ConfigQuery(query_id, sql_text, visual_state)` - Define una consulta con un ID único, texto SQL y estado visual.
-- `initial_queries` - Lista de instancias de `ConfigQuery`.
-- `load_config_to_memory(session=None)` - Carga las consultas iniciales en la sesión de base de datos. Esta función está obsoleta y no realiza ninguna operación.
-- `_ensure_loaded()` - Función interna que no hace nada.
-- `get_setting(key, default=None)` - Obtiene un valor de configuración basado en una clave, con un valor predeterminado opcional.
-- `get_status_mapping()` - Devuelve un mapeo de códigos de estado a etiquetas.
-- `get_cost_center_mapping()` - Devuelve un mapeo de códigos de centro de costo a áreas de negocio.
-- `get_holidays()` - Devuelve una lista de fechas festivas.
-- `get_query(query_id)` - Obtiene el texto SQL de una consulta basada en su ID.
+- `initial_queries` - Lista de consultas iniciales a cargar en la sesión.
+- `load_config_to_memory(session=None)` - Carga las configuraciones iniciales en la sesión. Esta función está obsoleta y no realiza ninguna operación.
+- `_ensure_loaded()` - No hace nada, es una función auxiliar que no se utiliza.
+- `get_setting(key: str, default: Any = None) -> Any` - Recupera un valor de configuración basado en su clave.
+- `get_status_mapping() -> Dict[str, str]` - Devuelve un mapeo de códigos de estado a etiquetas.
+- `get_cost_center_mapping() -> Dict[str, str]` - Devuelve un mapeo de códigos de centro de costo a áreas de negocio.
+- `get_holidays() -> List[str]` - Devuelve una lista de fechas festivas.
+- `get_query(query_id: str) -> str` - Recupera el texto SQL asociado a un ID de consulta. Esta función es obsoleta y se recomienda usar `get_query_visual_state()` en su lugar.
+- `get_query_visual_state(query_id: str) -> str` - Recupera el estado visual JSON de una consulta.
 
 ### Interacción con Base de Datos
-- Motor: No especificado (se infiere que es SQLAlchemy).
+- Motor de base de datos: No especificado.
 - Tablas:
   - `inventory_movements`
   - `warehouse_tasks`
@@ -158,7 +162,7 @@ El archivo `db_config_manager.py` contiene configuraciones de consultas SQL y fu
   - `Holiday`
 - Columnas:
   - `inventory_movements.cmv`, `inventory_movements.fe_contab`, `inventory_movements.material`, `inventory_movements.tipo_operacion`, `inventory_movements.registrado`
-  - `warehouse_tasks.usuario`, `warehouse_tasks.fe_creac`, `warehouse_tasks.fecha_conf`
+  - `warehouse_tasks.usuario`, `warehouse_tasks.fecha_conf`, `warehouse_tasks.fe_creac`
   - `AppSetting.key`, `AppSetting.typed_value()`
   - `StatusMapping.code`, `StatusMapping.label`
   - `CostCenterMapping.center_code`, `CostCenterMapping.business_area`
@@ -168,9 +172,9 @@ El archivo `db_config_manager.py` contiene configuraciones de consultas SQL y fu
 No aplica.
 
 ### Dependencias y Flujo
-- Librerías externas: SQLAlchemy.
+- Librerías externas utilizadas: No especificado.
 - Comunicación con otros archivos del proyecto:
-  - No se menciona ninguna comunicación específica entre este archivo y otros.
+  - `get_session()` - Se utiliza para obtener una sesión de base de datos.
 
 
 ---
@@ -178,15 +182,14 @@ No aplica.
 ## Archivo: ./core/models.py
 
 ### Resumen Funcional
-Este archivo define modelos ORM SQLAlchemy para el esquema de configuración SaaS, incluyendo mapeos de estados WMS, centros de costo, parámetros globales, feriados y consultas SQL gestionadas via UI.
+Este archivo define modelos ORM SQLAlchemy para el esquema de configuración SaaS, incluyendo mapeos de estados WMS a etiquetas visuales, centros de costo a áreas de negocio, parámetros de procesamiento configurables, feriados para cálculo de SLA y consultas SQL gestionadas via UI.
 
 ### Catálogo de Funciones y Clases
 - `StatusMapping(code: str, label: str)` - Mapea códigos internos del WMS a etiquetas legibles por humanos.
 - `CostCenterMapping(center_code: str, business_area: str)` - Asocia un código de centro de costo del WMS con un Área de Negocio.
 - `AppSetting(key: str, value: str, type: str = "str")` - Parámetros de comportamiento del sistema.
-  - `typed_value()` - Retorna el valor con el tipo Python correcto.
-- `Holiday(date_str: str)` - Días no hábiles para el cálculo de SLA (días de retraso).
-- `ConfigQuery(query_id: str, sql_text: str, visual_state: str = None)` - Almacena queries SQL nombradas para el dominio de inventario/entregas.
+- `Holiday(date_str: str)` - Días no hábiles para el cálculo de SLA.
+- `ConfigQuery(query_id: str, sql_text: str = None, visual_state: str = None)` - Almacena el estado visual (JSON) de las consultas del Analytics Studio.
 
 ### Interacción con Base de Datos
 - Motor: SQLAlchemy
@@ -397,6 +400,41 @@ Uso indirecto de una biblioteca de PDF (no especificada en el fragmento)
 
 ---
 
+## Archivo: ./core/query_engine.py
+
+### Resumen Funcional
+Este archivo `query_engine.py` es el motor de construcción de consultas SQL seguras para el Analytics Studio. Centraliza la validación de identificadores (tablas y columnas) contra una lista blanca y construye consultas parametrizadas dinámicamente a partir de un `VisualQueryBuilderPayload`.
+
+### Catálogo de Funciones y Clases
+- `validate_identifier(name: str, db: Session)` - Valida que un identificador (tabla o tabla.columna) pertenezca a la lista blanca.
+- `validate_column(table: str, column: str, db: Session)` - Valida que una columna pertenezca a una tabla permitida.
+- `get_table_columns(table: str, db: Session)` - Retorna la lista de columnas de una tabla permitida.
+- `get_bound_params_from_visual_state(visual_state_str: str)` - Extrae los bind params (?) de un visual_state JSON serializado.
+- `extract_metric_value(df, active_year: str = None)` - Extrae el valor numérico principal de un DataFrame de resultado de query.
+- `build_sql_from_payload(payload, db: Session)` - Compila un VisualQueryBuilderPayload validado en una tupla (sql_text, bound_params).
+
+### Interacción con Base de Datos
+- Motor de base de datos: SQLAlchemy
+- Tablas permitidas:
+  - `outbound_deliveries`
+  - `stock_levels`
+  - `warehouse_tasks`
+  - `inventory_movements`
+- Consultas SQL dinámicas que utilizan bind params para evitar inyección SQL.
+
+### Estado y Variables Globales
+No aplica
+
+### Dependencias y Flujo
+- Librerías externas: `sqlalchemy`, `fastapi`
+- Comunicación con otros archivos:
+  - `routes/settings.py::api_build_sql` → llama a `build_sql_from_payload()`
+  - `core/security.py::validate_table` → valida nombres de tabla en ETL (sin cambios)
+  - `core/utils.py` → utilidades JSON y métricas (sin cambios)
+
+
+---
+
 ## Archivo: ./core/schemas.py
 
 ### Resumen Funcional
@@ -512,28 +550,24 @@ No aplica. El archivo no interactúa con ninguna base de datos.
 ## Archivo: ./core/utils.py
 
 ### Resumen Funcional
-Este archivo contiene utilidades transversales y gestión de señales del sistema. Incluye funciones para configurar manejadores de señales, registrar mensajes de inicio y limpiar datos para su serialización JSON segura.
+Este archivo contiene utilidades transversales y gestión de señales del sistema. Incluye funciones para configurar manejadores de señales, registrar un banner de inicio y limpiar datos para su serialización JSON segura.
 
 ### Catálogo de Funciones y Clases
 - `setup_signal_handlers()` - Configura los manejadores de señales (SIGINT, SIGTERM) para un cierre limpio.
-- `log_startup_banner()` - Registra un mensaje de inicio del módulo de utilidades del sistema.
+- `log_startup_banner()` - Registra un banner de inicio del módulo de utilidades del sistema.
 - `sanitize_for_json(data: Any) -> Any` - Limpia datos para su serialización JSON segura.
-- `_get_bound_params_from_visual_state(visual_state_str: str) -> list` - Extrae parámetros limitados desde una cadena de estado visual.
-- `_extract_metric_value(df, active_year: str = None) -> Any` - Extrae el valor numérico de la métrica de un DataFrame de forma segura.
+- `_get_bound_params_from_visual_state(visual_state_str: str) -> list` - Alias de compatibilidad para obtener parámetros enlazados desde un estado visual.
+- `_extract_metric_value(df, active_year: str = None) -> Any` - Alias de compatibilidad para extraer un valor métrico de un DataFrame.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `_handlers_registered` (boolean): Flag interno para evitar registros múltiples de manejadores de señales.
+- `_handlers_registered` - Flag interno para evitar registros múltiples de manejadores de señales.
 
 ### Dependencias y Flujo
-- `signal`: Para manejar señales del sistema.
-- `sys`: Para salir del programa.
-- `logging`: Para registrar mensajes.
-- `pandas`: Para manipular datos en formato DataFrame.
-- `math`: Para manejar valores numéricos especiales (NaN, Inf).
-- `typing.Final`, `typing.Any`: Para anotaciones de tipos.
+- `signal`, `sys`, `logging`, `pandas`, `math`
+- Importa funciones desde `services.tunnel` y `core.query_engine`
 
 
 ---
@@ -563,7 +597,7 @@ Dependencia directa:
 ## Archivo: ./core/wms_utils.py
 
 ### Resumen Funcional
-Este archivo contiene funciones utilitarias vectorizadas para transformación de datos WMS, incluyendo limpieza de datos, mapeos de negocio, normalización y cálculos métricos.
+Este archivo contiene funciones utilitarias vectorizadas para transformación de datos en un sistema WMS (Warehouse Management System). Incluye operaciones como limpieza de cadenas, mapeos de estados y centros de costo, normalización de fechas y cálculos de retraso.
 
 ### Catálogo de Funciones y Clases
 - `sanitize_string(text: str) -> str` - Normaliza un string para usarlo como encabezado de columna.
@@ -572,24 +606,23 @@ Este archivo contiene funciones utilitarias vectorizadas para transformación de
 - `normalize_date_columns(df: pd.DataFrame) -> pd.DataFrame` - Estandariza formatos de fecha WMS a dd-mm-yyyy de forma eficiente.
 - `calculate_sla_delays(df: pd.DataFrame) -> pd.DataFrame` - Calcula días hábiles de retraso usando lógica vectorizada de NumPy.
 - `generate_time_labels(df: pd.DataFrame) -> pd.DataFrame` - Genera etiquetas de semana ISO para visualización y analítica.
-- `is_file_changed(session: Session, file_path: Path) -> bool` - Verifica si un archivo ha cambiado desde la última sincronización.
-- `mark_file_processed(session: Session, file_path: Path, row_count: Optional[int] = None)` - Marca un archivo como procesado exitosamente en el manifiesto.
+- `_manifest_execute(session_or_conn, sql: str, params: dict)` - Ejecuta una query de manifiesto sobre Session SQLAlchemy o sqlite3.Connection.
+- `is_file_changed(session_or_conn, file_path: Path) -> bool` - Verifica si un archivo ha cambiado desde la última sincronización.
+- `mark_file_processed(session_or_conn, file_path: Path, row_count: Optional[int] = None)` - Marca un archivo como procesado en el manifiesto.
 
 ### Interacción con Base de Datos
-- Motor: SQLAlchemy ORM
+- Motor: SQLAlchemy (puede interactuar con SQLite o otras bases de datos compatibles).
 - Tablas:
-  - `sync_manifest`
-- Columnas:
-  - `file_path`, `last_modified`, `file_size`, `processed_at`, `row_count`
+  - `sync_manifest` (Tabla utilizada para almacenar información sobre archivos procesados, incluyendo su ruta, tamaño, última modificación y número de filas procesadas).
 
 ### Estado y Variables Globales
-No aplica
+No aplica.
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `re`, `logging`, `numpy`, `pandas`, `datetime`, `pathlib`, `typing`
-- Comunicación con otros archivos del proyecto:
-  - `core.wms_config`: Para mapeos de estado y centro de costo.
-  - `core.db_config_manager`: Para obtener feriados.
+- Librerías externas: `re`, `logging`, `numpy`, `pandas`, `datetime`, `pathlib`, `typing`.
+- Comunicación con otros archivos:
+  - `core.wms_config`: Para mapeos de estados y centros de costo.
+  - `core.db_config_manager`: Para obtener información sobre feriados.
 
 
 ---

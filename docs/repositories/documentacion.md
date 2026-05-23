@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: repositories
-Compilado el: 2026-05-22 16:53:13
+Compilado el: 2026-05-23 00:11:14
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -36,22 +36,28 @@ No aplica
 ## Archivo: ./repositories/base.py
 
 ### Resumen Funcional
-Clase base para todos los repositorios de datos que proporciona una sesión de SQLAlchemy y un método para obtener consultas SQL desde una configuración.
+La clase `BaseRepository` proporciona una estructura base para interactuar con bases de datos mediante SQLAlchemy. Define métodos para obtener consultas SQL y verificar el estado visual de las mismas.
 
 ### Catálogo de Funciones y Clases
-- `BaseRepository(session: Session)` - Inicializa la clase con una sesión de SQLAlchemy.
-- `_sql(query_id: str, fallback: str) -> str` - Obtiene un SQL desde la BD de configuración, con fallback.
+- `__init__(self, session: Session)` - Inicializa la instancia con una sesión de SQLAlchemy.
+- `_sql(self, query_id: str, fallback: str) -> str` - Obtiene un SQL desde la base de datos de configuración o devuelve un fallback hardcodeado si no existe.
+- `_has_visual_state(self, query_id: str) -> bool` - Verifica si una consulta tiene un estado visual JSON almacenado.
 
 ### Interacción con Base de Datos
-- Motor: No aplica (no hay consultas SQL crudas o llamadas a ORM explícitas).
-- Tablas y Columnas: No aplica (no interactúa directamente con tablas).
+- Motor: SQLAlchemy
+- Tablas: `config_queries`
+- Columnas: `query_id`, `sql_text`
 
 ### Estado y Variables Globales
-- No aplica (no define variables globales, de sesión, de entorno o diccionarios quemados en código que almacenan estado crítico).
+No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `sqlalchemy.orm.Session`, `core.wms_config.get_query`.
-- Comunicación con otros archivos del proyecto: No aplica (no comunica con otros archivos).
+- Librerías externas utilizadas:
+  - `sqlalchemy.orm.Session`
+  - `core.wms_config.get_query`
+  - `core.db_config_manager.get_query_visual_state`
+- Comunicación con otros archivos del proyecto:
+  - `core/query_engine.build_sql_from_payload()` (mencionado en la documentación, pero no implementado)
 
 
 ---
@@ -59,49 +65,50 @@ Clase base para todos los repositorios de datos que proporciona una sesión de S
 ## Archivo: ./repositories/deliveries.py
 
 ### Resumen Funcional
-El archivo `deliveries.py` contiene una clase `DeliveriesRepository` que proporciona métodos para obtener estadísticas y datos relacionados con las entregas. Estos métodos interactúan con una base de datos para recuperar información sobre áreas, retrasos, autores, ubicaciones y materiales.
+El archivo `deliveries.py` contiene una clase `DeliveriesRepository` que proporciona métodos para obtener estadísticas y datos relacionados con las entregas (`outbound_deliveries`). Estos métodos realizan consultas SQL en una base de datos utilizando SQLAlchemy y pandas para procesar los resultados.
 
 ### Catálogo de Funciones y Clases
-- `DeliveriesRepository(BaseRepository)` - Repositorio para el dominio de Entregas.
-  - `_sql(query_id: str, fallback: str) -> str` - Reemplaza `{AREA_EXPR}` en la consulta SQL con una expresión CASE que determina el área basada en diferentes campos.
-  - `_get_sla_threshold() -> int` - Obtiene el umbral de SLA (Service Level Agreement) desde las configuraciones del sistema.
-  - `get_area_stats(year: str) -> pd.DataFrame` - Devuelve estadísticas por área, incluyendo el número total de entregas y días activos.
-  - `get_total_active_days(year: str) -> int` - Calcula el número total de días activos en un año específico.
-  - `get_sla_stats(year: str) -> pd.DataFrame` - Devuelve estadísticas sobre el cumplimiento del SLA por entrega.
-  - `get_top_authors(year: str) -> pd.DataFrame` - Obtiene los autores con más entregas y su área asociada.
-  - `get_dates_counts(year: str) -> pd.DataFrame` - Cuenta las entregas por fecha y área.
-  - `get_top_locations(year: str) -> pd.DataFrame` - Devuelve las ubicaciones con más materiales y su área asociada.
-  - `get_top_materials_by_area(year: str) -> pd.DataFrame` - Muestra los materiales más frecuentes por área.
-  - `get_area_material_mapping(year: str) -> pd.DataFrame` - Mapea el material por área y cantidad.
-  - `get_user_material_mapping(year: str) -> pd.DataFrame` - Mapea el material por usuario y cantidad.
-  - `get_sla_audit_records(year: str, late: bool = True, limit: int = 500) -> pd.DataFrame` - Devuelve registros de auditoría del SLA basados en retrasos.
-  - `get_monthly_evolution() -> pd.DataFrame` - Muestra la evolución mensual de entregas y días activos.
-  - `get_weekly_evolution() -> pd.DataFrame` - Muestra la evolución semanal de entregas.
-  - `get_wms_status_distribution(year: str) -> pd.DataFrame` - Distribución del estado WMS (Warehouse Management System).
-  - `get_lead_time_by_area(year: str) -> pd.DataFrame` - Tiempo promedio de entrega por área.
-  - `get_sla_trend() -> pd.DataFrame` - Tendencia del SLA a lo largo del tiempo.
-  - `get_author_sla_correlation() -> pd.DataFrame` - Correlación entre el autor y el retraso en el SLA.
-  - `get_volume_delay_trend() -> pd.DataFrame` - Tendencia de volumen y retardo.
-  - `get_sla_trend_by_area() -> pd.DataFrame` - Tendencia del SLA por área a lo largo del tiempo.
-  - `get_sla_monthly_trend() -> pd.DataFrame` - Tendencia mensual del SLA.
-  - `get_sla_monthly_trend_by_area() -> pd.DataFrame` - Tendencia mensual del SLA por área.
+- `DeliveriesRepository(BaseRepository)` - Repositorio para el dominio de Entregas (outbound_deliveries).
+  - `_sql(query_id: str, fallback: str) -> str` - Obtiene SQL desde config_queries con fallback explícito.
+  - `_get_sla_threshold() -> int` - Retorna el umbral SLA configurado en las variables de entorno.
+  - `get_area_stats(year: str) -> pd.DataFrame` - Obtiene estadísticas por área para un año dado.
+  - `get_total_active_days(year: str) -> int` - Cuenta los días activos de entrega para un año dado.
+  - `get_sla_stats(year: str) -> pd.DataFrame` - Obtiene estadísticas de SLA para un año dado.
+  - `get_top_authors(year: str) -> pd.DataFrame` - Obtiene los autores con más entregas en un año dado.
+  - `get_dates_counts(year: str) -> pd.DataFrame` - Obtiene el conteo de entregas por fecha y área para un año dado.
+  - `get_top_locations(year: str) -> pd.DataFrame` - Obtiene las ubicaciones con más entregas en un año dado.
+  - `get_top_materials_by_area(year: str) -> pd.DataFrame` - Obtiene los materiales con mayor frecuencia por área para un año dado.
+  - `get_area_material_mapping(year: str) -> pd.DataFrame` - Mapea el material por área y cantidad para un año dado.
+  - `get_user_material_mapping(year: str) -> pd.DataFrame` - Mapea el material por usuario y cantidad para un año dado.
+  - `get_sla_audit_records(year: str, late: bool = True, limit: int = 500) -> pd.DataFrame` - Obtiene registros de auditoría de SLA para un año dado.
+  - `get_monthly_evolution() -> pd.DataFrame` - Obtiene la evolución mensual de entregas y días activos.
+  - `get_weekly_evolution() -> pd.DataFrame` - Obtiene la evolución semanal de entregas.
+  - `get_wms_status_distribution(year: str) -> pd.DataFrame` - Distribución del estado WMS para un año dado.
+  - `get_lead_time_by_area(year: str) -> pd.DataFrame` - Tiempo promedio de entrega por área para un año dado.
+  - `get_sla_trend() -> pd.DataFrame` - Tendencia de SLA semanal.
+  - `get_author_sla_correlation() -> pd.DataFrame` - Correlación entre el autor y el SLA.
+  - `get_volume_delay_trend() -> pd.DataFrame` - Tendencia del volumen y retraso por semana.
+  - `get_sla_trend_by_area() -> pd.DataFrame` - Tendencia de SLA semanal por área.
+  - `get_sla_monthly_trend() -> pd.DataFrame` - Tendencia mensual de SLA.
+  - `get_sla_monthly_trend_by_area() -> pd.DataFrame` - Tendencia mensual de SLA por área.
 
 ### Interacción con Base de Datos
-- Motor: SQLite (inferred from the use of SQLAlchemy's `text` function).
+- Motor: SQLAlchemy (no especificado el motor exacto).
 - Tablas:
   - `outbound_deliveries`
+  - `warehouse_tasks`
 - Columnas:
-  - `area`, `entrega`, `fecha_carga`, `dias_retraso`, `autor`, `creado_el`, `fecha_sm_real`, `material`, `denominacion`, `estado_wms`, `week_sort`, `week_label`
+  - `entrega`, `fecha_carga`, `dias_retraso`, `autor`, `material`, `denominacion`, `estado_wms`, `creado_el`, `fecha_sm_real`, `ubicacion_bin`, `business_area`, `week_sort`, `week_label`
+- Consultas SQL crudas:
+  - Todas las consultas SQL utilizan parámetros de enlace (`?`) para evitar inyecciones SQL.
 
 ### Estado y Variables Globales
-- No aplica.
+No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
-  - `pandas`
-  - `sqlalchemy`
+- Librerías externas: pandas, sqlalchemy.
 - Comunicación con otros archivos del proyecto:
-  - `core.db_config_manager` (para obtener configuraciones)
+  - `core.db_config_manager` (para obtener configuraciones de variables de entorno).
 
 
 ---
@@ -109,44 +116,48 @@ El archivo `deliveries.py` contiene una clase `DeliveriesRepository` que proporc
 ## Archivo: ./repositories/inventory.py
 
 ### Resumen Funcional
-El archivo `inventory.py` contiene una clase `InventoryRepository` que proporciona métodos para obtener estadísticas y datos de inventario desde una base de datos SQLite. Los métodos incluyen consultas para volumen, área, materiales consumidos, usuarios activos, tendencias temporales, días hábiles y tipos de material.
+El archivo `inventory.py` contiene una clase `InventoryRepository` que se encarga de interactuar con la base de datos para obtener estadísticas y datos relacionados con el inventario, utilizando SQL queries y pandas DataFrames.
 
 ### Catálogo de Funciones y Clases
-- `InventoryRepository(BaseRepository)` - Repositorio para el dominio de Inventario (ex-Movimientos).
-  - `get_cmv_prod()` - Devuelve el valor de la configuración "CMV_PROD".
-  - `get_cmv_mant()` - Devuelve el valor de la configuración "CMV_MANT".
-  - `get_cmv_consumos()` - Devuelve una tupla con los valores de "CMV_PROD" y "CMV_MANT".
-  - `get_cmv_reversas()` - Devuelve una tupla con los valores de "CMV_REVERSAS".
-  - `check_table_exists()` - Verifica si la tabla 'inventory_movements' existe en la base de datos.
-  - `_FALLBACK_QUERIES` - Diccionario con consultas SQL para diferentes estadísticas.
-  - `_sql(query_id: str, fallback: str = "") -> str` - Obtiene una consulta SQL a partir del diccionario o devuelve una consulta de respaldo si no se encuentra.
-  - `get_volumen_stats()` - Devuelve un DataFrame con las estadísticas de volumen de movimientos.
-  - `get_area_stats_prod()` - Devuelve un DataFrame con las estadísticas de área para materiales de producción.
-  - `get_material_consumos_abc()` - Devuelve un DataFrame con las estadísticas de consumo ABC.
-  - `get_top_users(start_year: str = '2026') -> pd.DataFrame` - Devuelve un DataFrame con los usuarios más activos.
-  - `get_trend_stats(start_year: str = '2025') -> pd.DataFrame` - Devuelve un DataFrame con las tendencias temporales de movimientos.
-  - `get_dow_stats()` - Devuelve un DataFrame con las estadísticas de días hábiles.
-  - `get_pm_type_material_records()` - Devuelve un DataFrame con los tipos de material según el tipo de mantenimiento.
-  - `get_area_material_mapping_201()` - Devuelve un DataFrame con la asignación de materiales por área para CMV 201.
-  - `get_user_material_mapping(users: Tuple[str, ...]) -> pd.DataFrame` - Devuelve un DataFrame con la asignación de materiales por usuario y tipo de movimiento.
-  - `get_location_material_summary()` - Devuelve un DataFrame con las estadísticas de resumen de ubicaciones de materiales.
-  - `get_total_active_days()` - Devuelve el número total de días activos en los movimientos.
+- **Clase:** `InventoryRepository`
+  - **Métodos:**
+    - `get_cmv_prod()`: Devuelve el valor configurado para CMV_PROD.
+    - `get_cmv_mant()`: Devuelve el valor configurado para CMV_MANT.
+    - `get_cmv_consumos()`: Devuelve una tupla con los valores de CMV_PROD y CMV_MANT.
+    - `get_cmv_reversas()`: Devuelve una tupla con los valores configurados para CMV_REVERSAS.
+    - `check_table_exists()`: Verifica si la tabla 'inventory_movements' existe en la base de datos.
+    - `get_volumen_stats()`: Obtiene estadísticas de volumen del inventario.
+    - `get_area_stats_prod()`: Obtiene estadísticas por área para el producto.
+    - `get_material_consumos_abc()`: Obtiene estadísticas de materiales consumidos en ABC.
+    - `get_top_users(start_year='2026')`: Obtiene los usuarios con más movimientos.
+    - `get_trend_stats(start_year='2025')`: Obtiene tendencias de movimientos por período.
+    - `get_dow_stats()`: Obtiene estadísticas diarias de movimiento.
+    - `get_pm_type_material_records()`: Obtiene registros de tipo PM y material.
+    - `get_area_material_mapping_201()`: Obtiene mapeo de área para el producto 201.
+    - `get_user_material_mapping(users: Tuple[str, ...])`: Obtiene mapeo de usuario y material.
+    - `get_location_material_summary()`: Obtiene resumen de materiales por ubicación.
+    - `get_total_active_days()`: Obtiene el número total de días activos en los movimientos.
 
 ### Interacción con Base de Datos
-- Motor: SQLite
-- Tablas:
-  - `inventory_movements`
-- Columnas:
-  - `tipo_operacion`, `material`, `cantidad`, `fe_contab`, `usuario`, `alm`, `cmv`, `ce_coste`, `texto_breve_material`, `texto_cab_documento`, `referencia`
+- **Motor:** SQLite (inferred from the use of `sqlite_master`).
+- **Tablas:** `inventory_movements`.
+- **Columnas:**
+  - `tipo_operacion`
+  - `material`
+  - `num_tx`
+  - `business_area`
+  - `ce_coste`
+  - `cmv`
+  - `fe_contab`
+  - `alm`
+  - `usuario`
 
 ### Estado y Variables Globales
-No aplica
+No aplica.
 
 ### Dependencias y Flujo
-- Librerías externas:
-  - `pandas`
-  - `sqlalchemy`
-- Flujo interno: La clase interactúa con una instancia de `BaseRepository` para obtener la sesión de base de datos y ejecutar consultas SQL.
+- **Librerías Externas:** pandas, sqlalchemy.
+- **Flujo Interno:** Utiliza métodos de la clase base `BaseRepository` para interactuar con la base de datos.
 
 
 ---

@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: static/js
-Compilado el: 2026-05-22 16:53:13
+Compilado el: 2026-05-23 00:11:14
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -7,19 +7,15 @@ Modelo: qwen2.5-coder:7b | Separado por Carpetas
 ## Archivo: ./static/js/analytics_proyecciones.js
 
 ### Resumen Funcional
-El archivo `analytics_proyecciones.js` contiene lógica para manejar la interacción con una interfaz de usuario (UI) y renderizar datos en diferentes modales. Los datos se filtran y presentan según los criterios ingresados por el usuario.
+El archivo `analytics_proyecciones.js` contiene lógica para renderizar y controlar modales de alertas, combinaciones y gráficos de dispersión en una interfaz web. Utiliza funciones para filtrar y mostrar datos basados en criterios de búsqueda y selección.
 
 ### Catálogo de Funciones y Clases
-- `UI.openModal(id)` - Abre un modal identificado por `id`.
-- `UI.closeModal(id)` - Cierra un modal identificado por `id`.
-- `UI.populateAreaSelect(selectId, data, key = 'area')` - Llena un selector de áreas con valores únicos del conjunto de datos proporcionado.
-- `getData(id)` - Obtiene y parsea los datos almacenados en un elemento HTML con el ID especificado.
-- `renderAlerts()` - Renderiza una tabla de alertas basada en los criterios de búsqueda y filtro.
-- `renderCombos(filterText = "")` - Renderiza una lista de combinaciones de materiales basadas en la búsqueda del usuario.
-- `renderScatter()` - Renderiza un gráfico de dispersión basado en los criterios de búsqueda y filtro.
-- `openModalAlerts()` - Abre el modal de alertas, llena el selector de áreas y renderiza las alertas.
-- `openModalCombos()` - Abre el modal de combinaciones, limpia la entrada de búsqueda y renderiza las combinaciones.
-- `openModalScatter()` - Abre el modal de dispersión, llena los selectores de área y categoría, limpia las entradas de búsqueda y renderiza el gráfico.
+- `renderAlerts()` - Renderiza los datos de alertas en un modal.
+- `renderCombos(filterText = "")` - Renderiza los datos de combinaciones en un modal, filtrando por texto.
+- `renderScatter()` - Renderiza los datos de dispersión en un modal, filtrando por texto y categoría.
+- `openModalAlerts()` - Abre el modal de alertas y carga los datos iniciales.
+- `openModalCombos()` - Abre el modal de combinaciones y carga los datos iniciales.
+- `openModalScatter()` - Abre el modal de dispersión y carga los datos iniciales.
 
 ### Interacción con Base de Datos
 No aplica
@@ -28,8 +24,7 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `Chart.js` (usado para crear el gráfico de dispersión).
-- **Flujo Interno**: El archivo interactúa con elementos HTML para obtener datos, renderizar contenido en modales y actualizar gráficos.
+Dependencia: `core_ui.js` (carga previa para proporcionar funciones como `CoreUI.openModal`, `CoreUI.closeModal`, `CoreUI.populateAreaSelect`, y `CoreUI.getData`).
 
 
 ---
@@ -39,16 +34,14 @@ No aplica
 #### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-El archivo `analytics_studio.js` contiene funciones y variables para gestionar el estado del Studio de Análíticas, incluyendo la carga de esquemas de base de datos, visualización de consultas SQL, generación de gráficos y tarjetas métricas KPI.
+El archivo `analytics_studio.js` contiene funciones y variables para gestionar el estado del Studio de Análíticas, incluyendo la carga de esquemas de base de datos, visualización de consultas SQL y generación de gráficos.
 
 ### Catálogo de Funciones y Clases
-- `openEditQueryModal(queryId, chartTitle)` - Abre el modal para editar una consulta.
+- `openEditQueryModal(queryId, chartTitle)` - Abre un modal para editar una consulta.
 - `loadSchema()` - Carga el esquema de la base de datos.
-- `previewTable(tableName, el)` - Muestra una vista previa de los datos de una tabla.
+- `previewTable(tableName, el)` - Muestra una vista previa de una tabla en la interfaz.
 - `runPreview()` - Ejecuta una consulta SQL y muestra su resultado en un gráfico o tabla.
-- `renderPreviewChart(data)` - Renderiza el gráfico o tabla basado en los datos de la consulta.
-- `closeEditQueryModal()` - Cierra el modal para editar una consulta.
-- `showConfirmPublish()` - Muestra la ventana de confirmación para publicar.
+- `renderPreviewChart(data)` - Renderiza el resultado de una consulta como un gráfico.
 
 ### Interacción con Base de Datos
 No aplica
@@ -58,63 +51,106 @@ No aplica
 - `currentSchema` - Esquema de la base de datos actual.
 - `currentQueryId` - ID de la consulta actualmente seleccionada.
 - `studioBoundParams` - Parámetros de la consulta actual.
-- `serverVisualState` - Estado visual del servidor.
-- `visualState` - Estado del constructor visual.
-- `defaultVisualStates` - Mapeos predefinidos para inicialización visual intuitiva.
+- `serverVisualState` - Estado visual guardado en el servidor.
+- `visualState` - Estado del constructor visual actual.
+- `defaultVisualStates` - Mapeo predefinido para inicializar gráficos.
 
 ### Dependencias y Flujo
 Dependencias:
 - `Chart.js` - Librería para renderizar gráficos.
 
 Flujo:
-- El archivo interactúa con el backend a través de endpoints como `/api/queries/{queryId}`, `/api/studio/schema`, y `/api/studio/preview`.
-- Utiliza funciones asíncronas (`async/await`) para cargar datos y ejecutar consultas.
-- Renderiza gráficos utilizando la librería `Chart.js`.
+1. El usuario selecciona una consulta en el Studio de Análíticas.
+2. Se abre un modal con la opción de editar la consulta.
+3. La consulta se carga y se muestra en un editor de texto.
+4. El usuario puede modificar la consulta y ejecutarla para obtener resultados.
+5. Los resultados se renderizan como gráficos o tablas según el tipo de consulta.
+
+El archivo interactúa con una API que proporciona los datos necesarios para cargar esquemas, ejecutar consultas y obtener visualizaciones.
 
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-Este archivo contiene funciones y métodos para gestionar la edición de consultas, publicación de consultas, y construcción de consultas SQL dinámicamente en un entorno de análisis. Permite crear, modificar y ejecutar consultas SQL basadas en una interfaz gráfica de usuario (GUI) interactiva.
+El archivo `analytics_studio.js` contiene funciones y métodos para gestionar la creación, edición y publicación de consultas analíticas. Permite configurar gráficos, filtros y condiciones de búsqueda, y sincroniza estos cambios con un backend que genera y ejecuta consultas SQL.
 
 ### Catálogo de Funciones y Clases
-- `closeEditQueryModal()` - Cierra el modal de edición de consulta.
+- `closeEditQueryModal()` - Cierra el modal para editar una consulta.
 - `showConfirmPublish()` - Muestra la ventana de confirmación para publicar una consulta.
 - `hideConfirmPublish()` - Oculta la ventana de confirmación para publicar una consulta.
-- `executePublishQuery()` - Ejecuta la publicación de una consulta a través de una API y actualiza la interfaz según el resultado.
-- `initVisualQuery(queryId)` - Inicializa la interfaz visual del editor de consultas con los parámetros proporcionados.
+- `executePublishQuery()` - Ejecuta la publicación de una consulta y maneja la respuesta del backend.
+- `initVisualQuery(queryId)` - Inicializa el estado visual de la consulta y carga los datos necesarios.
 - `onBaseTableChange()` - Maneja el cambio en la tabla base seleccionada.
-- `getActiveTables()` - Devuelve una lista de tablas activas basadas en el estado actual.
-- `getActiveColumns()` - Devuelve una lista de columnas activas basadas en las tablas activas.
-- `refreshQbColumns(forceState = false)` - Refresca los selectores de columnas para los ejes Y, X y desglose.
-- `renderJoins()` - Renderiza la interfaz gráfica para gestionar los joins entre tablas.
-- `addJoin()` - Añade un nuevo join a la configuración actual.
-- `updateJoin(index)` - Actualiza el estado de un join específico.
-- `removeJoin(index)` - Elimina un join específico del estado.
-- `renderFilters()` - Renderiza la interfaz gráfica para gestionar los filtros (WHERE).
-- `addFilter()` - Añade un nuevo filtro a la configuración actual.
-- `updateFilterType(index, type)` - Actualiza el tipo de valor para un filtro específico.
-- `updateFilter(index)` - Actualiza el estado de un filtro específico.
-- `removeFilter(index)` - Elimina un filtro específico del estado.
+- `getActiveTables()` - Devuelve las tablas activas en la consulta.
+- `getActiveColumns()` - Devuelve las columnas activas en la consulta.
+- `refreshQbColumns(forceState = false)` - Refresca los selectores de columnas para los ejes y desglose.
+- `renderJoins()` - Renderiza los controles de join en el formulario.
+- `addJoin()` - Añade un nuevo join al estado visual.
+- `updateJoin(index)` - Actualiza un join existente en el estado visual.
+- `removeJoin(index)` - Elimina un join del estado visual.
+- `renderFilters()` - Renderiza los controles de filtro en el formulario.
+- `addFilter()` - Añade un nuevo filtro al estado visual.
+- `updateFilterType(index, type)` - Actualiza el tipo de valor para un filtro.
+- `updateFilter(index)` - Actualiza la configuración de un filtro existente.
+- `removeFilter(index)` - Elimina un filtro del estado visual.
 - `onSecondMetricToggle()` - Maneja el toggle de la segunda métrica.
-- `onQbChange()` - Sincroniza los cambios en la interfaz visual con el estado actual y genera una consulta SQL correspondiente.
-- `syncVisualToSQL()` - Envía el estado actual a través de una API para generar y sincronizar la consulta SQL.
+- `onQbChange()` - Sincroniza los cambios en el formulario con el estado visual y genera SQL.
+- `syncVisualToSQL()` - Envía el estado visual al backend para generar y ejecutar una consulta SQL.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `visualState` - Almacena el estado actual del editor visual, incluyendo tablas, joins, filtros, métricas, etc.
+- `studioChartInstance` - Instancia del gráfico generado por Chart.js.
+- `visualState` - Estado visual actual de la consulta, incluyendo tablas, joins, filtros, métricas, etc.
 - `serverVisualState` - Estado visual proporcionado por el servidor.
 - `defaultVisualStates` - Estados visuales predeterminados para diferentes consultas.
-- `currentSchema` - Esquema de la base de datos actual.
-- `studioBoundParams` - Parámetros vinculados al estudio.
+- `currentSchema` - Esquema de las tablas disponibles en la base de datos.
+- `studioBoundParams` - Parámetros vinculados a la consulta SQL generada.
 
 ### Dependencias y Flujo
 Dependencias:
-- `fetch` - Para hacer solicitudes HTTP a la API del servidor.
+- `Chart.js` - Usado para generar gráficos.
+- `fetch` - Para hacer solicitudes HTTP al backend.
+
+Flujo interno:
+1. El usuario interactúa con el formulario de configuración de consultas (tablas, joins, filtros, métricas).
+2. Los cambios en el formulario se reflejan en el estado visual (`visualState`).
+3. Al cambiar algo en el formulario, se llama a `onQbChange()`, que sincroniza los cambios con el backend y genera SQL.
+4. El backend devuelve la consulta SQL generada, que se muestra en un editor de texto.
+5. Cuando el usuario publica una consulta, se envía el estado visual al backend para ejecutar la consulta.
+
+Flujo externo:
+- La función `executePublishQuery()` se comunica con el backend a través de una solicitud POST a `/api/settings/query` para publicar la consulta.
+- La función `syncVisualToSQL()` se comunica con el backend a través de una solicitud POST a `/api/studio/build_sql` para generar y ejecutar la consulta SQL.
+
+
+---
+
+## Archivo: ./static/js/core_ui.js
+
+### Resumen Funcional
+El archivo `core_ui.js` es un módulo de utilidades de interfaz de usuario compartido por todas las vistas del proyecto. Proporciona funciones para mostrar y ocultar modales, renderizar modales de lista de materiales, poblar selectores con áreas únicas y leer datos JSON embebidos en el DOM.
+
+### Catálogo de Funciones y Clases
+- `CoreUI.openModal(id)` - Muestra un modal por su ID de elemento.
+- `CoreUI.closeModal(id)` - Oculta un modal por su ID de elemento.
+- `CoreUI.renderMaterialModal(opts)` - Rellena y abre un modal de lista de materiales con los ítems proporcionados.
+- `CoreUI.populateAreaSelect(selectId, data, key)` - Rellena un elemento `<select>` con áreas únicas encontradas en un array de datos.
+- `CoreUI.getData(id)` - Lee y parsea JSON embebido en el textContent de un elemento del DOM.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+No aplica
+
+### Dependencias y Flujo
+Dependencias:
+- No se mencionan dependencias externas específicas en este archivo.
 
 Flujo:
-Este archivo interactúa con el backend a través de llamadas a `/api/settings/query` para publicar consultas y `/api/studio/build_sql` para generar consultas SQL. No depende de ninguna base de datos específica, solo utiliza `fetch` para comunicarse con el backend.
+- El módulo expone funciones útiles para la interfaz de usuario.
+- Las funciones pueden ser llamadas directamente desde el DOM o a través de alias globales (`window.openModal` y `window.closeModal`).
 
 
 ---
@@ -122,38 +158,15 @@ Este archivo interactúa con el backend a través de llamadas a `/api/settings/q
 ## Archivo: ./static/js/dashboard.js
 
 ### Resumen Funcional
-El archivo `dashboard.js` contiene la lógica principal del dashboard de MonitorWeb. Define funciones para interactuar con una API, manejar la interfaz de usuario (UI), renderizar tablas y aplicar filtros.
+El archivo `dashboard.js` contiene la lógica principal del dashboard de MonitorWeb. Define funciones para interactuar con una API, manejar la interfaz de usuario (UI), aplicar filtros y ordenar tablas, generar PDFs, y sincronizar datos.
 
 ### Catálogo de Funciones y Clases
-- **DashboardAPI**
-  - `_fetch(url, options)` - Realiza solicitudes HTTP a la API.
-  - `fetchKPIs(params)` - Obtiene los KPIs basados en los parámetros proporcionados.
-  - `fetchFilteredData(params)` - Obtiene datos filtrados según los parámetros proporcionados.
-  - `sync()` - Sincroniza los datos del cliente con el servidor.
-  - `checkSyncStatus()` - Verifica el estado de la sincronización.
-  - `logout()` - Cierra sesión y redirige al usuario a la página de inicio de sesión.
-
-- **UI**
-  - `openPdfModal()` - Abre el modal para ver PDFs.
-  - `closePdfModal()` - Cierra el modal y limpia su contenido.
-  - `toggleMulti(id)` - Alterna la visibilidad de un elemento con el ID especificado.
-  - `setBtnLoading(btn, text, isLoading)` - Establece el estado de carga de un botón.
-
-- **Funciones Globales**
-  - `renderTableRow(t)` - Renderiza una fila de tabla para los datos proporcionados.
-  - `executeFilters()` - Ejecuta los filtros y actualiza la tabla y KPIs.
-  - `applyFilters()` - Aplica los filtros cuando se cambia un valor de entrada.
-  - `getCheckboxValues(className)` - Obtiene los valores de las casillas de verificación con el nombre de clase especificado.
-  - `toggleSelectAll(className, isChecked)` - Alterna la selección de todas las casillas de verificación con el nombre de clase especificado.
-  - `handleSmartCheckbox(cb, className, selectAllId, context)` - Maneja la selección inteligente de casillas de verificación.
-  - `filterTable()` - Filtra la tabla según los valores de entrada.
-  - `sortTable(idx)` - Ordena la tabla según el índice de columna especificado.
-  - `updateLogoVal(btn)` - Actualiza el valor del campo oculto para incluir o no el logotipo en el PDF.
-  - `pdfSubmit(btn, frameTarget, preview)` - Envía un formulario para generar y visualizar/descargar PDFs.
-  - `downloadBulk(action, btn)` - Descarga múltiples PDFs según los parámetros proporcionados.
-  - `syncData(e, onlyPoll = false)` - Inicia la sincronización de datos y verifica su estado.
-  - `startSyncPolling(btn)` - Comienza el sondeo para verificar el estado de la sincronización.
-  - `toggleSidebar()` - Alterna la visibilidad del sidebar.
+- `DashboardAPI._fetch(url, options)` - Realiza solicitudes HTTP a la API.
+- `DashboardAPI.fetchKPIs(params)` - Obtiene los KPIs (Indicadores Clave de Desempeño) basados en los parámetros proporcionados.
+- `DashboardAPI.fetchFilteredData(params)` - Obtiene datos filtrados según los parámetros proporcionados.
+- `DashboardAPI.sync()` - Sincroniza los datos del cliente con el servidor.
+- `DashboardAPI.checkSyncStatus()` - Verifica el estado de la sincronización actual.
+- `DashboardAPI.logout()` - Cierra sesión y redirige al usuario a la página de inicio de sesión.
 
 ### Interacción con Base de Datos
 No aplica
@@ -162,8 +175,13 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `fetch`
-- **Flujo Interno**: El archivo interactúa con el backend a través de la API definida en `DashboardAPI` para obtener datos, ejecutar filtros y sincronizar información. La UI se actualiza dinámicamente según los resultados obtenidos.
+Dependencias:
+- `fetch` (navegador)
+- `localStorage`
+
+Flujo:
+- El archivo interactúa con la API para obtener datos, renderizar tablas, aplicar filtros, generar PDFs y sincronizar datos.
+- Utiliza funciones globales como `closePdfModal`, `toggleMulti`, `sortTable`, etc., que se definen en el mismo archivo y son accesibles globalmente a través de `window`.
 
 
 ---
@@ -208,54 +226,62 @@ No aplica. El archivo no realiza ninguna interacción con una base de datos.
 #### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-El archivo `deliveries.js` contiene lógica para el análisis de entregas, incluyendo la interacción con componentes UI como modales y gráficos. Maneja datos de entrega, calcula indicadores clave (KPIs) y actualiza visualmente los gráficos en función de las selecciones del usuario.
+El archivo `deliveries.js` contiene la lógica para el análisis de entregas, incluyendo la interacción con componentes UI, controladores de modales, inicialización de gráficos y actualizaciones dinámicas del estado.
 
 ### Catálogo de Funciones y Clases
-- `UI.openModal(id)` - Abre un modal con el ID especificado.
-- `UI.closeModal(id)` - Cierra un modal con el ID especificado.
-- `UI.renderMaterialModal({ modalId, titleId, listId, title, items, colorVar, bgColor })` - Renderiza una lista de materiales en un modal.
-- `getData(id)` - Obtiene datos JSON desde elementos del DOM.
-- `openModalWeekday(dayName, isCurrentMonth = false)` - Abre el modal para mostrar detalles diarios.
-- `openModalUbicacion(name)` - Abre el modal para mostrar detalles de ubicación.
-- `openModalArea(name, isCurrentMonth = false)` - Abre el modal para mostrar detalles de área.
-- `openModalUser(name)` - Abre el modal para mostrar detalles del usuario.
+- `openModal(id)` - Abre un modal utilizando CoreUI.
+- `closeModal(id)` - Cierra un modal utilizando CoreUI.
+- `renderMaterialModal(opts)` - Renderiza un modal con opciones específicas.
+- `getData(id)` - Obtiene datos desde una fuente externa.
+- `toggleModalFilter(type, isCurrentMonth)` - Alternativa entre mostrar modales de área y día según el contexto actual.
+- `openModalWeekday(dayName, isCurrentMonth = false)` - Abre un modal para mostrar detalles del día.
+- `openModalUbicacion(name)` - Abre un modal para mostrar detalles de ubicación.
+- `openModalArea(name, isCurrentMonth = false)` - Abre un modal para mostrar detalles de área.
+- `openModalUser(name)` - Abre un modal para mostrar detalles de usuario.
 - `switchVLView(view)` - Cambia la vista entre operativa y histórica.
-- `toggleMulti(id)` - Alterna la visibilidad de un elemento con el ID especificado.
-- `updateDeliveriesAnalytics()` - Actualiza los KPIs y visualización en función de las selecciones del usuario.
+- `toggleMulti(id)` - Alterna la visibilidad de elementos según su ID.
+- `updateDeliveriesAnalytics()` - Actualiza los KPIs y filtra listas y gráficos según las áreas seleccionadas.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `currentModalContext` - Almacena el contexto actual del modal (área o día).
-- `window.openModal`, `window.closeModal`, `window.toggleModalFilter`, `window.openModalArea`, `window.openModalUser`, `window.openModalUbicacion` - Funciones globales para controlar modales y vistas.
-- `window.slaTrendChart`, `window.slaAreaTrendChart`, `window.weeklyTrendChart`, `window.monthlyTrendChart`, `window.slaMonthlyTrendChart`, `window.slaMonthlyTrellisCharts` - Referencias a gráficos.
+- `currentModalContext` - Almacena el contexto actual del modal (área y día).
+- `window.slaTrendChart`, `window.monthlyTrendChart`, etc. - Referencias a gráficos inicializados.
 
 ### Dependencias y Flujo
-- Depende de la librería Chart.js para crear gráficos.
-- Utiliza funciones globales definidas en el mismo archivo para controlar modales y vistas.
+Depende de `core_ui.js` para funciones UI como `openModal`, `closeModal`, y `renderMaterialModal`. Utiliza `getData` para obtener datos desde fuentes externas.
 
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-El archivo `deliveries.js` contiene funciones para actualizar gráficos y listas de áreas seleccionadas en una interfaz web, basándose en datos filtrados.
+El archivo `deliveries.js` contiene funciones para actualizar gráficos de rendimiento diario, semanal y mensual basados en datos seleccionados. Actualiza los datos de las gráficas de SLA (Service Level Agreement) y entrega semanal.
 
 ### Catálogo de Funciones y Clases
-- `updateDeliveriesAnalytics()` - Actualiza los gráficos y la lista de áreas seleccionadas.
-- `toggleChartSelectAll(isChecked)` - Maneja el estado del checkbox "Seleccionar todo" para los gráficos.
-- `handleSmartCheckbox(cb)` - Maneja el comportamiento inteligente de los checkboxes individuales.
+- `updateDeliveriesAnalytics()` - Actualiza los datos de las gráficas de rendimiento.
+- `window.toggleChartSelectAll(isChecked)` - Maneja la selección de todos los elementos en un grupo de checkboxes.
+- `window.handleSmartCheckbox(cb)` - Maneja la selección inteligente de elementos individuales en un grupo de checkboxes.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `window.areaMixChart` - Referencia al gráfico de mezcla de áreas.
-- `window.weekHeatChart` - Referencia al gráfico de calor semanal.
-- `selected` - Array que contiene las áreas seleccionadas.
+No aplica
 
 ### Dependencias y Flujo
-- No depende de ninguna librería externa.
-- Comunica con otros archivos del proyecto a través de funciones globales como `updateDeliveriesAnalytics()`.
+Dependencias:
+- `getData('data_weekly_raw_json')`
+- `getData('data_sla_area_trend_raw_json')`
+
+Flujo:
+1. La función `updateDeliveriesAnalytics()` se ejecuta cuando se necesitan actualizar los datos de las gráficas.
+2. Se filtran los datos según la selección del usuario (`selected`).
+3. Los datos filtrados se agrupan y procesan para calcular SLA y entregas.
+4. Los resultados se actualizan en las gráficas correspondientes.
+
+La función `window.toggleChartSelectAll(isChecked)` maneja la selección de todos los elementos en un grupo de checkboxes, asegurando que no haya una selección vacía.
+
+La función `window.handleSmartCheckbox(cb)` maneja la selección inteligente de elementos individuales, asegurando que si "Todos" está seleccionado y se selecciona uno individualmente, "Todos" se deselecciona.
 
 
 ---
@@ -285,28 +311,31 @@ No aplica
 ## Archivo: ./static/js/inventory.js
 
 ### Resumen Funcional
-El archivo `inventory.js` contiene lógica para el análisis de movimientos en un inventario, con funcionalidades como la visualización de gráficos y modales interactivos. Incluye manejo de datos desde elementos HTML, renderizado de gráficos usando Chart.js, y funciones para abrir y cerrar modales.
+El archivo `inventory.js` contiene lógica para el análisis de inventario, incluyendo la visualización de gráficos y la interacción con modales. Se utilizan Chart.js para crear gráficos de doughnut y lineas, y se manejan eventos de entrada para buscar ubicaciones dinámicamente.
 
 ### Catálogo de Funciones y Clases
-- `log(msg, data = null)` - Registra mensajes en la consola con un formato específico.
-- `UI.openModal(id)` - Abre un modal identificado por `id`.
-- `UI.closeModal(id)` - Cierra un modal identificado por `id`.
-- `UI.renderMaterialModal(options)` - Renderiza un modal con detalles de materiales, incluyendo una lista de elementos y estadísticas.
-- `getData(id)` - Obtiene datos desde un elemento HTML con el ID especificado.
-- `parseFormattedInt(val)` - Convierte una cadena formateada en un número entero.
-- `window.openModalUbicacion(name)` - Abre un modal con la ubicación de un material específico.
-- `window.openModalUserInv(name)` - Abre un modal con los detalles del inventario de un usuario específico.
-- `window.switchInventarioView(view)` - Cambia la vista del gráfico de tendencias entre históricos y actuales.
+- `log(msg, data = null)` - Registra mensajes en la consola.
+- `UI.openModal(id)` - Abre un modal utilizando CoreUI.
+- `UI.closeModal(id)` - Cierra un modal utilizando CoreUI.
+- `UI.renderMaterialModal(opts)` - Renderiza un modal de material utilizando CoreUI.
+- `getData(id)` - Obtiene datos desde el DOM utilizando CoreUI.
+- `parseFormattedInt(val)` - Convierte una cadena a un número entero, eliminando caracteres no numéricos.
+- `window.openModalUbicacion(name)` - Abre un modal con información de ubicación.
+- `window.openModalUserInv(name)` - Abre un modal con información de usuario.
+- `window.switchInventarioView(view)` - Cambia la vista del gráfico de tendencias según el parámetro `view`.
+- `window.toggleMultiInv(id)` - Alterna la visibilidad de un elemento según su ID.
+- `window.toggleAllInvAreas(checkbox)` - Alterna la selección de todas las áreas y actualiza los KPIs.
+- `window.updateInventoryAnalytics()` - Actualiza los KPIs y filtra listas según las áreas seleccionadas.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no realiza ninguna interacción con una base de datos.
+No aplica
 
 ### Estado y Variables Globales
-No aplica. No se definen variables globales en este archivo.
+No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `Chart.js`, `ChartDataLabels`.
-- **Flujo Interno**: El archivo interactúa con elementos HTML para obtener datos, renderizar modales y actualizar gráficos de Chart.js. No hay interacción directa con otros archivos del proyecto a menos que se invoquen las funciones globales definidas (`window.openModalUbicacion`, `window.openModalUserInv`, `window.switchInventarioView`).
+- **Librerías Externas**: Chart.js, CoreUI.
+- **Flujo Interno**: El archivo interactúa con el DOM para obtener datos y renderizar gráficos. Utiliza funciones de CoreUI para abrir y cerrar modales.
 
 
 ---

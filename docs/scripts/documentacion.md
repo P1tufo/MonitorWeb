@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: scripts
-Compilado el: 2026-05-22 16:53:13
+Compilado el: 2026-05-23 00:11:14
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -43,33 +43,6 @@ El archivo `main_processor.py` es el punto de entrada para un proceso automatiza
   - El script importa configuraciones globales desde un archivo `config.py`.
   - Configura el registro de eventos con nivel de logging a INFO.
   - Ejecuta una serie de fases, cada una realizando tareas específicas como la validación de directorios, ejecución de scripts secundarios y actualización de la base de datos.
-
-
----
-
-## Archivo: ./scripts/migrate_table_names.py
-
-### Resumen Funcional
-El archivo `migrate_table_names.py` es un script que renombra las tablas de una base de datos SQLite de producción, reemplazando nombres específicos del sistema WMS por nombres genéricos. El objetivo es hacer la base de datos agnóstica al sistema WMS original.
-
-### Catálogo de Funciones y Clases
-- `migrate_tables(db_path: str, dry_run: bool = False)` - Ejecuta la migración de nombres de tablas.
-
-### Interacción con Base de Datos
-- Motor: SQLite
-- Tablas modificadas:
-  - `vl06o_transactions` → `outbound_deliveries`
-  - `mb51_transactions` → `inventory_movements`
-  - `lx02_stock` → `stock_levels`
-  - `lt22_transactions` → `warehouse_tasks`
-
-### Estado y Variables Globales
-- No aplica
-
-### Dependencias y Flujo
-- Librerías utilizadas:
-  - `sys`, `os`, `sqlite3`, `logging`, `shutil`, `pathlib`
-- Comunicación con otros archivos del proyecto: Utiliza `config.DB_PATH` para obtener la ruta de la base de datos.
 
 
 ---

@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: services/etl
-Compilado el: 2026-05-22 16:53:13
+Compilado el: 2026-05-23 00:11:14
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -34,35 +34,53 @@ No aplica
 El archivo `base.py` define una clase abstracta `BaseWMSProcessor` que proporciona funcionalidades para procesar archivos WMS (TXT/CSV/XLSX) y cargarlos en una base de datos SQLite. Incluye métodos para validar archivos, leer y limpiar datos, realizar operaciones UPSERT atómicas, y procesar directorios de archivos.
 
 ### Catálogo de Funciones y Clases
-- `BaseWMSProcessor(encodings=None, chunk_size=50000)` - Clase abstracta para procesar archivos WMS.
-  - `validate_file(file_path: Path) -> bool` - Verifica si el archivo es válido para este procesador.
-  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma un chunk de datos crudos (Implementado por cada hijo).
-  - `_detect_file_params(file_path: Path, required_columns: List[str]) -> Tuple[int, str]` - Detecta la fila de encabezado y codificación buscando columnas clave.
-  - `read_and_clean_data(file_path: Path) -> pd.DataFrame` - Lee el archivo completo (para testing o archivos pequeños).
-  - `_get_required_columns() -> List[str]` - Lista de strings que deben estar en el header para detectar el inicio. Por defecto vacía.
-  - `_get_primary_keys() -> List[str]` - Devuelve las columnas que actúan como clave primaria para deduplicación. Por defecto vacía.
-  - `process_and_save(file_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int` - Orquestador unificado de procesamiento Chunked + Upsert SQLite.
-  - `_upsert_chunk(conn: sqlite3.Connection, df: pd.DataFrame, table_name: str)` - Lógica de Upsert atómico.
-  - `process_directory(folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int` - Escanea un directorio y procesa todos los archivos compatibles con Upsert acumulativo.
+- `BaseWMSProcessor(encodings=None, chunk_size=50000)` - Constructor que inicializa los parámetros de codificación y tamaño de chunk.
+  - Propósito: Configura las opciones iniciales para el procesamiento del archivo.
+
+- `validate_file(file_path)` - Método abstracto que verifica si el archivo es válido para este procesador.
+  - Propósito: Implementado por cada hijo para validar archivos específicos.
+
+- `_clean_dataframe(df)` - Método abstracto que limpia y transforma un chunk de datos crudos.
+  - Propósito: Implementado por cada hijo para realizar la limpieza específica del archivo.
+
+- `_detect_file_params(file_path, required_columns)` - Detecta la fila de encabezado y codificación buscando columnas clave.
+  - Propósito: Identifica los parámetros necesarios para leer el archivo correctamente.
+
+- `read_and_clean_data(file_path)` - Lee el archivo completo (para testing o archivos pequeños).
+  - Propósito: Carga y limpia un archivo en su totalidad.
+
+- `_get_required_columns()` - Devuelve una lista de columnas requeridas en el encabezado.
+  - Propósito: Implementado por cada hijo para especificar las columnas necesarias.
+
+- `_get_primary_keys()` - Devuelve las columnas que actúan como clave primaria para deduplicación.
+  - Propósito: Implementado por cada hijo para especificar las claves primarias.
+
+- `process_and_save(file_path, db_path, table_name, conn=None)` - Orquestador unificado de procesamiento Chunked + Upsert SQLite.
+  - Propósito: Procesa archivos en chunks y realiza operaciones UPSERT atómicas en la base de datos.
+
+- `_upsert_chunk(conn, df, table_name)` - Lógica de Upsert atómico por chunk.
+  - Propósito: Realiza una operación UPSERT atómica para un chunk de datos.
+
+- `process_directory(folder_path, db_path, table_name, conn=None)` - Escanea un directorio y procesa todos los archivos compatibles con Upsert acumulativo.
+  - Propósito: Procesa múltiples archivos en un directorio y realiza operaciones UPSERT atómicas.
 
 ### Interacción con Base de Datos
-- Motor: SQLite.
-- Tablas: No aplica (se espera que las tablas sean proporcionadas como parámetros).
-- Columnas: No aplica (se espera que las columnas sean proporcionadas como parámetros).
+- Motor: SQLite
+- Tablas: No aplica (se espera que las tablas sean proporcionadas como parámetros)
+- Columnas: No aplica (se espera que las columnas sean proporcionadas como parámetros)
 
 ### Estado y Variables Globales
 - `logger` - Variable global para el registro de eventos.
 
 ### Dependencias y Flujo
 - Librerías externas utilizadas:
-  - `abc`: Para definir clases abstractas.
-  - `pandas`: Para manipulación de datos.
-  - `pathlib`: Para manejo de rutas de archivos.
-  - `sqlite3`: Para interacción con la base de datos SQLite.
-  - `typing`: Para tipos de datos anotados.
-  - `logging`: Para registro de eventos.
+  - `pandas`
+  - `pathlib`
+  - `sqlite3`
+  - `typing`
+  - `logging`
 
-- Flujo: El archivo interactúa con clases y funciones definidas en otros módulos, como `core.security.validate_table`, para validar tablas antes de procesar archivos.
+- Flujo: El archivo interactúa con clases y funciones definidas en otros archivos del proyecto, como `core.security.validate_table`.
 
 
 ---
@@ -132,47 +150,35 @@ No aplica. No se definen variables globales, de sesión o de entorno en este arc
 ## Archivo: ./services/etl/stock.py
 
 ### Resumen Funcional
-El archivo `stock.py` contiene una clase `StockLevelAdapter` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos de inventario/stock en formato CSV, TXT, XLS o XLSX, y cargarlos en una base de datos SQLite. Realiza un proceso de limpieza de los datos y sobrescribe el método `process_directory` para combinar múltiples archivos en uno solo y luego realizar un `REPLACE` completo en la tabla especificada.
+El archivo `stock.py` contiene una clase `StockLevelAdapter` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos de inventario/stock en formato LX02, validar su contenido, leer y limpiar los datos, y luego guardarlos en una base de datos SQLite.
 
 ### Catálogo de Funciones y Clases
-- **Clase:** `StockLevelAdapter(BaseWMSProcessor)`
-  - Propósito: Adaptador para procesar Inventario/Stock LX02. Realiza REPLACE completo.
-  
-- **Función:** `validate_file(file_path: Path) -> bool`
-  - Propósito: Valida si el archivo existe y cumple con los requisitos.
-
-- **Función:** `_get_required_columns() -> List[str]`
-  - Propósito: Devuelve una lista de columnas requeridas. Actualmente está vacía.
-
-- **Función:** `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame`
-  - Propósito: Limpia el DataFrame eliminando filas y columnas totalmente vacías y limpia los strings.
-
-- **Función:** `process_directory(folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int`
-  - Propósito: Combina todos los archivos en el directorio especificado, realiza una limpieza y carga los datos en la base de datos SQLite.
+- **StockLevelAdapter(BaseWMSProcessor)** - Adaptador para procesar Inventario/Stock LX02. Realiza REPLACE completo.
+  - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y contiene las columnas requeridas.
+  - `_get_required_columns() -> List[str]` - Devuelve las columnas clave del header SAP LX02.
+  - `read_and_clean_data(file_path: Path) -> pd.DataFrame` - Lee el archivo LX02/Stock, detectando la fila header automáticamente y limpia los datos.
+  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia las filas y columnas vacías y limpia los strings de las columnas de tipo objeto.
+  - `process_directory(folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int` - Combina todos los archivos en el directorio especificado, realiza la limpieza y guarda los datos en una base de datos SQLite.
 
 ### Interacción con Base de Datos
-- **Motor:** SQLite
-- **Tablas:** No aplica (se espera que se proporcione una tabla al llamar a `process_directory`)
-- **Columnas:** Se espera que la columna `otcuanto` esté presente en los archivos procesados. Se crea un índice en esta columna.
+- **Motor**: SQLite
+- **Tablas**: No aplica (No se mencionan tablas específicas).
+- **Columnas**: No aplica (No se mencionan columnas específicas).
 
 ### Estado y Variables Globales
-- **No aplica**
+- **Variables Globales**: No aplica.
 
 ### Dependencias y Flujo
-- **Librerías Externas:**
-  - `pandas`: Para el manejo de DataFrames.
-  - `pathlib`: Para la manipulación de rutas de archivos.
-  - `typing`: Para las anotaciones de tipos.
-  - `sqlite3`: Para la interacción con la base de datos SQLite.
-  - `os`: Para operaciones del sistema operativo.
-  - `datetime`: Para obtener la fecha y hora actual.
-  - `logging`: Para el registro de eventos.
+- **Librerías Externas**:
+  - `pandas` - Para el procesamiento de datos.
+  - `pathlib` - Para manejar rutas de archivos.
+  - `typing` - Para definir tipos de variables.
+  - `sqlite3` - Para interactuar con la base de datos SQLite.
+  - `os` - Para operaciones del sistema.
+  - `datetime` - Para obtener la fecha y hora actual.
+  - `logging` - Para el registro de errores.
 
-- **Flujo Interno:**
-  - El archivo se valida y se limpia.
-  - Los archivos en el directorio se procesan y combinan en un solo DataFrame.
-  - El DataFrame se carga en la base de datos SQLite utilizando `REPLACE`.
-  - Se crea un índice en la columna `otcuanto` si no existe.
+- **Flujo**: El archivo se comunica con otros archivos dentro del proyecto a través de importaciones relativas (`from .base import BaseWMSProcessor`).
 
 
 ---

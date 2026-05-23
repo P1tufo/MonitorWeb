@@ -1,13 +1,11 @@
 ## Archivo: ./services/deliveries_service.py
 
 ### Resumen Funcional
-El archivo `deliveries_service.py` contiene una clase `DeliveriesService` que se encarga de generar un contexto completo para las entregas, incluyendo estadísticas, KPIs y datos relacionados con áreas, autores, ubicaciones y materiales. Utiliza SQLAlchemy para interactuar con la base de datos y pandas para procesar los datos.
+El archivo `deliveries_service.py` contiene una clase `DeliveriesService` que se encarga de generar un contexto completo para las entregas, incluyendo estadísticas, KPIs y datos relacionados con autores, ubicaciones y materiales. Utiliza SQLAlchemy para interactuar con la base de datos y pandas para procesar los datos.
 
 ### Catálogo de Funciones y Clases
 - `DeliveriesService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
-- `_get_bound_params_from_visual_state(visual_state_str: str) -> list` - Extrae parámetros de un estado visual en formato JSON.
-- `_extract_metric_value(df, active_year: str = None) -> Any` - Extrae el valor numérico de una métrica de un DataFrame de forma segura.
-- `get_full_context() -> Dict[str, Any]` - Genera el contexto completo para Entregas.
+- `get_full_context()` - Genera el contexto completo para las entregas, incluyendo estadísticas, KPIs y datos relacionados.
 - `_prepare_area_stats(year, month_str)` - Prepara el DataFrame de estadísticas por área.
 - `_calculate_kpis(sla_df, area_stats_df, total_dias)` - Calcula el diccionario de KPIs globales de forma segura.
 - `_prepare_authors(year, month_str)` - Obtiene ranking de autores con comparativa mensual.
@@ -16,19 +14,40 @@ El archivo `deliveries_service.py` contiene una clase `DeliveriesService` que se
 
 ### Interacción con Base de Datos
 El archivo interactúa con una base de datos utilizando SQLAlchemy. Las tablas y columnas específicas son:
-- Tablas: `outbound_deliveries`, `config_queries`
-- Columnas: `fecha_carga`, `sql_text`, `visual_state`, `area`, `mes`, `semana`, `autor`, `centro`, `fecha`, `valor`, `total_qty`, `efficiency`, `ontime_qty`, `late_qty`
+- Tabla: `outbound_deliveries`
+  - Columna: `fecha_carga`
+- Tabla: `config_queries`
+  - Columnas: `query_id`, `sql_text`, `visual_state`
+- Tabla: `area_stats`
+  - Columnas: `area`, `total_entregas`, `dias_activos`
+- Tabla: `top_authors`
+  - Columnas: `name`, `entregas`
+- Tabla: `top_locations`
+  - Columnas: `ubicacion`, `num_items`
+- Tabla: `top_materials_by_area`
+  - Columnas: `area`, `material`, `frequency`
 
 ### Estado y Variables Globales
 No aplica.
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `sqlalchemy`, `pandas`, `logging`, `datetime`, `typing`.
-- Comunicación con otros archivos del proyecto:
-  - `core.utils.sanitize_for_json`
-  - `core.state.get_app_state`
-  - `repositories.DeliveriesRepository`
-  - `routes.inventory.get_inventory_context`
-  - `routes.tasks.get_tasks_context`
-  - `routes.analytics_proyecciones.get_proyecciones_context`
+Dependencias:
+- `sqlalchemy.orm.Session` - Para la sesión de base de datos.
+- `pandas` - Para procesar los datos.
+- `logging` - Para el registro de errores.
+- `datetime` - Para manejar fechas.
+- `typing` - Para tipos de datos.
+- `core.utils.sanitize_for_json` - Para sanitizar datos para JSON.
+- `core.state.get_app_state` - Para obtener el estado de la aplicación.
+- `repositories.DeliveriesRepository` - Para interactuar con la base de datos.
+- `core.query_engine.get_bound_params_from_visual_state` - Para obtener parámetros de consulta.
+- `core.query_engine.extract_metric_value` - Para extraer métricas de los resultados de consulta.
+
+Flujo:
+El archivo se comunica con otros archivos del proyecto a través de las siguientes importaciones:
+- `routes.inventory.get_inventory_context`
+- `routes.tasks.get_tasks_context`
+- `routes.analytics_proyecciones.get_proyecciones_context`
+
+Estas funciones son llamadas para obtener contextos adicionales que se incluyen en el contexto final.
 

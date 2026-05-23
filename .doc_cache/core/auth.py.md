@@ -1,7 +1,7 @@
 ## Archivo: ./core/auth.py
 
 ### Resumen Funcional
-El archivo `auth.py` proporciona funcionalidades de autenticación y seguridad utilizando JSON Web Tokens (JWT) y OAuth2, con soporte para roles de usuario ('admin' y 'viewer'). Incluye funciones para crear tokens, verificar usuarios, manejar dependencias FastAPI para proteger endpoints y gestionar la base de datos de usuarios.
+El archivo `auth.py` proporciona funcionalidades de autenticación y seguridad utilizando JSON Web Tokens (JWT) y OAuth2, con soporte para roles de usuario ('admin' y 'viewer'). Incluye funciones para crear tokens, verificar contraseñas, manejar sesiones de usuarios y proteger endpoints en una aplicación FastAPI.
 
 ### Catálogo de Funciones y Clases
 - `hash_password(plain: str) -> str` - Genera un hash bcrypt del password.
@@ -15,9 +15,15 @@ El archivo `auth.py` proporciona funcionalidades de autenticación y seguridad u
 - `ensure_admin_exists()` - Crea el usuario admin por defecto si no existe ningún usuario.
 
 ### Interacción con Base de Datos
-- Motor: No aplica (No hay consultas SQL crudas o llamadas a ORM).
+- Motor: SQLAlchemy
 - Tablas: `User`
-- Columnas: `id`, `username`, `password_hash`, `role`, `is_active`, `created_at`
+- Columnas:
+  - `id` (int)
+  - `username` (str)
+  - `password_hash` (str)
+  - `role` (str)
+  - `is_active` (bool)
+  - `created_at` (datetime)
 
 ### Estado y Variables Globales
 - `SECRET_KEY`: Clave secreta para firmar JWT.
@@ -25,6 +31,8 @@ El archivo `auth.py` proporciona funcionalidades de autenticación y seguridad u
 - `ACCESS_TOKEN_EXPIRE_MINUTES`: Tiempo de expiración del token JWT.
 
 ### Dependencias y Flujo
-- Librerías externas: `bcrypt`, `jwt`, `fastapi`.
-- Comunicaciones internas: No aplica (No se comunica con otros archivos del proyecto).
+- Librerías externas: `bcrypt`, `jwt`, `fastapi`
+- Comunicaciones internas:
+  - Conecta con el archivo `database.py` para obtener sesiones de base de datos.
+  - Utiliza el modelo `User` definido en `models_auth.py`.
 
