@@ -165,19 +165,20 @@ def seed_initial_config():
                 FROM outbound_deliveries v
                 WHERE v.fecha_carga IS NOT NULL AND v.fecha_carga != ''
                 GROUP BY year, month, area
-                ORDER BY year ASC, month ASC"""
+                ORDER BY year ASC, month ASC""",
+                visual_state='{"baseTable": "outbound_deliveries", "joins": [], "filters": [{"column": "outbound_deliveries.fecha_carga", "operator": "isnotnull", "value": ""}], "metric": {"column": "outbound_deliveries.entrega", "aggregation": "COUNT_DISTINCT", "label": "entregas"}, "timeAxis": {"column": "outbound_deliveries.fecha_carga", "granularity": "MONTH"}, "breakdown": "", "chartType": "line"}'
             ),
             ConfigQuery(
                 query_id="vl_weekly_evolution",
                 sql_text="""SELECT 
-                    v.week_sort,
+                    v.week_sort as week_sort,
                     MAX(v.week_label) as label,
-                    {AREA_EXPR} as area,
-                    COUNT(DISTINCT v.entrega) as entregas
+                    COUNT(DISTINCT v.entrega) as entregas,
+                    COUNT(DISTINCT v.fecha_carga) as dias_activos
                 FROM outbound_deliveries v
                 WHERE v.week_sort IS NOT NULL AND v.week_sort != ''
-                GROUP BY v.week_sort, area
-                ORDER BY v.week_sort ASC"""
+                GROUP BY v.week_sort ORDER BY v.week_sort ASC""",
+                visual_state='{"baseTable": "outbound_deliveries", "joins": [], "filters": [{"column": "outbound_deliveries.fecha_carga", "operator": "isnotnull", "value": ""}], "metric": {"column": "outbound_deliveries.entrega", "aggregation": "COUNT_DISTINCT", "label": "entregas"}, "timeAxis": {"column": "outbound_deliveries.fecha_carga", "granularity": "WEEK"}, "breakdown": "", "chartType": "line"}'
             ),
             ConfigQuery(
                 query_id="vl_top_locations",
@@ -228,7 +229,7 @@ FROM (SELECT entrega, MAX(outbound_deliveries.dias_retraso) as dias_retraso, fec
 WHERE outbound_deliveries.fecha_carga LIKE ?
 GROUP BY fecha
 ORDER BY fecha ASC;""",
-                visual_state='{"baseTable": "outbound_deliveries", "joins": [], "filters": [{"column": "outbound_deliveries.fecha_carga", "operator": "contains", "value": "2026"}], "metric": {"column": "outbound_deliveries.dias_retraso", "aggregation": "SLA_EFFICIENCY", "format": "percent"}, "timeAxis": {"column": "outbound_deliveries.fecha_carga", "granularity": "MONTH"}, "breakdown": "", "secondMetric": {"column": "outbound_deliveries.entrega", "aggregation": "COUNT_DISTINCT", "label": "Materiales Solicitados"}, "chartType": "line"}'
+                visual_state='{"baseTable": "outbound_deliveries", "joins": [], "filters": [{"column": "outbound_deliveries.fecha_carga", "operator": "isnotnull", "value": ""}], "metric": {"column": "outbound_deliveries.dias_retraso", "aggregation": "SLA_EFFICIENCY", "format": "percent"}, "timeAxis": {"column": "outbound_deliveries.fecha_carga", "granularity": "MONTH"}, "breakdown": "", "secondMetric": {"column": "outbound_deliveries.entrega", "aggregation": "COUNT", "label": "Materiales Solicitados"}, "chartType": "line"}'
             ),
             ConfigQuery(
                 query_id="vl_sla_area_monthly_trend",
@@ -242,7 +243,7 @@ ORDER BY fecha ASC;""",
                 FROM outbound_deliveries v
                 WHERE v.fecha_carga IS NOT NULL AND v.fecha_carga != ''
                 GROUP BY month_sort, area ORDER BY month_sort ASC""",
-                visual_state='{"baseTable": "outbound_deliveries", "joins": [], "filters": [{"column": "outbound_deliveries.fecha_carga", "operator": "contains", "value": "2026"}], "metric": {"column": "outbound_deliveries.dias_retraso", "aggregation": "SLA_EFFICIENCY", "format": "percent"}, "timeAxis": {"column": "outbound_deliveries.fecha_carga", "granularity": "MONTH"}, "breakdown": "outbound_deliveries.area_negocio", "chartType": "line"}'
+                visual_state='{"baseTable": "outbound_deliveries", "joins": [], "filters": [{"column": "outbound_deliveries.fecha_carga", "operator": "isnotnull", "value": ""}], "metric": {"column": "outbound_deliveries.dias_retraso", "aggregation": "SLA_EFFICIENCY", "format": "percent"}, "timeAxis": {"column": "outbound_deliveries.fecha_carga", "granularity": "MONTH"}, "breakdown": "outbound_deliveries.area_negocio", "chartType": "line"}'
             ),
             ConfigQuery(
                 query_id="vl_sla_trend",
@@ -252,7 +253,7 @@ ORDER BY fecha ASC;""",
                 FROM outbound_deliveries v
                 WHERE v.week_sort IS NOT NULL AND v.week_sort != ''
                 GROUP BY v.week_sort ORDER BY v.week_sort ASC""",
-                visual_state='{"baseTable": "outbound_deliveries", "joins": [], "filters": [{"column": "outbound_deliveries.fecha_carga", "operator": "contains", "value": "2026"}], "metric": {"column": "outbound_deliveries.dias_retraso", "aggregation": "SLA_EFFICIENCY", "format": "percent"}, "timeAxis": {"column": "outbound_deliveries.fecha_carga", "granularity": "WEEK"}, "breakdown": "", "chartType": "line"}'
+                visual_state='{"baseTable": "outbound_deliveries", "joins": [], "filters": [{"column": "outbound_deliveries.fecha_carga", "operator": "isnotnull", "value": ""}], "metric": {"column": "outbound_deliveries.dias_retraso", "aggregation": "SLA_EFFICIENCY", "format": "percent"}, "timeAxis": {"column": "outbound_deliveries.fecha_carga", "granularity": "WEEK"}, "breakdown": "", "secondMetric": {"column": "outbound_deliveries.entrega", "aggregation": "COUNT", "label": "Materiales Solicitados"}, "chartType": "line"}'
             ),
             ConfigQuery(
                 query_id="vl_sla_area_trend",
@@ -264,7 +265,7 @@ ORDER BY fecha ASC;""",
                 FROM outbound_deliveries v
                 WHERE v.week_sort IS NOT NULL AND v.week_sort != ''
                 GROUP BY v.week_sort, area ORDER BY v.week_sort ASC""",
-                visual_state='{"baseTable": "outbound_deliveries", "joins": [], "filters": [{"column": "outbound_deliveries.fecha_carga", "operator": "contains", "value": "2026"}], "metric": {"column": "outbound_deliveries.dias_retraso", "aggregation": "SLA_EFFICIENCY", "format": "percent"}, "timeAxis": {"column": "outbound_deliveries.fecha_carga", "granularity": "WEEK"}, "breakdown": "outbound_deliveries.area_negocio", "chartType": "line"}'
+                visual_state='{"baseTable": "outbound_deliveries", "joins": [], "filters": [{"column": "outbound_deliveries.fecha_carga", "operator": "isnotnull", "value": ""}], "metric": {"column": "outbound_deliveries.dias_retraso", "aggregation": "SLA_EFFICIENCY", "format": "percent"}, "timeAxis": {"column": "outbound_deliveries.fecha_carga", "granularity": "WEEK"}, "breakdown": "outbound_deliveries.area_negocio", "chartType": "line"}'
             ),
             ConfigQuery(
                 query_id="vl_top_authors",

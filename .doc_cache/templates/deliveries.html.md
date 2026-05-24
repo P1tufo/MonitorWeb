@@ -7,6 +7,7 @@ El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario d
 
 ### Catálogo de Funciones y Clases
 - `switchTab(tabId, btnElement)` - Cambia la pestaña activa.
+- `switchSubTab(subTabId, btnElement)` - Cambia la subpestaña activa.
 - `openNonPalletizedDetails(user, claseMov)` - Abre un modal con detalles no paletizados.
 - `initTableFilters()` - Inicializa los filtros de tablas.
 - `filterOTTable()` - Filtra la tabla de OTs según los criterios seleccionados.
@@ -20,19 +21,18 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- **Librerías externas**: 
+- Librerías externas utilizadas:
   - Chart.js
-  - Chartjs-plugin-datalabels
+  - marked.js
   - Font Awesome
-  - marked
-- **Archivos JavaScript**:
+- Archivos JavaScript incluidos:
   - `core_ui.js`
+  - `dashboard.js`
   - `deliveries.js`
+  - `tasks.js`
   - `inventory.js`
   - `analytics_proyecciones.js`
   - `docs_explorer.js`
-- **Archivos CSS**:
-  - Estilos definidos en el archivo y referencias a archivos externos
-- **Datos JSON**: 
-  - Datos inyectados desde variables de contexto del servidor (por ejemplo, `area_stats_json`, `weekdays`, etc.)
+
+El archivo interactúa con otros archivos del proyecto para cargar scripts y estilos necesarios, y utiliza variables globales JSON para almacenar datos que se utilizan en el frontend.
 

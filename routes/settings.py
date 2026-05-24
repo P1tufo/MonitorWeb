@@ -65,42 +65,9 @@ class QueryUpdate(BaseModel):
     params: Optional[List[Any]] = None
     visual_state: Optional[str] = None
 
-class JoinDef(BaseModel):
-    table: str
-    onLeft: str
-    onRight: str
-
-class FilterDef(BaseModel):
-    column: str
-    operator: str
-    value: Optional[str] = ""
-    valueType: Optional[str] = "value"  # "value", "column", or "date_diff"
-    compareColumn: Optional[str] = None
-    offsetValue: Optional[str] = None
-
-class MetricDef(BaseModel):
-    column: str
-    aggregation: str
-    format: Optional[str] = "number"
-
-class TimeAxisDef(BaseModel):
-    column: str
-    granularity: str
-
-class SecondMetricDef(BaseModel):
-    column: str = ""
-    aggregation: str = ""
-    label: str = ""
-
-class VisualQueryBuilderPayload(BaseModel):
-    baseTable: str
-    joins: list[JoinDef] = []
-    filters: list[FilterDef] = []
-    metric: MetricDef
-    timeAxis: TimeAxisDef
-    breakdown: str | None = None
-    secondMetric: Optional[SecondMetricDef] = None
-
+from core.schemas import (
+    JoinDef, FilterDef, MetricDef, TimeAxisDef, SecondMetricDef, VisualQueryBuilderPayload
+)
 
 # ─── Vista (UI) ───────────────────────────────────────────────────────────────
 @router.get("/settings", response_class=HTMLResponse)
@@ -276,10 +243,16 @@ def api_update_query(update: QueryUpdate, db: DBSession, state: AppState = Depen
     nunca escribe sql_text desde la UI: el SQL es siempre derivado en tiempo
     de ejecución por api_build_sql a partir del visual_state almacenado.
     """
+    if update.sql_text:
+        raise HTTPException(
+            status_code=422,
+            detail="Fase 1: El endpoint rechaza solicitudes que expongan SQL crudo en el cliente."
+        )
+        
     if not update.visual_state:
         raise HTTPException(
             status_code=422,
-            detail="Se requiere 'visual_state'. El SQL crudo no es aceptado por este endpoint."
+            detail="Se requiere 'visual_state'."
         )
     row = db.query(ConfigQuery).filter(ConfigQuery.query_id == update.query_id).first()
     if not row:
@@ -317,56 +290,64 @@ def api_get_schema(db: DBSession, state: AppState = Depends(get_app_state)):
 async def api_query_preview(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state)):
     """Ejecuta una consulta temporal y retorna datos para previsualización."""
     import pandas as pd
+    import json
     from sqlalchemy import text
     from repositories.deliveries import DeliveriesRepository
+    from core.query_engine import build_sql_from_payload
+    
     AREA_EXPR = DeliveriesRepository.AREA_EXPR
     
-    sql = update.sql_text
+    sql = ""
+    params_dict = {}
+    
+    if update.visual_state:
+        # Modo Fase 1: Compilar AST a SQL internamente
+        try:
+            vs_dict = json.loads(update.visual_state)
+            payload = VisualQueryBuilderPayload(**vs_dict)
+            sql, bound_params = build_sql_from_payload(payload, db)
+            
+            for i, p in enumerate(bound_params):
+                params_dict[f"p{i}"] = p
+                
+            import re
+            for i in range(len(bound_params)):
+                sql = sql.replace("?", f":p{i}", 1)
+                
+        except Exception as e:
+            logger.error(f"Error compilando AST en preview: {e}")
+            return {"error": f"Error construyendo consulta visual: {e}"}
+    else:
+        # Modo Legacy
+        sql = update.sql_text
+        if not sql or not sql.strip() or sql.strip().lower() == "undefined":
+            return {"error": "No hay configuración visual ni SQL para previsualizar."}
 
-    # Guard: rechazar SQL vacío/None o el string literal "undefined" que JS envía
-    # cuando document.getElementById('editQueryText') no existe en el DOM.
-    if not sql or not sql.strip() or sql.strip().lower() == "undefined":
-        return {"error": "El campo SQL está vacío. Escribe o selecciona una consulta antes de previsualizar."}
+        import re
+        param_count = sql.count("?")
+        for i in range(param_count):
+            placeholder = f"p{i}"
+            sql = sql.replace("?", f":{placeholder}", 1)
+            if update.params is not None and i < len(update.params):
+                params_dict[placeholder] = update.params[i]
+            else:
+                if "retraso" in sql.lower() and i == 0:
+                    params_dict[placeholder] = 2
+                else:
+                    params_dict[placeholder] = "2026%"
 
     if "{AREA_EXPR}" in sql:
         sql = sql.replace("{AREA_EXPR}", AREA_EXPR)
         
     try:
-        # 1. Identificar parámetros necesarios para el preview
-        import re
-        param_count = sql.count("?")
-        params_dict = {}
-        sql_preview = sql
-        
-        # Convertimos '?' a ':p0', ':p1', etc. para compatibilidad con SQLAlchemy text()
-        for i in range(param_count):
-            placeholder = f"p{i}"
-            # Reemplazar solo la primera ocurrencia de '?' en cada iteración
-            sql_preview = sql_preview.replace("?", f":{placeholder}", 1)
-            
-            # Si el frontend nos provee los parámetros del constructor visual, usarlos exactamente!
-            if update.params is not None and i < len(update.params):
-                params_dict[placeholder] = update.params[i]
-            else:
-                # Lógica heurística heredada para fallback
-                if "retraso" in sql.lower() and i == 0:
-                    params_dict[placeholder] = 2
-                else:
-                    params_dict[placeholder] = "2026%"
-        
-        # 2. Ejecutar con límite de seguridad
-        # db.bind está deprecado en SQLAlchemy 2.x → usar db.connection()
-        df = pd.read_sql(text(sql_preview), db.connection(), params=params_dict)
+        df = pd.read_sql(text(sql), db.connection(), params=params_dict)
         df = df.head(100)
         
-        # 3. Saneamiento ULTRA-SEGURO
         records = df.to_dict(orient="records")
         sanitized = sanitize_for_json(records)
-        
-        logger.info(f"Studio Preview exitoso para SQL: {sql[:50]}... (Filas: {len(sanitized)})")
         return sanitized
     except Exception as e:
-        logger.error(f"Error en Studio Preview ({sql[:50]}...): {str(e)}")
+        logger.error(f"Error en Studio Preview: {str(e)}")
         return {"error": str(e)}
 
 # ─── API: Visual Query Builder ───────────────────────────────────────────────

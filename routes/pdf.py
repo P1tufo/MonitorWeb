@@ -74,11 +74,11 @@ async def generate_pdf_bulk(
     """Genera un reporte masivo con índice y picking list."""
     try:
         # 1. Consultar entregas a procesar
-        all_deliveries = get_deliveries_for_bulk(session, date, area, centro, has_ots_filter, entrega_query)
+        all_deliveries = get_deliveries_for_bulk(session.connection().connection, date, area, centro, has_ots_filter, entrega_query)
         if all_deliveries.empty:
             return {"error": "No hay datos que coincidan con los filtros."}
             
-        area_lookup = get_area_lookup(session)
+        area_lookup = get_area_lookup(session.connection().connection)
         all_deliveries = all_deliveries.merge(area_lookup, on='entrega', how='left')
 
         # Rellenar NaN para evitar errores en groupby y desempaquetado de tuplas
@@ -118,7 +118,7 @@ async def generate_pdf_bulk(
         draw_annex_table(pdf, grouped_data)
         
         all_entrega_ids = [e for row in grouped_data for e in row['items']]
-        picking_df = get_picking_items(session, all_entrega_ids)
+        picking_df = get_picking_items(session.connection().connection, all_entrega_ids)
         draw_picking_list(pdf, picking_df)
 
         # 4. Dibujar Páginas de Entrega

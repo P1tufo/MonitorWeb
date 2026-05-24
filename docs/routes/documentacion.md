@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: routes
-Compilado el: 2026-05-23 00:11:14
+Compilado el: 2026-05-24 00:59:57
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -163,13 +163,13 @@ El archivo `dashboard.py` define rutas para un panel de control (dashboard) que 
 ## Archivo: ./routes/deliveries.py
 
 ### Resumen Funcional
-Este archivo contiene rutas para el análisis de entregas optimizadas y seguras. Incluye endpoints para renderizar páginas web y proporcionar datos en formato JSON.
+El archivo `deliveries.py` contiene rutas y funciones para manejar las analíticas de entregas en una aplicación web. Incluye endpoints para renderizar páginas HTML con datos de análisis, guardar y cargar capturas de estado en la base de datos, y proporcionar datos de análisis a través de una API JSON.
 
 ### Catálogo de Funciones y Clases
 - `save_analytics_snapshot(session: Session, key: str, data: Dict[str, Any])` - Guarda una captura de las analíticas en la base de datos.
 - `load_analytics_snapshot(session: Session, key: str) -> Optional[Dict[str, Any]]` - Recupera la última captura de analíticas desde la base de datos.
 - `analytics(request: Request, user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - Renderiza la página principal de analíticas con caché multinivel.
-- `sla_details(request: Request, type: str = "late", session: Session = Depends(get_session_dep))` - Vista detallada de auditoría SLA.
+- `sla_details(request: Request, type: str = "late", date: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, session: Session = Depends(get_session_dep))` - Vista detallada de auditoría SLA.
 - `get_non_palletized_details(user: str, clase_mov: str, db: Session = Depends(get_session_dep), current_user: Dict[str, Any] = Depends(get_current_user))` - Obtiene el listado detallado de movimientos no paletizados para un usuario y tipo de movimiento específicos.
 - `analytics_deliveries_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - API JSON para analíticas de Entregas (Outbound Deliveries).
 
@@ -206,17 +206,9 @@ No aplica
   - `core.utils`
   - `services.deliveries_service`
 
-- Flujo hacia otros archivos del proyecto:
-  - `core.database.get_session_dep`
-  - `core.state.get_app_state`
-  - `templates.TemplateResponse`
-  - `DeliveriesRepository`
-  - `get_inventory_context`
-  - `get_tasks_context`
-  - `get_proyecciones_context`
-  - `get_current_user`
-  - `sanitize_for_json`
-  - `DeliveriesService`
+- Flujo de comunicación:
+  - El archivo interactúa con otros archivos del proyecto a través de importaciones, como `core.database`, `repositories`, `routes.inventory`, etc.
+  - Utiliza dependencias inyectadas para obtener sesiones de base de datos y estados de aplicación.
 
 
 ---
@@ -249,33 +241,45 @@ El archivo interactúa con el sistema de archivos para leer directorios y archiv
 ## Archivo: ./routes/filters.py
 
 ### Resumen Funcional
-El archivo `filters.py` contiene funciones para filtrar y calcular KPIs basados en múltiples criterios. Ofrece endpoints para obtener datos filtrados de entregas y calcular indicadores clave de rendimiento (KPIs) dinámicos.
+El archivo `filters.py` contiene funciones y rutas para filtrar entregas y calcular KPIs dinámicos en un sistema de gestión de materiales. Ofrece endpoints para obtener datos filtrados por múltiples criterios y calcular indicadores clave de rendimiento (KPIs) basados en estos filtros.
 
 ### Catálogo de Funciones y Clases
-- `_build_unified_where(date: str, area: str, centro: str, has_ots_filter: str, min_week: str)` - Construye la cláusula WHERE a nivel de MATERIAL con seguridad contra SQL Injection.
-- `filter_transactions(request: Request, date: Optional[str] = None, entrega: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, session: Session = Depends(get_session_dep))` - Filtra entregas basándose en múltiples criterios y devuelve los resultados como un DataFrame.
+- `_build_unified_where(date: str, area: str, centro: str, has_ots_filter: str, min_week: Optional[str])` - Construye la cláusula WHERE a nivel de MATERIAL con seguridad contra SQL Injection.
+- `filter_transactions(request: Request, date: Optional[str] = None, entrega: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, session: Session = Depends(get_session_dep))` - Filtra entregas basándose en múltiples criterios.
 - `get_kpis(date: Optional[str] = None, entrega: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, session: Session = Depends(get_session_dep))` - Calcula KPIs dinámicos filtrados por área para el dashboard.
+- `api_widget_data(query_id: str, request: Request, session: Session = Depends(get_session_dep))` - Endpoint de carga asíncrona para los componentes del Dashboard.
 
 ### Interacción con Base de Datos
-- Motor de BD: No especificado.
+- Motor de BD: SQLAlchemy
 - Tablas:
   - `outbound_deliveries`
   - `config_cost_center_mapping`
+  - `warehouse_tasks`
 - Columnas:
-  - `outbound_deliveries`: `entrega`, `fecha_carga`, `fecha_sm_real`, `creado_el`, `estado_wms`, `material`, `dias_retraso`.
-  - `config_cost_center_mapping`: `center_code`, `business_area`.
+  - `v.entrega`
+  - `v.week_sort`
+  - `v.area_negocio`
+  - `v.ubicacion_area`
+  - `v.ubicacion_bin_1`
+  - `v.ubicacion_bin`
+  - `v.estado_wms`
+  - `v.dias_retraso`
 
 ### Estado y Variables Globales
-- No aplica.
+- No aplica
 
 ### Dependencias y Flujo
 - Librerías externas utilizadas:
-  - `logging`
-  - `sqlalchemy`
   - `pandas`
   - `fastapi`
+  - `sqlalchemy`
+  - `logging`
 - Comunicación con otros archivos del proyecto:
-  - Depende de `core.database.get_session_dep` para obtener una sesión de base de datos.
+  - `core.database.get_session_dep`
+  - `core.models.ConfigQuery`
+  - `core.query_engine.build_sql_from_payload`
+  - `core.schemas.VisualQueryBuilderPayload`
+  - `repositories.deliveries.DeliveriesRepository`
 
 
 ---
@@ -339,59 +343,39 @@ No aplica.
 ## Archivo: ./routes/settings.py
 
 ### Resumen Funcional
-El archivo `settings.py` define una API para la gestión dinámica de configuraciones SaaS utilizando SQLAlchemy ORM. Permite crear, actualizar y eliminar configuraciones como estados, centros de costo y feriados, así como consultar y ejecutar consultas SQL.
+El archivo `settings.py` define una API para la gestión dinámica de configuraciones SaaS utilizando SQLAlchemy ORM. Permite crear, actualizar y eliminar configuraciones como estados, centros de costo y feriados, así como consultar y previsualizar consultas SQL.
 
 ### Catálogo de Funciones y Clases
 - `invalidate_caches(db: Session)` - Limpia el caché global en memoria y elimina todos los snapshots de base de datos.
 - `SettingUpdate(key: str, value: str)` - Modelo Pydantic para actualizar una configuración.
-- `StatusMappingUpdate(code: str, label: str)` - Modelo Pydantic para actualizar un estado.
-- `CostCenterMappingUpdate(center_code: str, business_area: str)` - Modelo Pydantic para actualizar un centro de costo.
+- `StatusMappingUpdate(code: str, label: str)` - Modelo Pydantic para actualizar un estado de mapeo.
+- `CostCenterMappingUpdate(center_code: str, business_area: str)` - Modelo Pydantic para actualizar un centro de costo de mapeo.
 - `HolidayAdd(date_str: str)` - Modelo Pydantic para agregar un feriado.
-- `QueryUpdate(query_id: str, sql_text: Optional[str], params: Optional[List[Any]], visual_state: Optional[str])` - Modelo Pydantic para actualizar una consulta.
-- `JoinDef(table: str, onLeft: str, onRight: str)` - Modelo Pydantic para definir una unión de tablas.
-- `FilterDef(column: str, operator: str, value: Optional[str], valueType: Optional[str], compareColumn: Optional[str], offsetValue: Optional[str])` - Modelo Pydantic para definir un filtro.
-- `MetricDef(column: str, aggregation: str, format: Optional[str])` - Modelo Pydantic para definir una métrica.
-- `TimeAxisDef(column: str, granularity: str)` - Modelo Pydantic para definir el eje de tiempo.
-- `SecondMetricDef(column: str = "", aggregation: str = "", label: str = "")` - Modelo Pydantic para definir una segunda métrica.
-- `VisualQueryBuilderPayload(baseTable: str, joins: list[JoinDef], filters: list[FilterDef], metric: MetricDef, timeAxis: TimeAxisDef, breakdown: str | None, secondMetric: Optional[SecondMetricDef])` - Modelo Pydantic para definir el payload del constructor de consultas visuales.
-- `settings_view(request: Request, db: DBSession, state: AppState = Depends(get_app_state))` - Vista que renderiza el panel de control de configuraciones SaaS.
-- `api_get_settings(state: AppState = Depends(get_app_state))` - API para obtener las configuraciones generales.
-- `api_update_setting(update: SettingUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - API para actualizar una configuración.
-- `api_upsert_status(update: StatusMappingUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - API para insertar o actualizar un estado.
-- `api_delete_status(code: str, db: DBSession, state: AppState = Depends(get_app_state))` - API para eliminar un estado.
-- `api_upsert_cost_center(update: CostCenterMappingUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - API para insertar o actualizar un centro de costo.
-- `api_delete_cost_center(code: str, db: DBSession, state: AppState = Depends(get_app_state))` - API para eliminar un centro de costo.
-- `api_add_holiday(h: HolidayAdd, db: DBSession, state: AppState = Depends(get_app_state))` - API para agregar un feriado.
-- `api_sync_holidays(db: DBSession, state: AppState = Depends(get_app_state))` - API para sincronizar automáticamente los feriados nacionales (Chile).
-- `api_delete_holiday(date_str: str, db: DBSession, state: AppState = Depends(get_app_state))` - API para eliminar un feriado.
-- `api_get_query(query_id: str, db: DBSession, state: AppState = Depends(get_app_state))` - API para obtener el estado visual de una consulta del Analytics Studio.
-- `api_update_query(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - API para actualizar el estado visual de una consulta.
-- `api_get_schema(db: DBSession, state: AppState = Depends(get_app_state))` - API para obtener el listado de tablas y sus columnas para el editor.
-- `api_query_preview(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - API para ejecutar una consulta temporal y retornar datos para previsualización.
-- `api_build_sql(payload: VisualQueryBuilderPayload, db: DBSession, state: AppState = Depends(get_app_state))` - API para compilar el estado visual del constructor en SQL parametrizado seguro.
+- `QueryUpdate(query_id: str, sql_text: Optional[str] = None, params: Optional[List[Any]] = None, visual_state: Optional[str] = None)` - Modelo Pydantic para actualizar una consulta.
 
 ### Interacción con Base de Datos
-El archivo interactúa con la base de datos utilizando SQLAlchemy ORM. Las tablas y columnas afectadas incluyen:
-- `AppSetting`
-- `StatusMapping`
-- `CostCenterMapping`
-- `Holiday`
-- `ConfigQuery`
-
-No hay consultas SQL crudas explícitas.
+- Motor: SQLAlchemy ORM (Pilar 3)
+- Tablas:
+  - `analytics_snapshots`
+- Columnas:
+  - No se especifican columnas específicas en el código proporcionado.
+- Consultas SQL Crudas:
+  - `DELETE FROM analytics_snapshots`
 
 ### Estado y Variables Globales
-No aplica.
+- No aplica
 
 ### Dependencias y Flujo
-Dependencias externas utilizadas:
-- `fastapi`
-- `pydantic`
-- `sqlalchemy`
-- `pandas`
-- `holidays`
-
-El archivo se comunica con otros archivos del proyecto a través de dependencias como `get_session_dep`, `require_admin`, `load_config_to_memory`, `get_setting`, `get_status_mapping`, `get_cost_center_mapping`, `get_holidays`, y `sanitize_for_json`.
+- Librerías Externas: FastAPI, SQLAlchemy, Pydantic, Pandas, holidays
+- Comunicación con otros archivos del proyecto:
+  - `core.auth.require_admin`
+  - `core.database.get_session_dep`
+  - `core.models.StatusMapping`, `CostCenterMapping`, `AppSetting`, `Holiday`, `ConfigQuery`
+  - `core.db_config_manager.load_config_to_memory`, `get_setting`, `get_status_mapping`, `get_cost_center_mapping`, `get_holidays`
+  - `core.app_instance.templates`
+  - `core.utils.sanitize_for_json`
+  - `core.state.AppState`, `get_app_state`
+  - `core.query_engine.build_sql_from_payload`
 
 
 ---

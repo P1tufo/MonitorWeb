@@ -119,4 +119,26 @@ def test_analytics_sla_route(auth_client, test_db):
     # (El texto completo de la tabla no debe tener la insignia de "OTRO")
     assert '<span class="area-badge">OTRO</span>' not in response.text
 
+def test_api_query_preview_returns_json_and_no_sql(auth_client):
+    """Verifica el contrato JSON in/out para preview y la ausencia de texto SQL."""
+    payload = {
+        "query_id": "preview",
+        "visual_state": '{"baseTable": "outbound_deliveries", "metric": {"column": "entrega", "aggregation": "COUNT"}, "timeAxis": {"column": "fecha_carga", "granularity": "MONTH"}, "joins": [], "filters": []}'
+    }
+    response = auth_client.post("/api/studio/preview", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    if len(data) > 0:
+        assert "sql_text" not in data[0]
+
+def test_api_settings_query_rejects_raw_sql(auth_client):
+    """Verifica protección contra inyección y que el endpoint solo acepte visual_state."""
+    payload = {
+        "query_id": "test_query",
+        "sql_text": "SELECT * FROM outbound_deliveries"
+    }
+    response = auth_client.post("/api/settings/query", json=payload)
+    assert response.status_code == 422
+
 

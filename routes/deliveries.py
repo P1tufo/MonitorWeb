@@ -96,10 +96,17 @@ async def analytics(request: Request, user = Depends(get_current_user), session:
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     return response
 
+from typing import Optional
+from routes.filters import _build_unified_where
+
 @router.get("/analytics/sla", response_class=HTMLResponse)
 async def sla_details(
     request: Request, 
     type: str = "late", 
+    date: Optional[str] = None,
+    area: Optional[str] = None,
+    centro: Optional[str] = None,
+    has_ots_filter: Optional[str] = None,
     session: Session = Depends(get_session_dep)
 ):
     """Vista detallada de auditoría SLA."""
@@ -107,8 +114,18 @@ async def sla_details(
         current_year = str(datetime.now().year)
         is_late = (type != "ontime")
         
-        title = "Auditoría: Atrasadas (Peores 500)" if is_late else "Auditoría: A Tiempo (Últimos 500)"
-        df = DeliveriesService(session).get_sla_audit_records(f"%{current_year}", late=is_late)
+        # Si se usa un filtro de área, reflejarlo en el título
+        area_title = f" ({area})" if area and area.strip() != "" else ""
+        title = f"Auditoría{area_title}: Atrasadas (Peores 500)" if is_late else f"Auditoría{area_title}: A Tiempo (Últimos 500)"
+        
+        iso_year, iso_week, _ = datetime.now().isocalendar()
+        current_week_str = f"{iso_year}-{iso_week:02d}"
+        
+        # Generamos la cláusula WHERE usando las reglas unificadas (no limita la fecha si no se envía, para el año actual limitaremos más abajo)
+        where_clause, where_params = _build_unified_where(date, area, centro, has_ots_filter, min_week=f"{current_year}-01")
+        
+        from repositories import DeliveriesRepository
+        df = DeliveriesRepository(session).get_sla_audit_records(f"%{current_year}", late=is_late, where_clause=where_clause, where_params=where_params)
         
         # Limpieza de datos profunda para evitar errores de tipo en Jinja2 (NaN -> '')
         df['area_negocio'] = df['area_negocio'].fillna('S/N')

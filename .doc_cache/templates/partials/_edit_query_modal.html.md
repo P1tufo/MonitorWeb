@@ -13,6 +13,6 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- **Dependencias**: No hay dependencias externas directamente mencionadas.
-- **Flujo**: El archivo se comunica con el backend a través de funciones JavaScript que interactúan con elementos del DOM, como `onBaseTableChange`, `addJoin`, `addFilter`, etc.
+- **Dependencias**: No hay dependencias directas mencionadas. El archivo se refiere a un script JavaScript (`analytics_studio.js`) que debe estar disponible en la ruta especificada.
+- **Flujo**: Este fragmento es una parte de una interfaz web y no realiza ninguna operación que requiera comunicación con otras partes del sistema o acceso a variables globales.
 

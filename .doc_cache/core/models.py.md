@@ -23,5 +23,9 @@ Este archivo define modelos ORM SQLAlchemy para el esquema de configuración Saa
 No aplica
 
 ### Dependencias y Flujo
-Dependencia única: `sqlalchemy`
+Dependencias:
+- `sqlalchemy` (ORM SQLAlchemy)
+- `__future__.annotations` (Para futuras anotaciones de tipos)
+
+Flujo: Este archivo comunica con otros archivos del proyecto a través de la definición de modelos ORM que son utilizados para interactuar con la base de datos.
 

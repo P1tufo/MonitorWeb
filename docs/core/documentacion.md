@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: core
-Compilado el: 2026-05-23 00:11:14
+Compilado el: 2026-05-24 00:59:57
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -141,40 +141,38 @@ El archivo `db_config_manager.py` contiene configuraciones de consultas SQL y fu
 
 ### Catálogo de Funciones y Clases
 - `ConfigQuery(query_id, sql_text, visual_state)` - Define una consulta con un ID único, texto SQL y estado visual.
-- `initial_queries` - Lista de consultas iniciales a cargar en la sesión.
-- `load_config_to_memory(session=None)` - Carga las configuraciones iniciales en la sesión. Esta función está obsoleta y no realiza ninguna operación.
-- `_ensure_loaded()` - No hace nada, es una función auxiliar que no se utiliza.
-- `get_setting(key: str, default: Any = None) -> Any` - Recupera un valor de configuración basado en su clave.
-- `get_status_mapping() -> Dict[str, str]` - Devuelve un mapeo de códigos de estado a etiquetas.
+- `initial_queries` - Lista de instancias de `ConfigQuery`.
+- `load_config_to_memory(session=None)` - Carga las consultas iniciales en la sesión de base de datos. Obsoleta y no hace nada.
+- `_ensure_loaded()` - No hace nada, función auxiliar obsoleta.
+- `get_setting(key: str, default: Any = None) -> Any` - Recupera un valor de configuración por clave.
+- `get_status_mapping() -> Dict[str, str]` - Devuelve un mapeo de códigos a etiquetas para estados.
 - `get_cost_center_mapping() -> Dict[str, str]` - Devuelve un mapeo de códigos de centro de costo a áreas de negocio.
 - `get_holidays() -> List[str]` - Devuelve una lista de fechas festivas.
-- `get_query(query_id: str) -> str` - Recupera el texto SQL asociado a un ID de consulta. Esta función es obsoleta y se recomienda usar `get_query_visual_state()` en su lugar.
+- `get_query(query_id: str) -> str` - Recupera el texto SQL asociado a un ID de consulta. Obsoleta, usar `get_query_visual_state()` en su lugar.
 - `get_query_visual_state(query_id: str) -> str` - Recupera el estado visual JSON de una consulta.
 
 ### Interacción con Base de Datos
-- Motor de base de datos: No especificado.
+- Motor: No especificado (se infiere que es SQLAlchemy basado en la sintaxis).
 - Tablas:
-  - `inventory_movements`
-  - `warehouse_tasks`
+  - `ConfigQuery`
   - `AppSetting`
   - `StatusMapping`
   - `CostCenterMapping`
   - `Holiday`
 - Columnas:
-  - `inventory_movements.cmv`, `inventory_movements.fe_contab`, `inventory_movements.material`, `inventory_movements.tipo_operacion`, `inventory_movements.registrado`
-  - `warehouse_tasks.usuario`, `warehouse_tasks.fecha_conf`, `warehouse_tasks.fe_creac`
-  - `AppSetting.key`, `AppSetting.typed_value()`
-  - `StatusMapping.code`, `StatusMapping.label`
-  - `CostCenterMapping.center_code`, `CostCenterMapping.business_area`
+  - `ConfigQuery.query_id`, `sql_text`, `visual_state`
+  - `AppSetting.key`, `typed_value()`
+  - `StatusMapping.code`, `label`
+  - `CostCenterMapping.center_code`, `business_area`
   - `Holiday.date_str`
 
 ### Estado y Variables Globales
-No aplica.
+- No aplica.
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: No especificado.
+- Librerías externas: SQLAlchemy.
 - Comunicación con otros archivos del proyecto:
-  - `get_session()` - Se utiliza para obtener una sesión de base de datos.
+  - `get_session()` - Se asume que esta función está definida en otro archivo para obtener una sesión de base de datos.
 
 
 ---
@@ -204,7 +202,11 @@ Este archivo define modelos ORM SQLAlchemy para el esquema de configuración Saa
 No aplica
 
 ### Dependencias y Flujo
-Dependencia única: `sqlalchemy`
+Dependencias:
+- `sqlalchemy` (ORM SQLAlchemy)
+- `__future__.annotations` (Para futuras anotaciones de tipos)
+
+Flujo: Este archivo comunica con otros archivos del proyecto a través de la definición de modelos ORM que son utilizados para interactuar con la base de datos.
 
 
 ---
@@ -438,13 +440,20 @@ No aplica
 ## Archivo: ./core/schemas.py
 
 ### Resumen Funcional
-Este archivo define esquemas de datos utilizando Pydantic para representar respuestas de diferentes endpoints en una aplicación. Cada esquema incluye un diccionario de datos y un indicador booleano que indica si la respuesta está sincronizando.
+Este archivo define esquemas de datos utilizando Pydantic, que son clases que describen la estructura y los tipos de datos esperados en las respuestas de API y payloads de consultas visuales.
 
 ### Catálogo de Funciones y Clases
-- `DashboardResponse(data: Dict[str, Any], is_syncing: bool)` - Representa la respuesta para el endpoint del panel de control.
-- `AnalyticsDeliveriesResponse(data: Dict[str, Any], is_syncing: bool)` - Representa la respuesta para el endpoint de análisis de entregas.
-- `AnalyticsInventoryResponse(data: Dict[str, Any], is_syncing: bool)` - Representa la respuesta para el endpoint de análisis de inventario.
-- `AnalyticsTasksResponse(data: Dict[str, Any], is_syncing: bool)` - Representa la respuesta para el endpoint de análisis de tareas.
+- `DashboardResponse(data: Dict[str, Any], is_syncing: bool)` - Define la estructura de la respuesta para un panel de control.
+- `AnalyticsDeliveriesResponse(data: Dict[str, Any], is_syncing: bool)` - Define la estructura de la respuesta para análisis de entregas.
+- `AnalyticsInventoryResponse(data: Dict[str, Any], is_syncing: bool)` - Define la estructura de la respuesta para análisis de inventario.
+- `AnalyticsTasksResponse(data: Dict[str, Any], is_syncing: bool)` - Define la estructura de la respuesta para análisis de tareas.
+- `JoinDef(table: str, onLeft: str, onRight: str)` - Define la estructura para una definición de unión en consultas visuales.
+- `FilterDef(column: str, operator: str, value: Optional[Any] = "", valueType: Optional[str] = "value", compareColumn: Optional[str] = None, offsetValue: Optional[str] = None, diffOp: Optional[str] = None)` - Define la estructura para una definición de filtro en consultas visuales.
+- `MetricCondition(column: str, operator: str, value: Any)` - Define la estructura para una condición de métrica en consultas visuales.
+- `MetricDef(column: str, aggregation: str, format: Optional[str] = "number", label: Optional[str] = "", condition: Optional[MetricCondition] = None, customExpr: Optional[str] = None)` - Define la estructura para una definición de métrica en consultas visuales.
+- `TimeAxisDef(column: Optional[str] = None, granularity: Optional[str] = "NONE")` - Define la estructura para la definición del eje temporal en consultas visuales.
+- `SecondMetricDef(column: str = "", aggregation: str = "", label: str = "")` - Define la estructura para una segunda métrica en consultas visuales.
+- `VisualQueryBuilderPayload(baseTable: str, joins: list[JoinDef] = [], filters: list[FilterDef] = [], metric: Optional[MetricDef] = None, timeAxis: Optional[TimeAxisDef] = None, breakdown: Optional[str] = None, secondMetric: Optional[SecondMetricDef] = None, metrics: list[MetricDef] = [])` - Define la estructura del payload para el generador de consultas visuales.
 
 ### Interacción con Base de Datos
 No aplica
@@ -453,8 +462,8 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-Dependencia única:
-- `pydantic` - Usada para definir los esquemas de datos.
+- `pydantic` - Librería utilizada para definir los esquemas de datos.
+- No se comunica con otros archivos del proyecto.
 
 
 ---

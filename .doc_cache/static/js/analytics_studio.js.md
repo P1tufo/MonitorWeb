@@ -3,92 +3,72 @@
 #### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-El archivo `analytics_studio.js` contiene funciones y variables para gestionar el estado del Studio de Análíticas, incluyendo la carga de esquemas de base de datos, visualización de consultas SQL y generación de gráficos.
+El archivo `analytics_studio.js` contiene funciones y variables para gestionar la visualización de gráficos en un entorno de análisis. Permite abrir modales, cargar esquemas de base de datos, previsualizar tablas y ejecutar consultas para generar gráficos.
 
 ### Catálogo de Funciones y Clases
 - `openEditQueryModal(queryId, chartTitle)` - Abre un modal para editar una consulta.
 - `loadSchema()` - Carga el esquema de la base de datos.
-- `previewTable(tableName, el)` - Muestra una vista previa de una tabla en la interfaz.
-- `runPreview()` - Ejecuta una consulta SQL y muestra su resultado en un gráfico o tabla.
-- `renderPreviewChart(data)` - Renderiza el resultado de una consulta como un gráfico.
+- `previewTable(tableName, el)` - Previsualiza los datos de una tabla.
+- `runPreview()` - Ejecuta una previsualización de la consulta y renderiza el gráfico.
+- `renderPreviewChart(data)` - Renderiza el gráfico basado en los datos obtenidos.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
 - `studioChartInstance` - Instancia del gráfico actual.
-- `currentSchema` - Esquema de la base de datos actual.
-- `currentQueryId` - ID de la consulta actualmente seleccionada.
-- `studioBoundParams` - Parámetros de la consulta actual.
-- `serverVisualState` - Estado visual guardado en el servidor.
-- `visualState` - Estado del constructor visual actual.
-- `defaultVisualStates` - Mapeo predefinido para inicializar gráficos.
+- `currentSchema` - Esquema actual de la base de datos.
+- `currentQueryId` - ID de la consulta actual.
+- `studioBoundParams` - Parámetros vinculados al estudio.
+- `serverVisualState` - Estado visual del servidor.
+- `legacySqlText` - Texto SQL heredado.
+- `visualState` - Estado del constructor visual.
+- `defaultVisualStates` - Mapeos predefinidos para inicialización visual intuitiva de gráficos.
 
 ### Dependencias y Flujo
-Dependencias:
-- `Chart.js` - Librería para renderizar gráficos.
-
-Flujo:
-1. El usuario selecciona una consulta en el Studio de Análíticas.
-2. Se abre un modal con la opción de editar la consulta.
-3. La consulta se carga y se muestra en un editor de texto.
-4. El usuario puede modificar la consulta y ejecutarla para obtener resultados.
-5. Los resultados se renderizan como gráficos o tablas según el tipo de consulta.
-
-El archivo interactúa con una API que proporciona los datos necesarios para cargar esquemas, ejecutar consultas y obtener visualizaciones.
+Depende de la librería Chart.js para renderizar los gráficos. Comunica con el servidor a través de endpoints como `/api/queries/{queryId}`, `/api/studio/schema`, y `/api/studio/preview`.
 
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-El archivo `analytics_studio.js` contiene funciones y métodos para gestionar la creación, edición y publicación de consultas analíticas. Permite configurar gráficos, filtros y condiciones de búsqueda, y sincroniza estos cambios con un backend que genera y ejecuta consultas SQL.
+El archivo `analytics_studio.js` contiene funciones y métodos para gestionar la interfaz de usuario y el estado del editor de consultas analíticas. Permite crear, editar y publicar consultas SQL interactuando con un backend a través de una API.
 
 ### Catálogo de Funciones y Clases
-- `closeEditQueryModal()` - Cierra el modal para editar una consulta.
+- `closeEditQueryModal()` - Cierra el modal para edición de consultas.
 - `showConfirmPublish()` - Muestra la ventana de confirmación para publicar una consulta.
 - `hideConfirmPublish()` - Oculta la ventana de confirmación para publicar una consulta.
-- `executePublishQuery()` - Ejecuta la publicación de una consulta y maneja la respuesta del backend.
-- `initVisualQuery(queryId)` - Inicializa el estado visual de la consulta y carga los datos necesarios.
+- `executePublishQuery()` - Ejecuta la publicación de una consulta a través de una API y maneja el estado del botón de confirmación.
+- `initVisualQuery(queryId)` - Inicializa el estado visual del editor de consultas con los datos proporcionados o por defecto.
 - `onBaseTableChange()` - Maneja el cambio en la tabla base seleccionada.
-- `getActiveTables()` - Devuelve las tablas activas en la consulta.
-- `getActiveColumns()` - Devuelve las columnas activas en la consulta.
-- `refreshQbColumns(forceState = false)` - Refresca los selectores de columnas para los ejes y desglose.
-- `renderJoins()` - Renderiza los controles de join en el formulario.
+- `getActiveTables()` - Devuelve las tablas activas basadas en el estado actual.
+- `getActiveColumns()` - Devuelve las columnas activas basadas en las tablas activas.
+- `refreshQbColumns(forceState = false)` - Refresca los selectores de columnas para los ejes y desglose según el estado actual.
+- `renderJoins()` - Renderiza los controles de join en la interfaz de usuario.
 - `addJoin()` - Añade un nuevo join al estado visual.
 - `updateJoin(index)` - Actualiza un join existente en el estado visual.
 - `removeJoin(index)` - Elimina un join del estado visual.
-- `renderFilters()` - Renderiza los controles de filtro en el formulario.
+- `renderFilters()` - Renderiza los controles de filtro en la interfaz de usuario.
 - `addFilter()` - Añade un nuevo filtro al estado visual.
-- `updateFilterType(index, type)` - Actualiza el tipo de valor para un filtro.
-- `updateFilter(index)` - Actualiza la configuración de un filtro existente.
+- `updateFilterType(index, type)` - Actualiza el tipo de valor para un filtro específico.
+- `updateFilter(index)` - Actualiza los detalles de un filtro específico.
 - `removeFilter(index)` - Elimina un filtro del estado visual.
 - `onSecondMetricToggle()` - Maneja el toggle de la segunda métrica.
-- `onQbChange()` - Sincroniza los cambios en el formulario con el estado visual y genera SQL.
-- `syncVisualToSQL()` - Envía el estado visual al backend para generar y ejecutar una consulta SQL.
+- `onQbChange()` - Sincroniza los cambios en la interfaz de usuario con el estado visual.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `studioChartInstance` - Instancia del gráfico generado por Chart.js.
-- `visualState` - Estado visual actual de la consulta, incluyendo tablas, joins, filtros, métricas, etc.
+- `visualState` - Almacena el estado actual del editor de consultas, incluyendo tablas, joins, filtros, métricas, etc.
 - `serverVisualState` - Estado visual proporcionado por el servidor.
 - `defaultVisualStates` - Estados visuales predeterminados para diferentes consultas.
-- `currentSchema` - Esquema de las tablas disponibles en la base de datos.
-- `studioBoundParams` - Parámetros vinculados a la consulta SQL generada.
+- `currentSchema` - Esquema actual de la base de datos.
 
 ### Dependencias y Flujo
 Dependencias:
-- `Chart.js` - Usado para generar gráficos.
 - `fetch` - Para hacer solicitudes HTTP al backend.
+- `document.getElementById`, `querySelector`, etc. - Para interactuar con el DOM.
 
-Flujo interno:
-1. El usuario interactúa con el formulario de configuración de consultas (tablas, joins, filtros, métricas).
-2. Los cambios en el formulario se reflejan en el estado visual (`visualState`).
-3. Al cambiar algo en el formulario, se llama a `onQbChange()`, que sincroniza los cambios con el backend y genera SQL.
-4. El backend devuelve la consulta SQL generada, que se muestra en un editor de texto.
-5. Cuando el usuario publica una consulta, se envía el estado visual al backend para ejecutar la consulta.
-
-Flujo externo:
-- La función `executePublishQuery()` se comunica con el backend a través de una solicitud POST a `/api/settings/query` para publicar la consulta.
-- La función `syncVisualToSQL()` se comunica con el backend a través de una solicitud POST a `/api/studio/build_sql` para generar y ejecutar la consulta SQL.
+Flujo:
+Este archivo se comunica con el backend a través de una API para publicar consultas. No realiza interacciones directas con bases de datos ni utiliza ORM.
 

@@ -48,3 +48,17 @@ def test_ui_smoke_error_handling(client) -> None:
     """Verifica que el servidor maneje correctamente las peticiones a rutas inexistentes."""
     response = client.get("/invalid/route/test")
     assert response.status_code == 404, "El servidor debería retornar 404 para rutas no definidas"
+
+def test_ui_smoke_analytics_studio_modal_components(auth_client) -> None:
+    """Verifica que el modal visual exponga los selectores correctos y aísle el SQL."""
+    response = auth_client.get("/analytics")
+    assert response.status_code == 200
+    html = response.text
+    
+    # Validar presencia de selectores visuales del AST
+    assert 'id="qbBaseTable"' in html
+    assert 'id="qbMetricColumn"' in html
+    
+    # Aislamiento de Seguridad: Asegurar que NO existe el textarea de SQL crudo
+    # Esto fallará hasta que se ejecute la Fase 1 del Plan Maestro
+    assert '<textarea id="editQueryText"' not in html

@@ -47,83 +47,23 @@ class DeliveriesService:
             kpis = self._calculate_kpis(sla_df, area_stats_df, total_dias)
             
             # Sobrescribir con KPIs dinámicos de la base de datos de configuración (Analytics Studio)
-            # 1. Volumen Total (Año)
-            try:
-                res_total = self.conn.execute("SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'vl_kpi_total'").fetchone()
-                if res_total:
-                    sql_total, visual_state_total = res_total
-                    if sql_total:
-                        params = ()
-                        if sql_total.count("?") > 0:
-                            params = tuple(get_bound_params_from_visual_state(visual_state_total))
-                            if len(params) != sql_total.count("?"):
-                                params = (yr_mask,) if sql_total.count("?") == 1 else ()
-                        df_total = pd.read_sql(sql_total, self.conn, params=params)
-                        if not df_total.empty:
-                            val = extract_metric_value(df_total, raw_year)
-                            if val is not None and not pd.isna(val):
-                                kpis["kpi_total"] = int(val)
-                                if total_dias > 0:
-                                    kpis["kpi_avg"] = round(kpis["kpi_total"] / total_dias, 1)
-            except Exception as e:
-                logger.error(f"Error al calcular KPI total dinámico: {e}")
-
-            # 2. Eficiencia de Bodega (SLA)
-            try:
-                res_eff = self.conn.execute("SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'vl_kpi_eff'").fetchone()
-                if res_eff:
-                    sql_eff, visual_state_eff = res_eff
-                    if sql_eff:
-                        params = ()
-                        if sql_eff.count("?") > 0:
-                            params = tuple(get_bound_params_from_visual_state(visual_state_eff))
-                            if len(params) != sql_eff.count("?"):
-                                params = (yr_mask,) if sql_eff.count("?") == 1 else ()
-                        df_eff = pd.read_sql(sql_eff, self.conn, params=params)
-                        if not df_eff.empty:
-                            val = extract_metric_value(df_eff, raw_year)
-                            if val is not None and not pd.isna(val):
-                                kpis["kpi_eff"] = round(float(val), 1)
-            except Exception as e:
-                logger.error(f"Error al calcular KPI eficiencia dinámico: {e}")
-
-            # 3. Entregadas a tiempo
-            try:
-                res_ontime = self.conn.execute("SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'vl_kpi_ontime'").fetchone()
-                if res_ontime:
-                    sql_ontime, visual_state_ontime = res_ontime
-                    if sql_ontime:
-                        params = ()
-                        if sql_ontime.count("?") > 0:
-                            params = tuple(get_bound_params_from_visual_state(visual_state_ontime))
-                            if len(params) != sql_ontime.count("?"):
-                                params = (yr_mask,) if sql_ontime.count("?") == 1 else ()
-                        df_ontime = pd.read_sql(sql_ontime, self.conn, params=params)
-                        if not df_ontime.empty:
-                            val = extract_metric_value(df_ontime, raw_year)
-                            if val is not None and not pd.isna(val):
-                                kpis["kpi_ontime"] = int(val)
-            except Exception as e:
-                logger.error(f"Error al calcular KPI ontime dinámico: {e}")
-
-            # 4. Entregas atrasadas
-            try:
-                res_late = self.conn.execute("SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'vl_kpi_late'").fetchone()
-                if res_late:
-                    sql_late, visual_state_late = res_late
-                    if sql_late:
-                        params = ()
-                        if sql_late.count("?") > 0:
-                            params = tuple(get_bound_params_from_visual_state(visual_state_late))
-                            if len(params) != sql_late.count("?"):
-                                params = (yr_mask,) if sql_late.count("?") == 1 else ()
-                        df_late = pd.read_sql(sql_late, self.conn, params=params)
-                        if not df_late.empty:
-                            val = extract_metric_value(df_late, raw_year)
-                            if val is not None and not pd.isna(val):
-                                kpis["kpi_late"] = int(val)
-            except Exception as e:
-                logger.error(f"Error al calcular KPI late dinámico: {e}")
+            val_total = self._execute_dynamic_kpi('vl_kpi_total', (yr_mask,), raw_year)
+            if val_total is not None:
+                kpis["kpi_total"] = int(val_total)
+                if total_dias > 0:
+                    kpis["kpi_avg"] = round(kpis["kpi_total"] / total_dias, 1)
+                    
+            val_eff = self._execute_dynamic_kpi('vl_kpi_eff', (yr_mask,), raw_year)
+            if val_eff is not None:
+                kpis["kpi_eff"] = round(val_eff, 1)
+                
+            val_ontime = self._execute_dynamic_kpi('vl_kpi_ontime', (yr_mask,), raw_year)
+            if val_ontime is not None:
+                kpis["kpi_ontime"] = int(val_ontime)
+                
+            val_late = self._execute_dynamic_kpi('vl_kpi_late', (yr_mask,), raw_year)
+            if val_late is not None:
+                kpis["kpi_late"] = int(val_late)
             
             authors = self._prepare_authors(yr_mask, cm_mask)
             locations = self._prepare_locations(yr_mask, cm_mask)
@@ -350,6 +290,38 @@ class DeliveriesService:
         except Exception as e:
             logger.error(f"Error generando contexto Entregas: {e}", exc_info=True)
             return {}
+
+    def _execute_dynamic_kpi(self, query_id: str, default_params: tuple, raw_year: str) -> Optional[float]:
+        try:
+            res = self.conn.execute(f"SELECT sql_text, visual_state FROM config_queries WHERE query_id = '{query_id}'").fetchone()
+            if not res:
+                return None
+            sql_text, visual_state = res
+            
+            if visual_state:
+                import json
+                from core.schemas import VisualQueryBuilderPayload
+                from core.query_engine import build_sql_from_payload
+                vs_dict = json.loads(visual_state)
+                payload = VisualQueryBuilderPayload(**vs_dict)
+                sql_dyn, bound_params_dyn = build_sql_from_payload(payload, self.session)
+                df = pd.read_sql(sql_dyn, self.conn, params=tuple(bound_params_dyn))
+            elif sql_text:
+                params = ()
+                if sql_text.count("?") > 0:
+                    params = default_params if len(default_params) == sql_text.count("?") else (default_params[0],) if sql_text.count("?") == 1 else ()
+                df = pd.read_sql(sql_text, self.conn, params=params)
+            else:
+                return None
+                
+            if not df.empty:
+                val = extract_metric_value(df, raw_year)
+                if val is not None and not pd.isna(val):
+                    return float(val)
+            return None
+        except Exception as e:
+            logger.error(f"Error calculando KPI dinámico {query_id}: {e}")
+            return None
 
     def _prepare_area_stats(self, year, month_str):
         """Prepara el DataFrame de estadísticas por área."""

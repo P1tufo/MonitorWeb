@@ -6,7 +6,17 @@
     app.py
     config.py
     main.py
+    monitor.db
+    package-lock.json
+    package.json
+    test_api_kpis.py
+    test_both.py
+    test_braces.py
+    test_browser.js
     test_deliveries.py
+    test_filter.py
+    test_kpis.py
+    test_widget.py
     core/
         __init__.py
         app_instance.py
@@ -27,6 +37,8 @@
         utils.py
         wms_config.py
         wms_utils.py
+        helpers/
+            visual_query_adapter.py
     bin/
         ngrok
     deploy/
@@ -60,7 +72,6 @@
     docs/
         documentacion_global.md
         mejoras_global.md
-        plan_maestro.md
         core/
             documentacion.md
             mejoras.md

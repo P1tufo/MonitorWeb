@@ -3,7 +3,7 @@
     let currentQueryId = "";
     let studioBoundParams = null;
     let serverVisualState = null;
-    
+    let legacySqlText = null;
     // Estado del constructor visual
     let visualState = {
         baseTable: '',
@@ -347,10 +347,7 @@
 
         document.getElementById('editQueryId').value = queryId;
         document.getElementById('editQueryTitle').innerHTML = `Studio de Analíticas &bull; ${chartTitle}`;
-        
-        const queryTextEl = document.getElementById('editQueryText');
-        queryTextEl.value = "-- Cargando consulta...";
-        queryTextEl.disabled = true;
+        legacySqlText = null;
         
         modal.classList.add('show');
         
@@ -366,16 +363,12 @@
             // La API expone sql_text directamente → cargar en textarea y preview sin builder.
             const hasDefault = !!defaultVisualStates[queryId];
             if (!data.visual_state && !hasDefault && data.sql_text) {
-                queryTextEl.value = data.sql_text;
+                legacySqlText = data.sql_text;
                 setTimeout(() => runPreview(), 300);
                 return;
             }
 
             // Caso B: query con constructor visual → flujo normal
-            // El textarea se rellena vía syncVisualToSQL() → build_sql API
-            queryTextEl.value = "";
-
-            // Guardar el visual state del servidor si existe
             if (data.visual_state) {
                 try {
                     serverVisualState = JSON.parse(data.visual_state);
@@ -386,18 +379,12 @@
                 serverVisualState = null;
             }
 
-            // Inicializar el Constructor Visual (usa serverVisualState o defaultVisualStates)
+            // Inicializar el Constructor Visual
             initVisualQuery(queryId);
-
-            // Compilar el estado visual a SQL internamente y lanzar preview
-            syncVisualToSQL();
 
             setTimeout(() => runPreview(), 300);
         } catch (err) {
             console.error("Studio Load Error:", err);
-            queryTextEl.value = "";
-        } finally {
-            queryTextEl.disabled = false;
         }
 
     }
@@ -449,14 +436,22 @@
     }
 
     async function runPreview() {
-        const sql = document.getElementById('editQueryText').value;
         const errorEl = document.getElementById('previewError');
         errorEl.style.display = 'none';
+        
+        let payload = { query_id: 'preview' };
+        if (legacySqlText) {
+            payload.sql_text = legacySqlText;
+            payload.params = studioBoundParams;
+        } else {
+            payload.visual_state = JSON.stringify(visualState);
+        }
+        
         try {
             const response = await fetch('/api/studio/preview', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query_id: 'preview', sql_text: sql, params: studioBoundParams })
+                body: JSON.stringify(payload)
             });
             const data = await response.json();
             if (data.error) {
@@ -750,7 +745,7 @@ errorEl.style.display = 'block';
             if (smLabelEl) smLabelEl.value = visualState.secondMetric.label || '';
         }
         
-        syncVisualToSQL();
+        runPreview();
     }
 
     function onBaseTableChange() {
@@ -1126,23 +1121,4 @@ errorEl.style.display = 'block';
             }
         }
 
-        syncVisualToSQL();
-    }
-
-    async function syncVisualToSQL() {
-        try {
-            const response = await fetch('/api/studio/build_sql', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(visualState)
-            });
-            const data = await response.json();
-            if (data.status === 'success') {
-                document.getElementById('editQueryText').value = data.sql_text;
-                studioBoundParams = data.bound_params;
-                runPreview();
-            }
-        } catch (e) {
-            console.error("Error sincronizando editor visual a SQL:", e);
-        }
     }

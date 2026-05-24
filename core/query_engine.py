@@ -26,6 +26,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from fastapi import HTTPException
 
+from repositories.deliveries import DeliveriesRepository
+AREA_EXPR_MACRO = DeliveriesRepository.AREA_EXPR
+
 logger = logging.getLogger("query-engine")
 
 # ─── Lista blanca de tablas expuestas al Analytics Studio ────────────────────
@@ -67,6 +70,8 @@ def validate_identifier(name: str, db: Session) -> bool:
     Nunca lanza excepción: el caller decide si rechazar con HTTPException.
     """
     if not name:
+        return True
+    if name == "__AREA_EXPR__":
         return True
 
     parts = name.split(".")
@@ -227,13 +232,35 @@ def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
         if comp_col and not validate_identifier(comp_col, db):
             raise HTTPException(status_code=400, detail=f"Columna de comparación no válida: {comp_col}")
 
-    if not validate_identifier(payload.metric.column, db):
-        raise HTTPException(status_code=400, detail=f"Columna de métrica no válida: {payload.metric.column}")
+    unified_metrics = []
+    if getattr(payload, "metrics", None):
+        unified_metrics.extend(payload.metrics)
+    else:
+        if getattr(payload, "metric", None):
+            unified_metrics.append(payload.metric)
+        if getattr(payload, "secondMetric", None) and getattr(payload.secondMetric, "column", None):
+            unified_metrics.append(payload.secondMetric)
 
-    if payload.metric.aggregation.upper() not in ALLOWED_AGGREGATIONS:
-        raise HTTPException(status_code=400, detail=f"Operación de agregación no válida: {payload.metric.aggregation}")
+    for m in unified_metrics:
+        custom_expr = getattr(m, "customExpr", None)
+        m_col = getattr(m, "column", None)
+        if custom_expr:
+            if custom_expr != "__AREA_EXPR__":
+                raise HTTPException(status_code=400, detail="customExpr no permitido")
+        elif m_col:
+            if not validate_identifier(m_col, db):
+                raise HTTPException(status_code=400, detail=f"Columna de métrica no válida: {m_col}")
+        
+        m_agg = getattr(m, "aggregation", "").upper()
+        if m_agg and m_agg not in ALLOWED_AGGREGATIONS and not custom_expr:
+            raise HTTPException(status_code=400, detail=f"Operación de agregación no válida: {m_agg}")
 
-    if payload.timeAxis.column:
+        m_cond = getattr(m, "condition", None)
+        if m_cond and m_cond.column:
+            if not validate_identifier(m_cond.column, db):
+                raise HTTPException(status_code=400, detail=f"Columna de condición de métrica no válida: {m_cond.column}")
+
+    if payload.timeAxis and payload.timeAxis.column:
         if not validate_identifier(payload.timeAxis.column, db):
             raise HTTPException(status_code=400, detail=f"Columna de fecha no válida: {payload.timeAxis.column}")
         if payload.timeAxis.granularity.upper() not in ALLOWED_GRANULARITIES:
@@ -252,8 +279,8 @@ def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
         from_clause = f"{from_clause}\n{join_str}"
 
     # ── 3. Eje de tiempo ─────────────────────────────────────────────────────
-    col = payload.timeAxis.column
-    if col:
+    if payload.timeAxis and payload.timeAxis.column:
+        col = payload.timeAxis.column
         table_prefix = col.split(".")[0] if "." in col else payload.baseTable
 
         has_hora = False
@@ -286,98 +313,76 @@ def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
     breakdown_select = ""
     breakdown_groupby = ""
     if payload.breakdown:
-        breakdown_select = f"{payload.breakdown} AS categoria,\n  "
+        b_expr = AREA_EXPR_MACRO.replace("v.", f"{payload.baseTable}.") if payload.breakdown == "__AREA_EXPR__" else payload.breakdown
+        breakdown_select = f"{b_expr} AS categoria,\n  "
         breakdown_groupby = ", categoria"
-
-    # ── 5. Métrica principal ──────────────────────────────────────────────────
-    metric_col = payload.metric.column or "*"
-
-    agg_upper = payload.metric.aggregation.upper()
-
-    if agg_upper == "COUNT_DISTINCT":
-        metric_func = "COUNT(*)" if metric_col == "*" else f"COUNT(DISTINCT {metric_col})"
-
-    elif agg_upper == "SLA_EFFICIENCY":
-        col_name = metric_col.split(".")[-1] if "." in metric_col else metric_col
-        metric_func = f"ROUND(SUM(CASE WHEN {metric_col} <= 2 THEN 100.0 ELSE 0.0 END) / COUNT(*), 1)"
-
-        extra_cols: List[str] = []
-        if payload.timeAxis.column:
-            t_col = payload.timeAxis.column.split(".")[-1] if "." in payload.timeAxis.column else payload.timeAxis.column
-            if t_col != "entrega" and t_col != col_name:
-                extra_cols.append(t_col)
-        else:
-            extra_cols.append("fecha_carga")
-
-        if payload.breakdown:
-            b_col = payload.breakdown.split(".")[-1] if "." in payload.breakdown else payload.breakdown
-            if b_col != "entrega" and b_col != col_name and b_col not in extra_cols:
-                extra_cols.append(b_col)
-
-        for f in payload.filters:
-            if f.column:
-                f_col = f.column.split(".")[-1] if "." in f.column else f.column
-                if f_col != "entrega" and f_col != col_name and f_col not in extra_cols:
-                    extra_cols.append(f_col)
-            comp_col = getattr(f, "compareColumn", None)
-            if comp_col:
-                fc_col = comp_col.split(".")[-1] if "." in comp_col else comp_col
-                if fc_col != "entrega" and fc_col != col_name and fc_col not in extra_cols:
-                    extra_cols.append(fc_col)
-
-        extra_cols_str = "".join([f", {c}" for c in extra_cols])
-        from_clause = (
-            f"(SELECT entrega, MAX({metric_col}) as {col_name}{extra_cols_str} "
-            f"FROM outbound_deliveries WHERE {metric_col} IS NOT NULL GROUP BY entrega) "
-            f"AS outbound_deliveries"
-        )
-
-    elif agg_upper == "REPLENISHMENT_RATE":
-        metric_func = (
-            f"ROUND(SUM(CASE WHEN {metric_col} LIKE '%Ingreso%' THEN 1.0 ELSE 0.0 END) * 100.0 "
-            f"/ COALESCE(NULLIF(SUM(CASE WHEN {metric_col} LIKE '%Centro Costo%' "
-            f"OR {metric_col} LIKE '%Orden/Reserva%' THEN 1.0 ELSE 0.0 END), 0), 1), 1)"
-        )
-
-    elif agg_upper == "RETURN_RATE":
-        metric_func = (
-            f"ROUND(SUM(CASE WHEN TRIM(cmv) IN ('202', '262') THEN 1.0 ELSE 0.0 END) * 100.0 "
-            f"/ COALESCE(NULLIF(SUM(CASE WHEN {metric_col} LIKE '%Centro Costo%' "
-            f"OR {metric_col} LIKE '%Orden/Reserva%' THEN 1.0 ELSE 0.0 END), 0), 1), 1)"
-        )
-
-    elif agg_upper == "INV_EFFICIENCY":
-        metric_func = (
-            "ROUND(SUM(CASE WHEN (julianday(substr(registrado, 7, 4) || '-' || substr(registrado, 4, 2) || "
-            "'-' || substr(registrado, 1, 2)) - julianday(substr(fe_contab, 7, 4) || '-' || "
-            "substr(fe_contab, 4, 2) || '-' || substr(fe_contab, 1, 2))) <= 3.0 "
-            "THEN 100.0 ELSE 0.0 END) / COUNT(*), 1)"
-        )
-    else:
-        metric_func = f"{agg_upper}({metric_col})"
-
-    # ── 5b. Segunda métrica ───────────────────────────────────────────────────
-    second_metric_select = ""
-    ALLOWED_AGGS_SM = {"SUM", "AVG", "COUNT", "MIN", "MAX", "COUNT_DISTINCT", "SLA_EFFICIENCY"}
-    sm = payload.secondMetric
-    if sm and sm.column and sm.aggregation and not payload.breakdown:
-        sm_agg = sm.aggregation.upper()
-        if sm_agg in ALLOWED_AGGS_SM:
-            sm_col = sm.column
-            sm_label = sm.label.strip() if sm.label else sm_agg.lower()
-            # Sanitizar alias: solo letras, números y guión bajo
-            sm_alias = "".join(c if c.isalnum() or c == "_" else "_" for c in sm_label) or "segunda_metrica"
-            if sm_agg == "COUNT_DISTINCT":
-                sm_func = f"COUNT(DISTINCT {sm_col})"
-            elif sm_agg == "SLA_EFFICIENCY":
-                sm_func = f"ROUND(SUM(CASE WHEN {sm_col} <= 2 THEN 100.0 ELSE 0.0 END) / NULLIF(COUNT(*), 0), 1)"
-            else:
-                sm_func = f"{sm_agg}({sm_col})"
-            second_metric_select = f",\n  {sm_func} AS {sm_alias}"
 
     # ── 6. Filtros parametrizados (bind params) ───────────────────────────────
     where_clauses = []
     bound_params: List = []
+    # Las métricas se procesan después para poder apendear a bound_params
+    metric_selects = []
+    
+    for i, m in enumerate(unified_metrics):
+        custom_expr = getattr(m, "customExpr", None)
+        m_label = getattr(m, "label", "")
+        if not m_label:
+            m_label = "valor" if i == 0 else f"metrica_{i}"
+            
+        if custom_expr:
+            m_expr = AREA_EXPR_MACRO.replace("v.", f"{payload.baseTable}.") if custom_expr == "__AREA_EXPR__" else "NULL"
+            metric_selects.append(f'{m_expr} AS "{m_label}"')
+            continue
+
+        metric_col = getattr(m, "column", "*") or "*"
+        agg_upper = getattr(m, "aggregation", "COUNT").upper()
+        condition = getattr(m, "condition", None)
+        
+        cond_str = ""
+        if condition:
+            op = condition.operator.lower()
+            val = condition.value
+            col = condition.column
+            op_map = {
+                "equals": "=", "notequals": "!=",
+                "greaterthan": ">", "lessthan": "<",
+                "greaterthanequal": ">=", "lessthanequal": "<="
+            }
+            sql_op = op_map.get(op, "=")
+            bound_params.append(val)
+            cond_str = f"CASE WHEN {col} {sql_op} ? THEN "
+                
+        if agg_upper == "COUNT_DISTINCT":
+            if cond_str:
+                m_expr = f"COUNT(DISTINCT {cond_str} {metric_col} ELSE NULL END)"
+            else:
+                m_expr = "COUNT(*)" if metric_col == "*" else f"COUNT(DISTINCT {metric_col})"
+        elif agg_upper in ("SUM", "AVG", "MIN", "MAX", "COUNT"):
+            if cond_str:
+                if agg_upper == "COUNT":
+                    m_expr = f"SUM({cond_str} 1 ELSE 0 END)"
+                else:
+                    m_expr = f"{agg_upper}({cond_str} {metric_col} ELSE NULL END)"
+            else:
+                m_expr = f"{agg_upper}({metric_col})"
+        elif agg_upper == "SLA_EFFICIENCY":
+            m_expr = f"ROUND(SUM(CASE WHEN {metric_col} <= 2 THEN 100.0 ELSE 0.0 END) / NULLIF(COUNT(*), 0), 1)"
+        elif agg_upper == "REPLENISHMENT_RATE":
+            m_expr = (f"ROUND(SUM(CASE WHEN {metric_col} LIKE '%Ingreso%' THEN 100.0 ELSE 0.0 END) "
+                      f"/ NULLIF(SUM(CASE WHEN {metric_col} LIKE '%Centro Costo%' "
+                      f"OR {metric_col} LIKE '%Orden/Reserva%' THEN 1.0 ELSE 0.0 END), 0), 1)")
+        elif agg_upper == "RETURN_RATE":
+            m_expr = (f"ROUND(SUM(CASE WHEN TRIM(cmv) IN ('202', '262') THEN 100.0 ELSE 0.0 END) "
+                      f"/ NULLIF(SUM(CASE WHEN {metric_col} LIKE '%Centro Costo%' "
+                      f"OR {metric_col} LIKE '%Orden/Reserva%' THEN 1.0 ELSE 0.0 END), 0), 1)")
+        else:
+            m_expr = f"{agg_upper}({metric_col})"
+            
+        metric_selects.append(f'{m_expr} AS "{m_label}"')
+
+    metrics_select_str = ",\n  ".join(metric_selects) if metric_selects else "1 AS dummy"
+
+
 
     for f in payload.filters:
         op = f.operator.lower()
@@ -467,7 +472,7 @@ def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
 
     # ── 7. GROUP BY ───────────────────────────────────────────────────────────
     groupby_clauses = []
-    if payload.timeAxis.column:
+    if payload.timeAxis and payload.timeAxis.column:
         groupby_clauses.append("fecha")
     if payload.breakdown:
         groupby_clauses.append("categoria")
@@ -478,18 +483,26 @@ def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
         sql = (
             f"SELECT \n"
             f"  {time_func} AS fecha,\n"
-            f"  {breakdown_select}{metric_func} AS valor\n"
+            f"  {breakdown_select}{metrics_select_str}\n"
             f"FROM {from_clause}{where_str}{groupby_str}\n"
             f"ORDER BY fecha ASC;"
         )
     else:
-        sql = (
-            f"SELECT \n"
-            f"  {time_func} AS fecha,\n"
-            f"  {metric_func} AS valor{second_metric_select}\n"
-            f"FROM {from_clause}{where_str}{groupby_str}\n"
-            f"ORDER BY fecha ASC;"
-        )
+        # Si no hay timeAxis ni breakdown, evitamos seleccionar y ordenar por 'fecha' ('Total')
+        if not (payload.timeAxis and payload.timeAxis.column):
+            sql = (
+                f"SELECT \n"
+                f"  {metrics_select_str}\n"
+                f"FROM {from_clause}{where_str}{groupby_str};"
+            )
+        else:
+            sql = (
+                f"SELECT \n"
+                f"  {time_func} AS fecha,\n"
+                f"  {metrics_select_str}\n"
+                f"FROM {from_clause}{where_str}{groupby_str}\n"
+                f"ORDER BY fecha ASC;"
+            )
 
     logger.debug(f"QueryEngine: SQL compilado para tabla '{payload.baseTable}' ({len(bound_params)} params)")
     return sql, bound_params

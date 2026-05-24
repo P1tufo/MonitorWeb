@@ -12,6 +12,13 @@ import pandas as pd
 from fastapi import APIRouter, Request, Depends, HTTPException
 from config import DB_PATH
 
+from core.models import ConfigQuery
+from core.query_engine import build_sql_from_payload
+from core.schemas import VisualQueryBuilderPayload
+import json
+from core.utils import sanitize_for_json
+from repositories.deliveries import DeliveriesRepository
+
 logger = logging.getLogger("routes-filters")
 router = APIRouter()
 
@@ -23,7 +30,7 @@ DATE_EXPR = "COALESCE(NULLIF(v.fecha_carga, ''), NULLIF(v.fecha_sm_real, ''), v.
 # cualquier auditoría de seguridad pueda verificar el contrato de entrada.
 ALLOWED_OTS_STATES: frozenset = frozenset({'OT Abierta', 'NO Tratada'})
 
-def _build_unified_where(date: str, area: str, centro: str, has_ots_filter: str, min_week: str):
+def _build_unified_where(date: str, area: str, centro: str, has_ots_filter: str, min_week: Optional[str]):
     """
     Construye la cláusula WHERE a nivel de MATERIAL.
 
@@ -57,16 +64,18 @@ def _build_unified_where(date: str, area: str, centro: str, has_ots_filter: str,
 
     # 1. Filtro de Fecha — valores del usuario → bind params nombrados
     if not date or date.strip() == "":
-        ph = _add_param(min_week)
-        where_clause += f" AND v.week_sort >= {ph}"
+        if min_week is not None:
+            ph = _add_param(min_week)
+            where_clause += f" AND v.week_sort >= {ph}"
     else:
         date_list = [d.strip() for d in date.split(",") if d.strip()]
         if date_list:
             phs = ", ".join(_add_param(d) for d in date_list)
             where_clause += f" AND {DATE_EXPR} IN ({phs})"
         else:
-            ph = _add_param(min_week)
-            where_clause += f" AND v.week_sort >= {ph}"
+            if min_week is not None:
+                ph = _add_param(min_week)
+                where_clause += f" AND v.week_sort >= {ph}"
 
     # 2. Filtro de Estado OT — validado contra whitelist estática antes de usarse
     if has_ots_filter and has_ots_filter.strip() in ALLOWED_OTS_STATES:
@@ -183,7 +192,10 @@ async def get_kpis(
     min_week = current_week_str
 
     try:
-        where_clause, where_params = _build_unified_where(date, area, centro, has_ots_filter, min_week)
+        # Pasamos None a has_ots_filter para que los KPIs NO se filtren por el estado de OT.
+        # Esto permite que los indicadores siempre muestren el desglose real del Centro/Área,
+        # mientras que la tabla de abajo sí se filtrará.
+        where_clause, where_params = _build_unified_where(date, area, centro, None, min_week)
 
         # SQL para KPIs optimizado: Una sola pasada con agregación condicional
         # Eliminamos DeliverySummary de los KPIs para contar MATERIALES reales individualmente
@@ -238,3 +250,91 @@ async def get_kpis(
     except Exception as e:
         logger.error(f"Error calculando KPIs dinámicos: {e}")
         raise HTTPException(status_code=500, detail="No se pudieron calcular los KPIs.")
+
+@router.get("/api/widget/data/{query_id}")
+async def api_widget_data(
+    query_id: str,
+    request: Request,
+    session: Session = Depends(get_session_dep)
+):
+    """
+    Endpoint de carga asíncrona para los componentes del Dashboard.
+    Lee visual_state, compila SQL y retorna los datos JSON directamente.
+    Aplica filtros globales de la UI mediante query parameters.
+    """
+    # 1. Obtener parámetros de la UI
+    date = request.query_params.get("date", "")
+    area = request.query_params.get("area", "")
+    centro = request.query_params.get("centro", "")
+    has_ots = request.query_params.get("has_ots_filter", "")
+
+    iso_year, iso_week, _ = datetime.now().isocalendar()
+    min_week = f"{iso_year}-{iso_week:02d}"
+
+    row = session.query(ConfigQuery).filter(ConfigQuery.query_id == query_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Widget no encontrado")
+        
+    if not row.visual_state:
+        # Modo legacy: ejecutar sql_text directamente
+        sql = row.sql_text or ""
+        if not sql:
+            raise HTTPException(status_code=400, detail="Widget no tiene visual_state ni sql_text.")
+        
+        if "{AREA_EXPR}" in sql:
+            from repositories.deliveries import DeliveriesRepository
+            sql = sql.replace("{AREA_EXPR}", DeliveriesRepository.AREA_EXPR)
+            
+        try:
+            df = pd.read_sql(text(sql), session.connection())
+            records = df.to_dict(orient="records")
+            return {"status": "success", "data": sanitize_for_json(records), "legacy": True}
+        except Exception as e:
+            logger.error(f"Error legacy widget {query_id}: {e}")
+            raise HTTPException(status_code=500, detail=str(e))
+    try:
+        vs_dict = json.loads(row.visual_state)
+        payload = VisualQueryBuilderPayload(**vs_dict)
+        sql, bound_params = build_sql_from_payload(payload, session)
+        
+        # Generar filtros globales (extra_where trae " WHERE 1=1 AND ...")
+        # Pasamos min_week=None para que los widgets históricos NO se limiten a la semana actual por defecto
+        extra_where, extra_params = _build_unified_where(date, area, centro, has_ots, None)
+        # Limpiar el "WHERE 1=1" que trae por defecto y ajustar el alias "v." al de la tabla base real
+        extra_conds = extra_where.replace(" WHERE 1=1", "").replace("v.", f"{payload.baseTable}.")
+
+        # Inyectar filtros globales en el SQL generado
+        if extra_conds:
+            if "\nWHERE " in sql:
+                sql = sql.replace("\nWHERE ", f"\nWHERE 1=1 {extra_conds} AND ", 1)
+            else:
+                if "\nGROUP BY " in sql:
+                    sql = sql.replace("\nGROUP BY ", f"\nWHERE 1=1 {extra_conds}\nGROUP BY ", 1)
+                elif "\nORDER BY " in sql:
+                    sql = sql.replace("\nORDER BY ", f"\nWHERE 1=1 {extra_conds}\nORDER BY ", 1)
+                else:
+                    sql = sql.replace(";", f"\nWHERE 1=1 {extra_conds};", 1)
+
+        # SQLAlchemy and Pandas execution
+        params_dict = {}
+        for i, p in enumerate(bound_params):
+            params_dict[f"vp{i}"] = p
+            
+        import re
+        for i in range(len(bound_params)):
+            sql = sql.replace("?", f":vp{i}", 1)
+            
+        # Combinar parámetros globales con los del visual builder
+        params_dict.update(extra_params)
+
+        # Add AREA_EXPR if needed
+        if "{AREA_EXPR}" in sql:
+            from repositories.deliveries import DeliveriesRepository
+            sql = sql.replace("{AREA_EXPR}", DeliveriesRepository.AREA_EXPR)
+            
+        df = pd.read_sql(text(sql), session.connection(), params=params_dict)
+        records = df.to_dict(orient="records")
+        return {"status": "success", "data": sanitize_for_json(records)}
+    except Exception as e:
+        logger.error(f"Error ejecutando widget {query_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

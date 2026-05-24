@@ -423,7 +423,8 @@
         <script type="application/json" id="data_sla_area_trend_raw_json">{{ (sla_area_trend_raw_json or []) | tojson | safe }}</script>
         <script type="application/json" id="data_avg_mensual_año">{{ (avg_mensual_año or 0) | tojson | safe }}</script>
         <script src="{{ url_for('static', path='js/core_ui.js') }}?v=1"></script>
-        <script src="{{ url_for('static', path='js/deliveries.js') }}?v=15"></script>
+        <script src="{{ url_for('static', path='js/dashboard.js') }}?v=17"></script>
+        <script src="{{ url_for('static', path='js/deliveries.js') }}?v=18"></script>
         <script type="application/json" id="data_volumen">{{ (volumen_data or []) | tojson | safe }}</script>
         <script type="application/json"
             id="data_area_stats_inv">{{ (inv_area_stats_json or []) | tojson | safe }}</script>

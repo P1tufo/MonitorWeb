@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: tests
-Compilado el: 2026-05-23 00:11:14
+Compilado el: 2026-05-24 00:59:57
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -41,7 +41,7 @@ Este archivo `conftest.py` es un archivo de configuración para pruebas unitaria
 ## Archivo: ./tests/test_api.py
 
 ### Resumen Funcional
-Este archivo contiene pruebas unitarias utilizando `pytest` para verificar el funcionamiento de varios endpoints y funcionalidades del sistema. Las pruebas cubren la lectura de un dashboard principal, la obtención de una URL de túnel, la iniciación de un proceso de sincronización, el acceso a una página de analíticas, la generación de consultas SQL para métricas SLA, y la resolución dinámica de áreas de negocio en rutas de auditoría.
+El archivo `test_api.py` contiene pruebas unitarias para verificar la funcionalidad de varios endpoints de una API, incluyendo el inicio de sesión, obtención de URLs de túnel, sincronización de datos, acceso a páginas de análisis y generación de consultas SQL.
 
 ### Catálogo de Funciones y Clases
 - `test_read_root(auth_client)` - Verifica que el dashboard principal responda con el título correcto.
@@ -50,17 +50,22 @@ Este archivo contiene pruebas unitarias utilizando `pytest` para verificar el fu
 - `test_analytics_page_access(auth_client)` - Verifica que la página de analíticas sea accesible.
 - `test_build_sql_sla_efficiency(auth_client)` - Verifica que el generador de consultas SQL compile correctamente la métrica SLA_EFFICIENCY con desgloses y filtros.
 - `test_analytics_sla_route(auth_client, test_db)` - Verifica que la ruta de auditoría SLA resuelva dinámicamente las áreas de negocio y que no muestre 'OTRO'.
+- `test_api_query_preview_returns_json_and_no_sql(auth_client)` - Verifica el contrato JSON in/out para preview y la ausencia de texto SQL.
+- `test_api_settings_query_rejects_raw_sql(auth_client)` - Verifica protección contra inyección y que el endpoint solo acepte visual_state.
 
 ### Interacción con Base de Datos
 - Motor: No aplica (No hay interacción directa con bases de datos en este archivo).
-- Tablas: `outbound_deliveries`
-- Columnas: `entrega`, `fecha_carga`, `ubicacion_area`, `area_negocio`, `dias_retraso`
+- Tablas: No aplica.
+- Columnas: No aplica.
 
 ### Estado y Variables Globales
-- No aplica (No hay variables globales definidas en este archivo).
+- No aplica (No se definen variables globales).
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `pytest`, `unittest.mock`.
+- Librerías externas utilizadas:
+  - `pytest`
+  - `unittest.mock`
+  - `fastapi.testclient.TestClient` (a través de `auth_client`)
 - Comunicación con otros archivos del proyecto:
   - `core.state.AppState`
   - `routes.sync.TUNNEL_URL_FILE`
@@ -223,32 +228,33 @@ El archivo `test_pipeline.py` contiene pruebas unitarias para el módulo de cons
 ## Archivo: ./tests/test_queries.py
 
 ### Resumen Funcional
-El archivo `test_queries.py` contiene pruebas unitarias para funciones que interactúan con una base de datos SQLite, específicamente para contar días activos y calcular estadísticas por área de negocio.
+El archivo `test_queries.py` contiene pruebas unitarias para verificar la funcionalidad de un repositorio que interactúa con una base de datos SQLite. Las pruebas cubren el conteo de días activos, cálculo de KPIs agrupados por área de negocio y la compilación correcta de consultas SQL a partir de payloads.
 
 ### Catálogo de Funciones y Clases
-- `test_get_total_active_days(test_db: sqlite3.Connection) -> None`: Verifica el conteo de días únicos con actividad filtrado por año usando fechas ISO.
-- `test_get_total_active_days_empty(test_db: sqlite3.Connection) -> None`: Verifica que el conteo de días activos devuelva 0 cuando la tabla está vacía.
-- `test_get_area_stats(test_db: sqlite3.Connection) -> None`: Verifica el cálculo de KPIs (ontime/late) agrupados por área de negocio.
-- `test_area_expr_fallback_locations(test_db: sqlite3.Connection) -> None`: Verifica que el mapeo de área resuelva correctamente usando las columnas de fallback.
+- `test_get_total_active_days(test_db: sqlite3.Connection) -> None` - Verifica el conteo de días únicos con actividad filtrado por año usando fechas ISO.
+- `test_get_total_active_days_empty(test_db: sqlite3.Connection) -> None` - Verifica que la función retorne 0 si no hay registros.
+- `test_get_area_stats(test_db: sqlite3.Connection) -> None` - Verifica el cálculo de KPIs (ontime/late) agrupados por área de negocio.
+- `test_area_expr_fallback_locations(test_db: sqlite3.Connection) -> None` - Verifica la asignación correcta de áreas basada en ubicaciones.
+- `test_query_engine_compiles_ast_correctly(test_db: sqlite3.Connection) -> None` - Verifica que el motor de consultas compile correctamente los ASTs a SQL.
 
 ### Interacción con Base de Datos
-- **Motor**: SQLite
-- **Tablas**: `outbound_deliveries`
-- **Columnas**:
-  - `entrega`
-  - `fecha_carga`
-  - `area_negocio`
-  - `dias_retraso`
-  - `ubicacion_area`
-  - `ubicacion_bin_1`
-  - `ubicacion_bin`
+- Motor de base de datos: SQLite
+- Tablas:
+  - `outbound_deliveries`
+- Columnas:
+  - `entrega`, `fecha_carga`, `area_negocio`, `dias_retraso`, `ubicacion_area`, `ubicacion_bin_1`, `ubicacion_bin`
 
 ### Estado y Variables Globales
-- No aplica
+No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `pytest`, `sqlite3`, `pandas`
-- **Flujo Interno**: El archivo interactúa con el módulo `core.queries_deliveries` para ejecutar consultas y validar resultados.
+- Librerías externas utilizadas:
+  - `pytest`
+  - `sqlite3`
+  - `pandas`
+- Comunicación con otros archivos del proyecto:
+  - `repositories.deliveries.DeliveriesRepository`
+  - `core.query_engine.build_sql_from_payload`
 
 
 ---
@@ -282,11 +288,12 @@ No aplica
 ## Archivo: ./tests/test_ui_smoke.py
 
 ### Resumen Funcional
-Este archivo contiene pruebas de humo (smoke tests) para verificar la presencia de componentes UI críticos en diferentes endpoints de una aplicación web. Las pruebas aseguran que los servidores respondan correctamente y que el HTML contenga los IDs necesarios para la inicialización de scripts frontend.
+El archivo `test_ui_smoke.py` contiene pruebas unitarias para verificar la funcionalidad de componentes UI en diferentes rutas de una aplicación web. Las pruebas comprueban que los elementos esperados estén presentes y que el servidor responda correctamente a las solicitudes.
 
 ### Catálogo de Funciones y Clases
-- `test_ui_smoke_components_presence(auth_client, path: str, markers: List[Tuple[str, str]])` - Prueba de humo parametrizada que verifica la presencia de componentes visuales críticos en diferentes endpoints.
+- `test_ui_smoke_components_presence(auth_client, path: str, markers: List[Tuple[str, str]])` - Prueba la presencia de componentes UI críticos en diferentes rutas.
 - `test_ui_smoke_error_handling(client)` - Verifica que el servidor maneje correctamente las peticiones a rutas inexistentes.
+- `test_ui_smoke_analytics_studio_modal_components(auth_client)` - Verifica que el modal visual exponga los selectores correctos y aísle el SQL.
 
 ### Interacción con Base de Datos
 No aplica
@@ -295,8 +302,8 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- **Librerías externas utilizadas**: `pytest`, `typing`
-- **Flujo**: El archivo interactúa con un cliente autenticado (`auth_client`) para realizar peticiones a diferentes endpoints y verifica la presencia de componentes UI específicos en el HTML de las respuestas. También interactúa con un cliente no autenticado (`client`) para verificar el manejo de rutas inexistentes.
+- **Librerías Externas**: `pytest`, `typing`
+- **Flujo Interno**: El archivo interactúa con un cliente autenticado (`auth_client`) para realizar solicitudes HTTP a diferentes rutas de la aplicación. Las respuestas se validan para asegurar que contengan los componentes UI esperados y que el servidor responda con códigos de estado correctos (200, 404).
 
 
 ---

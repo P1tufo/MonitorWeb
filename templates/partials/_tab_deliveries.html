@@ -122,7 +122,7 @@
                 {% endif %}
                 <h3>📈 Evolución por Mes (Histórico Anual)</h3>
                 <div style="position: relative; height: 350px; width: 100%;">
-                    <canvas id="monthlyTrendChart"></canvas>
+                    <div class="saas-widget" data-query-id="vl_monthly_evolution" style="width: 100%; height: 100%;"></div>
                 </div>
             </div>
         </div>
@@ -140,7 +140,7 @@
                         {% endif %}
                         <h3>🎯 Tendencia de Cumplimiento SLA Mensual (% On-Time)</h3>
                         <div style="position: relative; height: 300px; width: 100%;">
-                            <canvas id="slaMonthlyTrendChart"></canvas>
+                            <div class="saas-widget" data-query-id="vl_sla_monthly_trend" style="width: 100%; height: 100%;"></div>
                         </div>
                     </div>
                     <div class="capacity-box"
@@ -151,21 +151,22 @@
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <div style="padding: 8px; border-left: 3px solid #22c55e; background: rgba(34, 197, 94, 0.05);">
                                 <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">Punto Ideal</div>
-                                <div style="font-size: 0.9rem; color: #22c55e; font-weight: bold;">1.9k - 2.2k <small>mats/mes</small></div>
+                                <div id="cap-ideal-val" style="font-size: 0.9rem; color: #22c55e; font-weight: bold;">-- <small>mats/mes</small></div>
                             </div>
                             <div style="padding: 8px; border-left: 3px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
                                 <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">Estabilidad</div>
-                                <div style="font-size: 0.9rem; color: #f59e0b; font-weight: bold;">2.3k <small>mats/mes</small></div>
+                                <div id="cap-estab-val" style="font-size: 0.9rem; color: #f59e0b; font-weight: bold;">-- <small>mats/mes</small></div>
                             </div>
                             <div style="padding: 8px; border-left: 3px solid #ef4444; background: rgba(239, 68, 68, 0.05);">
-                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">Saturación</div>
-                                <div style="font-size: 0.9rem; color: #ef4444; font-weight: bold;">>2.4k <small>mats/mes</small></div>
+                                <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">Sobrecarga</div>
+                                <div id="cap-sobre-val" style="font-size: 0.9rem; color: #ef4444; font-weight: bold;">-- <small>mats/mes</small></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
 
         <div class="row-grid" style="margin-top: 1.5rem;">
             <div class="chart-box full-width">
@@ -178,7 +179,7 @@
                 {% endif %}
                 <h3>📈 Cumplimiento SLA Mensual por Área</h3>
                 <p class="chart-subtitle" style="font-size: 0.75rem; margin-bottom: 15px;">Análisis mensual de eficiencia por sección</p>
-                <div id="sla-monthly-trellis-container"
+                <div id="sla-monthly-trellis-container" class="saas-widget saas-trellis-widget" data-query-id="vl_sla_area_monthly_trend"
                     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; width: 100%;">
                 </div>
             </div>
@@ -197,7 +198,7 @@
                 {% endif %}
                 <h3>📈 Evolución por Semana (Histórico)</h3>
                 <div style="position: relative; height: 350px; width: 100%;">
-                    <canvas id="weeklyTrendChart"></canvas>
+                    <div class="saas-widget" data-query-id="vl_weekly_evolution" style="width: 100%; height: 100%;"></div>
                 </div>
             </div>
         </div>
@@ -215,7 +216,7 @@
                         {% endif %}
                         <h3>🎯 Tendencia de Cumplimiento SLA (% On-Time)</h3>
                         <div style="position: relative; height: 300px; width: 100%;">
-                            <canvas id="slaTrendChart"></canvas>
+                            <div class="saas-widget" data-query-id="vl_sla_trend" style="width: 100%; height: 100%;"></div>
                         </div>
                     </div>
                     <div class="capacity-box"
@@ -226,15 +227,15 @@
                         <div style="display: flex; flex-direction: column; gap: 10px;">
                             <div style="padding: 8px; border-left: 3px solid #22c55e; background: rgba(34, 197, 94, 0.05);">
                                 <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">Punto Ideal</div>
-                                <div style="font-size: 0.9rem; color: #22c55e; font-weight: bold;">450-520 <small>mats/sem ⬆️90%</small></div>
+                                <div id="cap-ideal-val-week" style="font-size: 0.9rem; color: #22c55e; font-weight: bold;">-- <small>mats/sem</small></div>
                             </div>
                             <div style="padding: 8px; border-left: 3px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
                                 <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">Límite Estabilidad</div>
-                                <div style="font-size: 0.9rem; color: #f59e0b; font-weight: bold;">530 <small>mats/sem 85%</small></div>
+                                <div id="cap-estab-val-week" style="font-size: 0.9rem; color: #f59e0b; font-weight: bold;">-- <small>mats/sem</small></div>
                             </div>
                             <div style="padding: 8px; border-left: 3px solid #ef4444; background: rgba(239, 68, 68, 0.05);">
                                 <div style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase;">Zona de Saturación</div>
-                                <div style="font-size: 0.9rem; color: #ef4444; font-weight: bold;">>550 <small>mats/sem ⬇️82%</small></div>
+                                <div id="cap-sobre-val-week" style="font-size: 0.9rem; color: #ef4444; font-weight: bold;">-- <small>mats/sem</small></div>
                             </div>
                         </div>
                         <p style="font-size: 0.65rem; color: #64748b; margin-top: 12px; font-style: italic;">
@@ -256,7 +257,7 @@
                 {% endif %}
                 <h3>📈 Tendencia de Cumplimiento SLA por Área (Small Multiples)</h3>
                 <p class="chart-subtitle" style="font-size: 0.75rem; margin-bottom: 15px;">Análisis individual de eficiencia On-Time por sección</p>
-                <div id="sla-trellis-container"
+                <div id="sla-trellis-container" class="saas-widget saas-trellis-widget" data-query-id="vl_sla_area_trend"
                     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; width: 100%;">
                     <!-- Dinámicamente generado por JS -->
                 </div>

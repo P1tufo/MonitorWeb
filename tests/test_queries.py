@@ -1,7 +1,7 @@
 import pytest
 import sqlite3
 import pandas as pd
-from core.queries_deliveries import get_total_active_days, get_area_stats
+from repositories.deliveries import DeliveriesRepository
 
 # Constantes de prueba para evitar magic strings y facilitar el mantenimiento
 TEST_YEAR = "%2026"  # Las queries usan LIKE ?, así que el wildcard es necesario
@@ -12,41 +12,51 @@ AREA_B = "MOLDURAS"
 DATE_1 = "01-05-2026"
 DATE_2 = "02-05-2026"
 
+class MockConnectionWrapper:
+    def __init__(self, conn):
+        self.connection = conn
+
+class MockSession:
+    def __init__(self, conn):
+        self._conn = conn
+    def connection(self):
+        return MockConnectionWrapper(self._conn)
+    def execute(self, stmt):
+        class Result:
+            def all(self):
+                cur = self._conn.execute(str(stmt))
+                return cur.fetchall()
+        r = Result()
+        r._conn = self._conn
+        return r
+
+
 def test_get_total_active_days(test_db: sqlite3.Connection) -> None:
     """Verifica el conteo de días únicos con actividad filtrado por año usando fechas ISO."""
-    # 1. Insertar datos de prueba (3 registros en 2 días distintos)
     data = [
         ('1001', DATE_1, 'A', 1),
         ('1002', DATE_1, 'B', 0),
         ('1003', DATE_2, 'A', 5)
     ]
-    # Se usa el context manager de la conexión para asegurar el commit/rollback automático
     with test_db:
         test_db.executemany(
             "INSERT INTO outbound_deliveries (entrega, fecha_carga, area_negocio, dias_retraso) VALUES (?,?,?,?)", 
             data
         )
 
-    # 2. Ejecutar consulta para el año configurado
-    result = get_total_active_days(test_db, TEST_YEAR)
-
-    # 3. Validar: Deberían ser 2 días únicos (DATE_1 y DATE_2)
+    repo = DeliveriesRepository(MockSession(test_db))
+    result = repo.get_total_active_days(TEST_YEAR)
     assert result == 2, f"Se esperaban 2 días activos para {TEST_YEAR}, se obtuvo {result}"
 
 def test_get_total_active_days_empty(test_db: sqlite3.Connection) -> None:
-    """Verifica que el conteo de días activos devuelva 0 cuando la tabla está vacía."""
-    # La tabla ya existe por conftest.py, pero está vacía al inicio de cada función de test
-    result = get_total_active_days(test_db, TEST_YEAR)
-    assert result == 0, "Debería retornar 0 si no hay registros en el año consultado"
+    repo = DeliveriesRepository(MockSession(test_db))
+    result = repo.get_total_active_days(TEST_YEAR)
+    assert result == 0, "Debería retornar 0 si no hay registros"
 
 def test_get_area_stats(test_db: sqlite3.Connection) -> None:
     """
-    Verifica el cálculo de KPIs (ontime/late) agrupados por área de negocio.
-    Utiliza validaciones robustas sobre el DataFrame para evitar fallos por ordenamiento.
+    Verifica el cálculo de KPIs (ontime/late) agrupados por área de negocio (ahora a través del motor AST).
     """
-    # Preparación de datos:
-    # Area A: 1 a tiempo (retraso 1 <= 2), 1 tarde (retraso 5 > 2)
-    # Area B: 1 a tiempo (retraso 0 <= 2)
     data = [
         ('1001', DATE_1, AREA_A, 1), # ontime
         ('1002', DATE_1, AREA_A, 5), # late
@@ -58,18 +68,18 @@ def test_get_area_stats(test_db: sqlite3.Connection) -> None:
             data
         )
 
-    # Ejecutar la consulta de estadísticas por área
-    df = get_area_stats(test_db, TEST_YEAR)
+    repo = DeliveriesRepository(MockSession(test_db))
+    df = repo.get_area_stats(TEST_YEAR)
 
-    # 1. Validar resultados para Area A sin depender del índice iloc
+    # Validar resultados para Area A
     df_a = df[df['area'] == AREA_A]
     assert not df_a.empty, f"No se encontraron resultados para el área {AREA_A}"
-    stats_a = df_a.squeeze() # Convierte el DataFrame de una sola fila en una Serie
+    stats_a = df_a.squeeze()
     assert stats_a['total_entregas'] == 2
     assert stats_a['ontime'] == 1
     assert stats_a['late'] == 1
 
-    # 2. Validar resultados para Area B
+    # Validar resultados para Area B
     df_b = df[df['area'] == AREA_B]
     assert not df_b.empty, f"No se encontraron resultados para el área {AREA_B}"
     stats_b = df_b.squeeze()
@@ -78,15 +88,11 @@ def test_get_area_stats(test_db: sqlite3.Connection) -> None:
     assert stats_b['late'] == 0
 
 def test_area_expr_fallback_locations(test_db: sqlite3.Connection) -> None:
-    """Verifica que el mapeo de área resuelva correctamente usando las columnas de fallback."""
-    # MOLTR1 -> MOLDURAS (por cost center mapping)
-    # PATRU2 -> LINEA 2 (por cost center mapping)
     data = [
-        # entrega, fecha_carga, area_negocio, ubicacion_area, ubicacion_bin_1, ubicacion_bin, dias_retraso
-        ('8001', DATE_1, None, None, 'MOLTR1-104', 'Q1C02A', 1), # MOLTR1-104 en ubicacion_bin_1 -> MOLDURAS
-        ('8002', DATE_1, None, None, None, 'PATRU2-201', 1), # PATRU2-201 en ubicacion_bin -> LINEA 2
-        ('8003', DATE_1, None, 'ASERRADERO', None, None, 1), # ASERRADERO en ubicacion_area -> ASERRADERO
-        ('8004', DATE_1, None, None, None, None, 1), # Todo NULL -> S/N
+        ('8001', DATE_1, None, None, 'MOLTR1-104', 'Q1C02A', 1), # -> MOLDURAS
+        ('8002', DATE_1, None, None, None, 'PATRU2-201', 1), # -> LINEA 2
+        ('8003', DATE_1, None, 'ASERRADERO', None, None, 1), # -> ASERRADERO
+        ('8004', DATE_1, None, None, None, None, 1), # -> S/N
     ]
     with test_db:
         test_db.executemany(
@@ -94,25 +100,31 @@ def test_area_expr_fallback_locations(test_db: sqlite3.Connection) -> None:
             data
         )
 
-    df = get_area_stats(test_db, TEST_YEAR)
+    repo = DeliveriesRepository(MockSession(test_db))
+    df = repo.get_area_stats(TEST_YEAR)
     
-    # Validar MOLDURAS
-    molduras = df[df['area'] == 'MOLDURAS']
-    assert not molduras.empty
-    assert molduras.squeeze()['total_entregas'] == 1
+    assert df[df['area'] == 'MOLDURAS'].squeeze()['total_entregas'] == 1
+    assert df[df['area'] == 'LINEA 2'].squeeze()['total_entregas'] == 1
+    assert df[df['area'] == 'ASERRADERO'].squeeze()['total_entregas'] == 1
+    assert df[df['area'] == 'S/N'].squeeze()['total_entregas'] == 1
 
-    # Validar LINEA 2
-    linea2 = df[df['area'] == 'LINEA 2']
-    assert not linea2.empty
-    assert linea2.squeeze()['total_entregas'] == 1
+def test_query_engine_compiles_ast_correctly(test_db: sqlite3.Connection) -> None:
+    from core.query_engine import build_sql_from_payload
+    from core.schemas import VisualQueryBuilderPayload, MetricDef, TimeAxisDef, FilterDef
+    
+    payload = VisualQueryBuilderPayload(
+        baseTable="outbound_deliveries",
+        metric=MetricDef(column="outbound_deliveries.entrega", aggregation="COUNT"),
+        timeAxis=TimeAxisDef(column="outbound_deliveries.fecha_carga", granularity="MONTH"),
+        filters=[FilterDef(column="outbound_deliveries.dias_retraso", operator="lessthan", value="3")],
+        metrics=[]
+    )
 
-    # Validar ASERRADERO
-    aserradero = df[df['area'] == 'ASERRADERO']
-    assert not aserradero.empty
-    assert aserradero.squeeze()['total_entregas'] == 1
-
-    # Validar S/N
-    sn = df[df['area'] == 'S/N']
-    assert not sn.empty
-    assert sn.squeeze()['total_entregas'] == 1
+    sql, params = build_sql_from_payload(payload, MockSession(test_db))
+    
+    sql_upper = sql.upper()
+    assert "SELECT" in sql_upper
+    assert "COUNT(" in sql_upper
+    assert "WHERE" in sql_upper
+    assert "<" in sql_upper and "?" in sql_upper
 

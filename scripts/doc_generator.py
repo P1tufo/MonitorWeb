@@ -462,8 +462,10 @@ def analyze_structure_pre_flight():
         analysis_res = call_ollama_with_retry(msgs_analysis)
         with open(analysis_cache_path, 'w', encoding='utf-8') as af:
             af.write(f"## Análisis de Arquitectura Global\n\n{analysis_res}\n\n")
+        return True
     else:
         print("   ✓ Análisis estructural actualizado en caché.")
+        return False
 
 def generate_audit_post_flight(files_ordered):
     """Genera la Auditoría Global analizando la documentación ya generada en la caché."""
@@ -614,6 +616,30 @@ def compile_by_folders(files_ordered):
                         f_mej.write(cf.read())
                         f_mej.write("\n---\n\n")
 
+    # Limpieza de carpetas huérfanas en 'docs/'
+    if os.path.exists("docs"):
+        for root_dir, dirs, files_in_dir in os.walk("docs", topdown=False):
+            if root_dir == "docs":
+                continue
+            rel_dir = os.path.relpath(root_dir, "docs")
+            
+            # Si el directorio no está en nuestros grupos activos y no es 'raiz'
+            if rel_dir not in folder_groups and rel_dir != "raiz":
+                # Borramos los archivos markdown generados
+                for f in files_in_dir:
+                    if f in ["documentacion.md", "mejoras.md"]:
+                        try:
+                            os.remove(os.path.join(root_dir, f))
+                        except OSError:
+                            pass
+                # Intentamos borrar el directorio si quedó vacío
+                try:
+                    if not os.listdir(root_dir):
+                        os.rmdir(root_dir)
+                        print(f"   ✓ Directorio obsoleto eliminado de docs/: {rel_dir}")
+                except OSError:
+                    pass
+
 def prepare_model():
     """Verifica si Ollama está activo y si el modelo solicitado existe."""
     print(f"--- Preparando Motor de IA ({MODEL_NAME}) ---")
@@ -642,7 +668,7 @@ def prepare_model():
 def cleanup_orphaned_cache(state, valid_files):
     """Elimina de la caché los archivos que ya no existen en el proyecto."""
     if not os.path.exists(CACHE_DIR):
-        return state
+        return state, False
     
     valid_files_set = set(valid_files)
     orphaned_keys = []
@@ -662,7 +688,17 @@ def cleanup_orphaned_cache(state, valid_files):
     if orphaned_keys:
         print(f"   ✓ Se limpiaron {len(orphaned_keys)} archivos huérfanos de la caché.")
         
-    return state
+    # Limpiar directorios vacíos que hayan quedado en la caché
+    for root_dir, dirs, _ in os.walk(CACHE_DIR, topdown=False):
+        for name in dirs:
+            dir_path = os.path.join(root_dir, name)
+            try:
+                if not os.listdir(dir_path):
+                    os.rmdir(dir_path)
+            except OSError:
+                pass
+                
+    return state, len(orphaned_keys) > 0
 
 def purge_empty_cache_files():
     """Busca y elimina archivos en .doc_cache que estén vacíos o corruptos para forzar reintento."""
@@ -706,7 +742,7 @@ def main():
     state = load_state()
     
     # 0. Fase Pre-flight: Árbol y Análisis Estructural
-    analyze_structure_pre_flight()
+    structure_changed = analyze_structure_pre_flight()
     
     all_valid_files = []
     files_to_process = []
@@ -723,7 +759,7 @@ def main():
     
     all_valid_files.sort() # Orden alfabético para el archivo final
     
-    state = cleanup_orphaned_cache(state, all_valid_files)
+    state, was_cleaned = cleanup_orphaned_cache(state, all_valid_files)
     save_state(state)
     
     count = len(files_to_process)
@@ -746,11 +782,17 @@ def main():
     if needs_audit:
         generate_audit_post_flight(all_valid_files)
 
-    # 3. Compilar siempre para asegurar que el archivo maestro refleje el estado actual de la caché
-    compile_master_file(all_valid_files)
-    compile_by_folders(all_valid_files)
+    master_missing = not os.path.exists(OUTPUT_FILE) or not os.path.exists(OUTPUT_MEJORAS_FILE)
+    needs_compilation = (count > 0) or was_cleaned or structure_changed or needs_audit or master_missing
+    
+    if needs_compilation:
+        # 3. Compilar archivo maestro y carpetas con el estado actual
+        compile_master_file(all_valid_files)
+        compile_by_folders(all_valid_files)
+    else:
+        print("\n✓ Documentación compilada al día. No es necesario recompilar.")
 
-    # 3. Liberar modelo de la RAM
+    # 4. Liberar modelo de la RAM
     print("\n[*] Solicitando a Ollama liberar el modelo de la RAM...")
     try:
         ollama.chat(model=MODEL_NAME, messages=[], keep_alive=0)

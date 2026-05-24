@@ -109,7 +109,8 @@ class ConfigQuery(Base):
     __tablename__ = "config_queries"
 
     query_id: Mapped[str] = mapped_column(String(100), primary_key=True)
-    # DEPRECADO: nullable=True para permitir la migración progresiva hacia visual_state.
+    # OBSOLETO (Fase 3): Mantenido únicamente por compatibilidad estructural con SQLAlchemy.
+    # El motor analítico ahora lee exclusivamente `visual_state`.
     sql_text: Mapped[str] = mapped_column(Text, nullable=True)
     visual_state: Mapped[str] = mapped_column(Text, nullable=True)
 

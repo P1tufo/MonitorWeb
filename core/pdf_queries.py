@@ -42,6 +42,14 @@ def get_deliveries_for_bulk(
                 placeholders = ','.join(['?'] * len(date_list))
                 query += f" AND COALESCE(NULLIF(v.fecha_carga, ''), NULLIF(v.fecha_sm_real, ''), v.creado_el) IN ({placeholders})"
                 params.extend(date_list)
+        else:
+            # Límite de seguridad: si no hay filtro de fecha explícito, limitamos a la semana actual 
+            # (Igual que la lógica de la tabla en dashboard.html)
+            from datetime import datetime
+            iso_year, iso_week, _ = datetime.now().isocalendar()
+            min_week = f"{iso_year}-{iso_week:02d}"
+            query += " AND (v.week_sort >= ? OR v.week_sort IS NULL)"
+            params.append(min_week)
 
         if area:
             area_list = [a.strip() for a in area.split(",") if a.strip()]
@@ -54,16 +62,16 @@ def get_deliveries_for_bulk(
             query += f" AND (CASE WHEN {AREA_EXPR} IN ('VIGAS', 'ASERRADERO', 'REMANUFACTURA') THEN 'Aserradero' ELSE 'Paneles' END) = ?"
             params.append(centro)
 
-        if has_ots_filter == '1':
-            query += " AND EXISTS (SELECT 1 FROM warehouse_tasks l WHERE CAST(l.entrega AS INTEGER) = v.entrega)"
-        elif has_ots_filter == '0':
-            query += " AND NOT EXISTS (SELECT 1 FROM warehouse_tasks l WHERE CAST(l.entrega AS INTEGER) = v.entrega)"
+        if has_ots_filter in ('OT Abierta', 'NO Tratada'):
+            query += " AND v.estado_wms = ?"
+            params.append(has_ots_filter)
 
         if entrega_query:
             query += " AND v.entrega LIKE ?"
             params.append(f"%{entrega_query}%")
 
         query += " GROUP BY v.entrega"
+        logger.info(f"==== BULK PDF QUERY ====\n{query}\nPARAMS: {params}\n==========================")
         return pd.read_sql(query, conn, params=params)
 
     except Exception as e:

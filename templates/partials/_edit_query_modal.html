@@ -361,12 +361,7 @@
 
                 </div>
 
-                <!-- ARTEFACTO DE COMPATIBILIDAD TEMPORAL (Fase 1 → Fase 2):
-                     Este textarea permanece oculto y NO es editable por el usuario.
-                     syncVisualToSQL() lo utiliza internamente para pasar el SQL compilado
-                     a runPreview(). Será eliminado en la Fase 2 cuando runPreview() consuma
-                     directamente el visual_state en lugar del SQL generado. -->
-                <textarea id="editQueryText" style="display: none;"></textarea>
+                <!-- FASE 1: Se eliminó textarea editQueryText para aislar UI del SQL crudo. -->
             </div>
 
             <!-- PANEL DERECHO: Live Preview & Gráfico -->
