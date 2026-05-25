@@ -1,30 +1,35 @@
 # Documentación Técnica - Directorio: core/helpers
-Compilado el: 2026-05-24 00:59:57
+Compilado el: 2026-05-24 14:59:18
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
 
-## Archivo: ./core/helpers/visual_query_adapter.py
+## Archivo: ./core/helpers/dynamic_executor.py
 
 ### Resumen Funcional
-Este archivo contiene funciones que construyen payloads para consultas visuales, utilizando un esquema definido en `core.schemas`. Cada función genera un objeto `VisualQueryBuilderPayload` con diferentes configuraciones de tablas, filtros y métricas.
+El archivo `dynamic_executor.py` es un módulo que permite la ejecución de consultas SQL dinámicas a partir de payloads JSON proporcionados por el frontend. Utiliza el motor de consulta `query_engine` para construir y ejecutar las consultas, devolviendo los resultados en forma de DataFrame de Pandas.
 
 ### Catálogo de Funciones y Clases
-- `build_area_stats_payload(year: str, sla_threshold: int) -> VisualQueryBuilderPayload`: Construye un payload para estadísticas agrupadas por área de negocio.
-- `build_sla_stats_payload(year: str, sla_threshold: int) -> VisualQueryBuilderPayload`: Construye un payload para resumen global de SLA.
-- `build_dates_counts_payload(year: str) -> VisualQueryBuilderPayload`: Construye un payload para conteo por fechas y área.
-- `build_top_materials_payload(year: str) -> VisualQueryBuilderPayload`: Construye un payload para ranking de materiales por área.
-- `build_wms_status_payload(year: str) -> VisualQueryBuilderPayload`: Construye un payload para el estado del WMS.
+- `execute_visual_query(payload_dict: Dict, db: Session) -> pd.DataFrame` - Toma un payload JSON crudo desde el frontend, lo valida y compila usando el query_engine, y devuelve un DataFrame de Pandas directamente.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no realiza ninguna interacción con una base de datos.
+- Motor de base de datos: SQLAlchemy.
+- Tablas y Columnas: No aplica (no hay consultas SQL explícitas o llamadas a ORM).
+- Consultas SQL Crudas: Sí, se genera una consulta SQL dinámica a través del `query_engine`.
+- Llamadas a ORM: Sí, se utiliza el método `build_sql_from_payload` del módulo `core.query_engine`.
 
 ### Estado y Variables Globales
-No aplica. No se definen variables globales, de sesión o de entorno en este archivo.
+No aplica.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `logging`
-- **Flujo Interno**: Las funciones dependen del módulo `core.schemas` para definir los payloads.
+- Librerías externas utilizadas:
+  - `pandas`: Para manejar los DataFrames.
+  - `logging`: Para registrar errores.
+  - `typing.Dict`: Para tipar el parámetro de entrada.
+  - `sqlalchemy.orm.Session`: Para la sesión de base de datos.
+  
+- Flujo hacia otros archivos del proyecto:
+  - `core.query_engine.build_sql_from_payload`: Se utiliza para construir la consulta SQL dinámica.
 
 
 ---

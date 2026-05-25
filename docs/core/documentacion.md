@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: core
-Compilado el: 2026-05-24 00:59:57
+Compilado el: 2026-05-24 14:59:18
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -348,7 +348,7 @@ No aplica
 ## Archivo: ./core/pdf_queries.py
 
 ### Resumen Funcional
-Este archivo contiene funciones para construir y ejecutar consultas SQL en una base de datos SQLite, específicamente para generar reportes PDFs relacionados con entregas y materiales. Las funciones manejan filtros dinámicos y validaciones de seguridad.
+Este archivo contiene funciones para construir y ejecutar consultas SQL en una base de datos SQLite, específicamente para generar reportes PDF. Las funciones manejan filtros dinámicos para entregas, áreas y centros, y recuperan información detallada sobre los materiales por entrega.
 
 ### Catálogo de Funciones y Clases
 - `get_deliveries_for_bulk(conn: sqlite3.Connection, date: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, entrega_query: Optional[str] = None) -> pd.DataFrame` - Construye y ejecuta la query dinámica para filtrar entregas en reportes masivos.
@@ -359,21 +359,24 @@ Este archivo contiene funciones para construir y ejecutar consultas SQL en una b
 - Motor de BD: SQLite
 - Tablas:
   - `outbound_deliveries`
-  - `warehouse_tasks`
 - Columnas:
-  - `entrega`, `autor`, `fecha_carga`, `fecha_sm_real`, `creado_el`, `ubicacion_area`, `ubicacion_bin_1`, `ubicacion_bin`, `area_negocio`, `material`, `denominacion`, `cantidad`, `umb`, `pos_`
+  - `entrega`, `autor`, `fecha_carga`, `fecha_sm_real`, `creado_el`, `week_sort`, `estado_wms`, `material`, `denominacion`, `cantidad`, `umb`, `ubicacion_bin`, `ubicacion_area`, `ubicacion_bin_1`
 - Consultas SQL crudas:
-  - Consulta dinámica para filtrar entregas.
-  - Consulta para obtener el área de negocio dominante.
-  - Consulta para obtener materiales por entrega.
+  - `get_deliveries_for_bulk` construye consultas dinámicas basadas en los filtros proporcionados.
+  - `get_area_lookup` y `get_picking_items` ejecutan consultas estáticas para obtener áreas de negocio y materiales por entrega, respectivamente.
 
 ### Estado y Variables Globales
-No aplica
+- No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `logging`, `pandas`, `sqlite3`
-- Comunicación con otros archivos del proyecto:
-  - No se menciona ninguna comunicación explícita con otros archivos.
+- Librerías externas utilizadas:
+  - `logging`
+  - `pandas`
+  - `sqlite3`
+  - `typing` (para tipos de datos)
+- Flujo interno:
+  - Las funciones interactúan con la base de datos SQLite para recuperar y procesar información.
+  - Utilizan expresiones SQL complejas para filtrar y agrupar datos.
 
 
 ---
@@ -440,20 +443,20 @@ No aplica
 ## Archivo: ./core/schemas.py
 
 ### Resumen Funcional
-Este archivo define esquemas de datos utilizando Pydantic, que son clases que describen la estructura y los tipos de datos esperados en las respuestas de API y payloads de consultas visuales.
+Este archivo define esquemas de datos utilizando Pydantic, que son clases que describen la estructura y los tipos de datos para objetos JSON. Estos esquemas se utilizan principalmente para validar y manejar datos en aplicaciones web.
 
 ### Catálogo de Funciones y Clases
-- `DashboardResponse(data: Dict[str, Any], is_syncing: bool)` - Define la estructura de la respuesta para un panel de control.
-- `AnalyticsDeliveriesResponse(data: Dict[str, Any], is_syncing: bool)` - Define la estructura de la respuesta para análisis de entregas.
-- `AnalyticsInventoryResponse(data: Dict[str, Any], is_syncing: bool)` - Define la estructura de la respuesta para análisis de inventario.
-- `AnalyticsTasksResponse(data: Dict[str, Any], is_syncing: bool)` - Define la estructura de la respuesta para análisis de tareas.
-- `JoinDef(table: str, onLeft: str, onRight: str)` - Define la estructura para una definición de unión en consultas visuales.
-- `FilterDef(column: str, operator: str, value: Optional[Any] = "", valueType: Optional[str] = "value", compareColumn: Optional[str] = None, offsetValue: Optional[str] = None, diffOp: Optional[str] = None)` - Define la estructura para una definición de filtro en consultas visuales.
-- `MetricCondition(column: str, operator: str, value: Any)` - Define la estructura para una condición de métrica en consultas visuales.
-- `MetricDef(column: str, aggregation: str, format: Optional[str] = "number", label: Optional[str] = "", condition: Optional[MetricCondition] = None, customExpr: Optional[str] = None)` - Define la estructura para una definición de métrica en consultas visuales.
-- `TimeAxisDef(column: Optional[str] = None, granularity: Optional[str] = "NONE")` - Define la estructura para la definición del eje temporal en consultas visuales.
-- `SecondMetricDef(column: str = "", aggregation: str = "", label: str = "")` - Define la estructura para una segunda métrica en consultas visuales.
-- `VisualQueryBuilderPayload(baseTable: str, joins: list[JoinDef] = [], filters: list[FilterDef] = [], metric: Optional[MetricDef] = None, timeAxis: Optional[TimeAxisDef] = None, breakdown: Optional[str] = None, secondMetric: Optional[SecondMetricDef] = None, metrics: list[MetricDef] = [])` - Define la estructura del payload para el generador de consultas visuales.
+- `DashboardResponse(data: Dict[str, Any], is_syncing: bool)` - Define la respuesta para un panel de control.
+- `AnalyticsDeliveriesResponse(data: Dict[str, Any], is_syncing: bool)` - Define la respuesta para análisis de entregas.
+- `AnalyticsInventoryResponse(data: Dict[str, Any], is_syncing: bool)` - Define la respuesta para análisis de inventario.
+- `AnalyticsTasksResponse(data: Dict[str, Any], is_syncing: bool)` - Define la respuesta para análisis de tareas.
+- `JoinDef(table: str, onLeft: str, onRight: str)` - Define una definición de unión para consultas SQL.
+- `FilterDef(column: str, operator: str, value: Optional[Any] = "", valueType: Optional[str] = "value", compareColumn: Optional[str] = None, offsetValue: Optional[str] = None, diffOp: Optional[str] = None)` - Define una definición de filtro para consultas SQL.
+- `MetricCondition(column: str, operator: str, value: Any)` - Define una condición para métricas en consultas SQL.
+- `MetricDef(column: str, aggregation: str, format: Optional[str] = "number", label: Optional[str] = "", condition: Optional[MetricCondition] = None, customExpr: Optional[str] = None)` - Define una definición de métrica para consultas SQL.
+- `TimeAxisDef(column: Optional[str] = None, granularity: Optional[str] = "NONE")` - Define la definición del eje temporal en consultas SQL.
+- `SecondMetricDef(column: str = "", aggregation: str = "", label: str = "")` - Define una segunda métrica para consultas SQL.
+- `VisualQueryBuilderPayload(baseTable: str, joins: list[JoinDef] = [], filters: list[FilterDef] = [], metric: Optional[MetricDef] = None, timeAxis: Optional[TimeAxisDef] = None, breakdown: Optional[str] = None, secondMetric: Optional[SecondMetricDef] = None, metrics: list[MetricDef] = [], chartType: Optional[str] = "bar")` - Define el payload para el generador de consultas visuales.
 
 ### Interacción con Base de Datos
 No aplica
@@ -462,7 +465,7 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- `pydantic` - Librería utilizada para definir los esquemas de datos.
+- `pydantic`: Librería utilizada para definir esquemas de datos.
 - No se comunica con otros archivos del proyecto.
 
 
@@ -500,24 +503,20 @@ Gestión centralizada del estado mutable y la caché de la aplicación, implemen
   - `sync_lock` (getter)
   - `is_syncing` (getter/setter)
   - `cache_size` (getter)
-  - `get_cache(key: str) -> Optional[Any]`
-  - `set_cache(key: str, value: Any)`
-  - `clear_cache(key: Optional[str] = None)`
+  - `get_cache(key: str)` - Recupera un valor del caché.
+  - `set_cache(key: str, value: Any)` - Guarda un valor en el caché, respetando los límites de tamaño.
+  - `clear_cache(key: Optional[str] = None)` - Limpia una entrada específica o todo el caché.
+  - `clear_cache_prefix(prefix: str)` - Limpia todas las entradas de caché que comiencen con el prefijo dado.
 
 ### Interacción con Base de Datos
-No aplica.
+No aplica
 
 ### Estado y Variables Globales
-- `global_state` (variable global): Instancia única de `AppState`.
+- `global_state` - Instancia única de `AppState`.
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
-  - `fastapi`: Para inyección de dependencias.
-  - `logging`: Para registro de eventos.
-  - `threading.Lock`: Para sincronización.
-
-- Comunicación con otros archivos del proyecto:
-  - `get_app_state()`: Inyección de dependencias para FastAPI.
+- Librerías externas utilizadas: `fastapi`, `logging`, `threading`.
+- No comunica con otros archivos del proyecto.
 
 
 ---

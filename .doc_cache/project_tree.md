@@ -6,17 +6,6 @@
     app.py
     config.py
     main.py
-    monitor.db
-    package-lock.json
-    package.json
-    test_api_kpis.py
-    test_both.py
-    test_braces.py
-    test_browser.js
-    test_deliveries.py
-    test_filter.py
-    test_kpis.py
-    test_widget.py
     core/
         __init__.py
         app_instance.py
@@ -38,7 +27,7 @@
         wms_config.py
         wms_utils.py
         helpers/
-            visual_query_adapter.py
+            dynamic_executor.py
     bin/
         ngrok
     deploy/
@@ -75,6 +64,9 @@
         core/
             documentacion.md
             mejoras.md
+            helpers/
+                documentacion.md
+                mejoras.md
         raiz/
             documentacion.md
             mejoras.md
@@ -137,6 +129,7 @@
             deliveries.js
             docs_explorer.js
             inventory.js
+            saas_engine.js
             sla_table.js
             tasks.js
     scripts/
@@ -149,6 +142,7 @@
         consolidator.py
         data.db
         db_enrichment.py
+        deliveries.db
         monitor.db
         predictive_engine.py
     templates/
@@ -199,6 +193,7 @@
         settings.py
         sync.py
         tasks.py
+        widgets.py
     services/
         __init__.py
         dashboard_service.py

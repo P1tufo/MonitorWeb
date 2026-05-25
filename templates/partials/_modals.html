@@ -51,3 +51,22 @@
         </div>
     </div>
 </div>
+
+<!-- Drilldown Modal para Analíticas SaaS -->
+<div id="drilldownModal" class="pdf-modal">
+    <div class="pdf-modal-content" style="max-width: 1200px; width: 95%;">
+        <div class="pdf-modal-header">
+            <h3 id="drilldownModalTitle" class="modal-title">📊 Detalles de Categoría</h3>
+            <span class="pdf-close" onclick="document.getElementById('drilldownModal').classList.remove('active')" title="Cerrar">&times;</span>
+        </div>
+        <div class="modal-body" style="min-height: 200px; display: flex; flex-direction: column;">
+            <div id="drilldownSpinner" style="text-align:center; padding: 40px; display: none;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i>
+                <p style="color: #94a3b8; margin-top: 10px; font-size: 0.9rem;">Cargando detalles...</p>
+            </div>
+            <div id="drilldownTableContainer" class="table-responsive" style="flex: 1; overflow-y: auto;">
+                <!-- La tabla será inyectada aquí dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>

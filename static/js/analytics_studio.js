@@ -1,19 +1,27 @@
+    // Scope modular para evitar fugas de estado entre widgets
+    const AnalyticsStudioManager = {
+        instances: {},
+        getVisualState(queryId) {
+            if (!this.instances[queryId]) {
+                this.instances[queryId] = {
+                    baseTable: '', joins: [], filters: [],
+                    metric: { column: '', aggregation: 'COUNT' },
+                    timeAxis: { column: '', granularity: 'MONTH' },
+                    breakdown: '', secondMetric: null
+                };
+            }
+            return this.instances[queryId];
+        },
+        setVisualState(queryId, state) {
+            this.instances[queryId] = state;
+        }
+    };
+
     let studioChartInstance = null;
     let currentSchema = {};
     let currentQueryId = "";
-    let studioBoundParams = null;
     let serverVisualState = null;
-    let legacySqlText = null;
-    // Estado del constructor visual
-    let visualState = {
-        baseTable: '',
-        joins: [],
-        filters: [],
-        metric: { column: '', aggregation: 'COUNT' },
-        timeAxis: { column: '', granularity: 'MONTH' },
-        breakdown: '',
-        secondMetric: null
-    };
+    let visualState = null; // Puntero al estado activo del modal
 
     // Mapeos predefinidos para inicialización visual intuitiva de todos los gráficos del sistema
     const defaultVisualStates = {
@@ -338,7 +346,6 @@
     async function openEditQueryModal(queryId, chartTitle) {
         console.log("Studio: Abriendo modal para", queryId);
         currentQueryId = queryId;
-        studioBoundParams = null;
         const modal = document.getElementById('modalEditQuery');
         if(!modal) {
             alert("Error crítico: No se encontró el elemento modalEditQuery en el DOM");
@@ -347,7 +354,6 @@
 
         document.getElementById('editQueryId').value = queryId;
         document.getElementById('editQueryTitle').innerHTML = `Studio de Analíticas &bull; ${chartTitle}`;
-        legacySqlText = null;
         
         modal.classList.add('show');
         
@@ -359,14 +365,8 @@
             if (!response.ok) throw new Error("Status: " + response.status);
             const data = await response.json();
 
-            // Caso A: query sin constructor visual (no tiene visual_state ni defaultVisualStates)
-            // La API expone sql_text directamente → cargar en textarea y preview sin builder.
-            const hasDefault = !!defaultVisualStates[queryId];
-            if (!data.visual_state && !hasDefault && data.sql_text) {
-                legacySqlText = data.sql_text;
-                setTimeout(() => runPreview(), 300);
-                return;
-            }
+            // Fallbacks legacy eliminados (Fase 1: No más SQL crudo).
+            // Todo debe procesarse a través del visual_state.
 
             // Caso B: query con constructor visual → flujo normal
             if (data.visual_state) {
@@ -418,11 +418,7 @@
         if (!previewEl) return;
         previewEl.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i></div>';
         try {
-            const response = await fetch('/api/studio/preview', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query_id: 'internal', sql_text: `SELECT * FROM ${tableName} LIMIT 5` })
-            });
+            const response = await fetch(`/api/studio/preview_table/${tableName}`);
             const data = await response.json();
             let html = `<h4 style="color: var(--primary); font-size: 0.9rem; margin-bottom:10px;">${tableName}</h4>`;
             if (data.length > 0) {
@@ -440,12 +436,7 @@
         errorEl.style.display = 'none';
         
         let payload = { query_id: 'preview' };
-        if (legacySqlText) {
-            payload.sql_text = legacySqlText;
-            payload.params = studioBoundParams;
-        } else {
-            payload.visual_state = JSON.stringify(visualState);
-        }
+        payload.visual_state = JSON.stringify(visualState);
         
         try {
             const response = await fetch('/api/studio/preview', {
@@ -463,7 +454,12 @@ errorEl.style.display = 'block';
         } catch (err) { console.error(err); }
     }
 
-    function renderPreviewChart(data) {
+    function renderPreviewChart(payload) {
+        let data = payload;
+        if (payload && !Array.isArray(payload) && payload.raw_data) {
+            data = payload.raw_data;
+        }
+        
         const canvas = document.getElementById('studioPreviewChart');
         const tableContainer = document.getElementById('studioTableContainer');
         const trellisContainer = document.getElementById('studioTrellisContainer');
@@ -707,7 +703,9 @@ errorEl.style.display = 'block';
             };
         }
         
-        visualState = JSON.parse(JSON.stringify(state)); // Deep clone
+        // Encapsular en el scope modular
+        AnalyticsStudioManager.setVisualState(queryId, JSON.parse(JSON.stringify(state)));
+        visualState = AnalyticsStudioManager.getVisualState(queryId);
         
         // Poblar baseTable select
         const baseSelect = document.getElementById('qbBaseTable');

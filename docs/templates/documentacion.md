@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: templates
-Compilado el: 2026-05-24 00:59:57
+Compilado el: 2026-05-24 14:59:18
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -70,12 +70,11 @@ El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario d
 
 ### Catálogo de Funciones y Clases
 - `switchTab(tabId, btnElement)` - Cambia la pestaña activa.
-- `switchSubTab(subTabId, btnElement)` - Cambia la subpestaña activa.
 - `openNonPalletizedDetails(user, claseMov)` - Abre un modal con detalles no paletizados.
 - `initTableFilters()` - Inicializa los filtros de tablas.
 - `filterOTTable()` - Filtra la tabla de OTs según los criterios seleccionados.
-- `filterDiscrepancyTable()` - Filtra la tabla de Discrepancias según los criterios seleccionados.
-- `sortTableDiscrepancy(columnIndex)` - Ordena la tabla de Discrepancias.
+- `filterDiscrepancyTable()` - Filtra la tabla de discrepancias según los criterios seleccionados.
+- `sortTableDiscrepancy(columnIndex)` - Ordena la tabla de discrepancias.
 
 ### Interacción con Base de Datos
 No aplica
@@ -91,13 +90,20 @@ No aplica
 - Archivos JavaScript incluidos:
   - `core_ui.js`
   - `dashboard.js`
+  - `saas_engine.js`
   - `deliveries.js`
   - `tasks.js`
   - `inventory.js`
   - `analytics_proyecciones.js`
   - `docs_explorer.js`
 
-El archivo interactúa con otros archivos del proyecto para cargar scripts y estilos necesarios, y utiliza variables globales JSON para almacenar datos que se utilizan en el frontend.
+- Archivos CSS incluidos:
+  - `deliveries.css`
+  - `inventory.css`
+  - `analytics_proyecciones.css`
+  - `docs_explorer.css`
+
+- Variables globales y datos JSON inyectados dinámicamente desde el backend.
 
 
 ---
@@ -105,54 +111,32 @@ El archivo interactúa con otros archivos del proyecto para cargar scripts y est
 ## Archivo: ./templates/inventory.html
 
 ### Resumen Funcional
-El archivo `inventory.html` es una plantilla HTML para la interfaz de usuario del módulo de inventario, que muestra análisis y gráficos relacionados con las entradas, consumos y traspasos de materiales.
+El archivo `inventory.html` es una plantilla HTML para la interfaz de usuario del módulo de inventario. Define la estructura y el diseño de la página, incluyendo encabezados, botones de acción, gráficos y enlaces a otros módulos.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este archivo. Todo el contenido es estructura HTML y JavaScript.
+No se detectan funciones o clases definidas directamente en este archivo HTML.
 
 ### Interacción con Base de Datos
-No aplica
+No aplica. El archivo no contiene consultas SQL ni interacciones con bases de datos.
 
 ### Estado y Variables Globales
-- `user.username`: Nombre del usuario actual.
-- `kpi_ingresos`: Total de ingresos.
-- `kpi_consumos_prod`: Consumo de producción.
-- `kpi_consumos_mant`: Consumo de mantenimiento.
-- `rate_reabast`: Tasa de reabastecimiento.
-- `kpi_traspasos`: Número de traspasos.
-- `rate_devolucion`: Tasa de devoluciones.
-- `kpi_devoluciones`: Cantidad de devoluciones.
-- `volumen_data`: Datos de volumen.
-- `area_stats_json`: Estadísticas por área.
-- `trend_labels`: Etiquetas para gráficos de tendencia.
-- `trend_entradas`: Datos de entradas para gráficos de tendencia.
-- `trend_salidas_prod`: Datos de salidas de producción para gráficos de tendencia.
-- `trend_salidas_mant`: Datos de salidas de mantenimiento para gráficos de tendencia.
-- `abc_counts`: Conteo de elementos ABC.
-- `abc_mapping`: Mapeo de elementos ABC.
-- `kpi_consumos_prod`: Consumo de producción (repetido).
-- `kpi_consumos_mant`: Consumo de mantenimiento (repetido).
-- `dow_distribution`: Distribución diaria.
-- `ubicaciones_mapping`: Mapeo de ubicaciones.
-- `area_material_mapping`: Mapeo de materiales por área.
-- `user_material_mapping`: Mapeo de materiales por usuario.
-- `dow_material_mapping`: Mapeo de materiales por distribución diaria.
-- `pm_material_mapping`: Mapeo de materiales para producción vs mantenimiento.
+No aplica. No hay variables globales, de sesión o diccionarios quemados en el código que almacenen estado crítico.
 
 ### Dependencias y Flujo
-- **Librerías externas**: 
-  - Chart.js
-  - Chartjs-plugin-datalabels
+- **Librerías externas utilizadas:**
+  - `Chart.js`
+  - `chartjs-plugin-datalabels`
 
-- **Archivos JavaScript**:
+- **Archivos JavaScript incluidos:**
   - `core_ui.js`
+  - `saas_engine.js`
   - `inventory.js`
 
-- **Modales y parciales HTML incluidos**:
-  - `_styles.html`
-  - `_inventory_modals.html`
-  - `_quick_login_modal.html`
-  - `_logout.html`
+- **Interacción con otros archivos del proyecto:**
+  - `_styles.html`: Incluye estilos CSS.
+  - `_inventory_modals.html`: Incluye modales de inventario.
+  - `_quick_login_modal.html`: Incluye el modal de inicio de sesión rápido.
+  - `_logout.html`: Incluye el código para el cierre de sesión.
 
 
 ---

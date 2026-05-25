@@ -64,3 +64,4 @@ class VisualQueryBuilderPayload(BaseModel):
     breakdown: Optional[str] = None
     secondMetric: Optional[SecondMetricDef] = None
     metrics: list[MetricDef] = [] # Fase 2: Soporte para tablas anchas
+    chartType: Optional[str] = "bar" # Fase 3: Server-Driven UI

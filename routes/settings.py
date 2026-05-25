@@ -59,11 +59,7 @@ class HolidayAdd(BaseModel):
 
 class QueryUpdate(BaseModel):
     query_id: str
-    # DEPRECADO: solo se mantiene para compatibilidad con api_query_preview heredado.
-    # Los nuevos consumidores deben enviar únicamente visual_state.
-    sql_text: Optional[str] = None
-    params: Optional[List[Any]] = None
-    visual_state: Optional[str] = None
+    visual_state: str
 
 from core.schemas import (
     JoinDef, FilterDef, MetricDef, TimeAxisDef, SecondMetricDef, VisualQueryBuilderPayload
@@ -243,17 +239,6 @@ def api_update_query(update: QueryUpdate, db: DBSession, state: AppState = Depen
     nunca escribe sql_text desde la UI: el SQL es siempre derivado en tiempo
     de ejecución por api_build_sql a partir del visual_state almacenado.
     """
-    if update.sql_text:
-        raise HTTPException(
-            status_code=422,
-            detail="Fase 1: El endpoint rechaza solicitudes que expongan SQL crudo en el cliente."
-        )
-        
-    if not update.visual_state:
-        raise HTTPException(
-            status_code=422,
-            detail="Se requiere 'visual_state'."
-        )
     row = db.query(ConfigQuery).filter(ConfigQuery.query_id == update.query_id).first()
     if not row:
         raise HTTPException(status_code=404, detail="Consulta no encontrada")
@@ -262,7 +247,8 @@ def api_update_query(update: QueryUpdate, db: DBSession, state: AppState = Depen
     # y será limpiado progresivamente en la Fase 2.
     db.flush()
     load_config_to_memory(db)
-    invalidate_caches(db)
+    # Invalidación granular del widget editado (no borra todo el caché)
+    state.clear_cache_prefix(f"widget_{update.query_id}")
     return {"status": "success", "message": "Estado visual actualizado correctamente"}
 
 # ─── API: Estudio de Analíticas (Introspección y Preview) ───────────────────
@@ -286,6 +272,21 @@ def api_get_schema(db: DBSession, state: AppState = Depends(get_app_state)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/api/studio/preview_table/{table_name}")
+def api_preview_table(table_name: str, db: DBSession, state: AppState = Depends(get_app_state)):
+    from core.query_engine import ALLOWED_TABLES
+    from sqlalchemy import text
+    import pandas as pd
+    if table_name not in ALLOWED_TABLES:
+        raise HTTPException(status_code=400, detail="Tabla no permitida")
+    try:
+        df = pd.read_sql(text(f"SELECT * FROM {table_name} LIMIT 5"), db.connection())
+        records = df.to_dict(orient="records")
+        return sanitize_for_json(records)
+    except Exception as e:
+        logger.error(f"Error preview table: {e}")
+        return []
+
 @router.post("/api/studio/preview")
 async def api_query_preview(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state)):
     """Ejecuta una consulta temporal y retorna datos para previsualización."""
@@ -300,52 +301,86 @@ async def api_query_preview(update: QueryUpdate, db: DBSession, state: AppState 
     sql = ""
     params_dict = {}
     
-    if update.visual_state:
-        # Modo Fase 1: Compilar AST a SQL internamente
-        try:
-            vs_dict = json.loads(update.visual_state)
-            payload = VisualQueryBuilderPayload(**vs_dict)
-            sql, bound_params = build_sql_from_payload(payload, db)
+    # Modo Fase 1: Compilar AST a SQL internamente
+    try:
+        vs_dict = json.loads(update.visual_state)
+        payload = VisualQueryBuilderPayload(**vs_dict)
+        sql, bound_params = build_sql_from_payload(payload, db)
+        
+        for i, p in enumerate(bound_params):
+            params_dict[f"p{i}"] = p
             
-            for i, p in enumerate(bound_params):
-                params_dict[f"p{i}"] = p
-                
-            import re
-            for i in range(len(bound_params)):
-                sql = sql.replace("?", f":p{i}", 1)
-                
-        except Exception as e:
-            logger.error(f"Error compilando AST en preview: {e}")
-            return {"error": f"Error construyendo consulta visual: {e}"}
-    else:
-        # Modo Legacy
-        sql = update.sql_text
-        if not sql or not sql.strip() or sql.strip().lower() == "undefined":
-            return {"error": "No hay configuración visual ni SQL para previsualizar."}
-
         import re
-        param_count = sql.count("?")
-        for i in range(param_count):
-            placeholder = f"p{i}"
-            sql = sql.replace("?", f":{placeholder}", 1)
-            if update.params is not None and i < len(update.params):
-                params_dict[placeholder] = update.params[i]
-            else:
-                if "retraso" in sql.lower() and i == 0:
-                    params_dict[placeholder] = 2
-                else:
-                    params_dict[placeholder] = "2026%"
+        for i in range(len(bound_params)):
+            sql = sql.replace("?", f":p{i}", 1)
+            
+    except Exception as e:
+        logger.error(f"Error compilando AST en preview: {e}")
+        return {"error": f"Error construyendo consulta visual: {e}"}
 
     if "{AREA_EXPR}" in sql:
         sql = sql.replace("{AREA_EXPR}", AREA_EXPR)
         
     try:
         df = pd.read_sql(text(sql), db.connection(), params=params_dict)
-        df = df.head(100)
         
-        records = df.to_dict(orient="records")
-        sanitized = sanitize_for_json(records)
-        return sanitized
+        raw_data = []
+        labels = []
+        datasets = []
+        chart_type = vs_dict.get("chartType", "bar")
+        
+        if not df.empty:
+            raw_data = sanitize_for_json(df.head(100))
+            
+            # Formatting logic identical to routes/widgets.py
+            if "categoria" in df.columns or "fecha" in df.columns:
+                if "fecha" in df.columns and "categoria" in df.columns:
+                    pivot = df.pivot_table(index="fecha", columns="categoria", values=df.columns[-1], aggfunc="sum").fillna(0)
+                    labels = [str(x) for x in pivot.index.tolist()]
+                    for col in pivot.columns:
+                        datasets.append({
+                            "label": str(col),
+                            "data": [float(x) if pd.notna(x) else 0 for x in pivot[col].tolist()]
+                        })
+                elif "categoria" in df.columns:
+                    labels = [str(x) for x in df["categoria"].tolist()]
+                    val_col = df.columns[-1]
+                    metric_label = getattr(payload.metric, "label", "Valor") if hasattr(payload, "metric") else "Valor"
+                    datasets.append({
+                        "label": metric_label,
+                        "data": [float(x) if pd.notna(x) else 0 for x in df[val_col].tolist()]
+                    })
+                elif "fecha" in df.columns:
+                    labels = [str(x) for x in df["fecha"].tolist()]
+                    val_col = df.columns[-1]
+                    metric_label = getattr(payload.metric, "label", "Valor") if hasattr(payload, "metric") else "Valor"
+                    datasets.append({
+                        "label": metric_label,
+                        "data": [float(x) if pd.notna(x) else 0 for x in df[val_col].tolist()]
+                    })
+            else:
+                # Fallback for simple flat queries or KPI (no fecha/categoria)
+                if len(df.columns) == 1 and len(df) == 1:
+                    chart_type = "kpi"
+                else:
+                    labels = [str(x) for x in df.iloc[:, 0].tolist()]
+                    for col in df.columns[1:]:
+                        if pd.api.types.is_numeric_dtype(df[col]):
+                            datasets.append({
+                                "label": str(col).title(),
+                                "data": [float(x) if pd.notna(x) else 0 for x in df[col].tolist()]
+                            })
+                            
+        return {
+            "query_id": "preview",
+            "chartType": chart_type,
+            "title": "Preview",
+            "labels": labels,
+            "datasets": datasets,
+            "raw_data": raw_data,
+            "isEmpty": df.empty,
+            "legacy": False
+        }
     except Exception as e:
         logger.error(f"Error en Studio Preview: {str(e)}")
         return {"error": str(e)}

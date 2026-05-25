@@ -422,9 +422,10 @@
         <script type="application/json" id="data_weekly_raw_json">{{ (weekly_raw_json or []) | tojson | safe }}</script>
         <script type="application/json" id="data_sla_area_trend_raw_json">{{ (sla_area_trend_raw_json or []) | tojson | safe }}</script>
         <script type="application/json" id="data_avg_mensual_año">{{ (avg_mensual_año or 0) | tojson | safe }}</script>
-        <script src="{{ url_for('static', path='js/core_ui.js') }}?v=1"></script>
-        <script src="{{ url_for('static', path='js/dashboard.js') }}?v=17"></script>
-        <script src="{{ url_for('static', path='js/deliveries.js') }}?v=18"></script>
+        <script src="{{ url_for('static', path='js/core_ui.js') }}?v=2"></script>
+        <script src="{{ url_for('static', path='js/dashboard.js') }}?v=18"></script>
+        <script src="{{ url_for('static', path='js/saas_engine.js') }}?v=3"></script>
+        <script src="{{ url_for('static', path='js/deliveries.js') }}?v=20"></script>
         <script type="application/json" id="data_volumen">{{ (volumen_data or []) | tojson | safe }}</script>
         <script type="application/json"
             id="data_area_stats_inv">{{ (inv_area_stats_json or []) | tojson | safe }}</script>
@@ -491,9 +492,10 @@
         <script type="application/json" id="data_ots_type_labels">{{ (ots_type_labels or []) | tojson | safe }}</script>
         <script type="application/json" id="data_ots_type_data">{{ (ots_type_data or []) | tojson | safe }}</script>
         <script src="{{ url_for('static', path='js/tasks.js') }}?v=5"></script>
-        <script src="{{ url_for('static', path='js/inventory.js') }}?v=10"></script>
+        <script src="{{ url_for('static', path='js/inventory.js') }}?v=11"></script>
         <script src="{{ url_for('static', path='js/analytics_proyecciones.js') }}?v=3"></script>
         <script src="{{ url_for('static', path='js/docs_explorer.js') }}?v=5"></script>
+        {% include "partials/_modals.html" %}
         {% include "partials/_deliveries_modals.html" %}
         {% include "partials/_inventory_modals.html" %}
         {% include "partials/_analytics_proyecciones_modals.html" %}

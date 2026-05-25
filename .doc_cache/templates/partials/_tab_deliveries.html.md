@@ -1,7 +1,7 @@
 ## Archivo: ./templates/partials/_tab_deliveries.html
 
 ### Resumen Funcional
-Este fragmento HTML muestra una pestaña de análisis de entregas con gráficos y KPIs, permitiendo a los usuarios cambiar entre vistas operativas y históricas. Incluye indicadores como volumen total, eficiencia de bodega, entregadas a tiempo y atrasadas, así como gráficos que muestran la evolución mensual del SLA y el ranking de solicitadores.
+Este fragmento HTML es una pestaña que muestra análisis de entregas, incluyendo KPIs como volumen total y eficiencia de bodega. Permite cambiar entre vistas operativas (anual) y históricas (semanales), y filtra los datos por áreas seleccionadas.
 
 ### Catálogo de Funciones y Clases
 No se detectaron funciones o clases definidas en este fragmento HTML.
@@ -10,18 +10,16 @@ No se detectaron funciones o clases definidas en este fragmento HTML.
 Ninguna
 
 ### Estado y Variables Globales
-- `kpi_total`: Volumen total de entregas (Año)
-- `kpi_eff`: Eficiencia de bodega (%)
-- `kpi_ontime`: Entregadas a tiempo
-- `kpi_late`: Entregadas atrasadas
-- `areas_vl`: Áreas seleccionadas para el filtrado
-- `top_authors`: Top solicitadores
-- `top_materials`: Ranking de materiales repetitivos por área
+- `user.role`: Rol del usuario, utilizado para determinar si se muestran botones de edición.
+- `areas_vl`: Lista de áreas disponibles para filtrar.
+- `top_authors`: Lista de los top solicitadores con sus entregas.
+- `top_materials`: Diccionario con materiales repetitivos por área.
 
 ### Dependencias y Flujo
 Dependencias:
-- Font Awesome (para iconos)
-- JavaScript (funciones como `switchVLView`, `openEditQueryModal`, etc.)
+- `FontAwesome` (usado para iconos)
+- JavaScript (`openEditQueryModal`, `toggleMulti`, etc.)
 
-Flujo: Este fragmento HTML se comunica con el backend a través de funciones JavaScript que pueden realizar acciones como cambiar la vista, abrir modales para editar consultas SQL y filtrar datos.
+Flujo:
+Este fragmento interactúa con el backend a través de funciones JavaScript que pueden abrir modales, cambiar vistas y filtrar datos. No realiza ninguna interacción directa con la base de datos.
 

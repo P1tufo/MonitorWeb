@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: static/js
-Compilado el: 2026-05-24 00:59:57
+Compilado el: 2026-05-24 14:59:18
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -34,74 +34,80 @@ Dependencia: `core_ui.js` (carga previa para proporcionar funciones como `CoreUI
 #### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-El archivo `analytics_studio.js` contiene funciones y variables para gestionar la visualización de gráficos en un entorno de análisis. Permite abrir modales, cargar esquemas de base de datos, previsualizar tablas y ejecutar consultas para generar gráficos.
+El archivo `analytics_studio.js` contiene funciones y clases para gestionar el estado visual de consultas en un sistema de análisis. Permite abrir modales, cargar esquemas de base de datos, previsualizar tablas y ejecutar consultas para generar gráficos.
 
 ### Catálogo de Funciones y Clases
+- `AnalyticsStudioManager.getVisualState(queryId)` - Obtiene el estado visual de una consulta.
+- `AnalyticsStudioManager.setVisualState(queryId, state)` - Establece el estado visual de una consulta.
 - `openEditQueryModal(queryId, chartTitle)` - Abre un modal para editar una consulta.
 - `loadSchema()` - Carga el esquema de la base de datos.
 - `previewTable(tableName, el)` - Previsualiza los datos de una tabla.
-- `runPreview()` - Ejecuta una previsualización de la consulta y renderiza el gráfico.
-- `renderPreviewChart(data)` - Renderiza el gráfico basado en los datos obtenidos.
+- `runPreview()` - Ejecuta una previsualización de la consulta actual.
+- `renderPreviewChart(data)` - Renderiza un gráfico basado en los datos de la previsualización.
+- `closeEditQueryModal()` - Cierra el modal para editar una consulta.
+- `showConfirmPublish()` - Muestra una overlay para confirmar la publicación.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
+- `AnalyticsStudioManager.instances` - Almacena los estados visuales de las consultas.
 - `studioChartInstance` - Instancia del gráfico actual.
 - `currentSchema` - Esquema actual de la base de datos.
-- `currentQueryId` - ID de la consulta actual.
-- `studioBoundParams` - Parámetros vinculados al estudio.
-- `serverVisualState` - Estado visual del servidor.
-- `legacySqlText` - Texto SQL heredado.
-- `visualState` - Estado del constructor visual.
-- `defaultVisualStates` - Mapeos predefinidos para inicialización visual intuitiva de gráficos.
+- `currentQueryId` - ID de la consulta actualmente seleccionada.
+- `serverVisualState` - Estado visual de la consulta desde el servidor.
+- `visualState` - Puntero al estado activo del modal.
 
 ### Dependencias y Flujo
-Depende de la librería Chart.js para renderizar los gráficos. Comunica con el servidor a través de endpoints como `/api/queries/{queryId}`, `/api/studio/schema`, y `/api/studio/preview`.
+Depende de las siguientes librerías externas:
+- `Chart.js` para renderizar gráficos.
+
+Se comunica con los siguientes archivos del proyecto:
+- `/api/queries/{queryId}` - Para cargar el estado visual de una consulta.
+- `/api/studio/schema` - Para cargar el esquema de la base de datos.
+- `/api/studio/preview_table/{tableName}` - Para previsualizar los datos de una tabla.
+- `/api/studio/preview` - Para ejecutar una previsualización de la consulta actual.
 
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-El archivo `analytics_studio.js` contiene funciones y métodos para gestionar la interfaz de usuario y el estado del editor de consultas analíticas. Permite crear, editar y publicar consultas SQL interactuando con un backend a través de una API.
+El archivo `analytics_studio.js` contiene funciones y lógica para gestionar la edición, publicación y configuración de consultas analíticas en un estudio de datos. Permite crear, modificar y ejecutar consultas SQL interactuando con una interfaz gráfica basada en JavaScript.
 
 ### Catálogo de Funciones y Clases
-- `closeEditQueryModal()` - Cierra el modal para edición de consultas.
+- `closeEditQueryModal()` - Cierra el modal de edición de consulta.
 - `showConfirmPublish()` - Muestra la ventana de confirmación para publicar una consulta.
 - `hideConfirmPublish()` - Oculta la ventana de confirmación para publicar una consulta.
-- `executePublishQuery()` - Ejecuta la publicación de una consulta a través de una API y maneja el estado del botón de confirmación.
-- `initVisualQuery(queryId)` - Inicializa el estado visual del editor de consultas con los datos proporcionados o por defecto.
+- `executePublishQuery()` - Ejecuta la publicación de una consulta y maneja la respuesta del servidor.
+- `initVisualQuery(queryId)` - Inicializa el estado visual de la consulta.
 - `onBaseTableChange()` - Maneja el cambio en la tabla base seleccionada.
-- `getActiveTables()` - Devuelve las tablas activas basadas en el estado actual.
-- `getActiveColumns()` - Devuelve las columnas activas basadas en las tablas activas.
-- `refreshQbColumns(forceState = false)` - Refresca los selectores de columnas para los ejes y desglose según el estado actual.
-- `renderJoins()` - Renderiza los controles de join en la interfaz de usuario.
-- `addJoin()` - Añade un nuevo join al estado visual.
-- `updateJoin(index)` - Actualiza un join existente en el estado visual.
-- `removeJoin(index)` - Elimina un join del estado visual.
-- `renderFilters()` - Renderiza los controles de filtro en la interfaz de usuario.
-- `addFilter()` - Añade un nuevo filtro al estado visual.
-- `updateFilterType(index, type)` - Actualiza el tipo de valor para un filtro específico.
-- `updateFilter(index)` - Actualiza los detalles de un filtro específico.
-- `removeFilter(index)` - Elimina un filtro del estado visual.
+- `getActiveTables()` - Obtiene las tablas activas en la consulta.
+- `getActiveColumns()` - Obtiene las columnas activas en la consulta.
+- `refreshQbColumns(forceState)` - Refresca los selectores de columnas para el eje Y, X y desglose.
+- `renderJoins()` - Renderiza los joins en la interfaz gráfica.
+- `addJoin()` - Añade un nuevo join a la consulta.
+- `updateJoin(index)` - Actualiza un join existente.
+- `removeJoin(index)` - Elimina un join de la consulta.
+- `renderFilters()` - Renderiza los filtros en la interfaz gráfica.
+- `addFilter()` - Añade un nuevo filtro a la consulta.
+- `updateFilterType(index, type)` - Actualiza el tipo de valor para un filtro.
+- `updateFilter(index)` - Actualiza los detalles de un filtro existente.
+- `removeFilter(index)` - Elimina un filtro de la consulta.
 - `onSecondMetricToggle()` - Maneja el toggle de la segunda métrica.
-- `onQbChange()` - Sincroniza los cambios en la interfaz de usuario con el estado visual.
+- `onQbChange()` - Sincroniza los cambios en la interfaz gráfica con el estado visual.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `visualState` - Almacena el estado actual del editor de consultas, incluyendo tablas, joins, filtros, métricas, etc.
-- `serverVisualState` - Estado visual proporcionado por el servidor.
-- `defaultVisualStates` - Estados visuales predeterminados para diferentes consultas.
-- `currentSchema` - Esquema actual de la base de datos.
+- `visualState` - Almacena el estado actual de la consulta visual.
+- `serverVisualState` - Almacena el estado visual del servidor.
+- `defaultVisualStates` - Almacena los estados visuales por defecto para diferentes consultas.
+- `currentSchema` - Almacena el esquema de la base de datos actual.
 
 ### Dependencias y Flujo
 Dependencias:
-- `fetch` - Para hacer solicitudes HTTP al backend.
-- `document.getElementById`, `querySelector`, etc. - Para interactuar con el DOM.
-
-Flujo:
-Este archivo se comunica con el backend a través de una API para publicar consultas. No realiza interacciones directas con bases de datos ni utiliza ORM.
+- `fetch` - Para hacer solicitudes HTTP al servidor.
+- `AnalyticsStudioManager` - Para gestionar el estado visual del estudio de datos.
 
 
 ---
@@ -274,31 +280,55 @@ No aplica
 ## Archivo: ./static/js/inventory.js
 
 ### Resumen Funcional
-El archivo `inventory.js` contiene lógica para el análisis de inventario, incluyendo la visualización de gráficos y la interacción con modales. Se utilizan Chart.js para crear gráficos de doughnut y lineas, y se manejan eventos de entrada para buscar ubicaciones dinámicamente.
+El archivo `inventory.js` contiene lógica para manejar movimientos de inventario, incluyendo la interacción con una interfaz de usuario y la obtención de datos desde una base de datos a través de una API.
 
 ### Catálogo de Funciones y Clases
 - `log(msg, data = null)` - Registra mensajes en la consola.
-- `UI.openModal(id)` - Abre un modal utilizando CoreUI.
-- `UI.closeModal(id)` - Cierra un modal utilizando CoreUI.
-- `UI.renderMaterialModal(opts)` - Renderiza un modal de material utilizando CoreUI.
-- `getData(id)` - Obtiene datos desde el DOM utilizando CoreUI.
-- `parseFormattedInt(val)` - Convierte una cadena a un número entero, eliminando caracteres no numéricos.
-- `window.openModalUbicacion(name)` - Abre un modal con información de ubicación.
-- `window.openModalUserInv(name)` - Abre un modal con información de usuario.
-- `window.switchInventarioView(view)` - Cambia la vista del gráfico de tendencias según el parámetro `view`.
-- `window.toggleMultiInv(id)` - Alterna la visibilidad de un elemento según su ID.
-- `window.toggleAllInvAreas(checkbox)` - Alterna la selección de todas las áreas y actualiza los KPIs.
-- `window.updateInventoryAnalytics()` - Actualiza los KPIs y filtra listas según las áreas seleccionadas.
+- `parseFormattedInt(val)` - Convierte un valor a un entero, eliminando caracteres no numéricos.
+- `openModalUbicacion(name)` - Abre una ventana modal con información de ubicación.
+- `openModalUserInv(name)` - Abre una ventana modal con información del inventario de usuarios.
 
 ### Interacción con Base de Datos
-No aplica
+No aplica. El archivo no realiza ninguna interacción directa con una base de datos.
 
 ### Estado y Variables Globales
-No aplica
+No aplica. No se definen variables globales en este archivo.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: Chart.js, CoreUI.
-- **Flujo Interno**: El archivo interactúa con el DOM para obtener datos y renderizar gráficos. Utiliza funciones de CoreUI para abrir y cerrar modales.
+- Depende de `core_ui.js` para funciones como `CoreUI.openModal`, `CoreUI.closeModal`, `CoreUI.renderMaterialModal`, y `CoreUI.getData`.
+- Comunica con el servidor a través de una API (`/api/ubicaciones/${encodeURIComponent(val)}`) para obtener datos de ubicación.
+
+El archivo no utiliza ORM ni consultas SQL crudas.
+
+
+---
+
+## Archivo: ./static/js/saas_engine.js
+
+### Resumen Funcional
+El archivo `saas_engine.js` es un motor SaaS V2 que se encarga de renderizar gráficos y KPIs en elementos HTML con la clase `.saas-widget-v2`. Utiliza una API para obtener los datos necesarios y actualiza el contenido del widget según estos datos.
+
+### Catálogo de Funciones y Clases
+- `initSaaSWidgetsV2(params = null)` - Inicializa los widgets SaaS V2, leyendo parámetros desde la interfaz o URL, y renderizando gráficos o KPIs en los elementos correspondientes.
+
+### Interacción con Base de Datos
+No aplica. El archivo no realiza ninguna interacción con una base de datos.
+
+### Estado y Variables Globales
+- `window.saasChartInstancesV2` - Almacena instancias de gráficos Chart.js para widgets que ya han sido renderizados.
+
+### Dependencias y Flujo
+- **Librerías Externas**: 
+  - `fetch` - Para hacer solicitudes HTTP.
+  - `Chart.js` - Para renderizar gráficos.
+  - `ChartDataLabels` - Plugin de Chart.js para etiquetar datos en gráficos.
+  
+- **Flujo Interno**:
+  - El archivo se ejecuta al cargar el DOM (`DOMContentLoaded`).
+  - Intercepta la función `updateDeliveriesAnalytics` si existe, y reemplaza su contenido con una versión que también llama a `initSaaSWidgetsV2`.
+  - Llama a `initSaaSWidgetsV2` después de un pequeño delay para asegurar que el DOM esté listo.
+
+El archivo interactúa con elementos HTML mediante la selección de clases y atributos, y utiliza funciones asíncronas para obtener datos desde una API y actualizar el contenido de los widgets.
 
 
 ---

@@ -14,7 +14,8 @@ from . import (
     docs,
     settings,
     auth,
-    tasks
+    tasks,
+    widgets
 )
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,8 @@ def register_routes(app: FastAPI) -> None:
         sync.router,
         docs.router,
         settings.router,
-        tasks.router
+        tasks.router,
+        widgets.router
     ]
 
     for router in ROUTERS:

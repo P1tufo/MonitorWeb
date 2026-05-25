@@ -70,6 +70,13 @@ class AppState:
         else:
             self._cache.clear()
             logger.info("Caché global vaciado.")
+            
+    def clear_cache_prefix(self, prefix: str):
+        """Limpia todas las entradas de caché que comiencen con el prefijo dado."""
+        keys_to_delete = [k for k in self._cache.keys() if k.startswith(prefix)]
+        for k in keys_to_delete:
+            self._cache.pop(k, None)
+        logger.info(f"Caché limpiado para prefijo '{prefix}' ({len(keys_to_delete)} entradas).")
 
 global_state = AppState()
 

@@ -49,9 +49,11 @@ ALLOWED_AGGREGATIONS = frozenset({
     "REPLENISHMENT_RATE",
     "RETURN_RATE",
     "INV_EFFICIENCY",
+    "ABC_ANALYSIS",
+    "AVG_TX_PER_DAY",
 })
 
-ALLOWED_GRANULARITIES = frozenset({"HOUR", "DAY", "WEEK", "MONTH", "YEAR"})
+ALLOWED_GRANULARITIES = frozenset({"HOUR", "DAY", "WEEK", "MONTH", "YEAR", "DAY_OF_WEEK"})
 
 
 # ─── Validación de identificadores ───────────────────────────────────────────
@@ -71,7 +73,7 @@ def validate_identifier(name: str, db: Session) -> bool:
     """
     if not name:
         return True
-    if name == "__AREA_EXPR__":
+    if name in ["__AREA_EXPR__", "__PLAN_VS_UNPLAN__", "__ABAST_VS_CONSUMO__", "__PROD_VS_MANT__"]:
         return True
 
     parts = name.split(".")
@@ -201,7 +203,7 @@ def extract_metric_value(df, active_year: str = None):
 
 # ─── Motor de construcción SQL ────────────────────────────────────────────────
 
-def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
+def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str] = None, drilldown_material: Optional[str] = None) -> Tuple[str, List]:
     """
     Compila un VisualQueryBuilderPayload validado en una tupla (sql_text, bound_params).
 
@@ -278,6 +280,10 @@ def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
     if join_str:
         from_clause = f"{from_clause}\n{join_str}"
 
+    # ── Filtros parametrizados (bind params) ────────────────────────────────
+    where_clauses = []
+    bound_params: List = []
+
     # ── 3. Eje de tiempo ─────────────────────────────────────────────────────
     if payload.timeAxis and payload.timeAxis.column:
         col = payload.timeAxis.column
@@ -297,6 +303,18 @@ def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
             time_func = f"substr({col}, 7, 4) || '-' || substr({col}, 4, 2)"
         elif gran == "WEEK":
             time_func = f"strftime('%Y-W%W', substr({col}, 7, 4) || '-' || substr({col}, 4, 2) || '-' || substr({col}, 1, 2))"
+        elif gran == "DAY_OF_WEEK":
+            time_func = f"""CASE cast(strftime('%w', substr({col}, 7, 4) || '-' || substr({col}, 4, 2) || '-' || substr({col}, 1, 2)) as integer)
+                WHEN 1 THEN '1 Lunes'
+                WHEN 2 THEN '2 Martes'
+                WHEN 3 THEN '3 Miércoles'
+                WHEN 4 THEN '4 Jueves'
+                WHEN 5 THEN '5 Viernes'
+                WHEN 6 THEN '6 Sábado'
+                WHEN 0 THEN '7 Domingo'
+            END"""
+            # Strict filter to Monday-Friday as requested
+            where_clauses.append(f"cast(strftime('%w', substr({col}, 7, 4) || '-' || substr({col}, 4, 2) || '-' || substr({col}, 1, 2)) as integer) BETWEEN 1 AND 5")
         elif gran == "DAY":
             time_func = f"substr({col}, 7, 4) || '-' || substr({col}, 4, 2) || '-' || substr({col}, 1, 2)"
         elif gran == "HOUR":
@@ -313,13 +331,39 @@ def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
     breakdown_select = ""
     breakdown_groupby = ""
     if payload.breakdown:
-        b_expr = AREA_EXPR_MACRO.replace("v.", f"{payload.baseTable}.") if payload.breakdown == "__AREA_EXPR__" else payload.breakdown
+        if payload.breakdown == "__AREA_EXPR__":
+            b_expr = AREA_EXPR_MACRO.replace("v.", f"{payload.baseTable}.")
+        elif payload.breakdown == "__PLAN_VS_UNPLAN__":
+            b_expr = f"""CASE 
+                WHEN {payload.baseTable}.cmv = '201' AND (
+                    {payload.baseTable}.referencia GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.referencia GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR
+                    {payload.baseTable}.texto_cab_documento GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.texto_cab_documento GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*'
+                ) THEN 'Planificado'
+                WHEN {payload.baseTable}.cmv = '261' AND (
+                    ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND 
+                    ({payload.baseTable}.texto_cab_documento IS NULL OR {payload.baseTable}.texto_cab_documento = '')
+                ) THEN 'Planificado'
+                WHEN {payload.baseTable}.cmv IN ('201', '261', '221') THEN 'Desplanificado'
+                ELSE 'Otro'
+            END"""
+        elif payload.breakdown == "__ABAST_VS_CONSUMO__":
+            b_expr = f"""CASE 
+                WHEN {payload.baseTable}.cmv IN ('101', '305') THEN 'Abastecimiento'
+                WHEN {payload.baseTable}.cmv IN ('201', '221', '261') THEN 'Consumo'
+                ELSE 'Otro'
+            END"""
+        elif payload.breakdown == "__PROD_VS_MANT__":
+            b_expr = f"""CASE 
+                WHEN {payload.baseTable}.cmv = '201' THEN 'Producción (201)'
+                WHEN {payload.baseTable}.cmv = '261' THEN 'Mantención (261)'
+                ELSE 'Otro'
+            END"""
+        else:
+            b_expr = payload.breakdown
         breakdown_select = f"{b_expr} AS categoria,\n  "
         breakdown_groupby = ", categoria"
 
     # ── 6. Filtros parametrizados (bind params) ───────────────────────────────
-    where_clauses = []
-    bound_params: List = []
     # Las métricas se procesan después para poder apendear a bound_params
     metric_selects = []
     
@@ -375,6 +419,14 @@ def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
             m_expr = (f"ROUND(SUM(CASE WHEN TRIM(cmv) IN ('202', '262') THEN 100.0 ELSE 0.0 END) "
                       f"/ NULLIF(SUM(CASE WHEN {metric_col} LIKE '%Centro Costo%' "
                       f"OR {metric_col} LIKE '%Orden/Reserva%' THEN 1.0 ELSE 0.0 END), 0), 1)")
+        elif agg_upper == "INV_EFFICIENCY":
+            fe_contab_iso = "(substr(fe_contab, 7, 4) || '-' || substr(fe_contab, 4, 2) || '-' || substr(fe_contab, 1, 2))"
+            registrado_iso = "(substr(registrado, 7, 4) || '-' || substr(registrado, 4, 2) || '-' || substr(registrado, 1, 2))"
+            m_expr = (f"ROUND(SUM(CASE WHEN "
+                      f"(julianday({registrado_iso}) - julianday({fe_contab_iso})) <= 3 "
+                      f"THEN 100.0 ELSE 0.0 END) / NULLIF(COUNT(*), 0), 1)")
+        elif agg_upper == "AVG_TX_PER_DAY":
+            m_expr = f"ROUND(COUNT(*) * 1.0 / NULLIF(COUNT(DISTINCT substr({payload.baseTable}.fe_contab, 1, 10)), 0), 1)"
         else:
             m_expr = f"{agg_upper}({metric_col})"
             
@@ -478,7 +530,100 @@ def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
         groupby_clauses.append("categoria")
     groupby_str = ("\nGROUP BY " + ", ".join(groupby_clauses)) if groupby_clauses else ""
 
-    # ── 8. SQL final ─────────────────────────────────────────────────────────
+    # ── 8. Interceptores Avanzados (Análisis No-Code) ───────────────────────
+    is_abc_analysis = any(getattr(m, "aggregation", "").upper() == "ABC_ANALYSIS" for m in unified_metrics)
+    if is_abc_analysis:
+        metric_col = getattr(unified_metrics[0], "column", "*") if unified_metrics else "*"
+        if metric_col == "*":
+            raise HTTPException(status_code=400, detail="Análisis ABC requiere una columna específica")
+            
+        desc_select = ""
+        desc_propagate = ""
+        desc_drilldown = ""
+        sum_select = ""
+        sum_propagate = ""
+        sum_drilldown = ""
+        if payload.baseTable == "inventory_movements":
+            desc_select = "MAX(texto_breve_material) as descripcion,"
+            desc_propagate = "descripcion,"
+            desc_drilldown = ", descripcion AS \"Descripción\""
+            sum_select = "ROUND(ABS(AVG(cantidad)), 1) as avg_qty,"
+            sum_propagate = "avg_qty,"
+            sum_drilldown = ", avg_qty AS \"Promedio por Retiro\""
+
+        if drilldown_material:
+            area_expr = "COALESCE((SELECT business_area FROM config_cost_center_mapping WHERE center_code = SUBSTR(inventory_movements.ce_coste, 1, 6)), 'Mantencion')" if payload.baseTable == "inventory_movements" else "'OTRO'"
+            sum_flat = ", ROUND(ABS(AVG(cantidad)), 1) AS \"Promedio por Retiro\"" if payload.baseTable == "inventory_movements" else ""
+            where_flat = f"{where_str} AND {metric_col} = ?" if where_str else f"WHERE {metric_col} = ?"
+            sql = f"""
+SELECT 
+    {area_expr} AS "Área de Negocio",
+    COUNT({metric_col}) AS "Frecuencia (Veces)"{sum_flat}
+FROM {from_clause}
+{where_flat}
+GROUP BY 1
+ORDER BY 2 DESC;
+"""
+            bound_params.append(drilldown_material)
+            logger.debug(f"QueryEngine: SQL Drilldown Nivel 2 compilado para material '{drilldown_material}'")
+            return sql, bound_params
+
+        sql = f"""
+WITH MaterialCounts AS (
+    SELECT 
+        {metric_col} as cod_mat,
+        {desc_select}
+        {sum_select}
+        COUNT({metric_col}) as qty
+    FROM {from_clause}
+    {where_str}
+    GROUP BY cod_mat
+),
+TotalQty AS (
+    SELECT SUM(qty) as total FROM MaterialCounts
+),
+CumSum AS (
+    SELECT 
+        cod_mat,
+        {desc_propagate}
+        {sum_propagate}
+        qty,
+        SUM(qty) OVER (ORDER BY qty DESC, cod_mat ASC) as cum_qty
+    FROM MaterialCounts
+),
+Classified AS (
+    SELECT 
+        cod_mat,
+        {desc_propagate}
+        {sum_propagate}
+        qty,
+        CASE 
+            WHEN cum_qty <= (SELECT total FROM TotalQty) * 0.80 THEN 'A: Eje Crítico (Top 80% frecuencia)'
+            WHEN cum_qty <= (SELECT total FROM TotalQty) * 0.95 THEN 'B: Moderados (Sig. 15%)'
+            ELSE 'C: Esporádicos'
+        END as categoria
+    FROM CumSum
+)
+"""
+        if drilldown_segment:
+            sql += f"""
+SELECT cod_mat AS "Material"{desc_drilldown}, qty AS "Frecuencia (Veces)"{sum_drilldown}
+FROM Classified
+WHERE categoria = ?
+ORDER BY qty DESC;
+"""
+            bound_params.append(drilldown_segment)
+        else:
+            sql += f"""
+SELECT categoria AS fecha, COUNT(cod_mat) AS "Valor"
+FROM Classified
+GROUP BY categoria
+ORDER BY categoria ASC;
+"""
+        logger.debug(f"QueryEngine: SQL ABC compilado para tabla '{payload.baseTable}' ({len(bound_params)} params)")
+        return sql, bound_params
+
+    # ── 9. SQL final ─────────────────────────────────────────────────────────
     if payload.breakdown:
         sql = (
             f"SELECT \n"
@@ -503,6 +648,11 @@ def build_sql_from_payload(payload, db: Session) -> Tuple[str, List]:
                 f"FROM {from_clause}{where_str}{groupby_str}\n"
                 f"ORDER BY fecha ASC;"
             )
+
+    # Post-proceso de macros globales (Ej: AREA_EXPR inyectado en filtros)
+    if "__AREA_EXPR__" in sql:
+        table_prefix = f"{payload.baseTable}." if payload.baseTable else "v."
+        sql = sql.replace("__AREA_EXPR__", AREA_EXPR_MACRO.replace("v.", table_prefix))
 
     logger.debug(f"QueryEngine: SQL compilado para tabla '{payload.baseTable}' ({len(bound_params)} params)")
     return sql, bound_params

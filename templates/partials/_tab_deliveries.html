@@ -25,7 +25,7 @@
             </div>
             {% endif %}
             <h3>Volumen Total (Año)</h3>
-            <div class="value" id="vl-kpi-total">{{ kpi_total }}</div>
+            <div class="saas-widget-v2 saas-kpi value" data-query-id="vl_kpi_total" style="min-height: 40px;">--</div>
             <div class="desc">Entregas totales generadas</div>
         </div>
     </div>
@@ -40,7 +40,7 @@
             </div>
             {% endif %}
             <h3>Eficiencia de Bodega</h3>
-            <div class="value" id="vl-kpi-eff" style="color: var(--calipso);">{{ kpi_eff }}%</div>
+            <div class="saas-widget-v2 saas-kpi value" data-query-id="vl_kpi_eff" style="color: var(--calipso); min-height: 40px;">--</div>
             <div class="desc">Entregas despachadas en ≤ 2 días</div>
         </div>
 
@@ -56,7 +56,7 @@
                 </div>
                 {% endif %}
                 <h3>Entregadas a tiempo</h3>
-                <div class="value" id="vl-kpi-ontime" style="color: var(--verde);">{{ kpi_ontime }}</div>
+                <div class="saas-widget-v2 saas-kpi value" data-query-id="vl_kpi_ontime" style="color: var(--verde); min-height: 40px;">--</div>
                 <div class="desc">(Click para auditar)</div>
             </div>
         </a>
@@ -73,7 +73,7 @@
                 </div>
                 {% endif %}
                 <h3>Entregas atrasadas</h3>
-                <div class="value" id="vl-kpi-late" style="color: var(--rojo);">{{ kpi_late }}</div>
+                <div class="saas-widget-v2 saas-kpi value" data-query-id="vl_kpi_late" style="color: var(--rojo); min-height: 40px;">--</div>
                 <div class="desc">(Click para auditar)</div>
             </div>
         </a>
@@ -122,7 +122,7 @@
                 {% endif %}
                 <h3>📈 Evolución por Mes (Histórico Anual)</h3>
                 <div style="position: relative; height: 350px; width: 100%;">
-                    <div class="saas-widget" data-query-id="vl_monthly_evolution" style="width: 100%; height: 100%;"></div>
+                    <div class="saas-widget-v2" data-query-id="vl_monthly_evolution" style="width: 100%; height: 100%;"></div>
                 </div>
             </div>
         </div>
@@ -140,7 +140,7 @@
                         {% endif %}
                         <h3>🎯 Tendencia de Cumplimiento SLA Mensual (% On-Time)</h3>
                         <div style="position: relative; height: 300px; width: 100%;">
-                            <div class="saas-widget" data-query-id="vl_sla_monthly_trend" style="width: 100%; height: 100%;"></div>
+                            <div class="saas-widget-v2" data-query-id="vl_sla_monthly_trend" style="width: 100%; height: 100%;"></div>
                         </div>
                     </div>
                     <div class="capacity-box"
@@ -179,7 +179,7 @@
                 {% endif %}
                 <h3>📈 Cumplimiento SLA Mensual por Área</h3>
                 <p class="chart-subtitle" style="font-size: 0.75rem; margin-bottom: 15px;">Análisis mensual de eficiencia por sección</p>
-                <div id="sla-monthly-trellis-container" class="saas-widget saas-trellis-widget" data-query-id="vl_sla_area_monthly_trend"
+                <div id="sla-monthly-trellis-container" class="saas-widget-v2 saas-trellis-widget" data-query-id="vl_sla_area_monthly_trend"
                     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; width: 100%;">
                 </div>
             </div>
@@ -198,7 +198,7 @@
                 {% endif %}
                 <h3>📈 Evolución por Semana (Histórico)</h3>
                 <div style="position: relative; height: 350px; width: 100%;">
-                    <div class="saas-widget" data-query-id="vl_weekly_evolution" style="width: 100%; height: 100%;"></div>
+                    <div class="saas-widget-v2" data-query-id="vl_weekly_evolution" style="width: 100%; height: 100%;"></div>
                 </div>
             </div>
         </div>
@@ -216,7 +216,7 @@
                         {% endif %}
                         <h3>🎯 Tendencia de Cumplimiento SLA (% On-Time)</h3>
                         <div style="position: relative; height: 300px; width: 100%;">
-                            <div class="saas-widget" data-query-id="vl_sla_trend" style="width: 100%; height: 100%;"></div>
+                            <div class="saas-widget-v2" data-query-id="vl_sla_trend" style="width: 100%; height: 100%;"></div>
                         </div>
                     </div>
                     <div class="capacity-box"
@@ -257,7 +257,7 @@
                 {% endif %}
                 <h3>📈 Tendencia de Cumplimiento SLA por Área (Small Multiples)</h3>
                 <p class="chart-subtitle" style="font-size: 0.75rem; margin-bottom: 15px;">Análisis individual de eficiencia On-Time por sección</p>
-                <div id="sla-trellis-container" class="saas-widget saas-trellis-widget" data-query-id="vl_sla_area_trend"
+                <div id="sla-trellis-container" class="saas-widget-v2 saas-trellis-widget" data-query-id="vl_sla_area_trend"
                     style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; width: 100%;">
                     <!-- Dinámicamente generado por JS -->
                 </div>
@@ -265,61 +265,5 @@
         </div>
     </div>
 
-    <!-- Charts Row 2 -->
-    <div class="row-grid-2">
-        <div class="chart-box">
-            {% if user.role == 'admin' %}
-            <div class="edit-query-btn" onclick="openEditQueryModal('vl_top_authors', 'Top Solicitadores')"
-                title="Editar Consulta SQL">
-                <i class="fas fa-cog"></i>
-            </div>
-            {% endif %}
-            <h3>Top Solicitadores</h3>
-            <ul class="rank-list" style="max-height: 280px; overflow-y: auto;">
-                {% for a in top_authors %}
-                <li data-area="{{ a.area or 'MIXTO' }}" style="cursor: pointer; transition: background 0.2s;"
-                    onclick="openModalUser('{{ a.name }}')"
-                    onmouseover="this.style.background='rgba(255,255,255,0.05)'"
-                    onmouseout="this.style.background='transparent'">
-                    <div>
-                        <div class="name">
-                            {{ a.name }}
-                            <span style="font-size: 0.65rem; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; margin-left: 5px; color: #cbd5e1; font-weight: normal;">{{ a.area or 'MIXTO' }}</span>
-                        </div>
-                        <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">{{ a.num_lineas }} ítems solicitados</div>
-                    </div>
-                    <div class="score"
-                        style="display: flex; flex-direction: column; align-items: flex-end; justify-content: center;">
-                        <div>{{ a.entregas }} Entregas</div>
-                    </div>
-                </li>
-                {% else %}
-                <li style="text-align: center; color: #64748b; padding: 2rem;">No hay registros de solicitadores.</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
 
-    <!-- Materials Grid -->
-    <h3 style="margin: 2rem 0 1rem; color: #e2e8f0; font-size: 1.5rem; font-weight: 600;">Ranking de Materiales Repetitivos por Área</h3>
-    <div class="materials-grid">
-        {% for area, items in top_materials.items() %}
-        <div class="area-card" data-area="{{ area }}">
-            <h4>{{ area }}</h4>
-            {% for it in items %}
-            <div class="mat-item">
-                <span class="mat-name" title="{{ it.material }}">{{ loop.index }}. {{ it.material }}</span>
-                <div style="text-align: right; display: flex; align-items: center;">
-                    <span class="mat-qty">{{ it.frequency }}x</span>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div style="grid-column: 1/-1; text-align: center; color: #64748b; padding: 3rem; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-            <i class="fas fa-box-open" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-            <p>No se encontraron materiales repetitivos para el periodo seleccionado.</p>
-        </div>
-        {% endfor %}
-    </div>
 </div>

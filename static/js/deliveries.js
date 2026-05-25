@@ -322,12 +322,16 @@ function updateDeliveriesAnalytics() {
         const centroValue = document.querySelector('input[name="centro-filter"]:checked')?.value || '';
         const otsValue = document.querySelector('input[name="ot-filter"]:checked')?.value || '';
 
-        window.initSaaSWidgets({
-            date: dateValues,
-            area: areaValues,
-            centro: centroValue,
-            has_ots_filter: otsValue
-        });
+        try {
+            window.initSaaSWidgets({
+                date: dateValues,
+                area: areaValues,
+                centro: centroValue,
+                has_ots_filter: otsValue
+            });
+        } catch (e) {
+            console.error("Legacy widget error:", e);
+        }
     }
 }
 
@@ -344,7 +348,8 @@ window.toggleChartSelectAll = (isChecked) => {
     } else {
         boxes.forEach(cb => cb.checked = true);
     }
-    updateDeliveriesAnalytics();
+    window.updateDeliveriesAnalytics();
+    if (window.initSaaSWidgetsV2) window.initSaaSWidgetsV2();
 };
 
 window.handleSmartCheckbox = (cb) => {
@@ -367,7 +372,9 @@ window.handleSmartCheckbox = (cb) => {
             if (selAll) selAll.checked = allCheckedNow;
         }
     }
-    updateDeliveriesAnalytics();
+
+    window.updateDeliveriesAnalytics();
+    if (window.initSaaSWidgetsV2) window.initSaaSWidgetsV2();
 };
 
 

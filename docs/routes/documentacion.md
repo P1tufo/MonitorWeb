@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: routes
-Compilado el: 2026-05-24 00:59:57
+Compilado el: 2026-05-24 14:59:18
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -89,23 +89,27 @@ No aplica
 ## Archivo: ./routes/config.py
 
 ### Resumen Funcional
-El archivo `config.py` es un módulo que se encarga de registrar todos los routers de una aplicación FastAPI. Incluye manejo básico de errores para evitar que un router mal configurado detenga el arranque completo del servidor.
+El archivo `config.py` es un módulo que se encarga de registrar todos los routers de una aplicación FastAPI. Estos routers corresponden a diferentes funcionalidades como autenticación, dashboards, entregas, inventario, análisis proyecciones, filtros, PDFs, sincronización, documentación, configuraciones, tareas y widgets.
 
 ### Catálogo de Funciones y Clases
-- `register_routes(app: FastAPI) -> None` - Registra todos los routers de la aplicación de forma centralizada, incluyendo manejo de errores básico.
+- `register_routes(app: FastAPI) -> None` - Registra todos los routers de la aplicación de forma centralizada. Maneja errores para evitar que un router mal configurado detenga el arranque completo del servidor.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-No aplica
+- `logger` - Variable global que almacena el objeto de registro de logs.
 
 ### Dependencias y Flujo
-- `fastapi`: Se utiliza para crear y gestionar la aplicación FastAPI.
-- `logging`: Se utiliza para registrar mensajes de depuración y error.
-- Importa varios módulos de ruta (`dashboard`, `deliveries`, `inventory`, etc.) desde el mismo directorio.
+- **Dependencias**: 
+  - `fastapi`: Se utiliza para crear la aplicación FastAPI y los routers.
+  - `logging`: Para el registro de errores y mensajes de depuración.
+  
+- **Flujo**:
+  - El archivo importa varios módulos que contienen routers específicos (`dashboard`, `deliveries`, etc.).
+  - La función `register_routes` itera sobre una lista de routers y los registra en la aplicación FastAPI, capturando cualquier error que pueda ocurrir durante el proceso.
 
-El archivo no depende de ninguna base de datos ni variables globales.
+Este archivo es crucial para mantener la estructura organizada de un proyecto FastAPI, centralizando la configuración de rutas y proporcionando un punto de control para el registro de errores.
 
 
 ---
@@ -311,31 +315,30 @@ No aplica
 ## Archivo: ./routes/pdf.py
 
 ### Resumen Funcional
-Este archivo contiene rutas para generar reportes PDF en un sistema WMS (Warehouse Management System), incluyendo una versión individual y una versión masiva de entregas.
+Este archivo contiene rutas para generar reportes PDF en un sistema WMS (Warehouse Management System). Ofrece dos endpoints: uno para generar un PDF individual y otro para generar un reporte masivo con múltiples entregas.
 
 ### Catálogo de Funciones y Clases
-- `generate_pdf(entrega: str, include_logo: bool = False, action: str = "previsualizar", session: Session = Depends(get_session_dep))` - Genera un PDF para una única entrega.
-- `generate_pdf_bulk(date: Optional[str] = None, entrega_query: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, include_logo: bool = False, action: str = "previsualizar", session: Session = Depends(get_session_dep))` - Genera un reporte masivo con índice y picking list.
+- `generate_pdf(entrega, include_logo, action, session)` - Genera un PDF para una única entrega.
+- `generate_pdf_bulk(date, entrega_query, area, centro, has_ots_filter, include_logo, action, session)` - Genera un reporte masivo con índice y picking list.
 
 ### Interacción con Base de Datos
-- Motor: SQLite (deducido del uso de `get_session_dep()` que probablemente se conecta a una base de datos SQLite).
+- Motor: SQLite (inferred from the use of SQLAlchemy)
 - Tablas:
   - `outbound_deliveries`
-  - `area_lookup`
+  - Consultas SQL crudas para leer datos de estas tablas.
 - Columnas:
-  - `entrega` en `outbound_deliveries`
-  - `entrega`, `area_negocio`, `autor` en `area_lookup`
+  - Todas las columnas de la tabla `outbound_deliveries` se leen en los métodos.
 
 ### Estado y Variables Globales
-No aplica.
+No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `pandas`, `fastapi`, `sqlalchemy`.
+- Librerías externas utilizadas: `pandas`, `fastapi`, `sqlalchemy`, `logging`.
 - Comunicación con otros archivos del proyecto:
-  - `core.database.get_session_dep`
-  - `core.pdf_engine.WMS_Landscape_PDF`
-  - `core.pdf_queries.get_deliveries_for_bulk`, `get_area_lookup`, `get_picking_items`
-  - `core.pdf_reports.draw_annex_table`, `draw_picking_list`
+  - `core.database.get_session_dep` para obtener la sesión de base de datos.
+  - `core.pdf_engine.WMS_Landscape_PDF` y sus métodos (`draw_delivery_page`, `get_ots_for_delivery`) para generar el PDF.
+  - `core.pdf_queries` para consultas SQL relacionadas con las entregas.
+  - `core.pdf_reports` para dibujar tablas y listas en el PDF.
 
 
 ---
@@ -343,30 +346,28 @@ No aplica.
 ## Archivo: ./routes/settings.py
 
 ### Resumen Funcional
-El archivo `settings.py` define una API para la gestión dinámica de configuraciones SaaS utilizando SQLAlchemy ORM. Permite crear, actualizar y eliminar configuraciones como estados, centros de costo y feriados, así como consultar y previsualizar consultas SQL.
+El archivo `settings.py` define una API para la gestión dinámica de configuraciones SaaS utilizando SQLAlchemy ORM. Permite crear, actualizar y eliminar configuraciones como mapeos de estado, centros de costo y feriados, así como consultar y modificar consultas SQL.
 
 ### Catálogo de Funciones y Clases
 - `invalidate_caches(db: Session)` - Limpia el caché global en memoria y elimina todos los snapshots de base de datos.
-- `SettingUpdate(key: str, value: str)` - Modelo Pydantic para actualizar una configuración.
-- `StatusMappingUpdate(code: str, label: str)` - Modelo Pydantic para actualizar un estado de mapeo.
-- `CostCenterMappingUpdate(center_code: str, business_area: str)` - Modelo Pydantic para actualizar un centro de costo de mapeo.
-- `HolidayAdd(date_str: str)` - Modelo Pydantic para agregar un feriado.
-- `QueryUpdate(query_id: str, sql_text: Optional[str] = None, params: Optional[List[Any]] = None, visual_state: Optional[str] = None)` - Modelo Pydantic para actualizar una consulta.
+- `SettingUpdate(key: str, value: str)` - Modelo Pydantic para actualizar configuraciones individuales.
+- `StatusMappingUpdate(code: str, label: str)` - Modelo Pydantic para actualizar mapeos de estado.
+- `CostCenterMappingUpdate(center_code: str, business_area: str)` - Modelo Pydantic para actualizar centros de costo.
+- `HolidayAdd(date_str: str)` - Modelo Pydantic para agregar feriados.
+- `QueryUpdate(query_id: str, visual_state: str)` - Modelo Pydantic para actualizar el estado visual de consultas.
 
 ### Interacción con Base de Datos
 - Motor: SQLAlchemy ORM (Pilar 3)
 - Tablas:
   - `analytics_snapshots`
 - Columnas:
-  - No se especifican columnas específicas en el código proporcionado.
-- Consultas SQL Crudas:
-  - `DELETE FROM analytics_snapshots`
+  - No se especifican columnas específicas en las consultas SQL, pero se hace referencia a la tabla `analytics_snapshots`.
 
 ### Estado y Variables Globales
 - No aplica
 
 ### Dependencias y Flujo
-- Librerías Externas: FastAPI, SQLAlchemy, Pydantic, Pandas, holidays
+- Librerías externas utilizadas: `fastapi`, `pydantic`, `sqlalchemy`, `logging`, `pandas`, `holidays`.
 - Comunicación con otros archivos del proyecto:
   - `core.auth.require_admin`
   - `core.database.get_session_dep`
@@ -440,6 +441,29 @@ No aplica. El archivo no realiza ninguna interacción directa con una base de da
   - Intenta recuperar el contexto de las tareas desde la caché. Si no está disponible, lo recupera del servicio `TasksService`, limpia los datos innecesarios, y lo almacena en la caché antes de devolverlo.
 
 Este archivo es una parte integral del backend que proporciona un endpoint para obtener analíticas de tareas, utilizando servicios y dependencias definidos en otros módulos del proyecto.
+
+
+---
+
+## Archivo: ./routes/widgets.py
+
+### Resumen Funcional
+El archivo `widgets.py` define un endpoint FastAPI que ejecuta consultas SQL dinámicas y devuelve datos estructurados para visualización en una interfaz de usuario. El endpoint maneja tanto widgets modernos (que utilizan JSON) como legacy (que solo contienen texto SQL).
+
+### Catálogo de Funciones y Clases
+- `get_widget_data(query_id: str, year: Optional[str] = None, area: Optional[str] = None, db: Session = Depends(get_session_dep), user = Depends(get_current_user), state: AppState = Depends(get_app_state))` - Endpoint que ejecuta consultas SQL dinámicas y devuelve datos para visualización.
+
+### Interacción con Base de Datos
+- **Motor:** SQLAlchemy
+- **Tablas:** `ConfigQuery`
+- **Columnas:** `query_id`, `visual_state`, `sql_text`
+
+### Estado y Variables Globales
+- No aplica
+
+### Dependencias y Flujo
+- **Librerías Externas:** FastAPI, SQLAlchemy, Pandas, logging
+- **Flujo Interno:** El archivo interactúa con el estado de la aplicación (`AppState`), ejecuta consultas SQL utilizando `execute_visual_query`, y utiliza `sanitize_for_json` para limpiar los datos antes de devolverlos.
 
 
 ---

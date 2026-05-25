@@ -1,29 +1,28 @@
 ## Archivo: ./routes/pdf.py
 
 ### Resumen Funcional
-Este archivo contiene rutas para generar reportes PDF en un sistema WMS (Warehouse Management System), incluyendo una versión individual y una versión masiva de entregas.
+Este archivo contiene rutas para generar reportes PDF en un sistema WMS (Warehouse Management System). Ofrece dos endpoints: uno para generar un PDF individual y otro para generar un reporte masivo con múltiples entregas.
 
 ### Catálogo de Funciones y Clases
-- `generate_pdf(entrega: str, include_logo: bool = False, action: str = "previsualizar", session: Session = Depends(get_session_dep))` - Genera un PDF para una única entrega.
-- `generate_pdf_bulk(date: Optional[str] = None, entrega_query: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, include_logo: bool = False, action: str = "previsualizar", session: Session = Depends(get_session_dep))` - Genera un reporte masivo con índice y picking list.
+- `generate_pdf(entrega, include_logo, action, session)` - Genera un PDF para una única entrega.
+- `generate_pdf_bulk(date, entrega_query, area, centro, has_ots_filter, include_logo, action, session)` - Genera un reporte masivo con índice y picking list.
 
 ### Interacción con Base de Datos
-- Motor: SQLite (deducido del uso de `get_session_dep()` que probablemente se conecta a una base de datos SQLite).
+- Motor: SQLite (inferred from the use of SQLAlchemy)
 - Tablas:
   - `outbound_deliveries`
-  - `area_lookup`
+  - Consultas SQL crudas para leer datos de estas tablas.
 - Columnas:
-  - `entrega` en `outbound_deliveries`
-  - `entrega`, `area_negocio`, `autor` en `area_lookup`
+  - Todas las columnas de la tabla `outbound_deliveries` se leen en los métodos.
 
 ### Estado y Variables Globales
-No aplica.
+No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `pandas`, `fastapi`, `sqlalchemy`.
+- Librerías externas utilizadas: `pandas`, `fastapi`, `sqlalchemy`, `logging`.
 - Comunicación con otros archivos del proyecto:
-  - `core.database.get_session_dep`
-  - `core.pdf_engine.WMS_Landscape_PDF`
-  - `core.pdf_queries.get_deliveries_for_bulk`, `get_area_lookup`, `get_picking_items`
-  - `core.pdf_reports.draw_annex_table`, `draw_picking_list`
+  - `core.database.get_session_dep` para obtener la sesión de base de datos.
+  - `core.pdf_engine.WMS_Landscape_PDF` y sus métodos (`draw_delivery_page`, `get_ots_for_delivery`) para generar el PDF.
+  - `core.pdf_queries` para consultas SQL relacionadas con las entregas.
+  - `core.pdf_reports` para dibujar tablas y listas en el PDF.
 
