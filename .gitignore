@@ -31,9 +31,7 @@ config.local.*
 logs/
 
 # Scratch / temp
-scratch/*.xlsx
-scratch/*.csv
-scratch/*.pyc
+scratch/
 
 # macOS
 .DS_Store

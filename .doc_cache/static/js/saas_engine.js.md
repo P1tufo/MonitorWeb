@@ -1,27 +1,28 @@
 ## Archivo: ./static/js/saas_engine.js
 
 ### Resumen Funcional
-El archivo `saas_engine.js` es un motor SaaS V2 que se encarga de renderizar gráficos y KPIs en elementos HTML con la clase `.saas-widget-v2`. Utiliza una API para obtener los datos necesarios y actualiza el contenido del widget según estos datos.
+El archivo `saas_engine.js` es un motor SaaS que se encarga de leer contenedores con la clase `.saas-widget-v2`, obtener datos a través de una API y renderizar gráficos o KPIs en estos contenedores. El motor maneja diferentes tipos de widgets, como KPI numéricos y trellis (múltiples minigráficos), y permite el filtrado por área y año.
 
 ### Catálogo de Funciones y Clases
-- `initSaaSWidgetsV2(params = null)` - Inicializa los widgets SaaS V2, leyendo parámetros desde la interfaz o URL, y renderizando gráficos o KPIs en los elementos correspondientes.
+- `initSaaSWidgetsV2(params = null, rootElement = document)` - Inicializa los widgets SaaS en el elemento raíz especificado.
+- `openDrilldownModal(queryId, segmentLabel, materialId = null)` - Abre un modal con detalles adicionales para un segmento específico.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no realiza ninguna interacción con una base de datos.
+No aplica. El archivo no realiza ninguna interacción directa con una base de datos.
 
 ### Estado y Variables Globales
-- `window.saasChartInstancesV2` - Almacena instancias de gráficos Chart.js para widgets que ya han sido renderizados.
+- `window.saasChartInstancesV2` - Almacena instancias de gráficos Chart.js renderizados en los widgets.
 
 ### Dependencias y Flujo
 - **Librerías Externas**: 
   - `fetch` - Para hacer solicitudes HTTP.
-  - `Chart.js` - Para renderizar gráficos.
-  - `ChartDataLabels` - Plugin de Chart.js para etiquetar datos en gráficos.
-  
+  - `Chart.js` - Para crear y gestionar gráficos.
+  - `ChartDataLabels` - Plugin para Chart.js que permite mostrar etiquetas de datos en los gráficos.
+
 - **Flujo Interno**:
   - El archivo se ejecuta al cargar el DOM (`DOMContentLoaded`).
-  - Intercepta la función `updateDeliveriesAnalytics` si existe, y reemplaza su contenido con una versión que también llama a `initSaaSWidgetsV2`.
-  - Llama a `initSaaSWidgetsV2` después de un pequeño delay para asegurar que el DOM esté listo.
+  - Llama a `initSaaSWidgetsV2()` con un pequeño retraso para asegurar que el DOM esté listo.
+  - `initSaaSWidgetsV2()` busca todos los elementos con la clase `.saas-widget-v2`, recopila parámetros de filtro, realiza solicitudes a una API y renderiza gráficos o KPIs en estos elementos.
 
-El archivo interactúa con elementos HTML mediante la selección de clases y atributos, y utiliza funciones asíncronas para obtener datos desde una API y actualizar el contenido de los widgets.
+El archivo no depende de otros archivos del proyecto directamente.
 
