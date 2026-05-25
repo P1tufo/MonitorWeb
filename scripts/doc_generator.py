@@ -789,6 +789,12 @@ def main():
         # 3. Compilar archivo maestro y carpetas con el estado actual
         compile_master_file(all_valid_files)
         compile_by_folders(all_valid_files)
+        
+        # Automatizar README.md para GitHub
+        import shutil
+        print(f"\n[*] Actualizando README.md en la raíz del proyecto...")
+        shutil.copy(OUTPUT_FILE, "README.md")
+        print("✓ README.md sincronizado con éxito.")
     else:
         print("\n✓ Documentación compilada al día. No es necesario recompilar.")
 
