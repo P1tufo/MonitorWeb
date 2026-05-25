@@ -13,7 +13,7 @@ El archivo `deliveries.js` contiene la lógica para el análisis de entregas, in
 - `updateDeliveriesAnalytics()` - Recalcula y actualiza los KPIs y listas de entregas según los filtros seleccionados.
 - `toggleMulti(id)` - Alterna la visibilidad de un elemento con el ID especificado.
 - `toggleChartSelectAll(isChecked)` - Maneja el estado del checkbox "Seleccionar todo".
-- `handleSmartCheckbox(cb)` - Maneja el comportamiento inteligente de los checkboxes.
+- `handleSmartCheckbox(cb)` - Maneja el comportamiento inteligente de los checkboxes individuales.
 
 ### Interacción con Base de Datos
 No aplica
@@ -23,6 +23,13 @@ No aplica
 
 ### Dependencias y Flujo
 - Depende de `core_ui.js`, que proporciona funciones como `CoreUI.openModal`, `CoreUI.closeModal`, `CoreUI.renderMaterialModal`, y `CoreUI.getData`.
-- Utiliza gráficos de Chart.js, incluyendo el plugin `ChartDataLabels`.
-- Comunica con otros archivos del proyecto a través de eventos globales (`window.dispatchEvent(new Event('resize'))`) y funciones expuestas en la ventana global (`window.openModalArea`, `window.openModalUser`, `window.openModalUbicacion`, `window.updateDeliveriesAnalytics`).
+- Comunica con otros archivos a través de las siguientes variables globales:
+  - `window.toggleModalFilter`
+  - `window.openModalArea`
+  - `window.openModalUser`
+  - `window.openModalUbicacion`
+  - `window.switchVLView`
+  - `window.updateDeliveriesAnalytics`
+  - `window.toggleChartSelectAll`
+  - `window.handleSmartCheckbox`
 

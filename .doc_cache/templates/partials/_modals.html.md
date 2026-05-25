@@ -1,17 +1,21 @@
 ## Archivo: ./templates/partials/_modals.html
 
 ### Resumen Funcional
-Este archivo contiene fragmentos HTML para dos modales: uno que muestra un visor de PDF y otro que presenta una tabla de usuarios y sus áreas asignadas.
+Este archivo contiene fragmentos HTML para modales que se utilizan en una interfaz web. Cada modal tiene un propósito específico: uno para visualizar PDFs, otro para mostrar una tabla de usuarios y sus áreas asignadas, y otro para proporcionar detalles dinámicos sobre categorías.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones ni clases definidas en este archivo.
+No se detectaron funciones o métodos definidos en este archivo. Todas las interacciones son realizadas a través de eventos JavaScript (como `onclick`) y el uso de plantillas Jinja2 para renderizar contenido dinámicamente.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna
 
 ### Estado y Variables Globales
-- `autores_map`: Una variable global o diccionario que contiene la información de los autores y sus áreas asignadas. Se utiliza para llenar la tabla en el modal "Tabla de usuarios y sus areas".
+No aplica
 
 ### Dependencias y Flujo
-No se detectan dependencias externas ni llamadas a otros archivos del proyecto.
+- **Librerías externas utilizadas**: 
+  - Font Awesome (`fas fa-spinner`)
+  
+- **Flujo hacia otros archivos del proyecto**:
+  - No se detectaron llamadas directas a otros archivos.
 

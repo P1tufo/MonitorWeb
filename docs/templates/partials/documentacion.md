@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: templates/partials
-Compilado el: 2026-05-24 14:59:18
+Compilado el: 2026-05-24 23:35:28
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -67,8 +67,8 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- **Dependencias**: No hay dependencias directas mencionadas. El archivo se refiere a un script JavaScript (`analytics_studio.js`) que debe estar disponible en la ruta especificada.
-- **Flujo**: Este fragmento es una parte de una interfaz web y no realiza ninguna operación que requiera comunicación con otras partes del sistema o acceso a variables globales.
+- **Dependencias**: No hay dependencias externas directamente mencionadas.
+- **Flujo**: El archivo se comunica con el archivo `analytics_studio.js` para manejar la lógica del constructor visual y la simulación del gráfico.
 
 
 ---
@@ -118,19 +118,23 @@ No aplica. No se definen variables globales, de sesión o diccionarios quemados 
 ## Archivo: ./templates/partials/_modals.html
 
 ### Resumen Funcional
-Este archivo contiene fragmentos HTML para dos modales: uno que muestra un visor de PDF y otro que presenta una tabla de usuarios y sus áreas asignadas.
+Este archivo contiene fragmentos HTML para modales que se utilizan en una interfaz web. Cada modal tiene un propósito específico: uno para visualizar PDFs, otro para mostrar una tabla de usuarios y sus áreas asignadas, y otro para proporcionar detalles dinámicos sobre categorías.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones ni clases definidas en este archivo.
+No se detectaron funciones o métodos definidos en este archivo. Todas las interacciones son realizadas a través de eventos JavaScript (como `onclick`) y el uso de plantillas Jinja2 para renderizar contenido dinámicamente.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna
 
 ### Estado y Variables Globales
-- `autores_map`: Una variable global o diccionario que contiene la información de los autores y sus áreas asignadas. Se utiliza para llenar la tabla en el modal "Tabla de usuarios y sus areas".
+No aplica
 
 ### Dependencias y Flujo
-No se detectan dependencias externas ni llamadas a otros archivos del proyecto.
+- **Librerías externas utilizadas**: 
+  - Font Awesome (`fas fa-spinner`)
+  
+- **Flujo hacia otros archivos del proyecto**:
+  - No se detectaron llamadas directas a otros archivos.
 
 
 ---
@@ -238,27 +242,27 @@ No aplica
 ## Archivo: ./templates/partials/_tab_deliveries.html
 
 ### Resumen Funcional
-Este fragmento HTML es una pestaña que muestra análisis de entregas, incluyendo KPIs como volumen total y eficiencia de bodega. Permite cambiar entre vistas operativas (anual) y históricas (semanales), y filtra los datos por áreas seleccionadas.
+Este fragmento HTML es una pestaña que muestra un análisis de entregas, incluyendo KPIs como volumen total y eficiencia de bodega. Permite cambiar entre vistas operativas (anual) y históricas (semanales), y filtra los datos por áreas seleccionadas.
 
 ### Catálogo de Funciones y Clases
-No se detectaron funciones o clases definidas en este fragmento HTML.
+- `switchVLView(value)` - Cambia la vista según el valor seleccionado en el selector.
+- `openEditQueryModal(queryId, title)` - Abre un modal para editar una consulta SQL específica.
+- `toggleMulti(id)` - Muestra u oculta los checkboxes de áreas.
+- `toggleChartSelectAll(checked)` - Selecciona/deselecciona todos los checkboxes de áreas.
+- `handleSmartCheckbox(element)` - Maneja el cambio en los checkboxes individuales.
 
 ### Interacción con Base de Datos
-Ninguna
+No aplica
 
 ### Estado y Variables Globales
-- `user.role`: Rol del usuario, utilizado para determinar si se muestran botones de edición.
-- `areas_vl`: Lista de áreas disponibles para filtrar.
-- `top_authors`: Lista de los top solicitadores con sus entregas.
-- `top_materials`: Diccionario con materiales repetitivos por área.
+No aplica
 
 ### Dependencias y Flujo
 Dependencias:
-- `FontAwesome` (usado para iconos)
-- JavaScript (`openEditQueryModal`, `toggleMulti`, etc.)
+- jQuery (para eventos como `onchange`, `onclick`, etc.)
+- Font Awesome (para iconos)
 
-Flujo:
-Este fragmento interactúa con el backend a través de funciones JavaScript que pueden abrir modales, cambiar vistas y filtrar datos. No realiza ninguna interacción directa con la base de datos.
+Flujo: Este fragmento interactúa con el backend a través de JavaScript para cargar datos dinámicamente en los KPIs y gráficos. No realiza consultas directas a la base de datos, sino que espera que estos datos se le pasen desde el backend.
 
 
 ---
@@ -331,25 +335,20 @@ Ninguna.
 ## Archivo: ./templates/partials/_tab_inventory.html
 
 ### Resumen Funcional
-Este fragmento HTML es una pestaña que muestra un análisis de movimientos en una interfaz web, incluyendo estadísticas clave y gráficos interactivos. Permite a los usuarios cambiar la vista entre "Vista Operativa (Anual)" y "Vista Semanal (Histórico)", y proporciona detalles sobre diferentes KPIs como ingresos, consumos de producción, mantenimiento, tasa de reabastecimiento, traspasos, devoluciones y eficiencia de bodega. También incluye gráficos que muestran la distribución de materiales según la curva ABC, tendencias de consumo, volumen operacional y carga semanal.
+Este archivo HTML es una pestaña de interfaz de usuario que muestra un análisis de movimientos en una bodega. Incluye un selector para cambiar la vista, indicadores clave (KPIs) y gráficos.
 
 ### Catálogo de Funciones y Clases
-- `switchInventarioView(value)` - Cambia la vista del inventario según el valor seleccionado.
-- `openEditQueryModal(id, title)` - Abre un modal para editar una consulta SQL específica.
+No se detectan funciones o clases definidas en este fragmento HTML.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna
 
 ### Estado y Variables Globales
-- `user.role` - Rol del usuario actual.
-- `kpi_ingresos`, `kpi_consumos_prod`, `kpi_consumos_mant`, `rate_reabast`, `kpi_traspasos`, `rate_devolucion`, `rate_eficiencia` - Valores de KPIs calculados.
-- `top_materials_quick` - Lista de materiales más consumidos.
-- `top_users` - Lista de usuarios con mayor frecuencia de despachos.
+No aplica
 
 ### Dependencias y Flujo
-- Librerías utilizadas: `FontAwesome` para iconos.
-- Comunicación con otros archivos del proyecto:
-  - `_tab_inventory.js` (posiblemente contiene la lógica detrás de las funciones `switchInventarioView` y `openEditQueryModal`).
+- **Librerías Externas**: `FontAwesome` para iconos.
+- **Flujo Interno**: Este archivo se comunica con JavaScript a través de funciones como `switchInventarioView`, `openEditQueryModal`, etc.
 
 
 ---

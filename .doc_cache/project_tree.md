@@ -2,6 +2,7 @@
 
 ```text
 ./
+    README.md
     app.log
     app.py
     config.py

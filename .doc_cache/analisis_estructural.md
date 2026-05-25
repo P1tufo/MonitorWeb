@@ -8,30 +8,31 @@ La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a 
 
 - **`app.py`**: Punto de entrada principal del aplicativo.
 - **`config.py`**: Archivo de configuración general del sistema.
-- **`main.py`**: Posiblemente un archivo auxiliar para iniciar el servidor o la aplicación.
-- **`core/`**: Contiene el código central y las funcionalidades principales del sistema. Incluye subcarpetas como `auth`, `database`, `models`, etc., que separan diferentes aspectos de la lógica de negocio.
+- **`main.py`**: Posiblemente un archivo auxiliar para la inicialización del sistema.
+- **`core/`**: Contiene el código central y las funcionalidades principales del sistema, como autenticación (`auth.py`), base de datos (`database.py`), modelos (`models.py`), etc.
 - **`bin/`**: Almacena binarios o herramientas externas necesarias para el proyecto, como `ngrok`.
-- **`deploy/`**: Contiene archivos relacionados con la despliegue del sistema, incluyendo Dockerfiles y configuraciones de entorno.
-- **`setup/`**: Archivos de configuración y scripts para gestionar las dependencias del proyecto, como `requirements.txt`, `package.json`, etc.
-- **`tests/`**: Contiene los tests unitarios y de integración del sistema.
-- **`repositories/`**: Define la lógica de acceso a datos, separando el modelo de datos (`models.py`) de la lógica de negocio.
-- **`docs/`**: Documentación del proyecto, incluyendo documentación técnica y mejoras propuestas.
-- **`DELIVERIES_cleansed/`**: Almacena archivos limpios de entregas.
-- **`static/`**: Archivos estáticos como CSS y JavaScript.
-- **`scripts/`**: Scripts auxiliares para tareas específicas, como generación de documentación o monitoreo del sistema.
-- **`db/`**: Contiene el código relacionado con la base de datos, incluyendo scripts de consolidación y archivos de base de datos.
-- **`templates/`**: Plantillas HTML para las vistas del sistema.
-- **`data/`**: Archivos de datos, como bases de datos SQLite.
-- **`routes/`**: Define las rutas y endpoints del API.
-- **`services/`**: Contiene la lógica de negocio separada en servicios, incluyendo subcarpetas para ETL.
+- **`deploy/`**: Contiene archivos relacionados con la implementación y despliegue del sistema, como Dockerfiles y configuraciones de entorno.
+- **`setup/`**: Archivos de configuración y scripts para el desarrollo y gestión del proyecto, incluyendo dependencias (`requirements.txt`) y pruebas (`pytest.ini`).
+- **`tests/`**: Directorio que contiene todos los tests unitarios y de integración del sistema.
+- **`repositories/`**: Contiene clases y métodos para interactuar con la base de datos y almacenar datos.
+- **`docs/`**: Documentación del proyecto, incluyendo documentación general y por módulo.
+- **`DELIVERIES_cleansed/`**: Archivos limpios de entregas, posiblemente resultados de procesamiento o exportaciones.
+- **`static/`**: Recursos estáticos como CSS y JavaScript para la interfaz web.
+- **`scripts/`**: Scripts auxiliares y herramientas útiles para el proyecto.
+- **`db/`**: Archivos relacionados con la base de datos, incluyendo archivos de base de datos SQLite (`data.db`, `deliveries.db`, etc.) y scripts para su manipulación.
+- **`templates/`**: Plantillas HTML para la interfaz web.
+- **`routes/`**: Definición de las rutas del sistema, que probablemente se manejan con un framework como Flask o Django.
+- **`services/`**: Servicios que encapsulan lógica de negocio y pueden interactuar con los repositorios y otras partes del sistema.
 
 ### Organización Lógica de las Dependencias
 
-La organización de dependencias es coherente con el diseño modular. Los módulos están organizados en carpetas que reflejan su funcionalidad, lo que facilita la localización y mantenimiento del código. Por ejemplo:
+La organización de dependencias es coherente con la arquitectura modular. El código se divide en módulos específicos, cada uno con un propósito claro:
 
-- **`core/`**: Contiene la lógica central del sistema, separada en subcarpetas para diferentes aspectos como autenticación, base de datos, modelos, etc.
-- **`repositories/`**: Define la interfaz de acceso a datos, lo que permite una separación clara entre el modelo de datos y la lógica de negocio.
-- **`tests/`**: Contiene los tests unitarios y de integración, asegurando que cada módulo funcione correctamente en aislamiento y junto con otros componentes.
+- **`core/`**: Contiene el núcleo del sistema, incluyendo lógica de negocio y acceso a datos.
+- **`routes/`**: Define las interfaces de usuario y la comunicación entre el cliente y el servidor.
+- **`services/`**: Encapsula la lógica de negocio y puede interactuar con los repositorios y otros servicios.
+- **`repositories/`**: Se encarga de la persistencia de datos, proporcionando una capa de abstracción sobre la base de datos.
+- **`tests/`**: Contiene pruebas unitarias y de integración para asegurar que el sistema funcione correctamente.
 
-Esta estructura facilita el mantenimiento y escalabilidad del proyecto, permitiendo a los desarrolladores trabajar en diferentes partes del sistema simultáneamente sin interferirse entre sí.
+Esta organización facilita el mantenimiento y escalabilidad del proyecto, permitiendo a los desarrolladores trabajar en diferentes partes del sistema simultáneamente.
 

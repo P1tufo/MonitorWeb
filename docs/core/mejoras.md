@@ -1,5 +1,5 @@
 # Sugerencias de Mejora - Directorio: core
-Compilado el: 2026-05-24 14:59:18
+Compilado el: 2026-05-24 23:35:28
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -87,7 +87,9 @@ CÓDIGO ÓPTIMO
 
 ---
 
-## Sugerencias para: ./core/query_engine.py
+## Sugerencias para: ./core/query_engine.py (Procesado en 1 partes)
+
+#### --- PARTE 1 de 1 ---
 
 CÓDIGO ÓPTIMO
 

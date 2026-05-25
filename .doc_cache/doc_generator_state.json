@@ -126,7 +126,7 @@
         "hash": "0af4df80296a9063d16c5174529bf81830ff9467c3a0da55e96c011cb7e4cee2"
     },
     "./static/js/analytics_studio.js": {
-        "hash": "98a4ff29b93125db3c5c0a6a3e4eb2277091a06a11f1feb1e6566b809dd2cd0e"
+        "hash": "5503d7941a2322a879da676225689771188f7751f11b246cc8cb2c7ae03cce4f"
     },
     "./static/js/docs_explorer.js": {
         "hash": "46ccc6810de38dbfa1aa8323a254449baa4b5be9acaf8c163bf781711faad2d4"
@@ -141,13 +141,13 @@
         "hash": "d818eb56cfc9a5dee299dda050cad2e084e0337db91d4206ba888d33cab86164"
     },
     "./static/js/deliveries.js": {
-        "hash": "ed413578428fc68357408c61e57726794a27e56a5a7cf8cd691ca74e83080c39"
+        "hash": "a4344ee60a50e906c34aa6499c7955667d86c0bae21be490079f8048a4a111e0"
     },
     "./static/js/dashboard_charts.js": {
         "hash": "200508b9b7a6fce898bb8f61e59c264759948b48c34a7e9762763c0e18ac6f63"
     },
     "./static/js/inventory.js": {
-        "hash": "8546f2c2681aaf4c9e467a35566cf487978a4e5a25d014fffab44910d7150cd3"
+        "hash": "73fee262330c9109e915a0e7b57c5d0b14222bc02fb5459190f247648e793dd8"
     },
     "./static/js/dashboard.js": {
         "hash": "4034230460aea6f0a0bad0e60db2c513e4bb23631a7b0b57fa9d759ebab9e16b"
@@ -171,7 +171,7 @@
         "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "./templates/inventory.html": {
-        "hash": "07014debf47ba17ea398120429a2ecfbd39165a210fbe1d0bf3787c8fbd5e706"
+        "hash": "444896bcb6150398f5e903dbf3c8a2aef0bd491edcf67e69d37115c26d00b9b4"
     },
     "./templates/login.html": {
         "hash": "4c088f56b08414c62497e6b5ac155686fecedc2f576754e3d8311705393eac04"
@@ -189,7 +189,7 @@
         "hash": "300f8db1e5abfdf86c83e21a033bdccf658fb075c9b2d2bbd88a9c88f1c7499b"
     },
     "./templates/deliveries.html": {
-        "hash": "74244b74db43a5eba915f0600bc75582f8898a4b7f45c103fb7b7d79e1aefef8"
+        "hash": "93d61936e3f9d4d3318acbc7ed5e911b45d458473f203e72118b5870a3ac6359"
     },
     "./templates/partials/_scripts.html": {
         "hash": "2e0f665bc1de569ed8771897c7900eb80ed801afec6a73bbf02b255865947587"
@@ -204,13 +204,13 @@
         "hash": "530eefdd0e885a661a6dc1925bcd0417b01c9292499d2ad32b4723a4a8941844"
     },
     "./templates/partials/_tab_deliveries.html": {
-        "hash": "62ea861b7c31a98c93087a9b31dd96e63f0eff52996ad7a9551077b72d2c2699"
+        "hash": "1bc6effd4c3f7f35e5e20057e589a08070721c117a70bd1fae7cb9f46d79f31a"
     },
     "./templates/partials/_tab_ots.html": {
         "hash": "ce234710b2f3b663e35cebc9a7bf60de409a0951b262db729570e773581c150a"
     },
     "./templates/partials/_edit_query_modal.html": {
-        "hash": "6e8a16adb3c1dd9de86aa22d2360066209c8bac08135c8ded3ac195fedfd70c0"
+        "hash": "e8f81973dab03a3f7404580abefedb8aaf521d13ccaceed4c1a2aaec2cbf59bb"
     },
     "./templates/partials/_styles.html": {
         "hash": "ffddc7db57aa78e0fc226e02db35995daa83c7a2e7a333ceb2d7fd6700e47b9d"
@@ -222,7 +222,7 @@
         "hash": "e5b4cf5438eae59a18256fb38f73b74f4ee02b66e45236c2e60510cbcb228ea5"
     },
     "./templates/partials/_modals.html": {
-        "hash": "c674ce1817a58fd747f23908d5911b536f4a57b0ae3741dea7ddcb7e73dab95f"
+        "hash": "a3bdb70a82a39a0e3c8969da9d334e06c2ea24a09a1d99d736ba4e8dfb3aed77"
     },
     "./templates/partials/_tab_historial.html": {
         "hash": "8892f7261b7f33eae3e13ae6649ee8d7935c284945169992f8a7a29d3ea725bb"
@@ -237,7 +237,7 @@
         "hash": "5ac67027e56d7fedee4e9f5d3f4dfdd55f3549f0cf539fe8fb64a7abea59c06c"
     },
     "./templates/partials/_tab_inventory.html": {
-        "hash": "f7670cad80bca7d22be1d21763a21e540d826abec720fc3b8668801ab098a509"
+        "hash": "821e49df1e4c913a883a778599403e5d1684e289bf75d0f0f11279432e08b4e6"
     },
     "./routes/sync.py": {
         "hash": "c58a9f56bc2df64ad7cedc40a97c9f6b509782092b68929a243121e9630b48b7"
@@ -267,7 +267,7 @@
         "hash": "9b6e753026d7b19830fea9421a63862deed360df90d3de7dcbf6ef397e82debd"
     },
     "./routes/settings.py": {
-        "hash": "4fc5cfa588851de4009eae4532ddd92b70790df35b93c1b8d81d4a6df42eec1f"
+        "hash": "3389b9920b512f416fb37bbeadf1beafafb58fabcbf0a80c4ef0f4390e22f518"
     },
     "./routes/deliveries.py": {
         "hash": "ffae167062a0ef989d74c52f68c85f23f4a6c6341dab90d8f60c72da03c46d73"
@@ -330,6 +330,6 @@
         "hash": "d786d05e68c21925aab811c4db35e47721d973c1c78f261738bf14101283961d"
     },
     "./routes/widgets.py": {
-        "hash": "1390a05b18cce59da2340e4dff272637be4638d49be84d52d3f6f6bf27dc3c2b"
+        "hash": "852652097993471dc89bf4d5e0a3f81b22f65d56168c510f1d022a4d8514e100"
     }
 }

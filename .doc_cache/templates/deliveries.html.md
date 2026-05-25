@@ -10,8 +10,8 @@ El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario d
 - `openNonPalletizedDetails(user, claseMov)` - Abre un modal con detalles no paletizados.
 - `initTableFilters()` - Inicializa los filtros de tablas.
 - `filterOTTable()` - Filtra la tabla de OTs según los criterios seleccionados.
-- `filterDiscrepancyTable()` - Filtra la tabla de discrepancias según los criterios seleccionados.
-- `sortTableDiscrepancy(columnIndex)` - Ordena la tabla de discrepancias.
+- `filterDiscrepancyTable()` - Filtra la tabla de Discrepancias según los criterios seleccionados.
+- `sortTableDiscrepancy(columnIndex)` - Ordena la tabla de Discrepancias.
 
 ### Interacción con Base de Datos
 No aplica
@@ -35,10 +35,8 @@ No aplica
   - `docs_explorer.js`
 
 - Archivos CSS incluidos:
-  - `deliveries.css`
-  - `inventory.css`
-  - `analytics_proyecciones.css`
-  - `docs_explorer.css`
+  - Estilos generales
+  - Estilos específicos para entregas, inventario, análisis de proyecciones
 
-- Variables globales y datos JSON inyectados dinámicamente desde el backend.
+El archivo interactúa con varios componentes del proyecto, incluyendo scripts y estilos que manejan la interfaz de usuario y el comportamiento dinámico.
 
