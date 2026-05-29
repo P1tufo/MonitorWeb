@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: core
-Compilado el: 2026-05-28 23:22:17
+Compilado el: 2026-05-29 00:41:03
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -414,12 +414,12 @@ Uso indirecto de una biblioteca de PDF (no especificada en el fragmento)
 
 ---
 
-## Archivo: ./core/query_engine.py (Procesado en 1 partes)
+## Archivo: ./core/query_engine.py (Procesado en 2 partes)
 
-#### --- PARTE 1 de 1 ---
+#### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-Este archivo contiene el motor de construcción de consultas SQL seguras para el Analytics Studio. Centraliza la lista blanca de tablas permitidas, la validación dinámica de identificadores (tablas y columnas) contra el esquema real de la BD, y la construcción parametrizada de SQL con FROM, JOIN, WHERE, agregaciones, eje temporal y desglose por series.
+Este archivo `query_engine.py` es el motor de construcción de SQL seguro para el Analytics Studio. Centraliza la lista blanca de tablas permitidas, la validación dinámica de identificadores (tablas y columnas) contra el esquema real de la BD, y la construcción parametrizada de SQL con FROM, JOIN, WHERE, agregaciones, eje temporal y desglose por series.
 
 ### Catálogo de Funciones y Clases
 - `validate_identifier(name: str, db: Session) -> bool`: Valida que un identificador (tabla o tabla.columna) pertenezca a la lista blanca.
@@ -435,16 +435,34 @@ Este archivo contiene el motor de construcción de consultas SQL seguras para el
 - Consultas SQL crudas: Utiliza `PRAGMA table_info` para validar columnas.
 
 ### Estado y Variables Globales
-- No aplica
+- Variables globales: No aplica.
 
 ### Dependencias y Flujo
 - Librerías externas utilizadas:
   - `sqlalchemy`
   - `fastapi`
 - Comunicación con otros archivos del proyecto:
-  - `routes/settings.py::api_build_sql` → llama a `build_sql_from_payload()`
-  - `core/security.py::validate_table` → valida nombres de tabla en ETL (sin cambios)
-  - `core/utils.py` → utilidades JSON y métricas (sin cambios)
+  - `routes/settings.py::api_build_sql` → llama a `build_sql_from_payload()`.
+  - `core/security.py::validate_table` → valida nombres de tabla en ETL (sin cambios).
+  - `core/utils.py` → utilidades JSON y métricas (sin cambios).
+
+#### --- PARTE 2 de 2 ---
+
+### Resumen Funcional
+El archivo `query_engine.py` genera consultas SQL dinámicas basadas en los parámetros proporcionados en el objeto `payload`. La consulta puede incluir agrupaciones y ordenamientos según las necesidades del usuario.
+
+### Catálogo de Funciones y Clases
+- `generate_query(payload)` - Genera una consulta SQL dinámica basada en los parámetros del objeto `payload`.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+- `AREA_EXPR_MACRO` - Una macro global que puede ser inyectada en la consulta SQL.
+
+### Dependencias y Flujo
+- Depende de las variables globales `time_func`, `breakdown_select`, `metrics_select_str`, `from_clause`, `where_str`, `groupby_str`, `payload.baseTable`.
+- No comunica con otros archivos del proyecto.
 
 
 ---
@@ -465,7 +483,7 @@ Este archivo define esquemas de datos utilizando Pydantic, que son clases que de
 - `MetricDef(column: str, aggregation: str, format: Optional[str] = "number", label: Optional[str] = "", condition: Optional[MetricCondition] = None, customExpr: Optional[str] = None)` - Define una definición de métrica para consultas SQL.
 - `TimeAxisDef(column: Optional[str] = None, granularity: Optional[str] = "NONE")` - Define la definición del eje temporal en consultas SQL.
 - `SecondMetricDef(column: str = "", aggregation: str = "", label: str = "")` - Define una segunda métrica para consultas SQL.
-- `VisualQueryBuilderPayload(baseTable: str, joins: list[JoinDef] = [], filters: list[FilterDef] = [], metric: Optional[MetricDef] = None, timeAxis: Optional[TimeAxisDef] = None, breakdown: Optional[str] = None, secondMetric: Optional[SecondMetricDef] = None, metrics: list[MetricDef] = [], chartType: Optional[str] = "bar")` - Define el payload para el generador de consultas visuales.
+- `VisualQueryBuilderPayload(baseTable: Optional[str] = None, datasetId: Optional[str] = None, joins: list[JoinDef] = [], filters: list[FilterDef] = [], metric: Optional[MetricDef] = None, timeAxis: Optional[TimeAxisDef] = None, breakdown: Optional[str] = None, secondMetric: Optional[SecondMetricDef] = None, metrics: list[MetricDef] = [], chartType: Optional[str] = "bar")` - Define el payload para el generador de consultas visuales.
 
 ### Interacción con Base de Datos
 No aplica
@@ -496,6 +514,36 @@ No aplica. El archivo no realiza ninguna interacción con bases de datos.
 
 ### Dependencias y Flujo
 No depende de ninguna librería externa. No comunica con otros archivos del proyecto.
+
+
+---
+
+## Archivo: ./core/semantic_layer.py
+
+### Resumen Funcional
+La capa semántica `semantic_layer.py` proporciona una abstracción entre el frontend y la estructura física de las bases de datos. Define clases para Dimensiones, Métricas y Conjuntos de Datos (Datasets), y ofrece funciones para obtener esquemas front-end, resolver mapeos físicos y recuperar fórmulas complejas.
+
+### Catálogo de Funciones y Clases
+- `Dimension(id: str, label: str, physical_column: str, type: str = "string", description: str = "")` - Representa una dimensión con sus atributos.
+- `Metric(id: str, label: str, physical_column: str, aggregation: str = "SUM", format: str = "number", is_complex_formula: bool = False, formula_template: Optional[str] = None, description: str = "")` - Representa una métrica con sus atributos.
+- `Dataset(id: str, label: str, physical_table: str, dimensions: List[Dimension] = field(default_factory=list), metrics: List[Metric] = field(default_factory=list))` - Representa un conjunto de datos compuesto por dimensiones y métricas.
+- `DATASETS: Dict[str, Dataset]` - Catálogo global de conjuntos de datos.
+- `_PHYSICAL_TABLE_TO_DATASET: Dict[str, str]` - Mapa inverso para mapear tablas físicas a IDs de conjuntos de datos.
+- `get_frontend_schema() -> Dict[str, Any]` - Genera un esquema semántico para la interfaz front-end.
+- `resolve_dataset_physical_table(dataset_id: str) -> str` - Devuelve la tabla física asociada con un ID de conjunto de datos.
+- `resolve_physical_mapping(dataset_id: str, field_id: str) -> str` - Traduce IDs semánticos a columnas físicas.
+- `get_metric_formula(dataset_id: str, metric_id: str, table_alias: str = "", legacy_agg: str = "") -> Optional[str]` - Devuelve la fórmula compleja de una métrica si la tiene.
+- `get_formula_by_physical_table(physical_table: str, aggregation: str, metric_col: str = "") -> Optional[str]` - Recupera expresiones SQL complejas basadas en la tabla física y la agregación.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+- `DATASETS`: Diccionario que almacena los conjuntos de datos.
+- `_PHYSICAL_TABLE_TO_DATASET`: Diccionario que mapea tablas físicas a IDs de conjuntos de datos.
+
+### Dependencias y Flujo
+No depende de ninguna librería externa. Comunica con otros archivos del proyecto a través de funciones públicas como `get_frontend_schema`, `resolve_dataset_physical_table`, etc.
 
 
 ---

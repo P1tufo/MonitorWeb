@@ -33,7 +33,7 @@
         "hash": "5f3f57d0bbb5c77a864b80199281626bb09895d31a0cf78346cf92186f691ec0"
     },
     "./core/schemas.py": {
-        "hash": "f6716d74dd45f418c110121cffe79c38242c5f6af65d109504123aced657e154"
+        "hash": "df2b7521f627f212c81155df256f027d868c9d2a4acea152f718e912857215c7"
     },
     "./core/pdf_reports.py": {
         "hash": "3c7bac394f60942610c3ba98ff27fc79b17e8ad087fe9c82e785e4159ae6cc3d"
@@ -126,7 +126,7 @@
         "hash": "0af4df80296a9063d16c5174529bf81830ff9467c3a0da55e96c011cb7e4cee2"
     },
     "./static/js/analytics_studio.js": {
-        "hash": "f2c4d3a732900542a1e4c70a720c4e63acae2b2f1ccffa463808b5f06e73ab96"
+        "hash": "c9cb2a042dc28ea62aa627bf3b636d06764961bc35fa7ab4aa6e54912f04c77a"
     },
     "./static/js/docs_explorer.js": {
         "hash": "46ccc6810de38dbfa1aa8323a254449baa4b5be9acaf8c163bf781711faad2d4"
@@ -210,7 +210,7 @@
         "hash": "ce234710b2f3b663e35cebc9a7bf60de409a0951b262db729570e773581c150a"
     },
     "./templates/partials/_edit_query_modal.html": {
-        "hash": "e8f81973dab03a3f7404580abefedb8aaf521d13ccaceed4c1a2aaec2cbf59bb"
+        "hash": "75ea316601ed1f369a659aa99476a6002e0a46e905f7cae03d20432857277938"
     },
     "./templates/partials/_styles.html": {
         "hash": "ffddc7db57aa78e0fc226e02db35995daa83c7a2e7a333ceb2d7fd6700e47b9d"
@@ -267,7 +267,7 @@
         "hash": "2f61cabf1c794d70705d8ae18a02b01953284568469a9e996da9f8b9060a95d8"
     },
     "./routes/settings.py": {
-        "hash": "3389b9920b512f416fb37bbeadf1beafafb58fabcbf0a80c4ef0f4390e22f518"
+        "hash": "149a8480b07f6e1a9b4a0a8e2589cfc8d3b84e4e0c0db34201cc3110231d30a1"
     },
     "./routes/deliveries.py": {
         "hash": "ffae167062a0ef989d74c52f68c85f23f4a6c6341dab90d8f60c72da03c46d73"
@@ -315,7 +315,7 @@
         "hash": "c9556ab65bb24b1a506d0759059954ebd3d2b0dddb32fd857d210087d45dc6b5"
     },
     "./core/query_engine.py": {
-        "hash": "582b3becf75cf1a40309e2fbdcc80f16def84d2fa898741942865335ea7675c5"
+        "hash": "1daf44cf38ce13a95d499cfdd6972bdc83d8dfd6b536fc6937ace47aaf625902"
     },
     "./static/js/core_ui.js": {
         "hash": "bd351a133766c4e2916fa6a41c04cd1b78964c61a1f5a66b5400d7930eaf1f39"
@@ -352,5 +352,8 @@
     },
     "./core/watcher.py": {
         "hash": "b8306d3a1118566a0195b2f4ee65cf3764ee3cef0b8b9b3e56477dbd98e0b2c1"
+    },
+    "./core/semantic_layer.py": {
+        "hash": "e84adf44e16f81beff4c719d50e75bcb4bdce338de366eac28a3b10b857c4476"
     }
 }

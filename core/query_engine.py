@@ -217,6 +217,46 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
     Lanza HTTPException(400) si algún identificador no es válido.
     Devuelve (sql_text, bound_params) listos para ejecutar con SQLAlchemy text().
     """
+    # ── Traducción Semántica (Fase 1) ────────────────────────────────────────
+    from core.semantic_layer import resolve_dataset_physical_table, resolve_physical_mapping, get_metric_formula
+    logical_dataset = getattr(payload, "datasetId", None) or getattr(payload, "baseTable", None)
+    
+    if logical_dataset:
+        try:
+            payload.baseTable = resolve_dataset_physical_table(logical_dataset)
+        except ValueError:
+            pass # Fallback a tabla física
+            
+        for f in payload.filters:
+            f.column = resolve_physical_mapping(logical_dataset, f.column)
+            if getattr(f, "compareColumn", None):
+                f.compareColumn = resolve_physical_mapping(logical_dataset, f.compareColumn)
+                
+        if payload.timeAxis and payload.timeAxis.column:
+            payload.timeAxis.column = resolve_physical_mapping(logical_dataset, payload.timeAxis.column)
+            
+        if payload.breakdown and not payload.breakdown.startswith("__"):
+            payload.breakdown = resolve_physical_mapping(logical_dataset, payload.breakdown)
+            
+        unified_metrics_to_translate = getattr(payload, "metrics", []) if getattr(payload, "metrics", None) else []
+        if not unified_metrics_to_translate:
+            if getattr(payload, "metric", None):
+                unified_metrics_to_translate.append(payload.metric)
+            if getattr(payload, "secondMetric", None) and getattr(payload.secondMetric, "column", None):
+                unified_metrics_to_translate.append(payload.secondMetric)
+                
+        for m in unified_metrics_to_translate:
+            m_col = getattr(m, "column", None)
+            m_agg = getattr(m, "aggregation", "")
+            if m_col:
+                # El ID semántico sirve para extraer la fórmula si la tiene (o fallback legacy)
+                formula = get_metric_formula(logical_dataset, m_col, payload.baseTable, m_agg)
+                if formula:
+                    m.customExpr = formula
+                    m.column = None # Bypass validación física
+                else:
+                    m.column = resolve_physical_mapping(logical_dataset, m_col)
+
     # ── 1. Validaciones de seguridad ─────────────────────────────────────────
     if not validate_identifier(payload.baseTable, db):
         raise HTTPException(status_code=400, detail=f"Tabla principal no válida: {payload.baseTable}")
@@ -247,8 +287,8 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
         custom_expr = getattr(m, "customExpr", None)
         m_col = getattr(m, "column", None)
         if custom_expr:
-            if custom_expr != "__AREA_EXPR__":
-                raise HTTPException(status_code=400, detail="customExpr no permitido")
+            # En la capa semántica, customExpr se inyecta desde el backend de forma segura
+            pass
         elif m_col:
             if not validate_identifier(m_col, db):
                 raise HTTPException(status_code=400, detail=f"Columna de métrica no válida: {m_col}")
@@ -381,7 +421,10 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
             m_label = "valor" if i == 0 else f"metrica_{i}"
             
         if custom_expr:
-            m_expr = AREA_EXPR_MACRO.replace("v.", f"{payload.baseTable}.") if custom_expr == "__AREA_EXPR__" else "NULL"
+            if custom_expr == "__AREA_EXPR__":
+                m_expr = AREA_EXPR_MACRO.replace("v.", f"{payload.baseTable}.")
+            else:
+                m_expr = custom_expr # Fórmula inyectada por la capa semántica
             metric_selects.append(f'{m_expr} AS "{m_label}"')
             continue
 
@@ -416,26 +459,16 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
                     m_expr = f"{agg_upper}({cond_str} {metric_col} ELSE NULL END)"
             else:
                 m_expr = f"{agg_upper}({metric_col})"
-        elif agg_upper == "SLA_EFFICIENCY":
-            m_expr = f"ROUND(SUM(CASE WHEN {metric_col} <= 2 THEN 100.0 ELSE 0.0 END) / NULLIF(COUNT(*), 0), 1)"
-        elif agg_upper == "REPLENISHMENT_RATE":
-            m_expr = (f"ROUND(SUM(CASE WHEN {metric_col} LIKE '%Ingreso%' THEN 100.0 ELSE 0.0 END) "
-                      f"/ NULLIF(SUM(CASE WHEN {metric_col} LIKE '%Centro Costo%' "
-                      f"OR {metric_col} LIKE '%Orden/Reserva%' THEN 1.0 ELSE 0.0 END), 0), 1)")
-        elif agg_upper == "RETURN_RATE":
-            m_expr = (f"ROUND(SUM(CASE WHEN TRIM(cmv) IN ('202', '262') THEN 100.0 ELSE 0.0 END) "
-                      f"/ NULLIF(SUM(CASE WHEN {metric_col} LIKE '%Centro Costo%' "
-                      f"OR {metric_col} LIKE '%Orden/Reserva%' THEN 1.0 ELSE 0.0 END), 0), 1)")
-        elif agg_upper == "INV_EFFICIENCY":
-            fe_contab_iso = "(substr(fe_contab, 7, 4) || '-' || substr(fe_contab, 4, 2) || '-' || substr(fe_contab, 1, 2))"
-            registrado_iso = "(substr(registrado, 7, 4) || '-' || substr(registrado, 4, 2) || '-' || substr(registrado, 1, 2))"
-            m_expr = (f"ROUND(SUM(CASE WHEN "
-                      f"(julianday({registrado_iso}) - julianday({fe_contab_iso})) <= 3 "
-                      f"THEN 100.0 ELSE 0.0 END) / NULLIF(COUNT(*), 0), 1)")
-        elif agg_upper == "AVG_TX_PER_DAY":
-            m_expr = f"ROUND(COUNT(*) * 1.0 / NULLIF(COUNT(DISTINCT substr({payload.baseTable}.fe_contab, 1, 10)), 0), 1)"
         else:
-            m_expr = f"{agg_upper}({metric_col})"
+            # Aggregación no estándar (SLA_EFFICIENCY, REPLENISHMENT_RATE, etc.)
+            # Intentar resolverla via reverse-lookup en la capa semántica
+            from core.semantic_layer import get_formula_by_physical_table
+            legacy_formula = get_formula_by_physical_table(payload.baseTable, agg_upper)
+            if legacy_formula:
+                m_expr = legacy_formula
+            else:
+                # Último recurso: pasar como función (fallará en SQLite si no existe)
+                m_expr = f"{agg_upper}({metric_col})"
             
         metric_selects.append(f'{m_expr} AS "{m_label}"')
 

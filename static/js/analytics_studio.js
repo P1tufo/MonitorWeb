@@ -26,318 +26,318 @@
     // Mapeos predefinidos para inicialización visual intuitiva de todos los gráficos del sistema
     const defaultVisualStates = {
         'ots_daily_trend': {
-            baseTable: 'warehouse_tasks',
+            baseTable: 'tareas',
             joins: [],
             filters: [],
-            metric: { column: 'warehouse_tasks.numero_ot', aggregation: 'COUNT' },
-            timeAxis: { column: 'warehouse_tasks.fe_creac', granularity: 'DAY' },
+            metric: { column: 'met_tareas', aggregation: 'COUNT' },
+            timeAxis: { column: 'dim_fecha_creac', granularity: 'DAY' },
             breakdown: '',
             chartType: 'line'
         },
         'ots_by_movement_type': {
-            baseTable: 'warehouse_tasks',
+            baseTable: 'tareas',
             joins: [],
-            filters: [{ column: 'warehouse_tasks.cl_mov', operator: 'isnotnull', value: '' }],
-            metric: { column: 'warehouse_tasks.numero_ot', aggregation: 'COUNT' },
-            timeAxis: { column: 'warehouse_tasks.fe_creac', granularity: 'MONTH' },
-            breakdown: 'warehouse_tasks.clase_mov',
+            filters: [{ column: 'dim_clase_mov', operator: 'isnotnull', value: '' }],
+            metric: { column: 'met_tareas', aggregation: 'COUNT' },
+            timeAxis: { column: 'dim_fecha_creac', granularity: 'MONTH' },
+            breakdown: 'dim_clase_mov',
             chartType: 'pie'
         },
         'ots_by_user_dual': {
-            baseTable: 'warehouse_tasks',
+            baseTable: 'tareas',
             joins: [],
             filters: [],
-            metric: { column: 'warehouse_tasks.numero_ot', aggregation: 'COUNT' },
-            timeAxis: { column: 'warehouse_tasks.fe_creac', granularity: 'MONTH' },
-            breakdown: 'warehouse_tasks.usuario',
+            metric: { column: 'met_tareas', aggregation: 'COUNT' },
+            timeAxis: { column: 'dim_fecha_creac', granularity: 'MONTH' },
+            breakdown: 'dim_usuario',
             chartType: 'bar'
         },
         'inv_volumen_stats': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
             filters: [],
-            metric: { column: 'inventory_movements.material', aggregation: 'COUNT' },
-            timeAxis: { column: 'inventory_movements.fe_contab', granularity: 'DAY' },
-            breakdown: 'inventory_movements.tipo_operacion',
+            metric: { column: 'met_movimientos', aggregation: 'COUNT' },
+            timeAxis: { column: 'dim_fecha_contab', granularity: 'DAY' },
+            breakdown: 'dim_tipo_operacion',
             chartType: 'bar'
         },
         'inv_consumos_quick': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
-            filters: [{ column: 'inventory_movements.material', operator: 'isnotnull', value: '' }],
-            metric: { column: 'inventory_movements.cantidad', aggregation: 'SUM' },
-            timeAxis: { column: 'inventory_movements.fe_contab', granularity: 'MONTH' },
-            breakdown: 'inventory_movements.texto_breve_material',
+            filters: [{ column: 'met_movimientos', operator: 'isnotnull', value: '' }],
+            metric: { column: 'met_cantidad', aggregation: 'SUM' },
+            timeAxis: { column: 'dim_fecha_contab', granularity: 'MONTH' },
+            breakdown: 'dim_texto_breve',
             chartType: 'bar'
         },
         'vl_monthly_evolution': {
-            baseTable: 'outbound_deliveries',
+            baseTable: 'entregas',
             joins: [],
             filters: [],
-            metric: { column: 'outbound_deliveries.entrega', aggregation: 'COUNT' },
-            timeAxis: { column: 'outbound_deliveries.fecha_carga', granularity: 'MONTH' },
+            metric: { column: 'met_entregas', aggregation: 'COUNT' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
             breakdown: '',
             chartType: 'line'
         },
         'vl_weekly_evolution': {
-            baseTable: 'outbound_deliveries',
+            baseTable: 'entregas',
             joins: [],
             filters: [],
-            metric: { column: 'outbound_deliveries.entrega', aggregation: 'COUNT' },
-            timeAxis: { column: 'outbound_deliveries.fecha_carga', granularity: 'WEEK' },
+            metric: { column: 'met_entregas', aggregation: 'COUNT' },
+            timeAxis: { column: 'dim_fecha', granularity: 'WEEK' },
             breakdown: '',
             chartType: 'line'
         },
         'vl_top_locations': {
-            baseTable: 'outbound_deliveries',
+            baseTable: 'entregas',
             joins: [],
             filters: [],
-            metric: { column: 'outbound_deliveries.entrega', aggregation: 'COUNT' },
-            timeAxis: { column: 'outbound_deliveries.fecha_carga', granularity: 'MONTH' },
-            breakdown: 'outbound_deliveries.ubicacion_bin',
+            metric: { column: 'met_entregas', aggregation: 'COUNT' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
+            breakdown: 'dim_ubic_bin',
             chartType: 'bar'
         },
         'inv_area_stats_prod': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
             filters: [],
-            metric: { column: 'inventory_movements.cantidad', aggregation: 'SUM' },
-            timeAxis: { column: 'inventory_movements.fe_contab', granularity: 'MONTH' },
-            breakdown: 'inventory_movements.ce_coste',
+            metric: { column: 'met_cantidad', aggregation: 'SUM' },
+            timeAxis: { column: 'dim_fecha_contab', granularity: 'MONTH' },
+            breakdown: 'dim_ce_coste',
             chartType: 'bar'
         },
         'inv_consumos_abc': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
             filters: [],
-            metric: { column: 'inventory_movements.material', aggregation: 'COUNT' },
-            timeAxis: { column: 'inventory_movements.fe_contab', granularity: 'MONTH' },
-            breakdown: 'inventory_movements.texto_breve_material',
+            metric: { column: 'met_movimientos', aggregation: 'COUNT' },
+            timeAxis: { column: 'dim_fecha_contab', granularity: 'MONTH' },
+            breakdown: 'dim_texto_breve',
             chartType: 'bar'
         },
         'inv_dow_stats': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
             filters: [],
-            metric: { column: 'inventory_movements.material', aggregation: 'COUNT' },
-            timeAxis: { column: 'inventory_movements.fe_contab', granularity: 'DAY' },
+            metric: { column: 'met_movimientos', aggregation: 'COUNT' },
+            timeAxis: { column: 'dim_fecha_contab', granularity: 'DAY' },
             breakdown: '',
             chartType: 'line'
         },
         'inv_pm_type_records': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
             filters: [],
-            metric: { column: 'inventory_movements.cantidad', aggregation: 'SUM' },
-            timeAxis: { column: 'inventory_movements.fe_contab', granularity: 'MONTH' },
-            breakdown: 'inventory_movements.tipo_operacion',
+            metric: { column: 'met_cantidad', aggregation: 'SUM' },
+            timeAxis: { column: 'dim_fecha_contab', granularity: 'MONTH' },
+            breakdown: 'dim_tipo_operacion',
             chartType: 'bar'
         },
         'inv_location_summary': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
             filters: [],
-            metric: { column: 'inventory_movements.material', aggregation: 'COUNT' },
-            timeAxis: { column: 'inventory_movements.fe_contab', granularity: 'MONTH' },
-            breakdown: 'inventory_movements.alm',
+            metric: { column: 'met_movimientos', aggregation: 'COUNT' },
+            timeAxis: { column: 'dim_fecha_contab', granularity: 'MONTH' },
+            breakdown: 'dim_alm',
             chartType: 'bar'
         },
         'inv_top_users': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
             filters: [],
-            metric: { column: 'inventory_movements.material', aggregation: 'COUNT' },
-            timeAxis: { column: 'inventory_movements.fe_contab', granularity: 'MONTH' },
-            breakdown: 'inventory_movements.usuario',
+            metric: { column: 'met_movimientos', aggregation: 'COUNT' },
+            timeAxis: { column: 'dim_fecha_contab', granularity: 'MONTH' },
+            breakdown: 'dim_usuario',
             chartType: 'bar'
         },
         'vl_sla_monthly_trend': {
-            baseTable: 'outbound_deliveries',
+            baseTable: 'entregas',
             joins: [],
-            filters: [{ column: 'outbound_deliveries.fecha_carga', operator: 'contains', value: '2026' }],
-            metric: { column: 'outbound_deliveries.dias_retraso', aggregation: 'SLA_EFFICIENCY', format: 'percent' },
-            timeAxis: { column: 'outbound_deliveries.fecha_carga', granularity: 'MONTH' },
+            filters: [{ column: 'dim_fecha', operator: 'contains', value: '2026' }],
+            metric: { column: 'met_sla_efficiency', aggregation: 'SLA_EFFICIENCY', format: 'percent' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
             breakdown: '',
-            secondMetric: { column: 'outbound_deliveries.entrega', aggregation: 'COUNT_DISTINCT', label: 'Materiales Solicitados' },
+            secondMetric: { column: 'met_entregas', aggregation: 'COUNT_DISTINCT', label: 'Materiales Solicitados' },
             chartType: 'line'
         },
         'vl_sla_area_monthly_trend': {
-            baseTable: 'outbound_deliveries',
+            baseTable: 'entregas',
             joins: [],
-            filters: [{ column: 'outbound_deliveries.fecha_carga', operator: 'contains', value: '2026' }],
-            metric: { column: 'outbound_deliveries.dias_retraso', aggregation: 'SLA_EFFICIENCY', format: 'percent' },
-            timeAxis: { column: 'outbound_deliveries.fecha_carga', granularity: 'MONTH' },
-            breakdown: 'outbound_deliveries.area_negocio',
-            secondMetric: { column: 'outbound_deliveries.material', aggregation: 'COUNT', label: 'Materiales_Solicitados' },
+            filters: [{ column: 'dim_fecha', operator: 'contains', value: '2026' }],
+            metric: { column: 'met_sla_efficiency', aggregation: 'SLA_EFFICIENCY', format: 'percent' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
+            breakdown: 'dim_area',
+            secondMetric: { column: 'met_entregas', aggregation: 'COUNT', label: 'Materiales_Solicitados' },
             chartType: 'line'
         },
         'vl_sla_trend': {
-            baseTable: 'outbound_deliveries',
+            baseTable: 'entregas',
             joins: [],
-            filters: [{ column: 'outbound_deliveries.fecha_carga', operator: 'contains', value: '2026' }],
-            metric: { column: 'outbound_deliveries.dias_retraso', aggregation: 'SLA_EFFICIENCY', format: 'percent' },
-            timeAxis: { column: 'outbound_deliveries.fecha_carga', granularity: 'WEEK' },
+            filters: [{ column: 'dim_fecha', operator: 'contains', value: '2026' }],
+            metric: { column: 'met_sla_efficiency', aggregation: 'SLA_EFFICIENCY', format: 'percent' },
+            timeAxis: { column: 'dim_fecha', granularity: 'WEEK' },
             breakdown: '',
             chartType: 'line'
         },
         'vl_sla_area_trend': {
-            baseTable: 'outbound_deliveries',
+            baseTable: 'entregas',
             joins: [],
-            filters: [{ column: 'outbound_deliveries.fecha_carga', operator: 'contains', value: '2026' }],
-            metric: { column: 'outbound_deliveries.dias_retraso', aggregation: 'SLA_EFFICIENCY', format: 'percent' },
-            timeAxis: { column: 'outbound_deliveries.fecha_carga', granularity: 'WEEK' },
-            breakdown: 'outbound_deliveries.area_negocio',
+            filters: [{ column: 'dim_fecha', operator: 'contains', value: '2026' }],
+            metric: { column: 'met_sla_efficiency', aggregation: 'SLA_EFFICIENCY', format: 'percent' },
+            timeAxis: { column: 'dim_fecha', granularity: 'WEEK' },
+            breakdown: 'dim_area',
             chartType: 'line'
         },
         'vl_top_authors': {
-            baseTable: 'outbound_deliveries',
+            baseTable: 'entregas',
             joins: [],
             filters: [],
-            metric: { column: 'outbound_deliveries.entrega', aggregation: 'COUNT' },
-            timeAxis: { column: 'outbound_deliveries.fecha_carga', granularity: 'MONTH' },
-            breakdown: 'outbound_deliveries.autor',
+            metric: { column: 'met_entregas', aggregation: 'COUNT' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
+            breakdown: 'dim_autor',
             chartType: 'bar'
         },
         
         // --- KPIS DEL SISTEMA (Tablas / Tarjetas Métricas) ---
         'vl_kpi_total': {
-            baseTable: 'outbound_deliveries',
+            baseTable: 'entregas',
             joins: [],
             filters: [
-                { column: 'outbound_deliveries.fecha_carga', operator: 'contains', value: '2026' },
-                { column: 'outbound_deliveries.ubicacion_area', operator: 'isnotnull', value: '' },
-                { column: 'outbound_deliveries.ubicacion_area', operator: 'notequals', value: 'PASAGG-752' }
+                { column: 'dim_fecha', operator: 'contains', value: '2026' },
+                { column: 'dim_ubic_area', operator: 'isnotnull', value: '' },
+                { column: 'dim_ubic_area', operator: 'notequals', value: 'PASAGG-752' }
             ],
-            metric: { column: 'outbound_deliveries.entrega', aggregation: 'COUNT_DISTINCT' },
-            timeAxis: { column: 'outbound_deliveries.fecha_carga', granularity: 'YEAR' },
+            metric: { column: 'met_entregas', aggregation: 'COUNT_DISTINCT' },
+            timeAxis: { column: 'dim_fecha', granularity: 'YEAR' },
             breakdown: '',
             chartType: 'kpi'
         },
         'vl_kpi_eff': {
-            baseTable: 'outbound_deliveries',
+            baseTable: 'entregas',
             joins: [],
             filters: [
-                { column: 'outbound_deliveries.fecha_carga', operator: 'contains', value: '2026' },
-                { column: 'outbound_deliveries.dias_retraso', operator: 'lessthan', value: '3' },
-                { column: 'outbound_deliveries.ubicacion_area', operator: 'isnotnull', value: '' },
-                { column: 'outbound_deliveries.ubicacion_area', operator: 'notequals', value: 'PASAGG-752' }
+                { column: 'dim_fecha', operator: 'contains', value: '2026' },
+                { column: 'met_retraso', operator: 'lessthan', value: '3' },
+                { column: 'dim_ubic_area', operator: 'isnotnull', value: '' },
+                { column: 'dim_ubic_area', operator: 'notequals', value: 'PASAGG-752' }
             ],
-            metric: { column: 'outbound_deliveries.entrega', aggregation: 'COUNT_DISTINCT' },
-            timeAxis: { column: 'outbound_deliveries.fecha_carga', granularity: 'MONTH' },
+            metric: { column: 'met_entregas', aggregation: 'COUNT_DISTINCT' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
             breakdown: '',
             chartType: 'kpi'
         },
         'vl_kpi_ontime': {
-            baseTable: 'outbound_deliveries',
+            baseTable: 'entregas',
             joins: [],
             filters: [
-                { column: 'outbound_deliveries.fecha_carga', operator: 'contains', value: '2026' },
-                { column: 'outbound_deliveries.dias_retraso', operator: 'lessthan', value: '3' },
-                { column: 'outbound_deliveries.ubicacion_area', operator: 'isnotnull', value: '' },
-                { column: 'outbound_deliveries.ubicacion_area', operator: 'notequals', value: 'PASAGG-752' }
+                { column: 'dim_fecha', operator: 'contains', value: '2026' },
+                { column: 'met_retraso', operator: 'lessthan', value: '3' },
+                { column: 'dim_ubic_area', operator: 'isnotnull', value: '' },
+                { column: 'dim_ubic_area', operator: 'notequals', value: 'PASAGG-752' }
             ],
-            metric: { column: 'outbound_deliveries.entrega', aggregation: 'COUNT_DISTINCT' },
-            timeAxis: { column: 'outbound_deliveries.fecha_carga', granularity: 'MONTH' },
+            metric: { column: 'met_entregas', aggregation: 'COUNT_DISTINCT' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
             breakdown: '',
             chartType: 'kpi'
         },
         'vl_kpi_late': {
-            baseTable: 'outbound_deliveries',
+            baseTable: 'entregas',
             joins: [],
             filters: [
-                { column: 'outbound_deliveries.fecha_carga', operator: 'contains', value: '2026' },
-                { column: 'outbound_deliveries.dias_retraso', operator: 'greaterthan', value: '2' },
-                { column: 'outbound_deliveries.ubicacion_area', operator: 'isnotnull', value: '' },
-                { column: 'outbound_deliveries.ubicacion_area', operator: 'notequals', value: 'PASAGG-752' }
+                { column: 'dim_fecha', operator: 'contains', value: '2026' },
+                { column: 'met_retraso', operator: 'greaterthan', value: '2' },
+                { column: 'dim_ubic_area', operator: 'isnotnull', value: '' },
+                { column: 'dim_ubic_area', operator: 'notequals', value: 'PASAGG-752' }
             ],
-            metric: { column: 'outbound_deliveries.entrega', aggregation: 'COUNT_DISTINCT' },
-            timeAxis: { column: 'outbound_deliveries.fecha_carga', granularity: 'MONTH' },
+            metric: { column: 'met_entregas', aggregation: 'COUNT_DISTINCT' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
             breakdown: '',
             chartType: 'kpi'
         },
         'inv_kpi_ingresos': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
-            filters: [{ column: 'inventory_movements.tipo_operacion', operator: 'contains', value: 'Ingreso' }],
-            metric: { column: 'inventory_movements.material', aggregation: 'COUNT' },
+            filters: [{ column: 'dim_tipo_operacion', operator: 'contains', value: 'Ingreso' }],
+            metric: { column: 'met_movimientos', aggregation: 'COUNT' },
             timeAxis: { column: '', granularity: 'YEAR' },
             breakdown: '',
             chartType: 'kpi'
         },
         'inv_kpi_consumos_prod': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
-            filters: [{ column: 'inventory_movements.tipo_operacion', operator: 'contains', value: 'Centro Costo' }],
-            metric: { column: 'inventory_movements.material', aggregation: 'COUNT' },
+            filters: [{ column: 'dim_tipo_operacion', operator: 'contains', value: 'Centro Costo' }],
+            metric: { column: 'met_movimientos', aggregation: 'COUNT' },
             timeAxis: { column: '', granularity: 'YEAR' },
             breakdown: '',
             chartType: 'kpi'
         },
         'inv_kpi_consumos_mant': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
-            filters: [{ column: 'inventory_movements.tipo_operacion', operator: 'contains', value: 'Orden/Reserva' }],
-            metric: { column: 'inventory_movements.material', aggregation: 'COUNT' },
+            filters: [{ column: 'dim_tipo_operacion', operator: 'contains', value: 'Orden/Reserva' }],
+            metric: { column: 'met_movimientos', aggregation: 'COUNT' },
             timeAxis: { column: '', granularity: 'YEAR' },
             breakdown: '',
             chartType: 'kpi'
         },
         'inv_kpi_rate_reabast': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
-            filters: [{ column: 'inventory_movements.fe_contab', operator: 'contains', value: '2026' }],
-            metric: { column: 'inventory_movements.tipo_operacion', aggregation: 'REPLENISHMENT_RATE', format: 'percent' },
+            filters: [{ column: 'dim_fecha_contab', operator: 'contains', value: '2026' }],
+            metric: { column: 'met_replenishment_rate', aggregation: 'REPLENISHMENT_RATE', format: 'percent' },
             timeAxis: { column: '', granularity: 'YEAR' },
             breakdown: '',
             chartType: 'kpi'
         },
         'inv_kpi_traspasos': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
             filters: [
-                { column: 'inventory_movements.cmv', operator: 'in', value: '301, 303' },
-                { column: 'inventory_movements.fe_contab', operator: 'contains', value: '2026' }
+                { column: 'dim_cmv', operator: 'in', value: '301, 303' },
+                { column: 'dim_fecha_contab', operator: 'contains', value: '2026' }
             ],
-            metric: { column: 'inventory_movements.material', aggregation: 'COUNT' },
+            metric: { column: 'met_movimientos', aggregation: 'COUNT' },
             timeAxis: { column: '', granularity: 'YEAR' },
             breakdown: '',
             chartType: 'kpi'
         },
         'inv_kpi_rate_devolucion': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
-            filters: [{ column: 'inventory_movements.fe_contab', operator: 'contains', value: '2026' }],
-            metric: { column: 'inventory_movements.tipo_operacion', aggregation: 'RETURN_RATE', format: 'percent' },
+            filters: [{ column: 'dim_fecha_contab', operator: 'contains', value: '2026' }],
+            metric: { column: 'met_return_rate', aggregation: 'RETURN_RATE', format: 'percent' },
             timeAxis: { column: '', granularity: 'YEAR' },
             breakdown: '',
             chartType: 'kpi'
         },
         'inv_kpi_rate_eficiencia': {
-            baseTable: 'inventory_movements',
+            baseTable: 'movimientos',
             joins: [],
-            filters: [{ column: 'inventory_movements.fe_contab', operator: 'contains', value: '2026' }],
-            metric: { column: 'inventory_movements.tipo_operacion', aggregation: 'INV_EFFICIENCY', format: 'percent' },
+            filters: [{ column: 'dim_fecha_contab', operator: 'contains', value: '2026' }],
+            metric: { column: 'met_inv_efficiency', aggregation: 'INV_EFFICIENCY', format: 'percent' },
             timeAxis: { column: '', granularity: 'YEAR' },
             breakdown: '',
             chartType: 'kpi'
         },
         'ots_kpi_pending': {
-            baseTable: 'warehouse_tasks',
+            baseTable: 'tareas',
             joins: [],
             filters: [{ column: 'warehouse_tasks.fecha_conf', operator: 'isnull', value: '' }],
-            metric: { column: 'warehouse_tasks.numero_ot', aggregation: 'COUNT' },
+            metric: { column: 'met_tareas', aggregation: 'COUNT' },
             timeAxis: { column: '', granularity: 'DAY' },
             breakdown: '',
             chartType: 'kpi'
         },
         'ots_kpi_users': {
-            baseTable: 'warehouse_tasks',
+            baseTable: 'tareas',
             joins: [],
             filters: [
-                { column: 'warehouse_tasks.usuario', operator: 'isnotnull', value: '' },
-                { column: 'warehouse_tasks.fe_creac', operator: 'contains', value: '2026' }
+                { column: 'dim_usuario', operator: 'isnotnull', value: '' },
+                { column: 'dim_fecha_creac', operator: 'contains', value: '2026' }
             ],
-            metric: { column: 'warehouse_tasks.usuario', aggregation: 'COUNT_DISTINCT' },
+            metric: { column: 'dim_usuario', aggregation: 'COUNT_DISTINCT' },
             timeAxis: { column: '', granularity: 'MONTH' },
             breakdown: '',
             chartType: 'kpi'
@@ -400,14 +400,14 @@
             const listEl = document.getElementById('dbSchemaList');
             if (listEl) {
                 let html = '';
-                for (const table of Object.keys(currentSchema)) {
-                    html += `<div class="table-nav-item" onclick="previewTable('${table}', this)">
-                                <i class="fas fa-table"></i> ${table}
+                for (const ds_id of Object.keys(currentSchema)) {
+                    html += `<div class="table-nav-item" onclick="previewTable('${ds_id}', this)">
+                                <i class="fas fa-cube"></i> ${currentSchema[ds_id].label}
                             </div>`;
                 }
                 listEl.innerHTML = html;
-                const firstTable = Object.keys(currentSchema)[0];
-                if (firstTable) previewTable(firstTable, listEl.querySelector('.table-nav-item'));
+                const firstDataset = Object.keys(currentSchema)[0];
+                if (firstDataset) previewTable(firstDataset, listEl.querySelector('.table-nav-item'));
             }
         } catch (err) { console.error("Schema fetch fail", err); }
     }
@@ -708,12 +708,12 @@ errorEl.style.display = 'block';
         AnalyticsStudioManager.setVisualState(queryId, JSON.parse(JSON.stringify(state)));
         visualState = AnalyticsStudioManager.getVisualState(queryId);
         
-        // Poblar baseTable select
+        // Poblar baseTable select (ahora Dataset Semántico)
         const baseSelect = document.getElementById('qbBaseTable');
-        baseSelect.innerHTML = Object.keys(currentSchema).map(t => `<option value="${t}">${t}</option>`).join('');
+        baseSelect.innerHTML = Object.keys(currentSchema).map(t => `<option value="${t}">${currentSchema[t].label}</option>`).join('');
         baseSelect.value = visualState.baseTable;
         
-        renderJoins();
+        renderFilters();
         renderFilters();
         
         // Configurar Ejes forzando los valores del estado mapeado
@@ -756,31 +756,31 @@ errorEl.style.display = 'block';
     }
 
     function getActiveTables() {
-        let tables = [visualState.baseTable];
-        visualState.joins.forEach(j => {
-            if (j.table && !tables.includes(j.table)) tables.push(j.table);
-        });
-        return tables;
+        // En la capa semántica, los datasets son autocontenidos. No se exponen joins físicos.
+        return [visualState.baseTable];
     }
 
     function getActiveColumns() {
         let cols = [];
-        getActiveTables().forEach(t => {
-            (currentSchema[t] || []).forEach(c => {
-                cols.push(`${t}.${c}`);
-            });
-        });
+        const ds_id = visualState.baseTable;
+        const ds = currentSchema[ds_id];
+        if (ds) {
+            (ds.dimensions || []).forEach(d => cols.push({ id: d.id, label: `Dimensión: ${d.label}` }));
+            (ds.metrics || []).forEach(m => cols.push({ id: m.id, label: `Métrica: ${m.label}` }));
+        }
         return cols;
     }
 
     function refreshQbColumns(forceState = false) {
-        const cols = getActiveColumns();
+        const colsObj = getActiveColumns();
+        const colsIds = colsObj.map(c => c.id);
+        const renderOptions = (items) => items.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
         
         // Eje Y dropdown
         const ySelect = document.getElementById('qbMetricColumn');
         const prevY = forceState ? visualState.metric.column : (ySelect.value || visualState.metric.column);
-        ySelect.innerHTML = cols.map(c => `<option value="${c}">${c}</option>`).join('');
-        if(cols.includes(prevY)) {
+        ySelect.innerHTML = renderOptions(colsObj);
+        if(colsIds.includes(prevY)) {
             ySelect.value = prevY;
             visualState.metric.column = prevY;
         } else {
@@ -790,8 +790,8 @@ errorEl.style.display = 'block';
         // Eje X dropdown
         const xSelect = document.getElementById('qbTimeColumn');
         const prevX = forceState ? visualState.timeAxis.column : (xSelect.value || visualState.timeAxis.column);
-        xSelect.innerHTML = '<option value="">-- Sin Eje X (Total Acumulado) --</option>' + cols.map(c => `<option value="${c}">${c}</option>`).join('');
-        if(prevX === '' || cols.includes(prevX)) {
+        xSelect.innerHTML = '<option value="">-- Sin Eje X (Total Acumulado) --</option>' + renderOptions(colsObj);
+        if(prevX === '' || colsIds.includes(prevX)) {
             xSelect.value = prevX;
             visualState.timeAxis.column = prevX;
         } else {
@@ -802,8 +802,8 @@ errorEl.style.display = 'block';
         // Desglose dropdown
         const bSelect = document.getElementById('qbBreakdownColumn');
         const prevB = forceState ? visualState.breakdown : (bSelect.value !== undefined ? bSelect.value : visualState.breakdown);
-        bSelect.innerHTML = '<option value="">-- Sin Desglose --</option>' + cols.map(c => `<option value="${c}">${c}</option>`).join('');
-        if(prevB === '' || cols.includes(prevB)) {
+        bSelect.innerHTML = '<option value="">-- Sin Desglose --</option>' + renderOptions(colsObj);
+        if(prevB === '' || colsIds.includes(prevB)) {
             bSelect.value = prevB;
             visualState.breakdown = prevB;
         } else {
@@ -817,75 +817,12 @@ errorEl.style.display = 'block';
             const prevSM = forceState
                 ? (visualState.secondMetric ? visualState.secondMetric.column : '')
                 : (sm2Select.value || '');
-            sm2Select.innerHTML = cols.map(c => `<option value="${c}">${c}</option>`).join('');
-            if (cols.includes(prevSM)) sm2Select.value = prevSM;
+            sm2Select.innerHTML = renderOptions(colsObj);
+            if (colsIds.includes(prevSM)) sm2Select.value = prevSM;
         }
     }
 
-    // JOINS
-    function renderJoins() {
-        const container = document.getElementById('qbJoinsContainer');
-        container.innerHTML = '';
-        
-        visualState.joins.forEach((j, index) => {
-            const joinRow = document.createElement('div');
-            joinRow.className = 'qb-form-row';
-            joinRow.innerHTML = `
-                <select class="qb-select j-table" onchange="updateJoin(${index})">
-                    ${Object.keys(currentSchema).map(t => `<option value="${t}" ${t === j.table ? 'selected' : ''}>${t}</option>`).join('')}
-                </select>
-                <span style="color:#64748b; font-size:0.8rem;">ON</span>
-                <select class="qb-select j-left" onchange="updateJoin(${index})">
-                    ${getActiveColumns().map(c => `<option value="${c}" ${c === j.onLeft ? 'selected' : ''}>${c}</option>`).join('')}
-                </select>
-                <span style="color:#64748b; font-size:0.8rem;">=</span>
-                <select class="qb-select j-right" onchange="updateJoin(${index})">
-                    ${(currentSchema[j.table] || []).map(c => `<option value="${j.table}.${c}" ${`${j.table}.${c}` === j.onRight ? 'selected' : ''}>${j.table}.${c}</option>`).join('')}
-                </select>
-                <div class="qb-trash-btn" onclick="removeJoin(${index})"><i class="fas fa-trash"></i></div>
-            `;
-            container.appendChild(joinRow);
-        });
-    }
 
-    function addJoin() {
-        const nextTable = Object.keys(currentSchema).find(t => t !== visualState.baseTable) || visualState.baseTable;
-        visualState.joins.push({
-            table: nextTable,
-            onLeft: getActiveColumns()[0] || '',
-            onRight: `${nextTable}.${(currentSchema[nextTable] || [])[0] || ''}`
-        });
-        renderJoins();
-        refreshQbColumns();
-        onQbChange();
-    }
-
-    function updateJoin(index) {
-        const row = document.getElementById('qbJoinsContainer').children[index];
-        const prevTable = visualState.joins[index].table;
-        const newTable = row.querySelector('.j-table').value;
-        
-        visualState.joins[index].table = newTable;
-        
-        // Si cambió la tabla de join, re-renderizar para actualizar columnas del ON derecho
-        if (prevTable !== newTable) {
-            visualState.joins[index].onRight = `${newTable}.${(currentSchema[newTable] || [])[0] || ''}`;
-            renderJoins();
-        } else {
-            visualState.joins[index].onLeft = row.querySelector('.j-left').value;
-            visualState.joins[index].onRight = row.querySelector('.j-right').value;
-        }
-        
-        refreshQbColumns();
-        onQbChange();
-    }
-
-    function removeJoin(index) {
-        visualState.joins.splice(index, 1);
-        renderJoins();
-        refreshQbColumns();
-        onQbChange();
-    }
 
     // FILTROS (WHERE)
     const operators = [
@@ -922,15 +859,14 @@ errorEl.style.display = 'block';
                 valControlsHtml = `
                     <select class="qb-select f-comp-col" onchange="updateFilter(${index})">
                         <option value="" disabled ${!f.compareColumn ? 'selected' : ''}>-- Columna --</option>
-                        ${getActiveColumns().map(c => `<option value="${c}" ${c === f.compareColumn ? 'selected' : ''}>${c}</option>`).join('')}
+                        ${getActiveColumns().map(c => `<option value="${c.id}" ${c.id === f.compareColumn ? 'selected' : ''}>${c.label}</option>`).join('')}
                     </select>
                 `;
             } else if (valueType === 'date_diff') {
-                // Columnas que parecen fechas (nombre contiene fecha/fe/date/creac/conf/contab)
-                const dateCols = getActiveColumns().filter(c => /fecha|fe_|date|creac|conf|contab|registr|sm_real|carga/i.test(c));
+                // En capa semántica, listamos todo por simplicidad
                 const colOptions = [
                     `<option value="today" ${f.compareColumn === 'today' ? 'selected' : ''}>📅 Hoy (DATE('now'))</option>`,
-                    ...getActiveColumns().map(c => `<option value="${c}" ${c === f.compareColumn ? 'selected' : ''}>${c}</option>`)
+                    ...getActiveColumns().map(c => `<option value="${c.id}" ${c.id === f.compareColumn ? 'selected' : ''}>${c.label}</option>`)
                 ].join('');
                 valControlsHtml = `
                     <span style="font-size:0.8rem; color:var(--text-muted); align-self:center; margin:0 5px;">vs</span>
@@ -964,7 +900,7 @@ errorEl.style.display = 'block';
 
             filterRow.innerHTML = `
                 <select class="qb-select f-col" style="flex: 1; min-width: 140px;" onchange="updateFilter(${index})">
-                    ${getActiveColumns().map(c => `<option value="${c}" ${c === f.column ? 'selected' : ''}>${c}</option>`).join('')}
+                    ${getActiveColumns().map(c => `<option value="${c.id}" ${c.id === f.column ? 'selected' : ''}>${c.label}</option>`).join('')}
                 </select>
                 
                 ${opControl}
@@ -990,7 +926,7 @@ errorEl.style.display = 'block';
 
     function addFilter() {
         visualState.filters.push({
-            column: getActiveColumns()[0] || '',
+            column: (getActiveColumns()[0] || {}).id || '',
             operator: 'equals',
             value: '',
             valueType: 'value',
@@ -1004,7 +940,7 @@ errorEl.style.display = 'block';
     function updateFilterType(index, type) {
         visualState.filters[index].valueType = type;
         if (type === 'column') {
-            visualState.filters[index].compareColumn = getActiveColumns()[1] || getActiveColumns()[0] || '';
+            visualState.filters[index].compareColumn = (getActiveColumns()[1] || getActiveColumns()[0] || {}).id || '';
             visualState.filters[index].value = '';
             visualState.filters[index].offsetValue = null;
             visualState.filters[index].diffOp = null;

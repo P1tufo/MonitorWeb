@@ -1,6 +1,10 @@
-## Sugerencias para: ./core/query_engine.py (Procesado en 1 partes)
+## Sugerencias para: ./core/query_engine.py (Procesado en 2 partes)
 
-#### --- PARTE 1 de 1 ---
+#### --- PARTE 1 de 2 ---
+
+CÓDIGO ÓPTIMO
+
+#### --- PARTE 2 de 2 ---
 
 CÓDIGO ÓPTIMO
 

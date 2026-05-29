@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: templates/partials
-Compilado el: 2026-05-28 23:22:17
+Compilado el: 2026-05-29 00:41:03
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -61,14 +61,14 @@ Este archivo contiene el código HTML para un modal de edición de consultas en 
 No se detectaron funciones o clases definidas explícitamente en este fragmento de código.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna
 
 ### Estado y Variables Globales
 No aplica
 
 ### Dependencias y Flujo
-- **Dependencias**: No hay dependencias externas directamente mencionadas.
-- **Flujo**: El archivo se comunica con el archivo `analytics_studio.js` para manejar la lógica del constructor visual y la simulación del gráfico.
+- **Dependencias**: No se mencionan dependencias específicas en el código proporcionado.
+- **Flujo**: El archivo interactúa con JavaScript para manejar la lógica del constructor visual y la vista previa del gráfico.
 
 
 ---

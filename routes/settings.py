@@ -254,33 +254,22 @@ def api_update_query(update: QueryUpdate, db: DBSession, state: AppState = Depen
 # ─── API: Estudio de Analíticas (Introspección y Preview) ───────────────────
 @router.get("/api/studio/schema")
 def api_get_schema(db: DBSession, state: AppState = Depends(get_app_state)):
-    """Retorna el listado de tablas y sus columnas para el editor."""
-    from sqlalchemy import text
-    tables = {}
-    ALLOWED_TABLES = {'outbound_deliveries', 'stock_levels', 'warehouse_tasks', 'inventory_movements'}
+    """Retorna el catálogo semántico de datos para el editor, ocultando las tablas físicas."""
+    from core.semantic_layer import get_frontend_schema
     try:
-        # SQLite: Obtener tablas permitidas
-        res_tables = db.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")).all()
-        for t in res_tables:
-            t_name = t[0]
-            if t_name not in ALLOWED_TABLES:
-                continue
-                
-            cols = db.execute(text(f"PRAGMA table_info({t_name})")).all()
-            tables[t_name] = [c[1] for c in cols] # c[1] es el nombre de la columna
-        return tables
+        return get_frontend_schema()
     except Exception as e:
+        logger.error(f"Error cargando el catálogo semántico: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/api/studio/preview_table/{table_name}")
-def api_preview_table(table_name: str, db: DBSession, state: AppState = Depends(get_app_state)):
-    from core.query_engine import ALLOWED_TABLES
+@router.get("/api/studio/preview_table/{dataset_id}")
+def api_preview_table(dataset_id: str, db: DBSession, state: AppState = Depends(get_app_state)):
+    from core.semantic_layer import resolve_dataset_physical_table
     from sqlalchemy import text
     import pandas as pd
-    if table_name not in ALLOWED_TABLES:
-        raise HTTPException(status_code=400, detail="Tabla no permitida")
     try:
-        df = pd.read_sql(text(f"SELECT * FROM {table_name} LIMIT 5"), db.connection())
+        physical_table = resolve_dataset_physical_table(dataset_id)
+        df = pd.read_sql(text(f"SELECT * FROM {physical_table} LIMIT 5"), db.connection())
         records = df.to_dict(orient="records")
         return sanitize_for_json(records)
     except Exception as e:
@@ -395,10 +384,11 @@ def api_build_sql(payload: VisualQueryBuilderPayload, db: DBSession, state: AppS
     """
     Compila el estado visual del constructor en SQL parametrizado seguro.
     La validación de identifiers y la construcción SQL están en core/query_engine.
+    Por seguridad (Fase 1), no se devuelve la cadena SQL al cliente.
     """
     sql, bound_params = build_sql_from_payload(payload, db)
     return {
         "status": "success",
-        "sql_text": sql,
+        # "sql_text": sql,  # Eliminado por seguridad (Leaky Abstraction)
         "bound_params": bound_params,
     }

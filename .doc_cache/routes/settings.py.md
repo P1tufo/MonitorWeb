@@ -17,8 +17,8 @@ El archivo `settings.py` define una API para la gestión dinámica de configurac
 - `api_delete_holiday(date_str: str, db: DBSession, state: AppState = Depends(get_app_state))` - Elimina un feriado.
 - `api_get_query(query_id: str, db: DBSession, state: AppState = Depends(get_app_state))` - Retorna el estado visual de una consulta del Analytics Studio.
 - `api_update_query(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Persiste el estado visual de una consulta.
-- `api_get_schema(db: DBSession, state: AppState = Depends(get_app_state))` - Retorna el listado de tablas y sus columnas para el editor.
-- `api_preview_table(table_name: str, db: DBSession, state: AppState = Depends(get_app_state))` - Previsualiza una tabla.
+- `api_get_schema(db: DBSession, state: AppState = Depends(get_app_state))` - Retorna el catálogo semántico de datos para el editor.
+- `api_preview_table(dataset_id: str, db: DBSession, state: AppState = Depends(get_app_state))` - Previsualiza una tabla.
 - `api_query_preview(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Ejecuta una consulta temporal y retorna datos para previsualización.
 - `api_build_sql(payload: VisualQueryBuilderPayload, db: DBSession, state: AppState = Depends(get_app_state))` - Compila el estado visual del constructor en SQL parametrizado seguro.
 
@@ -27,13 +27,13 @@ El archivo `settings.py` define una API para la gestión dinámica de configurac
 - Tablas:
   - `analytics_snapshots`
 - Columnas:
-  - No se especifican columnas explícitas, solo consultas generales sobre la tabla `analytics_snapshots`.
+  - No se especifican columnas específicas, solo consultas generales sobre la tabla `analytics_snapshots`.
 
 ### Estado y Variables Globales
 - No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `fastapi`, `pydantic`, `sqlalchemy`, `holidays`, `pandas`.
+- Librerías externas utilizadas: `fastapi`, `pydantic`, `sqlalchemy`, `logging`, `holidays`, `pandas`.
 - Comunicación con otros archivos del proyecto:
   - `core.auth.require_admin`
   - `core.database.get_session_dep`

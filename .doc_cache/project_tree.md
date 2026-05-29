@@ -23,6 +23,7 @@
         query_engine.py
         schemas.py
         security.py
+        semantic_layer.py
         state.py
         task_manager.py
         utils.py

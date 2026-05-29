@@ -56,7 +56,8 @@ class SecondMetricDef(BaseModel):
     label: str = ""
 
 class VisualQueryBuilderPayload(BaseModel):
-    baseTable: str
+    baseTable: Optional[str] = None # Fase 1: Opcional por compatibilidad hacia atrás
+    datasetId: Optional[str] = None # Fase 1: ID semántico del dataset
     joins: list[JoinDef] = []
     filters: list[FilterDef] = []
     metric: Optional[MetricDef] = None

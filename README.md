@@ -1,5 +1,5 @@
 # Documentación Técnica Global - MonitorWeb
-Compilado el: 2026-05-28 23:22:17
+Compilado el: 2026-05-29 00:41:03
 Modelo: qwen2.5-coder:7b | Hardware: M1 Pro Optimized
 
 ---
@@ -8,40 +8,69 @@ Modelo: qwen2.5-coder:7b | Hardware: M1 Pro Optimized
 
 ### Arquitectura General Detectada
 
-La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que separan diferentes aspectos del sistema, como el código principal (`app.py`), las configuraciones (`config.py`), la base de datos (`db.sqlite3`), los controladores (`routes/`), los modelos (`core/models.py`), las tareas (`core/task_manager.py`), y las pruebas unitarias (`tests/`). Además, la presencia de carpetas como `core`, `repositories`, `docs`, `static`, `scripts`, `db`, y `templates` indica una organización modular.
+La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que separan diferentes aspectos del sistema, como el núcleo (`core`), las rutas (`routes`), los servicios (`services`), los repositorios (`repositories`), y las pruebas (`tests`). Además, la presencia de un archivo `Dockerfile` en la carpeta `deploy` indica que se utiliza Docker para la despliegue del sistema.
 
 ### Propósito Probable de las Carpetas Principales
 
-- **app.py**: Punto de entrada principal del aplicativo.
-- **config.py**: Archivo de configuración para el proyecto, incluyendo variables de entorno y configuraciones específicas.
-- **db.sqlite3**: Base de datos SQLite utilizada por el proyecto.
-- **core/**: Contiene la lógica central del sistema, dividida en submódulos como `auth.py`, `database.py`, `models.py`, etc. Esta carpeta es crucial para mantener el código organizado y modular.
-- **bin/**: Almacena herramientas binarias necesarias para el proyecto, como `ngrok`.
-- **deploy/**: Contiene archivos de configuración para despliegue, incluyendo Dockerfiles y scripts de configuración.
-- **setup/**: Archivos de configuración para el entorno de desarrollo, como `requirements.txt` y `pytest.ini`.
-- **tests/**: Carpetas que contienen pruebas unitarias y de integración del proyecto.
-- **repositories/**: Define interfaces para interactuar con la base de datos y otros servicios externos.
-- **docs/**: Documentación del proyecto, incluyendo documentación técnica y mejoras propuestas.
-- **static/**: Archivos estáticos como CSS y JavaScript utilizados en las vistas.
-- **scripts/**: Scripts Python que realizan tareas específicas, como procesamiento de datos o generación de documentos.
-- **db/**: Contiene scripts y archivos relacionados con la base de datos, como migraciones y scripts de mantenimiento.
-- **templates/**: Plantillas HTML utilizadas para renderizar vistas en el frontend.
+- **core/**: Contiene el código central del sistema, incluyendo la lógica de negocio, modelos de datos, y utilidades.
+  - **auth.py**: Manejo de autenticación y autorización.
+  - **database.py**: Interacción con la base de datos.
+  - **models.py**: Definición de los modelos de datos.
+  - **utils.py**: Funciones útiles y herramientas generales.
+
+- **bin/**: Contiene archivos binarios necesarios para el proyecto, como `ngrok` para tunelización.
+
+- **deploy/**: Archivos relacionados con la despliegue del sistema, incluyendo Dockerfiles y configuraciones de entorno.
+  - **Dockerfile**: Define cómo se construye la imagen del contenedor.
+  - **docker-compose.yml**: Configuración para el despliegue multi-contenedor.
+
+- **setup/**: Archivos de configuración y scripts para el desarrollo y pruebas.
+  - **requirements.txt**: Lista de dependencias del proyecto.
+  - **run_tests.sh**: Script para ejecutar las pruebas.
+
+- **tests/**: Contiene los archivos de prueba unitaria y de integración.
+  - **test_api.py**: Pruebas de la API.
+  - **test_auth.py**: Pruebas de autenticación.
+
+- **repositories/**: Define los repositorios de datos, que son capas de acceso a la base de datos.
+  - **deliveries.py**: Repositorio para operaciones relacionadas con entregas.
+
+- **docs/**: Documentación del proyecto y sus componentes.
+  - **documentacion_global.md**: Documentación general del sistema.
+  - **core/**: Documentación específica del módulo core.
+    - **helpers/**: Documentación de las helpers dentro del core.
+
+- **DELIVERIES_cleansed/**: Archivos limpios de entregas, posiblemente para pruebas o análisis.
+
+- **static/**: Archivos estáticos como CSS y JavaScript.
+  - **css/**: Hojas de estilo.
+  - **js/**: Scripts JavaScript.
+
+- **scripts/**: Scripts Python útiles para el proyecto.
+  - **doc_generator.py**: Generador de documentación.
+
+- **db/**: Archivos relacionados con la base de datos.
+  - **data.db**: Base de datos principal del sistema.
+
+- **templates/**: Plantillas HTML para las vistas web.
+  - **analytics_proyecciones.html**: Plantilla para el análisis de proyecciones.
+  - **dashboard.html**: Plantilla para el panel de control.
+
+- **routes/**: Definición de las rutas y endpoints del API.
+  - **analytics_proyecciones.py**: Ruta para el análisis de proyecciones.
+
+- **services/**: Servicios que encapsulan la lógica de negocio.
+  - **dashboard_service.py**: Servicio para el panel de control.
 
 ### Organización Lógica de las Dependencias
 
-La organización lógica de las dependencias se basa en los módulos y carpetas principales:
+La organización de dependencias es coherente con una arquitectura modular. El núcleo (`core`) contiene los componentes básicos del sistema, mientras que las capas superiores (`routes`, `services`, `repositories`) dependen de estos componentes. Por ejemplo:
 
-1. **Core**: Contiene la lógica central del sistema, separada en submódulos que manejan diferentes aspectos como autenticación, base de datos, modelos, tareas, etc.
-2. **Repositories**: Define interfaces para interactuar con la base de datos y otros servicios externos, lo que facilita el mantenimiento y la reutilización del código.
-3. **Routes**: Contiene los controladores que manejan las solicitudes HTTP y definen las rutas del API.
-4. **Services**: Define servicios que encapsulan la lógica de negocio, separando la lógica de presentación de la lógica de negocio.
-5. **Tests**: Contiene pruebas unitarias y de integración para asegurar el funcionamiento correcto del sistema.
-6. **Docs**: Documentación técnica y mejoras propuestas del proyecto.
-7. **Static**: Archivos estáticos utilizados en las vistas, como CSS y JavaScript.
-8. **Scripts**: Scripts Python que realizan tareas específicas, como procesamiento de datos o generación de documentos.
-9. **DB**: Contiene scripts y archivos relacionados con la base de datos, como migraciones y scripts de mantenimiento.
+- **routes/** depende de **core/** para acceder a la lógica de negocio y modelos de datos.
+- **services/** depende de **core/** para interactuar con los modelos y repositorios.
+- **repositories/** depende de **core/** para definir las operaciones de base de datos.
 
-Esta organización modular facilita el mantenimiento del código, la escalabilidad y la colaboración entre los desarrolladores.
+Esta estructura facilita el mantenimiento, escalabilidad y reutilización del código.
 
 
 ---
@@ -560,12 +589,12 @@ Uso indirecto de una biblioteca de PDF (no especificada en el fragmento)
 
 ---
 
-## Archivo: ./core/query_engine.py (Procesado en 1 partes)
+## Archivo: ./core/query_engine.py (Procesado en 2 partes)
 
-#### --- PARTE 1 de 1 ---
+#### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-Este archivo contiene el motor de construcción de consultas SQL seguras para el Analytics Studio. Centraliza la lista blanca de tablas permitidas, la validación dinámica de identificadores (tablas y columnas) contra el esquema real de la BD, y la construcción parametrizada de SQL con FROM, JOIN, WHERE, agregaciones, eje temporal y desglose por series.
+Este archivo `query_engine.py` es el motor de construcción de SQL seguro para el Analytics Studio. Centraliza la lista blanca de tablas permitidas, la validación dinámica de identificadores (tablas y columnas) contra el esquema real de la BD, y la construcción parametrizada de SQL con FROM, JOIN, WHERE, agregaciones, eje temporal y desglose por series.
 
 ### Catálogo de Funciones y Clases
 - `validate_identifier(name: str, db: Session) -> bool`: Valida que un identificador (tabla o tabla.columna) pertenezca a la lista blanca.
@@ -581,16 +610,34 @@ Este archivo contiene el motor de construcción de consultas SQL seguras para el
 - Consultas SQL crudas: Utiliza `PRAGMA table_info` para validar columnas.
 
 ### Estado y Variables Globales
-- No aplica
+- Variables globales: No aplica.
 
 ### Dependencias y Flujo
 - Librerías externas utilizadas:
   - `sqlalchemy`
   - `fastapi`
 - Comunicación con otros archivos del proyecto:
-  - `routes/settings.py::api_build_sql` → llama a `build_sql_from_payload()`
-  - `core/security.py::validate_table` → valida nombres de tabla en ETL (sin cambios)
-  - `core/utils.py` → utilidades JSON y métricas (sin cambios)
+  - `routes/settings.py::api_build_sql` → llama a `build_sql_from_payload()`.
+  - `core/security.py::validate_table` → valida nombres de tabla en ETL (sin cambios).
+  - `core/utils.py` → utilidades JSON y métricas (sin cambios).
+
+#### --- PARTE 2 de 2 ---
+
+### Resumen Funcional
+El archivo `query_engine.py` genera consultas SQL dinámicas basadas en los parámetros proporcionados en el objeto `payload`. La consulta puede incluir agrupaciones y ordenamientos según las necesidades del usuario.
+
+### Catálogo de Funciones y Clases
+- `generate_query(payload)` - Genera una consulta SQL dinámica basada en los parámetros del objeto `payload`.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+- `AREA_EXPR_MACRO` - Una macro global que puede ser inyectada en la consulta SQL.
+
+### Dependencias y Flujo
+- Depende de las variables globales `time_func`, `breakdown_select`, `metrics_select_str`, `from_clause`, `where_str`, `groupby_str`, `payload.baseTable`.
+- No comunica con otros archivos del proyecto.
 
 
 ---
@@ -611,7 +658,7 @@ Este archivo define esquemas de datos utilizando Pydantic, que son clases que de
 - `MetricDef(column: str, aggregation: str, format: Optional[str] = "number", label: Optional[str] = "", condition: Optional[MetricCondition] = None, customExpr: Optional[str] = None)` - Define una definición de métrica para consultas SQL.
 - `TimeAxisDef(column: Optional[str] = None, granularity: Optional[str] = "NONE")` - Define la definición del eje temporal en consultas SQL.
 - `SecondMetricDef(column: str = "", aggregation: str = "", label: str = "")` - Define una segunda métrica para consultas SQL.
-- `VisualQueryBuilderPayload(baseTable: str, joins: list[JoinDef] = [], filters: list[FilterDef] = [], metric: Optional[MetricDef] = None, timeAxis: Optional[TimeAxisDef] = None, breakdown: Optional[str] = None, secondMetric: Optional[SecondMetricDef] = None, metrics: list[MetricDef] = [], chartType: Optional[str] = "bar")` - Define el payload para el generador de consultas visuales.
+- `VisualQueryBuilderPayload(baseTable: Optional[str] = None, datasetId: Optional[str] = None, joins: list[JoinDef] = [], filters: list[FilterDef] = [], metric: Optional[MetricDef] = None, timeAxis: Optional[TimeAxisDef] = None, breakdown: Optional[str] = None, secondMetric: Optional[SecondMetricDef] = None, metrics: list[MetricDef] = [], chartType: Optional[str] = "bar")` - Define el payload para el generador de consultas visuales.
 
 ### Interacción con Base de Datos
 No aplica
@@ -642,6 +689,36 @@ No aplica. El archivo no realiza ninguna interacción con bases de datos.
 
 ### Dependencias y Flujo
 No depende de ninguna librería externa. No comunica con otros archivos del proyecto.
+
+
+---
+
+## Archivo: ./core/semantic_layer.py
+
+### Resumen Funcional
+La capa semántica `semantic_layer.py` proporciona una abstracción entre el frontend y la estructura física de las bases de datos. Define clases para Dimensiones, Métricas y Conjuntos de Datos (Datasets), y ofrece funciones para obtener esquemas front-end, resolver mapeos físicos y recuperar fórmulas complejas.
+
+### Catálogo de Funciones y Clases
+- `Dimension(id: str, label: str, physical_column: str, type: str = "string", description: str = "")` - Representa una dimensión con sus atributos.
+- `Metric(id: str, label: str, physical_column: str, aggregation: str = "SUM", format: str = "number", is_complex_formula: bool = False, formula_template: Optional[str] = None, description: str = "")` - Representa una métrica con sus atributos.
+- `Dataset(id: str, label: str, physical_table: str, dimensions: List[Dimension] = field(default_factory=list), metrics: List[Metric] = field(default_factory=list))` - Representa un conjunto de datos compuesto por dimensiones y métricas.
+- `DATASETS: Dict[str, Dataset]` - Catálogo global de conjuntos de datos.
+- `_PHYSICAL_TABLE_TO_DATASET: Dict[str, str]` - Mapa inverso para mapear tablas físicas a IDs de conjuntos de datos.
+- `get_frontend_schema() -> Dict[str, Any]` - Genera un esquema semántico para la interfaz front-end.
+- `resolve_dataset_physical_table(dataset_id: str) -> str` - Devuelve la tabla física asociada con un ID de conjunto de datos.
+- `resolve_physical_mapping(dataset_id: str, field_id: str) -> str` - Traduce IDs semánticos a columnas físicas.
+- `get_metric_formula(dataset_id: str, metric_id: str, table_alias: str = "", legacy_agg: str = "") -> Optional[str]` - Devuelve la fórmula compleja de una métrica si la tiene.
+- `get_formula_by_physical_table(physical_table: str, aggregation: str, metric_col: str = "") -> Optional[str]` - Recupera expresiones SQL complejas basadas en la tabla física y la agregación.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+- `DATASETS`: Diccionario que almacena los conjuntos de datos.
+- `_PHYSICAL_TABLE_TO_DATASET`: Diccionario que mapea tablas físicas a IDs de conjuntos de datos.
+
+### Dependencias y Flujo
+No depende de ninguna librería externa. Comunica con otros archivos del proyecto a través de funciones públicas como `get_frontend_schema`, `resolve_dataset_physical_table`, etc.
 
 
 ---
@@ -1489,8 +1566,8 @@ El archivo `settings.py` define una API para la gestión dinámica de configurac
 - `api_delete_holiday(date_str: str, db: DBSession, state: AppState = Depends(get_app_state))` - Elimina un feriado.
 - `api_get_query(query_id: str, db: DBSession, state: AppState = Depends(get_app_state))` - Retorna el estado visual de una consulta del Analytics Studio.
 - `api_update_query(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Persiste el estado visual de una consulta.
-- `api_get_schema(db: DBSession, state: AppState = Depends(get_app_state))` - Retorna el listado de tablas y sus columnas para el editor.
-- `api_preview_table(table_name: str, db: DBSession, state: AppState = Depends(get_app_state))` - Previsualiza una tabla.
+- `api_get_schema(db: DBSession, state: AppState = Depends(get_app_state))` - Retorna el catálogo semántico de datos para el editor.
+- `api_preview_table(dataset_id: str, db: DBSession, state: AppState = Depends(get_app_state))` - Previsualiza una tabla.
 - `api_query_preview(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Ejecuta una consulta temporal y retorna datos para previsualización.
 - `api_build_sql(payload: VisualQueryBuilderPayload, db: DBSession, state: AppState = Depends(get_app_state))` - Compila el estado visual del constructor en SQL parametrizado seguro.
 
@@ -1499,13 +1576,13 @@ El archivo `settings.py` define una API para la gestión dinámica de configurac
 - Tablas:
   - `analytics_snapshots`
 - Columnas:
-  - No se especifican columnas explícitas, solo consultas generales sobre la tabla `analytics_snapshots`.
+  - No se especifican columnas específicas, solo consultas generales sobre la tabla `analytics_snapshots`.
 
 ### Estado y Variables Globales
 - No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `fastapi`, `pydantic`, `sqlalchemy`, `holidays`, `pandas`.
+- Librerías externas utilizadas: `fastapi`, `pydantic`, `sqlalchemy`, `logging`, `holidays`, `pandas`.
 - Comunicación con otros archivos del proyecto:
   - `core.auth.require_admin`
   - `core.database.get_session_dep`
@@ -2204,7 +2281,7 @@ Dependencia: `core_ui.js` (carga previa para proporcionar funciones como `CoreUI
 #### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-El archivo `analytics_studio.js` contiene funciones y clases para gestionar el estado visual de consultas en un sistema de análisis. Permite abrir modales, cargar esquemas de base de datos, previsualizar tablas y ejecutar consultas para generar gráficos.
+El archivo `analytics_studio.js` contiene funciones y métodos para gestionar el estado visual de consultas en un sistema de análisis. Permite abrir, editar y publicar consultas, cargar esquemas de base de datos, previsualizar tablas y ejecutar consultas para generar gráficos.
 
 ### Catálogo de Funciones y Clases
 - `AnalyticsStudioManager.getVisualState(queryId)` - Obtiene el estado visual de una consulta.
@@ -2212,14 +2289,18 @@ El archivo `analytics_studio.js` contiene funciones y clases para gestionar el e
 - `openEditQueryModal(queryId, chartTitle)` - Abre un modal para editar una consulta.
 - `loadSchema()` - Carga el esquema de la base de datos.
 - `previewTable(tableName, el)` - Previsualiza los datos de una tabla.
-- `runPreview()` - Ejecuta una previsualización de la consulta y renderiza el gráfico.
-- `renderPreviewChart(payload)` - Renderiza el gráfico basado en los datos de la consulta.
+- `runPreview()` - Ejecuta una previsualización de la consulta actual.
+- `renderPreviewChart(payload)` - Renderiza un gráfico basado en los resultados de la consulta.
+- `closeEditQueryModal()` - Cierra el modal de edición de consultas.
+- `showConfirmPublish()` - Muestra el overlay para confirmar la publicación de una consulta.
+- `hideConfirmPublish()` - Oculta el overlay de confirmación de publicación.
+- `executePublishQuery()` - Publica una consulta.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `AnalyticsStudioManager.instances` - Almacena instancias de estado visual por consulta.
+- `AnalyticsStudioManager.instances` - Almacena los estados visuales de las consultas.
 - `studioChartInstance` - Instancia del gráfico actual.
 - `currentSchema` - Esquema actual de la base de datos.
 - `currentQueryId` - ID de la consulta actualmente seleccionada.
@@ -2227,55 +2308,45 @@ No aplica
 - `visualState` - Puntero al estado activo del modal.
 
 ### Dependencias y Flujo
-Depende de las siguientes librerías:
-- `Chart.js` para renderizar gráficos.
+Dependencias:
+- `Chart.js` - Librería para renderizar gráficos.
 
-Se comunica con los siguientes archivos del proyecto:
-- `/api/queries/{queryId}` - Para cargar el estado visual de una consulta.
-- `/api/studio/schema` - Para cargar el esquema de la base de datos.
-- `/api/studio/preview_table/{tableName}` - Para previsualizar los datos de una tabla.
-- `/api/studio/preview` - Para ejecutar una previsualización de la consulta.
+Flujo:
+1. El usuario abre un modal para editar una consulta utilizando `openEditQueryModal`.
+2. Se carga el esquema de la base de datos con `loadSchema`.
+3. Los datos de la tabla seleccionada se previsualizan con `previewTable`.
+4. La consulta actual se ejecuta y los resultados se renderizan con `runPreview` y `renderPreviewChart`.
+5. El usuario puede publicar una consulta utilizando `executePublishQuery`.
 
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-El archivo `analytics_studio.js` contiene funciones y métodos para gestionar la interfaz de usuario y el estado del editor de consultas analíticas. Permite crear, editar y publicar consultas SQL interactuando con un backend a través de una API.
+Este archivo contiene la lógica para el editor de consultas analíticas, que permite crear y editar consultas SQL interactivamente. Permite seleccionar tablas, columnas, filtros, métricas y configuraciones de gráficos.
 
 ### Catálogo de Funciones y Clases
-- `closeEditQueryModal()` - Cierra el modal para edición de consultas.
-- `showConfirmPublish()` - Muestra la ventana de confirmación para publicar una consulta.
-- `hideConfirmPublish()` - Oculta la ventana de confirmación para publicar una consulta.
-- `executePublishQuery()` - Ejecuta la publicación de una consulta a través de una API y maneja el estado del botón de confirmación.
-- `initVisualQuery(queryId)` - Inicializa el estado visual del editor de consultas con los datos proporcionados o por defecto.
+- `initVisualQuery(queryId)` - Inicializa el estado visual del editor de consultas.
 - `onBaseTableChange()` - Maneja el cambio en la tabla base seleccionada.
-- `getActiveTables()` - Devuelve las tablas activas basadas en el estado actual.
-- `getActiveColumns()` - Devuelve las columnas activas basadas en las tablas activas.
-- `refreshQbColumns(forceState = false)` - Refresca los selectores de columnas para los ejes y desglose.
-- `renderJoins()` - Renderiza los controles de join en la interfaz de usuario.
-- `addJoin()` - Añade un nuevo join al estado visual.
-- `updateJoin(index)` - Actualiza el estado del join seleccionado.
-- `removeJoin(index)` - Elimina el join seleccionado.
-- `renderFilters()` - Renderiza los controles de filtro en la interfaz de usuario.
-- `addFilter()` - Añade un nuevo filtro al estado visual.
-- `updateFilterType(index, type)` - Actualiza el tipo de valor del filtro seleccionado.
-- `updateFilter(index)` - Actualiza el estado del filtro seleccionado.
-- `removeFilter(index)` - Elimina el filtro seleccionado.
-- `onSecondMetricToggle()` - Maneja el toggle para la segunda métrica.
-- `onQbChange()` - Sincroniza los cambios en la interfaz de usuario con el estado visual.
+- `getActiveTables()` - Devuelve las tablas activas en el estado actual.
+- `getActiveColumns()` - Devuelve las columnas activas disponibles para la consulta.
+- `refreshQbColumns(forceState = false)` - Refresca los selectores de columnas (Eje Y, Eje X, Desglose) basándose en el estado actual.
+- `renderFilters()` - Renderiza los controles de filtro dinámicamente según el estado del usuario.
+- `addFilter()` - Añade un nuevo filtro al estado y lo renderiza.
+- `updateFilterType(index, type)` - Actualiza el tipo de valor para un filtro específico.
+- `updateFilter(index)` - Actualiza los valores de un filtro específico basándose en la interfaz del usuario.
+- `removeFilter(index)` - Elimina un filtro específico del estado y lo actualiza en la interfaz.
+- `onSecondMetricToggle()` - Maneja el toggle de la segunda métrica.
+- `onQbChange()` - Sincroniza los cambios en la interfaz con el estado interno.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `visualState` - Almacena el estado actual del editor de consultas.
-- `serverVisualState` - Almacena el estado visual desde el servidor.
-- `defaultVisualStates` - Almacena los estados visuales por defecto para diferentes consultas.
-- `currentSchema` - Almacena la estructura de las tablas y columnas disponibles.
+- `visualState` - Almacena el estado actual del editor de consultas, incluyendo tablas, columnas, filtros, métricas y configuraciones de gráficos.
+- `currentSchema` - Esquema de la base de datos que contiene información sobre las tablas y columnas disponibles.
 
 ### Dependencias y Flujo
 Dependencias:
-- `fetch` - Para hacer solicitudes HTTP al backend.
-- `AnalyticsStudioManager` - Para gestionar el estado visual del editor de consultas.
+- `AnalyticsStudioManager` - Un módulo que gestiona el estado visual del editor de consultas.
 
 
 ---
@@ -2870,14 +2941,14 @@ Este archivo contiene el código HTML para un modal de edición de consultas en 
 No se detectaron funciones o clases definidas explícitamente en este fragmento de código.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna
 
 ### Estado y Variables Globales
 No aplica
 
 ### Dependencias y Flujo
-- **Dependencias**: No hay dependencias externas directamente mencionadas.
-- **Flujo**: El archivo se comunica con el archivo `analytics_studio.js` para manejar la lógica del constructor visual y la simulación del gráfico.
+- **Dependencias**: No se mencionan dependencias específicas en el código proporcionado.
+- **Flujo**: El archivo interactúa con JavaScript para manejar la lógica del constructor visual y la vista previa del gráfico.
 
 
 ---
