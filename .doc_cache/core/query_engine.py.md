@@ -3,7 +3,7 @@
 #### --- PARTE 1 de 1 ---
 
 ### Resumen Funcional
-Este archivo `query_engine.py` es el motor de construcción de consultas SQL seguras para el Analytics Studio. Centraliza la lista blanca de tablas permitidas, la validación dinámica de identificadores (tablas y columnas) contra el esquema real de la BD, y la construcción parametrizada de SQL con FROM, JOIN, WHERE, agregaciones, eje temporal y desglose por series.
+Este archivo contiene el motor de construcción de consultas SQL seguras para el Analytics Studio. Centraliza la lista blanca de tablas permitidas, la validación dinámica de identificadores (tablas y columnas) contra el esquema real de la BD, y la construcción parametrizada de SQL con FROM, JOIN, WHERE, agregaciones, eje temporal y desglose por series.
 
 ### Catálogo de Funciones y Clases
 - `validate_identifier(name: str, db: Session) -> bool`: Valida que un identificador (tabla o tabla.columna) pertenezca a la lista blanca.
@@ -19,14 +19,13 @@ Este archivo `query_engine.py` es el motor de construcción de consultas SQL seg
 - Consultas SQL crudas: Utiliza `PRAGMA table_info` para validar columnas.
 
 ### Estado y Variables Globales
-- Variables globales:
-  - `ALLOWED_TABLES`: Lista blanca de tablas permitidas.
-  - `ALLOWED_AGGREGATIONS`: Operaciones de agregación permitidas.
-  - `ALLOWED_GRANULARITIES`: Granularidades de tiempo permitidas.
+- No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `sqlalchemy`, `fastapi`.
-- Comunicación con otros archivos:
+- Librerías externas utilizadas:
+  - `sqlalchemy`
+  - `fastapi`
+- Comunicación con otros archivos del proyecto:
   - `routes/settings.py::api_build_sql` → llama a `build_sql_from_payload()`
   - `core/security.py::validate_table` → valida nombres de tabla en ETL (sin cambios)
   - `core/utils.py` → utilidades JSON y métricas (sin cambios)

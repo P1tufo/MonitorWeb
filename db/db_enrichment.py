@@ -139,9 +139,18 @@ def enrich_deliveries_with_stock(conn: sqlite3.Connection, trans_table: str = "o
         cursor.execute(f"PRAGMA table_info({stock_table})")
         existing_cols = {row[1] for row in cursor.fetchall()}
         ubi_col = "ubicacion_bin" if "ubicacion_bin" in existing_cols else ("ubicacin" if "ubicacin" in existing_cols else "ubicacion")
-        desc_col = "denominacion" if "denominacion" in existing_cols else "texto_breve_de_material"
+        if "denominacion" in existing_cols:
+            desc_col = "denominacion"
+        elif "Texto breve de material" in existing_cols:
+            desc_col = '"Texto breve de material"'
+        else:
+            desc_col = "texto_breve_de_material"
+            
+        mat_col = '"Material"' if "Material" in existing_cols else "material"
+        umb_col = '"UMB"' if "UMB" in existing_cols else "umb"
+        stock_col = '"Stock disp"' if "Stock disp" in existing_cols else "stock_disp"
         
-        stock_query = f"SELECT material, {desc_col} as texto_breve_de_material, {ubi_col} as ubicacion, stock_disp, umb FROM {stock_table}"
+        stock_query = f"SELECT {mat_col} as material, {desc_col} as texto_breve_de_material, {ubi_col} as ubicacion, {stock_col} as stock_disp, {umb_col} as umb FROM {stock_table}"
         stock_df = pd.read_sql(stock_query, conn)
         
         if stock_df.empty:
@@ -190,10 +199,18 @@ def backfill_material_texts(conn: sqlite3.Connection):
         cursor = conn.cursor()
         cursor.execute("PRAGMA table_info(stock_levels)")
         stock_cols = {row[1] for row in cursor.fetchall()}
-        desc_col = "denominacion" if "denominacion" in stock_cols else "texto_breve_de_material"
+        if "denominacion" in stock_cols:
+            desc_col = "denominacion"
+        elif "Texto breve de material" in stock_cols:
+            desc_col = '"Texto breve de material"'
+        else:
+            desc_col = "texto_breve_de_material"
+            
+        mat_col = '"Material"' if "Material" in stock_cols else "material"
+        umb_col = '"UMB"' if "UMB" in stock_cols else "umb"
         
         stock_df = pd.read_sql(f"""
-            SELECT DISTINCT material, {desc_col} as texto_breve_de_material, umb 
+            SELECT DISTINCT {mat_col} as material, {desc_col} as texto_breve_de_material, {umb_col} as umb 
             FROM stock_levels 
             WHERE {desc_col} IS NOT NULL AND {desc_col} != ''
         """, conn)

@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: raiz
-Compilado el: 2026-05-24 23:35:28
+Compilado el: 2026-05-28 23:22:17
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -7,7 +7,7 @@ Modelo: qwen2.5-coder:7b | Separado por Carpetas
 ## Archivo: ./app.py
 
 ### Resumen Funcional
-El archivo `app.py` es el punto de entrada para la configuración y ejecución de una aplicación FastAPI. Se encarga de montar rutas, recursos estáticos y gestionar el ciclo de vida de la aplicación, incluyendo la inicialización de bases de datos y la carga de snapshots.
+El archivo `app.py` es el punto de entrada para la configuración y ejecución de una aplicación FastAPI. Se encarga de montar rutas, recursos estáticos y gestionar el ciclo de vida de la aplicación, incluyendo la inicialización de bases de datos y servicios.
 
 ### Catálogo de Funciones y Clases
 - `lifespan(fastapi_app: FastAPI)` - Manejador del ciclo de vida de la aplicación, que se ejecuta al iniciar y detener el servidor.
@@ -24,12 +24,19 @@ El archivo `app.py` es el punto de entrada para la configuración y ejecución d
 - No aplica.
 
 ### Dependencias y Flujo
-- Librerías utilizadas: FastAPI, SQLAlchemy, pandas.
+- Librerías utilizadas: `fastapi`, `logging`, `contextlib`, `warnings`, `pandas`, `sqlalchemy`.
 - Comunicación con otros archivos del proyecto:
   - `config.py`: Para configuraciones globales.
   - `core.app_instance`: Para la instancia de la aplicación FastAPI.
   - `routes.config`: Para el registro de rutas.
-  - `core.auth`, `core.db_config_manager`, `core.state`, `core.task_manager`, `routes.tasks`, `services.deliveries_service`, `services.inventory_service`: Para la inicialización y gestión del estado global, tareas asíncronas y servicios.
+  - `core.auth`: Para la inicialización y gestión de autenticación.
+  - `core.db_config_manager`: Para la configuración y semillas de bases de datos.
+  - `core.database`: Para obtener sesiones de base de datos.
+  - `core.state`: Para el estado global de la aplicación.
+  - `core.task_manager`: Para la gestión de tareas en segundo plano.
+  - `routes.tasks`: Para el contexto de tareas.
+  - `services.deliveries_service` y `services.inventory_service`: Para servicios relacionados con entregas e inventario.
+  - `core.watcher`: Para el monitor de cambios.
 
 
 ---

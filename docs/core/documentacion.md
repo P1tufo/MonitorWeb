@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: core
-Compilado el: 2026-05-24 23:35:28
+Compilado el: 2026-05-28 23:22:17
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -109,30 +109,35 @@ Este archivo define una fábrica de sesiones SQLAlchemy para interactuar con bas
 #### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-Este archivo `db_config_manager.py` es el administrador de configuraciones dinámicas SaaS. Se encarga de la inicialización, semillas y carga de configuraciones en memoria para mejorar el rendimiento.
+Este archivo `db_config_manager.py` es el punto de acceso a la configuración WMS en tiempo de ejecución. Utiliza SQLAlchemy para interactuar con una base de datos PostgreSQL y mantiene una caché en memoria para mejorar el rendimiento.
 
 ### Catálogo de Funciones y Clases
 - `init_config_db()` - Crea las tablas de configuración SaaS via SQLAlchemy si no existen.
 - `seed_initial_config()` - Inserta valores por defecto si las tablas están vacías.
-- `load_config_to_memory()` - No definida en el fragmento.
 
 ### Interacción con Base de Datos
-- Motor: SQLAlchemy
+- Motor: PostgreSQL
 - Tablas:
-  - `StatusMapping`
-  - `CostCenterMapping`
-  - `AppSetting`
-  - `Holiday`
-  - `ConfigQuery`
+  - `config_queries`
+  - `status_mapping`
+  - `cost_center_mapping`
+  - `app_setting`
+  - `holiday`
 - Columnas:
-  - `config_queries` → `visual_state`
+  - `config_queries`: `query_id`, `sql_text`, `visual_state`
+  - `status_mapping`: `code`, `label`
+  - `cost_center_mapping`: `center_code`, `business_area`
+  - `app_setting`: `key`, `value`, `type`
+  - `holiday`: `date_str`
 
 ### Estado y Variables Globales
-No aplica
+- No aplica
 
 ### Dependencias y Flujo
-- Librerías externas: SQLAlchemy, logging
-- Comunicación con otros archivos del proyecto: No mencionado
+- Librerías externas utilizadas: `sqlalchemy`, `logging`
+- Comunicación con otros archivos del proyecto:
+  - `database.py` (para obtener el motor de base de datos y la sesión)
+  - `models.py` (para definir las clases ORM)
 
 #### --- PARTE 2 de 2 ---
 
@@ -141,36 +146,40 @@ El archivo `db_config_manager.py` contiene configuraciones de consultas SQL y fu
 
 ### Catálogo de Funciones y Clases
 - `ConfigQuery(query_id, sql_text, visual_state)` - Define una consulta con un ID único, texto SQL y estado visual.
-- `initial_queries` - Lista de instancias de `ConfigQuery`.
-- `load_config_to_memory(session=None)` - Carga las consultas iniciales en la sesión de base de datos. Obsoleta y no hace nada.
+- `initial_queries` - Lista de consultas iniciales a cargar en la sesión.
+- `load_config_to_memory(session=None)` - Carga las configuraciones iniciales en la memoria. Obsoleta y no realiza ninguna acción.
 - `_ensure_loaded()` - No hace nada, función auxiliar obsoleta.
 - `get_setting(key: str, default: Any = None) -> Any` - Recupera un valor de configuración por clave.
 - `get_status_mapping() -> Dict[str, str]` - Devuelve un mapeo de códigos a etiquetas para estados.
 - `get_cost_center_mapping() -> Dict[str, str]` - Devuelve un mapeo de códigos de centro de costo a áreas de negocio.
 - `get_holidays() -> List[str]` - Devuelve una lista de fechas festivas.
-- `get_query(query_id: str) -> str` - Recupera el texto SQL asociado a un ID de consulta. Obsoleta, usar `get_query_visual_state()` en su lugar.
+- `get_query(query_id: str) -> str` - Recupera el texto SQL asociado a un ID de consulta. Utiliza la versión visual_state si está disponible, sino devuelve sql_text.
 - `get_query_visual_state(query_id: str) -> str` - Recupera el estado visual JSON de una consulta.
 
 ### Interacción con Base de Datos
-- Motor: No especificado (se infiere que es SQLAlchemy basado en la sintaxis).
+- Motor de base de datos: No especificado en el código.
 - Tablas:
   - `ConfigQuery`
   - `AppSetting`
   - `StatusMapping`
   - `CostCenterMapping`
   - `Holiday`
+  - `warehouse_tasks`
+  - `inventory_movements`
 - Columnas:
-  - `ConfigQuery.query_id`, `sql_text`, `visual_state`
-  - `AppSetting.key`, `typed_value()`
-  - `StatusMapping.code`, `label`
-  - `CostCenterMapping.center_code`, `business_area`
-  - `Holiday.date_str`
+  - `ConfigQuery`: `query_id`, `sql_text`, `visual_state`
+  - `AppSetting`: `key`, `value`
+  - `StatusMapping`: `code`, `label`
+  - `CostCenterMapping`: `center_code`, `business_area`
+  - `Holiday`: `date_str`
+  - `warehouse_tasks`: `usuario`, `fecha_conf`, `fe_creac`
+  - `inventory_movements`: `tipo_operacion`, `material`, `cmv`, `fe_contab`, `registrado`
 
 ### Estado y Variables Globales
-- No aplica.
+No aplica.
 
 ### Dependencias y Flujo
-- Librerías externas: SQLAlchemy.
+- Librerías externas: No se mencionan librerías específicas.
 - Comunicación con otros archivos del proyecto:
   - `get_session()` - Se asume que esta función está definida en otro archivo para obtener una sesión de base de datos.
 
@@ -410,7 +419,7 @@ Uso indirecto de una biblioteca de PDF (no especificada en el fragmento)
 #### --- PARTE 1 de 1 ---
 
 ### Resumen Funcional
-Este archivo `query_engine.py` es el motor de construcción de consultas SQL seguras para el Analytics Studio. Centraliza la lista blanca de tablas permitidas, la validación dinámica de identificadores (tablas y columnas) contra el esquema real de la BD, y la construcción parametrizada de SQL con FROM, JOIN, WHERE, agregaciones, eje temporal y desglose por series.
+Este archivo contiene el motor de construcción de consultas SQL seguras para el Analytics Studio. Centraliza la lista blanca de tablas permitidas, la validación dinámica de identificadores (tablas y columnas) contra el esquema real de la BD, y la construcción parametrizada de SQL con FROM, JOIN, WHERE, agregaciones, eje temporal y desglose por series.
 
 ### Catálogo de Funciones y Clases
 - `validate_identifier(name: str, db: Session) -> bool`: Valida que un identificador (tabla o tabla.columna) pertenezca a la lista blanca.
@@ -426,14 +435,13 @@ Este archivo `query_engine.py` es el motor de construcción de consultas SQL seg
 - Consultas SQL crudas: Utiliza `PRAGMA table_info` para validar columnas.
 
 ### Estado y Variables Globales
-- Variables globales:
-  - `ALLOWED_TABLES`: Lista blanca de tablas permitidas.
-  - `ALLOWED_AGGREGATIONS`: Operaciones de agregación permitidas.
-  - `ALLOWED_GRANULARITIES`: Granularidades de tiempo permitidas.
+- No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `sqlalchemy`, `fastapi`.
-- Comunicación con otros archivos:
+- Librerías externas utilizadas:
+  - `sqlalchemy`
+  - `fastapi`
+- Comunicación con otros archivos del proyecto:
   - `routes/settings.py::api_build_sql` → llama a `build_sql_from_payload()`
   - `core/security.py::validate_table` → valida nombres de tabla en ETL (sin cambios)
   - `core/utils.py` → utilidades JSON y métricas (sin cambios)
@@ -577,6 +585,38 @@ No aplica
 ### Dependencias y Flujo
 - `signal`, `sys`, `logging`, `pandas`, `math`
 - Importa funciones desde `services.tunnel` y `core.query_engine`
+
+
+---
+
+## Archivo: ./core/watcher.py
+
+### Resumen Funcional
+El archivo `watcher.py` es un observador de archivos que monitorea cambios en un directorio especificado (`ONEDRIVE_PATH`). Cuando detecta archivos estables (sin cambios durante 3 segundos), dispara una sincronización de datos mediante la ejecución de `_run_sync_pipeline`.
+
+### Catálogo de Funciones y Clases
+- `AwaitWriteFinishHandler(stability_seconds=3.0, poll_interval=1.0)` - Maneja eventos de archivos y monitorea cambios para disparar la sincronización.
+  - `_should_track(path: str) -> bool` - Determina si un archivo debe ser rastreado.
+  - `on_created(event)` - Llama a `_add_file` cuando se crea un nuevo archivo.
+  - `on_modified(event)` - Llama a `_add_file` cuando se modifica un archivo existente.
+  - `_add_file(path: str)` - Añade o actualiza la información del archivo en el diccionario `tracked_files`.
+  - `_poll_files()` - Monitorea los archivos rastreados y dispara la sincronización si es necesario.
+  - `stop()` - Detiene el hilo de monitoreo y limpia los recursos.
+
+- `start_watcher()` - Inicia el observador en el directorio especificado (`ONEDRIVE_PATH`).
+- `stop_watcher()` - Detiene el observador y limpia los recursos.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+- `_observer`
+- `_handler`
+
+### Dependencias y Flujo
+- `watchdog.observers.Observer` y `watchdog.events.FileSystemEventHandler` para la monitorización de archivos.
+- `config.ONEDRIVE_PATH` para el directorio a observar.
+- `core.task_manager.task_manager` y `routes.sync._run_sync_pipeline` para la ejecución de la sincronización.
 
 
 ---

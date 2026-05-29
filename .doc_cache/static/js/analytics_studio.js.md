@@ -13,7 +13,6 @@ El archivo `analytics_studio.js` contiene funciones y clases para gestionar el e
 - `previewTable(tableName, el)` - Previsualiza los datos de una tabla.
 - `runPreview()` - Ejecuta una previsualización de la consulta y renderiza el gráfico.
 - `renderPreviewChart(payload)` - Renderiza el gráfico basado en los datos de la consulta.
-- `closeEditQueryModal()` - Cierra el modal para editar una consulta.
 
 ### Interacción con Base de Datos
 No aplica
@@ -21,7 +20,7 @@ No aplica
 ### Estado y Variables Globales
 - `AnalyticsStudioManager.instances` - Almacena instancias de estado visual por consulta.
 - `studioChartInstance` - Instancia del gráfico actual.
-- `currentSchema` - Esquema de la base de datos actual.
+- `currentSchema` - Esquema actual de la base de datos.
 - `currentQueryId` - ID de la consulta actualmente seleccionada.
 - `serverVisualState` - Estado visual de la consulta desde el servidor.
 - `visualState` - Puntero al estado activo del modal.
@@ -39,43 +38,41 @@ Se comunica con los siguientes archivos del proyecto:
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-El archivo `analytics_studio.js` contiene funciones y lógica para gestionar la edición, publicación y configuración de consultas analíticas en un estudio de datos. Permite crear, modificar y ejecutar consultas SQL interactuando con una interfaz gráfica basada en JavaScript.
+El archivo `analytics_studio.js` contiene funciones y métodos para gestionar la interfaz de usuario y el estado del editor de consultas analíticas. Permite crear, editar y publicar consultas SQL interactuando con un backend a través de una API.
 
 ### Catálogo de Funciones y Clases
-- `closeEditQueryModal()` - Cierra el modal para editar consultas.
+- `closeEditQueryModal()` - Cierra el modal para edición de consultas.
 - `showConfirmPublish()` - Muestra la ventana de confirmación para publicar una consulta.
 - `hideConfirmPublish()` - Oculta la ventana de confirmación para publicar una consulta.
-- `executePublishQuery()` - Ejecuta la publicación de una consulta y maneja la respuesta del servidor.
-- `initVisualQuery(queryId)` - Inicializa el estado visual de la consulta y carga los datos necesarios.
+- `executePublishQuery()` - Ejecuta la publicación de una consulta a través de una API y maneja el estado del botón de confirmación.
+- `initVisualQuery(queryId)` - Inicializa el estado visual del editor de consultas con los datos proporcionados o por defecto.
 - `onBaseTableChange()` - Maneja el cambio en la tabla base seleccionada.
-- `getActiveTables()` - Devuelve las tablas activas en la consulta.
-- `getActiveColumns()` - Devuelve las columnas activas en la consulta.
+- `getActiveTables()` - Devuelve las tablas activas basadas en el estado actual.
+- `getActiveColumns()` - Devuelve las columnas activas basadas en las tablas activas.
 - `refreshQbColumns(forceState = false)` - Refresca los selectores de columnas para los ejes y desglose.
-- `renderJoins()` - Renderiza los controles de joins en la interfaz.
-- `addJoin()` - Añade un nuevo join a la consulta.
-- `updateJoin(index)` - Actualiza un join existente.
-- `removeJoin(index)` - Elimina un join.
-- `renderFilters()` - Renderiza los controles de filtros en la interfaz.
-- `addFilter()` - Añade un nuevo filtro a la consulta.
-- `updateFilterType(index, type)` - Actualiza el tipo de valor para un filtro.
-- `updateFilter(index)` - Actualiza los detalles de un filtro existente.
-- `removeFilter(index)` - Elimina un filtro.
-- `onSecondMetricToggle()` - Maneja el toggle de la segunda métrica.
-- `onQbChange()` - Sincroniza los cambios en la interfaz con el estado visual de la consulta.
+- `renderJoins()` - Renderiza los controles de join en la interfaz de usuario.
+- `addJoin()` - Añade un nuevo join al estado visual.
+- `updateJoin(index)` - Actualiza el estado del join seleccionado.
+- `removeJoin(index)` - Elimina el join seleccionado.
+- `renderFilters()` - Renderiza los controles de filtro en la interfaz de usuario.
+- `addFilter()` - Añade un nuevo filtro al estado visual.
+- `updateFilterType(index, type)` - Actualiza el tipo de valor del filtro seleccionado.
+- `updateFilter(index)` - Actualiza el estado del filtro seleccionado.
+- `removeFilter(index)` - Elimina el filtro seleccionado.
+- `onSecondMetricToggle()` - Maneja el toggle para la segunda métrica.
+- `onQbChange()` - Sincroniza los cambios en la interfaz de usuario con el estado visual.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `visualState` - Almacena el estado actual de la consulta visual.
-- `serverVisualState` - Almacena el estado visual del servidor.
+- `visualState` - Almacena el estado actual del editor de consultas.
+- `serverVisualState` - Almacena el estado visual desde el servidor.
 - `defaultVisualStates` - Almacena los estados visuales por defecto para diferentes consultas.
-- `currentSchema` - Almacena el esquema de la base de datos actual.
+- `currentSchema` - Almacena la estructura de las tablas y columnas disponibles.
 
 ### Dependencias y Flujo
 Dependencias:
-- `fetch` - Para hacer solicitudes HTTP al servidor.
-- `AnalyticsStudioManager` - Para gestionar el estado visual de la consulta.
-
-Flujo: El archivo interactúa con la interfaz del usuario para permitir la edición, publicación y ejecución de consultas analíticas. No realiza interacciones directas con una base de datos.
+- `fetch` - Para hacer solicitudes HTTP al backend.
+- `AnalyticsStudioManager` - Para gestionar el estado visual del editor de consultas.
 

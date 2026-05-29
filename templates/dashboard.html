@@ -40,6 +40,8 @@
                         <a href="/analytics">📊 Entregas</a>
                         <a href="/analytics?tab=inventory">📦 Movimientos</a>
                         <a href="/analytics?tab=ots">📑 Monitor OTs</a>
+                        <a href="/analytics?tab=transporte">🚚 Transporte</a>
+                        <a href="/analytics?tab=consumos">💸 Costos y Consumos</a>
                         <a href="/analytics?tab=ia">🧠 IA Insomnio y Ansiedad</a>
                         <a href="/analytics?tab=historial">📍 Ubicaciones de materiales</a>
                         <a href="#" onclick="document.getElementById('authorModal').classList.add('active')">👥 Usuarios</a>
@@ -48,15 +50,20 @@
                 </div>
 
                 <!-- Guest View -->
-                <button id="btn-login-trigger" class="btn" style="background:#5DBAA9; color:#0f172a; text-decoration:none; {% if user.username != 'invitado' %}display:none;{% endif %}" onclick="document.getElementById('quickLoginModal').classList.add('active')">🔑 Entrar</button>
+                {% if user.username == 'invitado' %}
+                <button id="btn-login-trigger" class="btn" style="background:#5DBAA9; color:#0f172a; text-decoration:none;" onclick="document.getElementById('quickLoginModal').classList.add('active')">🔑 Entrar</button>
+                {% endif %}
 
                 <!-- Authenticated View -->
-                <span id="user-greeting" style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px; {% if user.username == 'invitado' %}display:none;{% endif %}">👤 <span id="user-name-display">{{ user.username }}</span></span>
+                {% if user.username != 'invitado' %}
+                <span id="user-greeting" style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px;">👤 <span id="user-name-display">{{ user.username }}</span></span>
+                <button id="btn-logout-trigger" class="btn" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);" onclick="logout()">🚪 Salir</button>
+                {% endif %}
                 
-                <button id="btn-logout-trigger" class="btn" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); {% if user.username == 'invitado' %}display:none;{% endif %}" onclick="logout()">🚪 Salir</button>
-                
-                <a href="/settings" id="btn-settings-trigger" class="btn" title="Configuración SaaS" style="{% if user.role != 'admin' %}display:none;{% endif %}">⚙️</a>
-                <button id="btn-sync-trigger" class="btn" onclick="syncData(event)" style="{% if user.role != 'admin' %}display:none;{% endif %}">🚀 Sync</button>
+                {% if user.role == 'admin' %}
+                <a href="/settings" id="btn-settings-trigger" class="btn" title="Configuración SaaS">⚙️</a>
+                <button id="btn-sync-trigger" class="btn" onclick="syncData(event)">🚀 Sync</button>
+                {% endif %}
             </div>
         </header>
 

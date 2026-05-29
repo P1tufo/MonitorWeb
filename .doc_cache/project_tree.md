@@ -6,6 +6,7 @@
     app.log
     app.py
     config.py
+    db.sqlite3
     main.py
     core/
         __init__.py
@@ -25,6 +26,7 @@
         state.py
         task_manager.py
         utils.py
+        watcher.py
         wms_config.py
         wms_utils.py
         helpers/
@@ -124,6 +126,7 @@
         js/
             analytics_proyecciones.js
             analytics_studio.js
+            consumos.js
             core_ui.js
             dashboard.js
             dashboard_charts.js
@@ -133,6 +136,7 @@
             saas_engine.js
             sla_table.js
             tasks.js
+            transporte.js
     scripts/
         __init__.py
         doc_generator.py
@@ -167,12 +171,14 @@
             _scripts.html
             _sidebar.html
             _styles.html
+            _tab_consumos.html
             _tab_deliveries.html
             _tab_docs.html
             _tab_historial.html
             _tab_ia.html
             _tab_inventory.html
             _tab_ots.html
+            _tab_transporte.html
             _table.html
     data/
         wms_transactions.db
@@ -184,6 +190,7 @@
         analytics_proyecciones.py
         auth.py
         config.py
+        consumos.py
         dashboard.py
         deliveries.py
         docs.py
@@ -194,6 +201,7 @@
         settings.py
         sync.py
         tasks.py
+        transporte.py
         widgets.py
     services/
         __init__.py

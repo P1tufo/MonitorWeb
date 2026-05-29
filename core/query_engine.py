@@ -354,8 +354,15 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
             END"""
         elif payload.breakdown == "__PROD_VS_MANT__":
             b_expr = f"""CASE 
-                WHEN {payload.baseTable}.cmv = '201' THEN 'Producción (201)'
-                WHEN {payload.baseTable}.cmv = '261' THEN 'Mantención (261)'
+                WHEN {payload.baseTable}.cmv = '201' AND (
+                    {payload.baseTable}.referencia GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.referencia GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR
+                    {payload.baseTable}.texto_cab_documento GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.texto_cab_documento GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*'
+                ) THEN 'Producción (201)'
+                WHEN {payload.baseTable}.cmv = '261' AND (
+                    ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND 
+                    ({payload.baseTable}.texto_cab_documento IS NULL OR {payload.baseTable}.texto_cab_documento = '')
+                ) THEN 'Mantención (261)'
+                WHEN {payload.baseTable}.cmv IN ('201', '261', '221') THEN 'Desplanificado'
                 ELSE 'Otro'
             END"""
         else:

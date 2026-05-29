@@ -55,12 +55,18 @@ async function initSaaSWidgetsV2(params = null, rootElement = document) {
             if (widget.classList.contains('saas-kpi')) {
                 // Renderizar KPI Numérico
                 let val = "0";
-                if (data.raw_data && data.raw_data.length > 0) {
+                if (data.datasets && data.datasets.length > 0 && data.datasets[0].data.length > 0) {
+                    val = data.datasets[0].data[0];
+                } else if (data.raw_data && data.raw_data.length > 0) {
                     const firstRow = data.raw_data[0];
-                    const valCol = Object.keys(firstRow)[0];
+                    // Try to avoid common dimension keys if falling back to raw_data
+                    const valCol = Object.keys(firstRow).find(k => !['fecha', 'categoria', 'label'].includes(k.toLowerCase())) || Object.keys(firstRow)[0];
                     val = firstRow[valCol];
                 }
-                widget.innerHTML = `<span style="font-size: 1.8rem; font-weight: 800; color: inherit;">${val.toLocaleString ? val.toLocaleString('de-DE') : val}</span>`;
+                let displayVal = val.toLocaleString ? val.toLocaleString('de-DE') : val;
+                if (data.format === 'percent') displayVal += '%';
+                else if (data.format === 'currency') displayVal = '$' + displayVal;
+                widget.innerHTML = `<span style="font-size: 1.8rem; font-weight: 800; color: inherit;">${displayVal}</span>`;
             } else if (widget.classList.contains('saas-trellis-widget')) {
                 // Renderizar Trellis (Múltiples Minigráficos)
                 if (!data.raw_data || !data.raw_data.length) {
@@ -81,14 +87,17 @@ async function initSaaSWidgetsV2(params = null, rootElement = document) {
                 if (!labelKey) labelKey = keys.find(k => k !== areaKey);
 
                 const numericKey = keys.find(k => k !== areaKey && k !== labelKey && typeof data.raw_data[0][k] === 'number');
+                const effKey = keys.includes('efficiency') ? 'efficiency' : numericKey;
+                const countKey = keys.includes('total_count') ? 'total_count' : (keys.includes('Materiales_Solicitados') ? 'Materiales_Solicitados' : null);
 
                 const grouped = {};
                 data.raw_data.forEach(r => {
                     const area = r[areaKey];
-                    if (!grouped[area]) grouped[area] = { labels: [], data: [], sum: 0, count: 0 };
+                    if (!grouped[area]) grouped[area] = { labels: [], data: [], counts: [], sum: 0, count: 0 };
                     grouped[area].labels.push(r[labelKey]);
-                    grouped[area].data.push(r[numericKey]);
-                    grouped[area].sum += r[numericKey];
+                    grouped[area].data.push(r[effKey]);
+                    if (countKey) grouped[area].counts.push(r[countKey]);
+                    grouped[area].sum += r[effKey];
                     grouped[area].count += 1;
                 });
 
@@ -107,6 +116,14 @@ async function initSaaSWidgetsV2(params = null, rootElement = document) {
                     i++;
                     const avg = areaData.count > 0 ? (areaData.sum / areaData.count).toFixed(1) : 0;
                     
+                    let avgMatsText = '';
+                    if (areaData.counts && areaData.counts.length > 0) {
+                        const totalMats = areaData.counts.reduce((a, b) => a + b, 0);
+                        const avgMats = (totalMats / areaData.counts.length).toFixed(0);
+                        const suffix = queryId.includes('week') || queryId === 'vl_sla_area_trend' ? 'mats/sem' : 'mats/mes';
+                        avgMatsText = ` | ~${avgMats} ${suffix}`;
+                    }
+                    
                     let statusColor = '#ef4444';
                     if (avg >= 90) statusColor = '#22c55e';
                     else if (avg >= 85) statusColor = '#f59e0b';
@@ -121,7 +138,7 @@ async function initSaaSWidgetsV2(params = null, rootElement = document) {
                     };
                     
                     const title = document.createElement('h4');
-                    title.innerHTML = `${area} <span style="color: ${statusColor}; margin-left: 8px; font-weight: bold;">Avg: ${avg}%</span>`;
+                    title.innerHTML = `${area} <span style="color: ${statusColor}; margin-left: 8px; font-weight: bold;">Avg: ${avg}%${avgMatsText}</span>`;
                     title.style.cssText = 'font-size: 0.75rem; color: #94a3b8; margin-bottom: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px; pointer-events: none;';
                     wrapper.appendChild(title);
                     
@@ -132,15 +149,17 @@ async function initSaaSWidgetsV2(params = null, rootElement = document) {
                     wrapper.appendChild(canvasWrapper);
                     widget.appendChild(wrapper);
 
+                    let chartDatasets = [
+                        { label: area, data: areaData.data, borderColor: color, backgroundColor: 'transparent', borderWidth: 3, pointRadius: 2, tension: 0.3, yAxisID: 'y' },
+                        { label: 'Meta (90%)', data: new Array(areaData.labels.length).fill(90), borderColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, borderDash: [5, 5], pointRadius: 0, fill: false, yAxisID: 'y' }
+                    ];
+
                     const chart = new Chart(canvas.getContext('2d'), {
                         type: 'line',
                         plugins: [ChartDataLabels],
                         data: {
                             labels: areaData.labels,
-                            datasets: [
-                                { label: area, data: areaData.data, borderColor: color, backgroundColor: 'transparent', borderWidth: 3, pointRadius: 2, tension: 0.3 },
-                                { label: 'Meta (90%)', data: new Array(areaData.labels.length).fill(90), borderColor: 'rgba(255, 255, 255, 0.1)', borderWidth: 1, borderDash: [5, 5], pointRadius: 0, fill: false }
-                            ]
+                            datasets: chartDatasets
                         },
                         options: {
                             responsive: true, maintainAspectRatio: false,
@@ -149,7 +168,7 @@ async function initSaaSWidgetsV2(params = null, rootElement = document) {
                                 datalabels: { display: true, color: color, font: { size: 9, weight: 'bold' }, align: 'top', formatter: (v, ctx) => ctx.datasetIndex === 0 ? v + '%' : '' }
                             },
                             scales: {
-                                y: { min: 0, max: 100, ticks: { display: false }, grid: { display: false } },
+                                y: { min: 0, max: 100, ticks: { display: false }, grid: { display: false }, position: 'left' },
                                 x: { ticks: { autoSkip: true, maxTicksLimit: 5, font: { size: 8 } }, grid: { display: false } }
                             }
                         }
@@ -196,7 +215,7 @@ async function initSaaSWidgetsV2(params = null, rootElement = document) {
                             formatter: (v, ctx) => {
                                 if (v <= 0) return '';
                                 let datasetLabel = ctx.chart.data.datasets[ctx.datasetIndex].label;
-                                let dsFormat = data.dataset_formats ? data.dataset_formats[datasetLabel] : data.format;
+                                let dsFormat = (data.dataset_formats && data.dataset_formats[datasetLabel]) ? data.dataset_formats[datasetLabel] : data.format;
 
                                 if (dsFormat === 'percent' && (data.chartType === 'doughnut' || data.chartType === 'pie')) {
                                     let sum = 0;
@@ -374,8 +393,10 @@ window.openDrilldownModal = async function(queryId, segmentLabel, materialId = n
         }
         
         const cols = Object.keys(data[0]);
-        let html = '<table class="mini-table" style="width: 100%; border-collapse: collapse;"><thead><tr>';
-        cols.forEach(c => html += `<th style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--primary); text-align: left;">${c}</th>`);
+        let html = '<table class="mini-table" id="drilldownModalTable" style="width: 100%; border-collapse: collapse;"><thead><tr>';
+        cols.forEach((c, i) => html += `<th style="padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--primary); text-align: left; cursor: pointer; white-space: nowrap;" onclick="window.sortDrilldownTable(${i})" title="Clic para ordenar">${c} ↕</th>`);
+        html += '</tr><tr class="filter-row">';
+        cols.forEach(c => html += `<th style="padding: 4px;"><input type="text" class="col-filter" placeholder="🔍 Filtrar..." onkeyup="window.filterDrilldownTable()" style="width: 100%; min-width: 60px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 4px; border-radius: 4px; font-size: 0.8rem;"></th>`);
         html += '</tr></thead><tbody>';
         
         data.forEach(row => {
@@ -395,4 +416,85 @@ window.openDrilldownModal = async function(queryId, segmentLabel, materialId = n
         document.getElementById('drilldownSpinner').style.display = 'none';
         document.getElementById('drilldownTableContainer').innerHTML += `<div style="color:var(--rojo); padding:20px; text-align:center;">Error al cargar detalles: ${e.message}</div>`;
     }
+};
+
+// --- Drilldown Table Utilities ---
+window.sortDrilldownTable = function(n) {
+    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+    table = document.getElementById("drilldownModalTable");
+    if(!table) return;
+    switching = true;
+    dir = "asc"; 
+    while (switching) {
+        switching = false;
+        rows = table.querySelectorAll("tbody tr");
+        for (i = 0; i < (rows.length - 1); i++) {
+            shouldSwitch = false;
+            x = rows[i].getElementsByTagName("TD")[n];
+            y = rows[i + 1].getElementsByTagName("TD")[n];
+            let valX = x.innerText.trim().toLowerCase();
+            let valY = y.innerText.trim().toLowerCase();
+            
+            if (!isNaN(parseFloat(valX)) && !isNaN(parseFloat(valY))) {
+                valX = parseFloat(valX);
+                valY = parseFloat(valY);
+            }
+
+            if (dir == "asc") {
+                if (valX > valY) { shouldSwitch = true; break; }
+            } else if (dir == "desc") {
+                if (valX < valY) { shouldSwitch = true; break; }
+            }
+        }
+        if (shouldSwitch) {
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
+            switchcount ++; 
+        } else {
+            if (switchcount == 0 && dir == "asc") {
+                dir = "desc";
+                switching = true;
+            }
+        }
+    }
+};
+
+window.filterDrilldownTableTimer = null;
+window.filterDrilldownTable = function() {
+    clearTimeout(window.filterDrilldownTableTimer);
+    window.filterDrilldownTableTimer = setTimeout(() => {
+        var table = document.getElementById("drilldownModalTable");
+        if(!table) return;
+        var inputs = Array.from(table.querySelectorAll("thead .col-filter"));
+        var activeFilters = inputs.map((inp, idx) => ({ value: inp.value.toLowerCase(), index: idx })).filter(f => f.value);
+        
+        var trs = table.querySelectorAll("tbody tr");
+        
+        // Use requestAnimationFrame for smoother UI if there are many rows
+        let i = 0;
+        const chunk = 100;
+        
+        function processChunk() {
+            let end = Math.min(i + chunk, trs.length);
+            for (; i < end; i++) {
+                let tr = trs[i];
+                let display = '';
+                if (activeFilters.length > 0) {
+                    let tds = tr.getElementsByTagName("td");
+                    for (let f of activeFilters) {
+                        let td = tds[f.index];
+                        if (td && td.textContent.toLowerCase().indexOf(f.value) === -1) {
+                            display = 'none';
+                            break;
+                        }
+                    }
+                }
+                tr.style.display = display;
+            }
+            if (i < trs.length) {
+                requestAnimationFrame(processChunk);
+            }
+        }
+        processChunk();
+    }, 300);
 };

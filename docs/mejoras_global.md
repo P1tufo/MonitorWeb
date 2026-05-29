@@ -1,5 +1,5 @@
 # Sugerencias de Mejora Global - MonitorWeb
-Compilado el: 2026-05-24 23:35:28
+Compilado el: 2026-05-28 23:22:17
 Modelo: qwen2.5-coder:7b | Hardware: M1 Pro Optimized
 
 ---
@@ -152,6 +152,13 @@ CÓDIGO ÓPTIMO
 
 ---
 
+## Sugerencias para: ./core/watcher.py
+
+CÓDIGO ÓPTIMO
+
+
+---
+
 ## Sugerencias para: ./core/wms_config.py
 
 **Veredicto de Calidad:** CÓDIGO ÓPTIMO
@@ -283,6 +290,13 @@ CÓDIGO ÓPTIMO
 
 ---
 
+## Sugerencias para: ./routes/consumos.py
+
+CÓDIGO ÓPTIMO
+
+
+---
+
 ## Sugerencias para: ./routes/dashboard.py
 
 CÓDIGO ÓPTIMO
@@ -340,6 +354,13 @@ CÓDIGO ÓPTIMO
 ---
 
 ## Sugerencias para: ./routes/tasks.py
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./routes/transporte.py
 
 CÓDIGO ÓPTIMO
 
@@ -506,6 +527,13 @@ CÓDIGO ÓPTIMO
 
 ---
 
+## Sugerencias para: ./static/js/consumos.js
+
+CÓDIGO ÓPTIMO
+
+
+---
+
 ## Sugerencias para: ./static/js/core_ui.js
 
 CÓDIGO ÓPTIMO
@@ -513,9 +541,13 @@ CÓDIGO ÓPTIMO
 
 ---
 
-## Sugerencias para: ./static/js/dashboard.js (Procesado en 1 partes)
+## Sugerencias para: ./static/js/dashboard.js (Procesado en 2 partes)
 
-#### --- PARTE 1 de 1 ---
+#### --- PARTE 1 de 2 ---
+
+CÓDIGO ÓPTIMO
+
+#### --- PARTE 2 de 2 ---
 
 CÓDIGO ÓPTIMO
 
@@ -550,7 +582,9 @@ CÓDIGO ÓPTIMO
 
 ---
 
-## Sugerencias para: ./static/js/saas_engine.js
+## Sugerencias para: ./static/js/saas_engine.js (Procesado en 1 partes)
+
+#### --- PARTE 1 de 1 ---
 
 CÓDIGO ÓPTIMO
 
@@ -571,6 +605,13 @@ CÓDIGO ÓPTIMO
 
 ---
 
+## Sugerencias para: ./static/js/transporte.js
+
+CÓDIGO ÓPTIMO
+
+
+---
+
 ## Sugerencias para: ./templates/analytics_proyecciones.html
 
 CÓDIGO ÓPTIMO
@@ -585,9 +626,13 @@ CÓDIGO ÓPTIMO
 
 ---
 
-## Sugerencias para: ./templates/deliveries.html (Procesado en 1 partes)
+## Sugerencias para: ./templates/deliveries.html (Procesado en 2 partes)
 
-#### --- PARTE 1 de 1 ---
+#### --- PARTE 1 de 2 ---
+
+CÓDIGO ÓPTIMO
+
+#### --- PARTE 2 de 2 ---
 
 CÓDIGO ÓPTIMO
 
@@ -678,6 +723,13 @@ CÓDIGO ÓPTIMO
 
 ---
 
+## Sugerencias para: ./templates/partials/_tab_consumos.html
+
+CÓDIGO ÓPTIMO
+
+
+---
+
 ## Sugerencias para: ./templates/partials/_tab_deliveries.html
 
 CÓDIGO ÓPTIMO
@@ -714,6 +766,13 @@ CÓDIGO ÓPTIMO
 ---
 
 ## Sugerencias para: ./templates/partials/_tab_ots.html
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./templates/partials/_tab_transporte.html
 
 CÓDIGO ÓPTIMO
 

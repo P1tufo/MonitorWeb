@@ -29,25 +29,45 @@ router = APIRouter()
 
 @router.get("/api/ubicaciones/{material}")
 async def get_ubicaciones(material: str, user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state)):
-    # Always detect the actual column name in stock_levels (varies by import source)
     res = session.execute(text("PRAGMA table_info(stock_levels)"))
     stock_cols = {row[1] for row in res.fetchall()}
-    ubi_col = (
-        "ubicacion_bin" if "ubicacion_bin" in stock_cols
-        else ("ubicacin" if "ubicacin" in stock_cols
-        else "ubicacion")
-    )
-    desc_col = "denominacion" if "denominacion" in stock_cols else "texto_breve_de_material"
+    
+    if "ubicacion_bin" in stock_cols:
+        ubi_col = "ubicacion_bin"
+    elif "Ubicación" in stock_cols:
+        ubi_col = '"Ubicación"'
+    elif "ubicacin" in stock_cols:
+        ubi_col = "ubicacin"
+    else:
+        ubi_col = "ubicacion"
+        
+    if "denominacion" in stock_cols:
+        desc_col = "denominacion"
+    elif "Texto breve de material" in stock_cols:
+        desc_col = '"Texto breve de material"'
+    else:
+        desc_col = "texto_breve_de_material"
+        
+    mat_col = '"Material"' if "Material" in stock_cols else "material"
+    umb_col = '"UMB"' if "UMB" in stock_cols else "umb"
+    stock_col = '"Stock disp"' if "Stock disp" in stock_cols else "stock_disp"
 
     query_db = get_query("inv_historial_ubicaciones")
     if query_db:
         # Substitute dynamic column names and normalise bind-params to SQLAlchemy style
         query = (
             query_db
+            .replace("s.ubicacion", f"s.{ubi_col}")
             .replace("s.ubicacin", f"s.{ubi_col}")
             .replace("s.texto_breve_de_material", f"s.{desc_col}")
+            .replace("s.stock_disp", f"s.{stock_col}")
+            .replace("s.umb", f"s.{umb_col}")
+            .replace("s.material", f"s.{mat_col}")
             .replace("{ubi_col}", ubi_col)
             .replace("{desc_col}", desc_col)
+            .replace("{stock_col}", stock_col)
+            .replace("{umb_col}", umb_col)
+            .replace("{mat_col}", mat_col)
             .replace("?", ":mat")   # convierte posicionales sqlite3 → nombrados SQLAlchemy
         )
     else:
@@ -79,11 +99,11 @@ async def get_ubicaciones(material: str, user = Depends(get_current_user), sessi
                 s.{ubi_col} as ubicacion,
                 NULL as fecha,
                 s.{desc_col} as texto_breve_material,
-                CAST(REPLACE(s.stock_disp, ',', '.') AS REAL) as stock_disp,
-                s.umb as umb,
+                CAST(REPLACE(s.{stock_col}, ',', '.') AS REAL) as stock_disp,
+                s.{umb_col} as umb,
                 s.{ubi_col} as ubic_actual
             FROM stock_levels s
-            WHERE UPPER(TRIM(s.material)) = :mat
+            WHERE UPPER(TRIM(s.{mat_col})) = :mat
               AND s.{ubi_col} IS NOT NULL
               AND TRIM(s.{ubi_col}) != ''
         ) l

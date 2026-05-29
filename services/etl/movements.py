@@ -79,3 +79,10 @@ class InventoryMovementAdapter(BaseWMSProcessor):
         ]
         df['tipo_operacion'] = np.select(conditions, choices, default='Otro')
         return df
+
+    def _post_process(self, conn, table_name: str):
+        """Crear índices estructurales vitales para el rendimiento de búsquedas."""
+        if table_name == "inventory_movements":
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_inv_cmv ON inventory_movements(cmv)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_inv_ceco_upper ON inventory_movements(UPPER(TRIM(ce_coste)))")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_inv_mat_upper ON inventory_movements(UPPER(TRIM(material)))")

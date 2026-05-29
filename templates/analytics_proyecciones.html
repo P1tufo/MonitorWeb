@@ -32,11 +32,15 @@
                         </div>
                     </div>
                     <!-- Guest View -->
-                    <button id="btn-login-trigger" class="btn btn-secondary" style="background:#5DBAA9; color:#0f172a; text-decoration:none; {% if user.username != 'invitado' %}display:none;{% endif %}" onclick="document.getElementById('quickLoginModal').classList.add('active')">🔑 Entrar</button>
+                    {% if user.username == 'invitado' %}
+                    <button id="btn-login-trigger" class="btn btn-secondary" style="background:#5DBAA9; color:#0f172a; text-decoration:none;" onclick="document.getElementById('quickLoginModal').classList.add('active')">🔑 Entrar</button>
+                    {% endif %}
 
                     <!-- Authenticated View -->
-                    <span id="user-greeting" style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px; {% if user.username == 'invitado' %}display:none;{% endif %}">👤 <span id="user-name-display">{{ user.username }}</span></span>
-                    <button id="btn-logout-trigger" class="btn btn-secondary" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); {% if user.username == 'invitado' %}display:none;{% endif %}" onclick="logout()">🚪 Salir</button>
+                    {% if user.username != 'invitado' %}
+                    <span id="user-greeting" style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px;">👤 <span id="user-name-display">{{ user.username }}</span></span>
+                    <button id="btn-logout-trigger" class="btn btn-secondary" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);" onclick="logout()">🚪 Salir</button>
+                    {% endif %}
                 </div>
             </div>
         </header>

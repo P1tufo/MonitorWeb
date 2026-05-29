@@ -29,7 +29,7 @@ def generate_predictions(db_path: str):
             SELECT 
                 fe_contab, ce_coste, material, texto_breve_material, cantidad, cmv
             FROM inventory_movements 
-            WHERE cmv IN ('201', '261') AND length(fe_contab) >= 10
+            WHERE cmv = '201' AND length(fe_contab) >= 10
         """
         df = pd.read_sql(query, conn)
         conn.close()
@@ -63,7 +63,7 @@ def generate_predictions(db_path: str):
         df['mat_full'] = "[" + df['material'].astype(str) + "] " + df['texto_breve_material']
         
         def map_area(ce):
-            if pd.isna(ce) or not str(ce).strip(): return 'OTRO'
+            if pd.isna(ce) or not str(ce).strip(): return '[Sin Centro de Coste]'
             ce_str = str(ce).upper()
             for code, name in COST_CENTER_MAPPING.items():
                 if code in ce_str:
@@ -214,14 +214,18 @@ def generate_predictions(db_path: str):
                 if len(mat_df) < 3:
                     continue # Necesitamos al menos 3 retiros de ESTA área para hacer un patrón
                     
-                mat_df = mat_df.sort_values('date')
+                # Agrupar por fecha para no sesgar el intervalo con retiros múltiples el mismo día
+                daily_df = mat_df.groupby('date').agg({'cantidad': 'sum'}).reset_index()
+                daily_df = daily_df.sort_values('date')
                 
-                # Calcular los días entre pedidos (MTBV) para esta área específica
-                mat_df['days_diff'] = mat_df['date'].diff().dt.days
+                if len(daily_df) < 3:
+                    continue # Necesitamos al menos 3 días distintos de retiros para establecer un patrón
                 
-                avg_interval = mat_df['days_diff'].mean()
-                std_interval = mat_df['days_diff'].std()
-                avg_qty = mat_df['cantidad'].mean()
+                daily_df['days_diff'] = daily_df['date'].diff().dt.days
+                
+                avg_interval = daily_df['days_diff'].mean()
+                std_interval = daily_df['days_diff'].std()
+                avg_qty = daily_df['cantidad'].mean()
                 
                 if pd.isna(avg_interval) or pd.isna(std_interval):
                     continue
@@ -235,12 +239,18 @@ def generate_predictions(db_path: str):
                 score = 0
                 if days_since >= avg_interval:
                     retraso = days_since - avg_interval
-                    tomorrow_dow = (today.dayofweek + 1) % 7
-                    dow_bonus = dow_counts.get(tomorrow_dow, 0) * 100 
                     
-                    base_score = min(50 + (retraso * 5), 90) 
-                    score = base_score + (dow_bonus * 0.5)
-                    score = min(score, 99.9)
+                    # Decaimiento: Si el retraso es excesivamente largo (ej. > 4x el intervalo y > 15 días)
+                    # asumimos que el ciclo se rompió (proyecto terminado, material descontinuado) y no es una alerta inminente.
+                    if retraso > (avg_interval * 4) and retraso > 15:
+                        score = 0
+                    else:
+                        tomorrow_dow = (today.dayofweek + 1) % 7
+                        dow_bonus = dow_counts.get(tomorrow_dow, 0) * 100 
+                        
+                        base_score = min(50 + (retraso * 5), 90) 
+                        score = base_score + (dow_bonus * 0.5)
+                        score = min(score, 99.9)
                     
                 if score > 50:
                     # Datos del mes actual para esta alerta de área

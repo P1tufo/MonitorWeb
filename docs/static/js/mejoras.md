@@ -1,5 +1,5 @@
 # Sugerencias de Mejora - Directorio: static/js
-Compilado el: 2026-05-24 23:35:28
+Compilado el: 2026-05-28 23:22:17
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -24,6 +24,13 @@ CÓDIGO ÓPTIMO
 
 ---
 
+## Sugerencias para: ./static/js/consumos.js
+
+CÓDIGO ÓPTIMO
+
+
+---
+
 ## Sugerencias para: ./static/js/core_ui.js
 
 CÓDIGO ÓPTIMO
@@ -31,9 +38,13 @@ CÓDIGO ÓPTIMO
 
 ---
 
-## Sugerencias para: ./static/js/dashboard.js (Procesado en 1 partes)
+## Sugerencias para: ./static/js/dashboard.js (Procesado en 2 partes)
 
-#### --- PARTE 1 de 1 ---
+#### --- PARTE 1 de 2 ---
+
+CÓDIGO ÓPTIMO
+
+#### --- PARTE 2 de 2 ---
 
 CÓDIGO ÓPTIMO
 
@@ -68,7 +79,9 @@ CÓDIGO ÓPTIMO
 
 ---
 
-## Sugerencias para: ./static/js/saas_engine.js
+## Sugerencias para: ./static/js/saas_engine.js (Procesado en 1 partes)
+
+#### --- PARTE 1 de 1 ---
 
 CÓDIGO ÓPTIMO
 
@@ -83,6 +96,13 @@ CÓDIGO ÓPTIMO
 ---
 
 ## Sugerencias para: ./static/js/tasks.js
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./static/js/transporte.js
 
 CÓDIGO ÓPTIMO
 

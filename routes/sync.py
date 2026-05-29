@@ -207,6 +207,13 @@ def _run_sync_pipeline():
                     if rows > 0:
                         has_changes = True
             
+            # Sincronización de Transporte (Avanti)
+            from routes.transporte import sync_transporte_logic
+            with get_session() as _sess_transporte:
+                logger.info("Sincronizando base de datos de Transporte (Avanti)...")
+                if sync_transporte_logic(_sess_transporte):
+                    has_changes = True
+
             # Enriquecimiento final cruzado (Solo si hubo cambios en algo)
             if has_changes:
                 con.backfill_from_movements()

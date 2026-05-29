@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: templates/partials
-Compilado el: 2026-05-24 23:35:28
+Compilado el: 2026-05-28 23:22:17
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -239,10 +239,32 @@ No aplica
 
 ---
 
+## Archivo: ./templates/partials/_tab_consumos.html
+
+### Resumen Funcional
+Este archivo HTML define una pestaña para el análisis de consumos y costos, que incluye dos paneles: uno para buscar por Centro de Costo (CeCo) y otro para buscar inversa por materiales.
+
+### Catálogo de Funciones y Clases
+- `buscarPorCeCo()` - Realiza la búsqueda de historial de retiros y consumo del mes actual por CeCo.
+- `limpiarGrilla()` - Limpia las celdas de la grilla de entrada de materiales.
+- `buscarPorMateriales()` - Analiza una lista de materiales para mostrar los resultados de consumo.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+No aplica
+
+### Dependencias y Flujo
+No depende de ninguna librería externa ni comunica con otros archivos del proyecto.
+
+
+---
+
 ## Archivo: ./templates/partials/_tab_deliveries.html
 
 ### Resumen Funcional
-Este fragmento HTML es una pestaña que muestra un análisis de entregas, incluyendo KPIs como volumen total y eficiencia de bodega. Permite cambiar entre vistas operativas (anual) y históricas (semanales), y filtra los datos por áreas seleccionadas.
+Este fragmento HTML es una pestaña que muestra un análisis de entregas, incluyendo KPIs como volumen total y eficiencia de bodega. Permite cambiar la vista entre "Vista Anual" y "Vista Semanal", y filtra los datos por áreas seleccionadas.
 
 ### Catálogo de Funciones y Clases
 - `switchVLView(value)` - Cambia la vista según el valor seleccionado en el selector.
@@ -255,14 +277,16 @@ Este fragmento HTML es una pestaña que muestra un análisis de entregas, incluy
 No aplica
 
 ### Estado y Variables Globales
-No aplica
+- `user.role` - Rol del usuario, utilizado para determinar si se muestran botones de edición.
+- `areas_vl` - Lista de áreas disponibles para filtrar.
 
 ### Dependencias y Flujo
 Dependencias:
-- jQuery (para eventos como `onchange`, `onclick`, etc.)
 - Font Awesome (para iconos)
+- JavaScript (funciones definidas en el archivo)
 
-Flujo: Este fragmento interactúa con el backend a través de JavaScript para cargar datos dinámicamente en los KPIs y gráficos. No realiza consultas directas a la base de datos, sino que espera que estos datos se le pasen desde el backend.
+Flujo:
+Este fragmento interactúa con otros archivos a través de llamadas a funciones JavaScript (`switchVLView`, `openEditQueryModal`, etc.) que probablemente estén definidas en un archivo `.js` asociado.
 
 
 ---
@@ -372,6 +396,32 @@ No se detectan variables globales, de sesión o diccionarios quemados en el cód
 ### Dependencias y Flujo
 - **Librerías Externas:** `FontAwesome` para iconos.
 - **Flujo Interno:** El fragmento interactúa con JavaScript a través de eventos como `onclick`, que llaman funciones como `openEditQueryModal`, `filterOTTable`, `switchSubTab`, etc. No se indica interacción directa con otros archivos del proyecto en este fragmento.
+
+
+---
+
+## Archivo: ./templates/partials/_tab_transporte.html
+
+### Resumen Funcional
+Este fragmento HTML es una interfaz de usuario para mostrar la evolución de entregas, permitiendo filtrar por mensual o semanal. Incluye un gráfico de líneas, un buscador rápido y una tabla con datos históricos y PDFs.
+
+### Catálogo de Funciones y Clases
+- `updateTransporteChartGroup(filter)` - Actualiza el gráfico de líneas según el filtro seleccionado (mensual o semanal).
+- `searchTransporte()` - Realiza la búsqueda en la tabla de entregas.
+- `closePdfViewer()` - Cierra el modal del visor PDF.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+No aplica
+
+### Dependencias y Flujo
+Dependencias:
+- JavaScript (funciones mencionadas)
+- CSS para estilos
+
+Flujo: Este fragmento interactúa con el backend a través de funciones JavaScript que se disparan en eventos del usuario, como cambios en los filtros o la entrada de texto en el buscador.
 
 
 ---

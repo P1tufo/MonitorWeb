@@ -110,6 +110,9 @@ class BaseWMSProcessor(ABC):
                             GROUP BY {group_cols}
                         )
                     """)
+
+                # Hook para índices u otros post-procesos específicos de cada clase
+                self._post_process(ctx_conn, table_name)
                     
             if conn is None:
                 ctx_conn.close()
@@ -162,6 +165,10 @@ class BaseWMSProcessor(ABC):
 
         # tmp_table: derivado de table_name validado por whitelist.
         conn.execute(f"DROP TABLE IF EXISTS {tmp_table}")
+
+    def _post_process(self, conn: sqlite3.Connection, table_name: str):
+        """Hook opcional para crear índices o post-procesar tras un upsert."""
+        pass
 
 
     def process_directory(self, folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int:

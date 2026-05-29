@@ -1,5 +1,5 @@
 # Sugerencias de Mejora - Directorio: templates/partials
-Compilado el: 2026-05-24 23:35:28
+Compilado el: 2026-05-28 23:22:17
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -74,6 +74,13 @@ CÓDIGO ÓPTIMO
 
 ---
 
+## Sugerencias para: ./templates/partials/_tab_consumos.html
+
+CÓDIGO ÓPTIMO
+
+
+---
+
 ## Sugerencias para: ./templates/partials/_tab_deliveries.html
 
 CÓDIGO ÓPTIMO
@@ -110,6 +117,13 @@ CÓDIGO ÓPTIMO
 ---
 
 ## Sugerencias para: ./templates/partials/_tab_ots.html
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./templates/partials/_tab_transporte.html
 
 CÓDIGO ÓPTIMO
 

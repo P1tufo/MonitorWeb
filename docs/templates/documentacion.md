@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: templates
-Compilado el: 2026-05-24 23:35:28
+Compilado el: 2026-05-28 23:22:17
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -7,7 +7,7 @@ Modelo: qwen2.5-coder:7b | Separado por Carpetas
 ## Archivo: ./templates/analytics_proyecciones.html
 
 ### Resumen Funcional
-El archivo `analytics_proyecciones.html` es una plantilla HTML para la interfaz de usuario de un módulo de análisis predictivo, que muestra información sobre desplanificaciones y predicciones de demanda. Incluye gráficos interactivos y tablas para visualizar datos relevantes.
+El archivo `analytics_proyecciones.html` es una plantilla HTML para la interfaz de usuario de un módulo de análisis predictivo, que muestra información sobre desplanificaciones y correlaciones entre materiales. Incluye gráficos interactivos y tablas para visualizar datos relevantes.
 
 ### Catálogo de Funciones y Clases
 No se detectan funciones o clases definidas en este archivo HTML.
@@ -16,20 +16,21 @@ No se detectan funciones o clases definidas en este archivo HTML.
 Ninguna.
 
 ### Estado y Variables Globales
-- `user.username`: Almacena el nombre de usuario actual.
-- `error_msg`: Almacena un mensaje de error si ocurre algún problema.
+- `user`: Objeto que contiene información del usuario autenticado.
+- `error_msg`: Mensaje de error a mostrar en la interfaz.
 - `alerts`: Lista de alertas de desplanificación.
-- `scatter_data`: Datos para el gráfico de dispersión "Frecuencia vs Volumen".
-- `combos`: Datos para la visualización de combinaciones frecuentes (Market Basket Analysis).
+- `scatter_data`: Datos para el gráfico de dispersión.
+- `combos`: Lista de combinaciones frecuentes (Market Basket Analysis).
 
 ### Dependencias y Flujo
 - **Librerías Externas**: 
-  - `Chart.js` para crear gráficos interactivos.
-- **Archivos del Proyecto**:
-  - `_styles.html`: Incluye estilos CSS adicionales.
-  - `_analytics_proyecciones_modals.html`: Contiene modales adicionales.
-  - `_scripts.html`: Incluye scripts adicionales.
-  - `analytics_proyecciones.js`: Script personalizado para el módulo de análisis predictivo.
+  - `Chart.js` para gráficos interactivos.
+- **Archivos Incluidos**:
+  - `_styles.html`: Estilos CSS adicionales.
+  - `_analytics_proyecciones_modals.html`: Modales adicionales.
+  - `_scripts.html`: Scripts adicionales.
+- **Scripts Internos**: 
+  - `analytics_proyecciones.js`: Script específico para este módulo.
 
 
 ---
@@ -37,10 +38,10 @@ Ninguna.
 ## Archivo: ./templates/dashboard.html
 
 ### Resumen Funcional
-El archivo `dashboard.html` es una plantilla HTML para el panel de control del proyecto Onedrive, que muestra indicadores clave (KPIs) y proporciona acceso a diferentes módulos y funciones.
+El archivo `dashboard.html` es una plantilla HTML para el panel de control del proyecto Onedrive, que muestra información sobre entregas y materiales solicitados. Incluye un encabezado con opciones de navegación, indicadores clave (KPIs) y un menú lateral.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este archivo. Todo el contenido es estructura HTML y Jinja2 templating.
+No se detectan funciones o clases definidas en este archivo HTML.
 
 ### Interacción con Base de Datos
 No aplica
@@ -50,23 +51,23 @@ No aplica
 - `user.username`: Nombre del usuario actual.
 - `user.role`: Rol del usuario actual.
 - `kpi_deliveries`: Número total de entregas generadas.
-- `sub_del_abierta`, `sub_del_no_tratada`, `sub_del_reunido`, `sub_del_atrasado`, `sub_del_critico`: Contadores para diferentes estados de entregas.
+- `sub_del_abierta`, `sub_del_no_tratada`, `sub_del_reunido`, `sub_del_atrasado`, `sub_del_critico`: Contadores para diferentes estados de las entregas.
 - `kpi_materials`: Número total de materiales solicitados.
-- `sub_mat_abierta`, `sub_mat_no_tratada`, `sub_mat_reunido`, `sub_mat_atrasado`, `sub_mat_critico`: Contadores para diferentes estados de materiales.
+- `sub_mat_abierta`, `sub_mat_no_tratada`, `sub_mat_reunido`, `sub_mat_atrasado`, `sub_mat_critico`: Contadores para diferentes estados de los materiales.
 
 ### Dependencias y Flujo
-- **Librerías externas**: No se detectan librerías externas específicas.
-- **Flujo interno**: El archivo incluye varios parciales HTML (`_styles.html`, `_modals.html`, `_sidebar.html`, `_table.html`, `_scripts.html`) que probablemente contienen el contenido específico para estos elementos.
+- **Librerías externas**: No se detectan librerías externas utilizadas.
+- **Flujo hacia otros archivos**: El archivo incluye parciales HTML (`_styles.html`, `_modals.html`, `_sidebar.html`, `_table.html`, `_scripts.html`) que probablemente contienen el estilo, modales, menú lateral, tabla y scripts necesarios para la funcionalidad del panel de control.
 
 
 ---
 
-## Archivo: ./templates/deliveries.html (Procesado en 1 partes)
+## Archivo: ./templates/deliveries.html (Procesado en 2 partes)
 
-#### --- PARTE 1 de 1 ---
+#### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario del proyecto, que incluye elementos como encabezados, botones de pestañas y scripts JavaScript para manejar el comportamiento de las pestañas y cargar datos dinámicamente.
+El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario del proyecto, que incluye elementos como encabezado, botones de pestañas y scripts JavaScript para manejar el comportamiento de las pestañas y cargar datos dinámicamente.
 
 ### Catálogo de Funciones y Clases
 - `switchTab(tabId, btnElement)` - Cambia la pestaña activa.
@@ -92,16 +93,44 @@ No aplica
   - `dashboard.js`
   - `saas_engine.js`
   - `deliveries.js`
-  - `tasks.js`
-  - `inventory.js`
-  - `analytics_proyecciones.js`
-  - `docs_explorer.js`
+  - `consumos.js`
+  - `transporte.js`
+- Variables JSON inyectadas dinámicamente desde el backend.
 
-- Archivos CSS incluidos:
-  - Estilos generales
-  - Estilos específicos para entregas, inventario, análisis de proyecciones
+#### --- PARTE 2 de 2 ---
 
-El archivo interactúa con varios componentes del proyecto, incluyendo scripts y estilos que manejan la interfaz de usuario y el comportamiento dinámico.
+### Resumen Funcional
+El archivo `deliveries.html` es una plantilla HTML que contiene scripts para cargar datos JSON y referencias a archivos JavaScript. También incluye varios modales parciales.
+
+### Catálogo de Funciones y Clases
+No se detectan funciones o clases definidas en este fragmento de código.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+- `ots_user_confirmed`: Almacena datos del usuario confirmado.
+- `ots_type_labels`: Almacena etiquetas de tipo OTS.
+- `ots_type_data`: Almacena datos de tipo OTS.
+
+### Dependencias y Flujo
+- **Librerías externas**: No se mencionan librerías externas específicas en este fragmento.
+- **Archivos JavaScript incluidos**:
+  - `js/tasks.js`
+  - `js/inventory.js`
+  - `js/analytics_proyecciones.js`
+  - `js/docs_explorer.js`
+
+- **Modales parciales incluidos**:
+  - `_modals.html`
+  - `_deliveries_modals.html`
+  - `_inventory_modals.html`
+  - `_analytics_proyecciones_modals.html`
+  - `_edit_query_modal.html`
+  - `_quick_login_modal.html`
+  - `_logout.html`
+
+Este archivo se utiliza para cargar datos y recursos necesarios en una página web, incluyendo modales que probablemente contienen funcionalidades adicionales.
 
 
 ---
@@ -109,7 +138,7 @@ El archivo interactúa con varios componentes del proyecto, incluyendo scripts y
 ## Archivo: ./templates/inventory.html
 
 ### Resumen Funcional
-El archivo `inventory.html` es una plantilla HTML para la interfaz de usuario del módulo de inventario. Define la estructura y el diseño de la página, incluyendo encabezados, botones de acción, gráficos y enlaces a otros módulos.
+El archivo `inventory.html` es una plantilla HTML para la interfaz de usuario del módulo de inventario. Define la estructura y el diseño de la página, incluyendo encabezados, botones de acción, gráficos y enlaces a otros módulos del sistema.
 
 ### Catálogo de Funciones y Clases
 No se detectan funciones o clases definidas directamente en este archivo HTML.
@@ -126,15 +155,17 @@ No aplica. No hay variables globales, de sesión o diccionarios quemados en el c
   - `chartjs-plugin-datalabels`
 
 - **Archivos JavaScript incluidos:**
-  - `core_ui.js`
-  - `saas_engine.js`
-  - `inventory.js`
+  - `core_ui.js` (versión 1)
+  - `saas_engine.js` (versión 3)
+  - `inventory.js` (versión 11)
 
 - **Interacción con otros archivos del proyecto:**
-  - `_styles.html`: Incluye estilos CSS.
-  - `_inventory_modals.html`: Incluye modales de inventario.
-  - `_quick_login_modal.html`: Incluye el modal de inicio de sesión rápido.
-  - `_logout.html`: Incluye el código para el cierre de sesión.
+  - `_styles.html`
+  - `_inventory_modals.html`
+  - `_quick_login_modal.html`
+  - `_logout.html`
+
+Este archivo HTML es principalmente una estructura de página que utiliza plantillas Jinja2 para incluir contenido dinámico y scripts JavaScript. No realiza operaciones directas con la base de datos ni maneja variables globales significativas.
 
 
 ---

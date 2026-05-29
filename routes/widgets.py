@@ -256,9 +256,52 @@ async def get_widget_drilldown(
                 })
         payload_dict["filters"] = filters
 
-        from core.query_engine import build_sql_from_payload
-        payload = VisualQueryBuilderPayload(**payload_dict)
-        sql, bound_params = build_sql_from_payload(payload, db, drilldown_segment=segment, drilldown_material=material)
+        if query_id in ("vl_sla_area_monthly_trend", "vl_sla_area_trend") and segment:
+            from core.query_engine import AREA_EXPR_MACRO
+            if material:
+                sql = """
+                SELECT 
+                    fecha_carga AS "Fecha",
+                    entrega AS "Entrega",
+                    pos_ AS "Pos",
+                    cantidad AS "Cantidad",
+                    dias_retraso AS "Días Retraso"
+                FROM outbound_deliveries
+                WHERE __AREA_EXPR__ = ? AND material = ? AND fecha_carga IS NOT NULL AND fecha_carga != ''
+                """
+                bound_params = [segment, material]
+                if year:
+                    sql += " AND fecha_carga LIKE ?"
+                    bound_params.append(f"%{year}%")
+                sql += " ORDER BY substr(fecha_carga, 7, 4) || '-' || substr(fecha_carga, 4, 2) || '-' || substr(fecha_carga, 1, 2) DESC LIMIT 50"
+                sql = sql.replace("__AREA_EXPR__", AREA_EXPR_MACRO.replace("v.", "outbound_deliveries."))
+            else:
+                sql = """
+                SELECT 
+                    material AS "Material",
+                    MAX(denominacion) AS "Descripción",
+                    COUNT(*) AS "Frecuencia (Veces)",
+                    ROUND((julianday(MAX(substr(fecha_carga, 7, 4) || '-' || substr(fecha_carga, 4, 2) || '-' || substr(fecha_carga, 1, 2))) - 
+                           julianday(MIN(substr(fecha_carga, 7, 4) || '-' || substr(fecha_carga, 4, 2) || '-' || substr(fecha_carga, 1, 2)))) / NULLIF(COUNT(*) - 1, 0), 1) AS "Frecuencia en Días (Prom)",
+                    ROUND(ABS(AVG(cantidad)), 1) AS "Cant. Prom. por Solicitud"
+                FROM outbound_deliveries
+                WHERE __AREA_EXPR__ = ? AND fecha_carga IS NOT NULL AND fecha_carga != ''
+                """
+                bound_params = [segment]
+                if year:
+                    sql += " AND fecha_carga LIKE ?"
+                    bound_params.append(f"%{year}%")
+                
+                sql += """
+                GROUP BY material
+                ORDER BY "Frecuencia (Veces)" DESC
+                LIMIT 50
+                """
+                sql = sql.replace("__AREA_EXPR__", AREA_EXPR_MACRO.replace("v.", "outbound_deliveries."))
+        else:
+            from core.query_engine import build_sql_from_payload
+            payload = VisualQueryBuilderPayload(**payload_dict)
+            sql, bound_params = build_sql_from_payload(payload, db, drilldown_segment=segment, drilldown_material=material)
         
         df = pd.read_sql(sql, db.connection().connection, params=tuple(bound_params))
         

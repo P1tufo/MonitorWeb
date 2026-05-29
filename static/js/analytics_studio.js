@@ -168,6 +168,7 @@
             metric: { column: 'outbound_deliveries.dias_retraso', aggregation: 'SLA_EFFICIENCY', format: 'percent' },
             timeAxis: { column: 'outbound_deliveries.fecha_carga', granularity: 'MONTH' },
             breakdown: 'outbound_deliveries.area_negocio',
+            secondMetric: { column: 'outbound_deliveries.material', aggregation: 'COUNT', label: 'Materiales_Solicitados' },
             chartType: 'line'
         },
         'vl_sla_trend': {

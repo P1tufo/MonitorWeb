@@ -106,8 +106,12 @@ async def lifespan(fastapi_app: FastAPI):
     # Iniciar refresco pesado como tarea de fondo trazable (Pilar 4)
     task_manager.submit_task("refresh_analytics", _refresh_analytics)
     
+    from core.watcher import start_watcher, stop_watcher
+    start_watcher()
+    
     yield
     # --- Lógica de Cierre (Shutdown) ---
+    stop_watcher()
     # Forzar el cierre inmediato de las tareas en segundo plano en lugar de esperar
     task_manager.shutdown(wait=False)
     logger.info(">>> Finalizando ciclo de vida de la aplicación.")

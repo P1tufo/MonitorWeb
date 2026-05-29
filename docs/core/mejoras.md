@@ -1,5 +1,5 @@
 # Sugerencias de Mejora - Directorio: core
-Compilado el: 2026-05-24 23:35:28
+Compilado el: 2026-05-28 23:22:17
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -125,6 +125,13 @@ CÓDIGO ÓPTIMO
 ---
 
 ## Sugerencias para: ./core/utils.py
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./core/watcher.py
 
 CÓDIGO ÓPTIMO
 

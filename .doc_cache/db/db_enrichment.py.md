@@ -1,7 +1,7 @@
 ## Archivo: ./db/db_enrichment.py
 
 ### Resumen Funcional
-El archivo `db_enrichment.py` contiene funciones que realizan el enriquecimiento de datos en una base de datos SQLite, utilizando SQL directo y pandas para manipular los datos. Las principales operaciones incluyen rellenar columnas vacías en tablas como `outbound_deliveries`, actualizar mapeos de frecuencia Autor -> Área, aplicar aprendizaje basado en autores a transacciones, enriquecer transacciones con datos de stock y rellenar descripciones de materiales faltantes.
+El archivo `db_enrichment.py` contiene funciones que realizan el enriquecimiento de datos en una base de datos SQLite, utilizando SQL directo y pandas para manipular los datos. Las principales operaciones incluyen rellenar columnas vacías en tablas como `outbound_deliveries`, actualizar mapeos de frecuencia Autor -> Área, aplicar aprendizaje basado en autores a transacciones, enriquecer transacciones con descripciones y ubicaciones físicas de stock, y actualizar la métrica de SLA usando fechas de confirmación de tareas.
 
 ### Catálogo de Funciones y Clases
 - `backfill_deliveries_from_movements(conn: sqlite3.Connection, trans_table: str = "outbound_deliveries", movements_table: str = "inventory_movements")` - Rellena columnas vacías en Entregas (autor, ubicacion, textos) cruzando con Movimientos.
@@ -12,16 +12,17 @@ El archivo `db_enrichment.py` contiene funciones que realizan el enriquecimiento
 - `update_sla_with_tasks(conn: sqlite3.Connection)` - Actualiza la métrica de SLA en outbound_deliveries cruzando con la fecha de confirmación real en Tareas.
 
 ### Interacción con Base de Datos
-El archivo interactúa con una base de datos SQLite. Las tablas y columnas específicas son:
-- Tablas: `outbound_deliveries`, `inventory_movements`, `stock_levels`, `warehouse_tasks`.
-- Columnas: `material`, `usuario`, `ce_coste`, `texto_breve_material`, `referencia`, `entrega`, `autor`, `centro_costo`, `denominacion`, `ubicacion_bin`, `umb`, `fecha_conf`, `creado_el`, `estado_wms`.
+- **Motor:** SQLite
+- **Tablas y Columnas:**
+  - `outbound_deliveries`: `material`, `usuario`, `ce_coste`, `texto_breve_material`, `entrega`, `autor`, `centro_costo`, `denominacion`, `dias_retraso`, `estado_wms`
+  - `inventory_movements`: `material`, `usuario`, `ce_coste`, `texto_breve_material`, `referencia`
+  - `stock_levels`: `material`, `denominacion`, `ubicacion_bin`, `umb`, `stock_disp`
+  - `warehouse_tasks`: `entrega`, `fecha_conf`
 
 ### Estado y Variables Globales
-No aplica.
+- No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas: `logging`, `pandas`, `sqlite3`, `numpy`.
-- Comunicación con otros archivos del proyecto:
-  - `core.security.validate_table`
-  - `core.db_config_manager.get_holidays`
+- **Librerías Externas:** `logging`, `pandas`, `sqlite3`, `typing`, `numpy`
+- **Flujo Interno:** El archivo interactúa con múltiples funciones dentro del mismo módulo, utilizando pandas para manipular datos en memoria y SQLite para realizar operaciones de base de datos.
 

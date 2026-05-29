@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: services/etl
-Compilado el: 2026-05-24 23:35:28
+Compilado el: 2026-05-28 23:22:17
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -34,53 +34,36 @@ No aplica
 El archivo `base.py` define una clase abstracta `BaseWMSProcessor` que proporciona funcionalidades para procesar archivos WMS (TXT/CSV/XLSX) y cargarlos en una base de datos SQLite. Incluye métodos para validar archivos, leer y limpiar datos, realizar operaciones UPSERT atómicas, y procesar directorios de archivos.
 
 ### Catálogo de Funciones y Clases
-- `BaseWMSProcessor(encodings=None, chunk_size=50000)` - Constructor que inicializa los parámetros de codificación y tamaño de chunk.
-  - Propósito: Configura las opciones iniciales para el procesamiento del archivo.
-
-- `validate_file(file_path)` - Método abstracto que verifica si el archivo es válido para este procesador.
-  - Propósito: Implementado por cada hijo para validar archivos específicos.
-
-- `_clean_dataframe(df)` - Método abstracto que limpia y transforma un chunk de datos crudos.
-  - Propósito: Implementado por cada hijo para realizar la limpieza específica del archivo.
-
-- `_detect_file_params(file_path, required_columns)` - Detecta la fila de encabezado y codificación buscando columnas clave.
-  - Propósito: Identifica los parámetros necesarios para leer el archivo correctamente.
-
-- `read_and_clean_data(file_path)` - Lee el archivo completo (para testing o archivos pequeños).
-  - Propósito: Carga y limpia un archivo en su totalidad.
-
-- `_get_required_columns()` - Devuelve una lista de columnas requeridas en el encabezado.
-  - Propósito: Implementado por cada hijo para especificar las columnas necesarias.
-
-- `_get_primary_keys()` - Devuelve las columnas que actúan como clave primaria para deduplicación.
-  - Propósito: Implementado por cada hijo para especificar las claves primarias.
-
-- `process_and_save(file_path, db_path, table_name, conn=None)` - Orquestador unificado de procesamiento Chunked + Upsert SQLite.
-  - Propósito: Procesa archivos en chunks y realiza operaciones UPSERT atómicas en la base de datos.
-
-- `_upsert_chunk(conn, df, table_name)` - Lógica de Upsert atómico por chunk.
-  - Propósito: Realiza una operación UPSERT atómica para un chunk de datos.
-
-- `process_directory(folder_path, db_path, table_name, conn=None)` - Escanea un directorio y procesa todos los archivos compatibles con Upsert acumulativo.
-  - Propósito: Procesa múltiples archivos en un directorio y realiza operaciones UPSERT atómicas.
+- `BaseWMSProcessor(encodings=None, chunk_size=50000)` - Clase abstracta para procesar archivos WMS.
+  - `validate_file(file_path: Path) -> bool` - Verifica si el archivo es válido para este procesador.
+  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma un chunk de datos crudos (Implementado por cada hijo).
+  - `_detect_file_params(file_path: Path, required_columns: List[str]) -> Tuple[int, str]` - Detecta la fila de encabezado y codificación buscando columnas clave.
+  - `read_and_clean_data(file_path: Path) -> pd.DataFrame` - Lee el archivo completo (para testing o archivos pequeños).
+  - `_get_required_columns() -> List[str]` - Lista de strings que deben estar en el header para detectar el inicio. Por defecto vacía.
+  - `_get_primary_keys() -> List[str]` - Devuelve las columnas que actúan como clave primaria para deduplicación. Por defecto vacía.
+  - `process_and_save(file_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int` - Orquestador unificado de procesamiento Chunked + Upsert SQLite.
+  - `_upsert_chunk(conn: sqlite3.Connection, df: pd.DataFrame, table_name: str)` - Lógica de Upsert atómico por chunk.
+  - `_post_process(conn: sqlite3.Connection, table_name: str)` - Hook opcional para crear índices o post-procesar tras un upsert.
+  - `process_directory(folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int` - Escanea un directorio y procesa todos los archivos compatibles con Upsert acumulativo.
 
 ### Interacción con Base de Datos
-- Motor: SQLite
-- Tablas: No aplica (se espera que las tablas sean proporcionadas como parámetros)
-- Columnas: No aplica (se espera que las columnas sean proporcionadas como parámetros)
+- Motor: SQLite.
+- Tablas: No aplica (se espera que las tablas sean proporcionadas como parámetros).
+- Columnas: No aplica (se espera que las columnas sean proporcionadas como parámetros).
 
 ### Estado y Variables Globales
 - `logger` - Variable global para el registro de eventos.
 
 ### Dependencias y Flujo
 - Librerías externas utilizadas:
-  - `pandas`
-  - `pathlib`
-  - `sqlite3`
-  - `typing`
-  - `logging`
+  - `abc`: Para definir clases abstractas.
+  - `pandas`: Para manipulación de datos.
+  - `pathlib`: Para manejo de rutas de archivos.
+  - `sqlite3`: Para interacción con la base de datos SQLite.
+  - `typing`: Para tipos de datos anotados.
+  - `logging`: Para registro de eventos.
 
-- Flujo: El archivo interactúa con clases y funciones definidas en otros archivos del proyecto, como `core.security.validate_table`.
+- Flujo: El archivo interactúa con clases y funciones definidas en otros módulos (`core.security.validate_table`) y maneja archivos CSV, TXT, XLSX y XLS.
 
 
 ---
@@ -88,35 +71,39 @@ El archivo `base.py` define una clase abstracta `BaseWMSProcessor` que proporcio
 ## Archivo: ./services/etl/deliveries.py
 
 ### Resumen Funcional
-El archivo `deliveries.py` contiene una clase `OutboundDeliveryAdapter` que extiende `BaseWMSProcessor`. Esta clase se encarga de procesar archivos de entregas de salida (Deliveries) utilizando pandas y SQLite. El objetivo es validar el archivo, limpiar los datos, aplicar mapeos y cálculos necesarios, y finalmente insertar o actualizar los datos en una base de datos SQLite.
+El archivo `deliveries.py` contiene una clase `OutboundDeliveryAdapter` que extiende `BaseWMSProcessor`. Esta clase se encarga de procesar archivos de entregas de salida (Deliveries) utilizando pandas y SQLite. El proceso incluye la validación del archivo, la limpieza y transformación de los datos, así como la inserción o actualización en una base de datos.
 
 ### Catálogo de Funciones y Clases
 - `OutboundDeliveryAdapter(BaseWMSProcessor)` - Adaptador para procesar Entregas de Salida (Deliveries).
   - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y tiene una extensión permitida.
   - `_get_required_columns() -> List[str]` - Devuelve las columnas requeridas en el DataFrame.
   - `_get_primary_keys() -> List[str]` - Devuelve las claves primarias utilizadas para la deduplicación.
-  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y normaliza el DataFrame.
-  - `_sanitizar_nombres_columnas(columns: pd.Index) -> list` - Sanitiza los nombres de las columnas eliminando caracteres no válidos y evitando duplicados.
-  - `_upsert_chunk(conn: sqlite3.Connection, df: pd.DataFrame, table_name: str)` - Inserta o actualiza datos en una tabla SQLite.
+  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma el DataFrame.
+  - `_sanitizar_nombres_columnas(columns: pd.Index) -> list` - Sanitiza los nombres de las columnas.
+  - `_post_process(conn, table_name: str)` - Crea índices en la tabla `outbound_deliveries`.
+  - `_upsert_chunk(conn: sqlite3.Connection, df: pd.DataFrame, table_name: str)` - Inserta o actualiza datos en la base de datos.
 
 ### Interacción con Base de Datos
-- Motor de base de datos: SQLite.
-- Tablas modificadas: No se especifican explícitamente las tablas, pero el método `_upsert_chunk` indica que interactúa con una tabla SQLite.
-- Columnas modificadas: Dependiendo del contenido del DataFrame `df`, se pueden agregar nuevas columnas a la tabla.
+- Motor: SQLite.
+- Tablas: `outbound_deliveries`.
+- Columnas:
+  - `entrega`
+  - `pos_`
+  - `centro_costo`
 
 ### Estado y Variables Globales
 No aplica.
 
 ### Dependencias y Flujo
 - Librerías externas utilizadas:
-  - `pandas` - Para el procesamiento de datos.
-  - `pathlib` - Para manejar rutas de archivos.
-  - `typing` - Para definir tipos de variables.
-  - `sqlite3` - Para interactuar con la base de datos SQLite.
-- Flujo interno:
-  - El archivo se comunica con el módulo `base.py` a través de la herencia de la clase `BaseWMSProcessor`.
-  - Utiliza funciones auxiliares definidas en `core.wms_utils`, como `sanitize_string`, `map_wms_status`, etc.
-  - Interactúa con archivos de entrada (Excel, TXT) y una base de datos SQLite.
+  - `pandas` (para el procesamiento de datos)
+  - `sqlite3` (para la interacción con SQLite)
+  - `pathlib` (para manejar rutas de archivos)
+  - `typing` (para definir tipos de variables)
+
+- Flujo hacia otros archivos del proyecto:
+  - Importa funciones desde `core.wms_utils`, lo que sugiere que interactúa con módulos de utilidades generales.
+  - Extiende `BaseWMSProcessor`, lo que indica una arquitectura orientada a objetos donde `OutboundDeliveryAdapter` es un componente específico dentro del sistema.
 
 
 ---
@@ -124,25 +111,36 @@ No aplica.
 ## Archivo: ./services/etl/movements.py
 
 ### Resumen Funcional
-El archivo `movements.py` contiene una clase `InventoryMovementAdapter` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos CSV relacionados con movimientos en un sistema WMS (Warehouse Management System), validando su contenido, limpiándolo y clasificándolo según ciertas reglas.
+El archivo `movements.py` contiene una clase `InventoryMovementAdapter` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos CSV con movimientos WMS, validando su contenido, limpiándolo y clasificándolo según ciertas reglas. Además, realiza operaciones post-procesamiento en la base de datos para optimizar el rendimiento de las búsquedas.
 
 ### Catálogo de Funciones y Clases
-- **InventoryMovementAdapter(BaseWMSProcessor)** - Adaptador específico para procesar el formato WMS Movimientos.
-  - `validate_file(file_path: Path) -> bool` - Valida si el archivo CSV existe y cumple con los requisitos mínimos.
-  - `_get_required_columns() -> List[str]` - Devuelve una lista de columnas requeridas en el archivo CSV.
-  - `_get_primary_keys() -> List[str]` - Devuelve una lista de claves primarias utilizadas para identificar registros.
-  - `_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame` - Limpia y normaliza los datos del DataFrame, aplicando diversas transformaciones como la eliminación de columnas vacías, renombramiento de columnas, validación de valores y clasificación de operaciones según el tipo de movimiento.
-  - `_vectorized_classify(df: pd.DataFrame) -> pd.DataFrame` - Clasifica las filas del DataFrame en función de los valores de ciertas columnas.
+- `InventoryMovementAdapter(BaseWMSProcessor)` - Adaptador específico para procesar el formato WMS Movimientos.
+  - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y contiene los columnas requeridas.
+  - `_get_required_columns() -> List[str]` - Devuelve una lista de columnas requeridas en el archivo.
+  - `_get_primary_keys() -> List[str]` - Devuelve una lista de claves primarias utilizadas en la clasificación.
+  - `_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame` - Limpia y normaliza el DataFrame, aplicando diversas transformaciones y validaciones.
+  - `_vectorized_classify(df: pd.DataFrame) -> pd.DataFrame` - Clasifica las filas del DataFrame según ciertas condiciones.
+  - `_post_process(conn, table_name: str)` - Crea índices en la base de datos para mejorar el rendimiento de las búsquedas.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no realiza ninguna interacción con una base de datos.
+- Motor: No especificado.
+- Tablas: `inventory_movements`.
+- Columnas:
+  - `cmv`
+  - `ce_coste`
+  - `material`
 
 ### Estado y Variables Globales
-No aplica. No se definen variables globales, de sesión o de entorno en este archivo.
+No aplica.
 
 ### Dependencias y Flujo
-- **Librerías externas utilizadas**: `pandas`, `numpy`, `pathlib`.
-- **Flujo interno**: El archivo interactúa con el objeto `BaseWMSProcessor` para procesar archivos CSV, utilizando métodos de limpieza y clasificación definidos en la clase `InventoryMovementAdapter`.
+- Librerías externas utilizadas:
+  - `pandas` (pd)
+  - `numpy` (np)
+  - `pathlib` (Path)
+  - `typing` (List)
+
+- No se comunica con otros archivos del proyecto.
 
 
 ---

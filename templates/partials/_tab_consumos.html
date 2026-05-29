@@ -1,0 +1,128 @@
+<!-- Pestaña Análisis de Consumos -->
+<div id="tab-consumos" class="tab-content" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+            <h2>💸 Análisis de Consumos y Costos</h2>
+            <p style="color: var(--text-muted);">Analiza los materiales retirados por Centro de Costo o rastrea el consumo de materiales específicos (Filtrado por Mov. 201).</p>
+        </div>
+    </div>
+
+    <div class="grid-2" style="grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">
+        
+        <!-- Panel 1: Búsqueda por CeCo -->
+        <div class="card" style="padding: 2rem;">
+            <h3>🔍 Búsqueda por Centro de Costo</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Ingresa un CeCo para ver el histórico de retiros y el consumo del mes en curso.</p>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 2rem;">
+                <input type="text" id="ceco-search-input" placeholder="Ej: patru1-702" style="flex: 1;" onkeypress="if(event.key === 'Enter') buscarPorCeCo()">
+                <button class="btn btn-primary" onclick="buscarPorCeCo()">Analizar</button>
+            </div>
+
+            <div id="ceco-results-container" style="display: none;">
+                <!-- Mes Actual -->
+                <h4 style="color: var(--accent); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; cursor: pointer; user-select: none;" onclick="document.getElementById('container-ceco-mes').style.display = document.getElementById('container-ceco-mes').style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.innerHTML.includes('▼') ? '▶ 📅 Mes Actual' : '▼ 📅 Mes Actual';">▼ 📅 Mes Actual</h4>
+                <div id="container-ceco-mes" style="display: block;">
+                    <div class="table-container" style="margin-bottom: 2rem;">
+                        <table class="data-table" id="table-ceco-mes">
+                            <thead>
+                                <tr>
+                                    <th>Material</th>
+                                    <th>Descripción</th>
+                                    <th style="text-align: right;">Cantidad Total</th>
+                                    <th style="text-align: right;">Precio Unit. ($)</th>
+                                    <th style="text-align: right;" id="th-costo-mes">Costo Total ($)</th>
+                                </tr>
+                                <tr class="filter-row">
+                                    <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
+                                    <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Histórico -->
+                <h4 style="color: var(--accent); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; cursor: pointer; user-select: none;" onclick="document.getElementById('container-ceco-hist').style.display = document.getElementById('container-ceco-hist').style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.innerHTML.includes('▼') ? '▶ 📚 Histórico Total' : '▼ 📚 Histórico Total';">▼ 📚 Histórico Total</h4>
+                <div id="container-ceco-hist" style="display: block;">
+                    <div class="table-container">
+                        <table class="data-table" id="table-ceco-hist">
+                            <thead>
+                                <tr>
+                                <th>Material</th>
+                                <th>Descripción</th>
+                                <th style="text-align: right;">Cantidad Total</th>
+                                <th style="text-align: right;">Precio Unit. ($)</th>
+                                <th style="text-align: right;" id="th-costo-hist">Costo Total ($)</th>
+                            </tr>
+                            <tr class="filter-row">
+                                <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
+                                <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 2: Búsqueda por Materiales -->
+        <div class="card" style="padding: 2rem;">
+            <h3>🔍 Búsqueda Inversa por Material(es)</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Pega directamente una lista de materiales por ejemplo desde Excel para ver qué áreas los han retirado.</p>
+            
+            <!-- Grid de Ingreso Tipo Excel -->
+            <div class="excel-grid-container" style="margin-bottom: 1.5rem;">
+                <div style="display: grid; grid-template-columns: 1fr; gap: 5px; max-width: 300px; max-height: 400px; overflow-y: auto; padding-right: 5px;" id="material-grid">
+                    <!-- Se generarán 25 celdas por JS -->
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                    <button class="btn btn-small" onclick="limpiarGrilla()" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">Limpiar Celdas</button>
+                    <button class="btn btn-primary" onclick="buscarPorMateriales()">Analizar Materiales</button>
+                </div>
+            </div>
+
+            <div id="materiales-results-container" style="display: none;">
+                <h4 style="color: var(--accent); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; cursor: pointer; user-select: none;" onclick="document.getElementById('container-materiales').style.display = document.getElementById('container-materiales').style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.innerHTML.includes('▼') ? '▶ 📊 Resultados de Consumo' : '▼ 📊 Resultados de Consumo';">▼ 📊 Resultados de Consumo</h4>
+                <div id="container-materiales" style="display: block;">
+                    <div class="table-container">
+                        <table class="data-table" id="table-materiales">
+                            <thead>
+                                <tr>
+                                    <th>Material</th>
+                                    <th>Descripción</th>
+                                    <th>Área de Negocio</th>
+                                    <th style="text-align: right;">Cantidad Este Mes</th>
+                                    <th style="text-align: right;" id="th-costo-mes-mat">Costo Este Mes ($)</th>
+                                    <th style="text-align: right;">Cantidad Total</th>
+                                    <th style="text-align: right;">Precio Unit. ($)</th>
+                                    <th style="text-align: right;" id="th-costo-mat">Costo Total ($)</th>
+                                </tr>
+                                <tr class="filter-row">
+                                    <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
+                                    <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
+                                    <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
+                                    <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
+                                    <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
+                                    <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
+                                    <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
+                                    <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

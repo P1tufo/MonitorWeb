@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: static/js
-Compilado el: 2026-05-24 23:35:28
+Compilado el: 2026-05-28 23:22:17
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -44,7 +44,6 @@ El archivo `analytics_studio.js` contiene funciones y clases para gestionar el e
 - `previewTable(tableName, el)` - Previsualiza los datos de una tabla.
 - `runPreview()` - Ejecuta una previsualización de la consulta y renderiza el gráfico.
 - `renderPreviewChart(payload)` - Renderiza el gráfico basado en los datos de la consulta.
-- `closeEditQueryModal()` - Cierra el modal para editar una consulta.
 
 ### Interacción con Base de Datos
 No aplica
@@ -52,7 +51,7 @@ No aplica
 ### Estado y Variables Globales
 - `AnalyticsStudioManager.instances` - Almacena instancias de estado visual por consulta.
 - `studioChartInstance` - Instancia del gráfico actual.
-- `currentSchema` - Esquema de la base de datos actual.
+- `currentSchema` - Esquema actual de la base de datos.
 - `currentQueryId` - ID de la consulta actualmente seleccionada.
 - `serverVisualState` - Estado visual de la consulta desde el servidor.
 - `visualState` - Puntero al estado activo del modal.
@@ -70,45 +69,72 @@ Se comunica con los siguientes archivos del proyecto:
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-El archivo `analytics_studio.js` contiene funciones y lógica para gestionar la edición, publicación y configuración de consultas analíticas en un estudio de datos. Permite crear, modificar y ejecutar consultas SQL interactuando con una interfaz gráfica basada en JavaScript.
+El archivo `analytics_studio.js` contiene funciones y métodos para gestionar la interfaz de usuario y el estado del editor de consultas analíticas. Permite crear, editar y publicar consultas SQL interactuando con un backend a través de una API.
 
 ### Catálogo de Funciones y Clases
-- `closeEditQueryModal()` - Cierra el modal para editar consultas.
+- `closeEditQueryModal()` - Cierra el modal para edición de consultas.
 - `showConfirmPublish()` - Muestra la ventana de confirmación para publicar una consulta.
 - `hideConfirmPublish()` - Oculta la ventana de confirmación para publicar una consulta.
-- `executePublishQuery()` - Ejecuta la publicación de una consulta y maneja la respuesta del servidor.
-- `initVisualQuery(queryId)` - Inicializa el estado visual de la consulta y carga los datos necesarios.
+- `executePublishQuery()` - Ejecuta la publicación de una consulta a través de una API y maneja el estado del botón de confirmación.
+- `initVisualQuery(queryId)` - Inicializa el estado visual del editor de consultas con los datos proporcionados o por defecto.
 - `onBaseTableChange()` - Maneja el cambio en la tabla base seleccionada.
-- `getActiveTables()` - Devuelve las tablas activas en la consulta.
-- `getActiveColumns()` - Devuelve las columnas activas en la consulta.
+- `getActiveTables()` - Devuelve las tablas activas basadas en el estado actual.
+- `getActiveColumns()` - Devuelve las columnas activas basadas en las tablas activas.
 - `refreshQbColumns(forceState = false)` - Refresca los selectores de columnas para los ejes y desglose.
-- `renderJoins()` - Renderiza los controles de joins en la interfaz.
-- `addJoin()` - Añade un nuevo join a la consulta.
-- `updateJoin(index)` - Actualiza un join existente.
-- `removeJoin(index)` - Elimina un join.
-- `renderFilters()` - Renderiza los controles de filtros en la interfaz.
-- `addFilter()` - Añade un nuevo filtro a la consulta.
-- `updateFilterType(index, type)` - Actualiza el tipo de valor para un filtro.
-- `updateFilter(index)` - Actualiza los detalles de un filtro existente.
-- `removeFilter(index)` - Elimina un filtro.
-- `onSecondMetricToggle()` - Maneja el toggle de la segunda métrica.
-- `onQbChange()` - Sincroniza los cambios en la interfaz con el estado visual de la consulta.
+- `renderJoins()` - Renderiza los controles de join en la interfaz de usuario.
+- `addJoin()` - Añade un nuevo join al estado visual.
+- `updateJoin(index)` - Actualiza el estado del join seleccionado.
+- `removeJoin(index)` - Elimina el join seleccionado.
+- `renderFilters()` - Renderiza los controles de filtro en la interfaz de usuario.
+- `addFilter()` - Añade un nuevo filtro al estado visual.
+- `updateFilterType(index, type)` - Actualiza el tipo de valor del filtro seleccionado.
+- `updateFilter(index)` - Actualiza el estado del filtro seleccionado.
+- `removeFilter(index)` - Elimina el filtro seleccionado.
+- `onSecondMetricToggle()` - Maneja el toggle para la segunda métrica.
+- `onQbChange()` - Sincroniza los cambios en la interfaz de usuario con el estado visual.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `visualState` - Almacena el estado actual de la consulta visual.
-- `serverVisualState` - Almacena el estado visual del servidor.
+- `visualState` - Almacena el estado actual del editor de consultas.
+- `serverVisualState` - Almacena el estado visual desde el servidor.
 - `defaultVisualStates` - Almacena los estados visuales por defecto para diferentes consultas.
-- `currentSchema` - Almacena el esquema de la base de datos actual.
+- `currentSchema` - Almacena la estructura de las tablas y columnas disponibles.
 
 ### Dependencias y Flujo
 Dependencias:
-- `fetch` - Para hacer solicitudes HTTP al servidor.
-- `AnalyticsStudioManager` - Para gestionar el estado visual de la consulta.
+- `fetch` - Para hacer solicitudes HTTP al backend.
+- `AnalyticsStudioManager` - Para gestionar el estado visual del editor de consultas.
 
-Flujo: El archivo interactúa con la interfaz del usuario para permitir la edición, publicación y ejecución de consultas analíticas. No realiza interacciones directas con una base de datos.
+
+---
+
+## Archivo: ./static/js/consumos.js
+
+### Resumen Funcional
+El archivo `consumos.js` es un script JavaScript que se ejecuta en el navegador y proporciona funcionalidades para interactuar con una interfaz de usuario web, permitiendo la entrada de datos en una grilla similar a Excel, filtrado de tablas y búsqueda de consumos por Centro de Costo (CeCo) o materiales.
+
+### Catálogo de Funciones y Clases
+- `document.addEventListener('DOMContentLoaded', callback)` - Inicializa el script cuando el DOM esté completamente cargado.
+- `handlePaste(e)` - Maneja el evento de pegar en las celdas de la grilla, permitiendo la entrada de múltiples valores a la vez.
+- `limpiarGrilla()` - Limpia los valores de todas las celdas y oculta el contenedor de resultados.
+- `formatearDinero(valor)` - Formatea un valor numérico como dinero con símbolo y formato localizado.
+- `formatearNumero(valor)` - Formatea un valor numérico con formato localizado.
+- `filterTable(tableId)` - Filtra las filas de una tabla según los valores ingresados en las celdas de filtro.
+- `renderVanillaTable(tbodyId, data, columns)` - Renderiza datos en una tabla HTML utilizando JavaScript puro.
+- `buscarPorCeCo()` - Busca y muestra los consumos asociados a un Centro de Costo específico.
+- `buscarPorMateriales()` - Busca y muestra los consumos asociados a materiales ingresados en la grilla.
+
+### Interacción con Base de Datos
+No aplica. El archivo no realiza ninguna interacción con una base de datos.
+
+### Estado y Variables Globales
+No aplica. No se definen variables globales ni se utiliza estado crítico almacenado en variables.
+
+### Dependencias y Flujo
+- **Librerías Externas**: No se utilizan librerías externas.
+- **Flujo Interno**: El script interactúa con elementos del DOM para crear una grilla de entrada, manejar eventos de pegar, filtrar tablas y realizar búsquedas. Los resultados de las búsquedas son renderizados en tablas HTML utilizando funciones JavaScript puro.
 
 
 ---
@@ -142,50 +168,68 @@ Flujo:
 
 ---
 
-## Archivo: ./static/js/dashboard.js (Procesado en 1 partes)
+## Archivo: ./static/js/dashboard.js (Procesado en 2 partes)
 
-#### --- PARTE 1 de 1 ---
+#### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-El archivo `dashboard.js` contiene la lógica principal del dashboard de MonitorWeb, que incluye funciones para interactuar con una API, manejar la interfaz de usuario (UI), renderizar tablas y gráficos, aplicar filtros, y gestionar la sincronización de datos.
+El archivo `dashboard.js` contiene la lógica principal del dashboard de MonitorWeb, que incluye funciones para interactuar con una API, manejar la interfaz de usuario y actualizar los datos en tiempo real.
 
 ### Catálogo de Funciones y Clases
-- `DashboardAPI._fetch(url, options = {})` - Realiza solicitudes HTTP a la API.
-- `DashboardAPI.fetchKPIs(params)` - Obtiene los KPIs (Indicadores Clave de Desempeño) basados en los parámetros proporcionados.
-- `DashboardAPI.fetchFilteredData(params)` - Obtiene datos filtrados según los parámetros proporcionados.
-- `DashboardAPI.sync()` - Sincroniza los datos del cliente con el servidor.
-- `DashboardAPI.checkSyncStatus()` - Verifica si la sincronización está en curso.
-- `DashboardAPI.logout()` - Cierra sesión y limpia el almacenamiento local.
-- `UI.openPdfModal()` - Abre un modal para ver PDFs.
-- `UI.closePdfModal()` - Cierra el modal de PDF.
-- `UI.toggleMulti(id)` - Alterna la visibilidad de elementos con una clase específica.
-- `UI.setBtnLoading(btn, text, isLoading)` - Establece el estado de carga de un botón.
-- `renderTableRow(t)` - Renderiza una fila de tabla HTML.
-- `executeFilters()` - Ejecuta los filtros y actualiza la interfaz del usuario.
-- `applyFilters()` - Aplica los filtros cuando se cambia algún valor.
-- `getCheckboxValues(className)` - Obtiene los valores de las casillas de verificación seleccionadas.
-- `toggleSelectAll(className, isChecked)` - Alterna el estado de todas las casillas de verificación en una clase específica.
-- `handleSmartCheckbox(cb, className, selectAllId, context)` - Maneja la selección inteligente de casillas de verificación.
-- `filterTable()` - Filtra la tabla según los valores de búsqueda.
-- `sortTable(idx)` - Ordena la tabla por una columna específica.
-- `updateLogoVal(btn)` - Actualiza el valor del logo en un formulario.
-- `pdfSubmit(btn, frameTarget, preview)` - Envía un formulario para generar y visualizar PDFs.
-- `downloadBulk(action, btn)` - Descarga o previsualiza múltiples PDFs según la acción seleccionada.
-- `syncData(e, onlyPoll = false)` - Inicia la sincronización de datos y maneja el estado de carga del botón.
-- `startSyncPolling(btn)` - Comienza a sondear el estado de la sincronización.
-- `initSaaSWidgets(params = null)` - Inicializa los widgets SaaS en el dashboard.
-- `renderSaaSChart(container, queryId, data)` - Renderiza un gráfico SaaS.
-- `renderSaaSTrellis(container, queryId, data)` - Renderiza una trillera de gráficos SaaS.
+- **DashboardAPI**
+  - `_fetch(url, options = {})`: Realiza solicitudes HTTP a la API.
+  - `fetchKPIs(params)`: Obtiene indicadores clave (KPIs).
+  - `fetchFilteredData(params)`: Obtiene datos filtrados.
+  - `sync()`: Sincroniza los datos del cliente con el servidor.
+  - `checkSyncStatus()`: Verifica el estado de la sincronización.
+  - `logout()`: Cierra sesión y limpia el almacenamiento local.
+
+- **UI**
+  - `openPdfModal()`: Abre un modal para ver PDFs.
+  - `closePdfModal()`: Cierra el modal de PDFs.
+  - `toggleMulti(id)`: Muestra u oculta elementos según su ID.
+  - `setBtnLoading(btn, text, isLoading)`: Cambia el estado del botón a cargando o normal.
+
+- **renderTableRow(t)**: Renderiza una fila de la tabla con los datos proporcionados.
+- **executeFilters()**: Ejecuta los filtros y actualiza los KPIs y la tabla.
+- **applyFilters()**: Aplica los filtros cuando se cambia un checkbox.
+- **getCheckboxValues(className)**: Obtiene los valores de los checkboxes seleccionados.
+- **toggleSelectAll(className, isChecked)**: Selecciona/deselecciona todos los checkboxes según el estado del checkbox "Seleccionar todo".
+- **handleSmartCheckbox(cb, className, selectAllId, context)**: Maneja la selección inteligente de checkboxes.
+- **filterTable()**: Filtra las filas de la tabla según los valores de búsqueda.
+- **sortTable(idx)**: Ordena la tabla por una columna específica.
+- **updateLogoVal(btn)**: Actualiza el valor del checkbox "Incluir Logo".
+- **pdfSubmit(btn, frameTarget, preview)**: Envía un formulario para generar y visualizar PDFs.
+- **downloadBulk(action, btn)**: Descarga o previsualiza múltiples PDFs según la acción seleccionada.
+- **syncData(e, onlyPoll = false)**: Inicia la sincronización de datos y verifica su estado.
+- **startSyncPolling(btn)**: Comienza el sondeo para verificar el estado de la sincronización.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no realiza ninguna interacción directa con bases de datos.
+No aplica. El archivo no realiza ninguna interacción directa con una base de datos.
 
 ### Estado y Variables Globales
 No aplica. No se definen variables globales en este archivo.
 
 ### Dependencias y Flujo
 - **Librerías Externas**: `fetch`, `Chart.js`, `ChartDataLabels`.
-- **Flujo Interno**: El archivo interactúa con la API a través de las funciones del objeto `DashboardAPI` para obtener datos, ejecutar filtros, renderizar tablas y gráficos, manejar la sincronización, etc. La interfaz de usuario se actualiza en respuesta a los eventos del usuario y las respuestas de la API.
+- **Flujo Interno**: El archivo interactúa con la API para obtener datos, actualiza el estado de los KPIs y la tabla, maneja eventos del usuario (como clics en botones y checkboxes), y renderiza elementos de la interfaz de usuario.
+
+#### --- PARTE 2 de 2 ---
+
+### Resumen Funcional
+El archivo `dashboard.js` se encarga de inicializar y configurar los elementos del dashboard, incluyendo la sincronización de estado de radio buttons y la carga de widgets inmediatamente al iniciar.
+
+### Catálogo de Funciones y Clases
+- `initSaaSWidgets()` - Inicia el motor SaaS y carga los widgets inmediatamente al iniciar.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+No aplica
+
+### Dependencias y Flujo
+Dependencia externa: `DashboardAPI` (se utiliza para verificar el estado de sincronización).
 
 
 ---
@@ -310,33 +354,28 @@ No aplica. No se definen variables globales en este archivo.
 
 ---
 
-## Archivo: ./static/js/saas_engine.js
+## Archivo: ./static/js/saas_engine.js (Procesado en 1 partes)
+
+#### --- PARTE 1 de 1 ---
 
 ### Resumen Funcional
-El archivo `saas_engine.js` es un motor SaaS que se encarga de leer contenedores con la clase `.saas-widget-v2`, obtener datos a través de una API y renderizar gráficos o KPIs en estos contenedores. El motor maneja diferentes tipos de widgets, como KPI numéricos y trellis (múltiples minigráficos), y permite el filtrado por área y año.
+El archivo `saas_engine.js` es un motor SaaS que se encarga de leer contenedores con la clase `.saas-widget-v2`, renderizar gráficos o KPIs, y manejar interacciones como el drilldown.
 
 ### Catálogo de Funciones y Clases
 - `initSaaSWidgetsV2(params = null, rootElement = document)` - Inicializa los widgets SaaS en el elemento raíz especificado.
-- `openDrilldownModal(queryId, segmentLabel, materialId = null)` - Abre un modal con detalles adicionales para un segmento específico.
+- `openDrilldownModal(queryId, segmentLabel, materialId = null)` - Abre un modal con detalles del drilldown.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no realiza ninguna interacción directa con una base de datos.
+No aplica
 
 ### Estado y Variables Globales
-- `window.saasChartInstancesV2` - Almacena instancias de gráficos Chart.js renderizados en los widgets.
+- `window.saasChartInstancesV2` - Almacena instancias de gráficos Chart.js para widgets individuales.
+- `window.openDrilldownModal` - Función global que maneja el drilldown.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: 
-  - `fetch` - Para hacer solicitudes HTTP.
-  - `Chart.js` - Para crear y gestionar gráficos.
-  - `ChartDataLabels` - Plugin para Chart.js que permite mostrar etiquetas de datos en los gráficos.
-
-- **Flujo Interno**:
-  - El archivo se ejecuta al cargar el DOM (`DOMContentLoaded`).
-  - Llama a `initSaaSWidgetsV2()` con un pequeño retraso para asegurar que el DOM esté listo.
-  - `initSaaSWidgetsV2()` busca todos los elementos con la clase `.saas-widget-v2`, recopila parámetros de filtro, realiza solicitudes a una API y renderiza gráficos o KPIs en estos elementos.
-
-El archivo no depende de otros archivos del proyecto directamente.
+- Depende de la librería `Chart.js` para renderizar gráficos.
+- Comunica con un servidor a través de peticiones `fetch` a endpoints como `/api/widget/{queryId}` y `/api/widget/{queryId}/drilldown`.
+- Utiliza funciones globales como `window.openDrilldownModal`, `window.sortDrilldownTable`, y `window.filterDrilldownTable`.
 
 
 ---
@@ -382,6 +421,37 @@ No aplica. No se definen variables globales en este archivo.
 ### Dependencias y Flujo
 - **Librerías Externas**: `Chart.js`, `ChartDataLabels`.
 - **Flujo Interno**: El archivo se ejecuta cuando el DOM esté completamente cargado (`DOMContentLoaded`). Luego, intenta obtener datos de elementos del DOM y usarlos para crear dos gráficos (uno de tipo línea y otro de tipo barras) utilizando Chart.js.
+
+
+---
+
+## Archivo: ./static/js/transporte.js
+
+### Resumen Funcional
+El archivo `transporte.js` es un script que se encarga de cargar y mostrar datos de transporte en un gráfico y una tabla. Los datos son obtenidos a través de una API, filtrados y agrupados según el grupo seleccionado (mensual o semanal), y luego renderizados en un gráfico de líneas y una tabla.
+
+### Catálogo de Funciones y Clases
+- `loadData()` - Carga los datos de transporte desde la API y los renderiza.
+- `getMonday(dateStr)` - Calcula la fecha del lunes correspondiente a una fecha dada.
+- `updateTransporteChartGroup(group)` - Actualiza el grupo de datos para el gráfico y vuelve a renderizarlo.
+- `renderChart()` - Renderiza el gráfico de transporte basado en los datos cargados.
+- `renderTable(data)` - Renderiza la tabla de transporte con los últimos 25 registros.
+- `openPdfViewer(url)` - Abre un modal para ver un PDF.
+- `closePdfViewer()` - Cierra el modal y detiene la carga del PDF.
+- `searchTransporte()` - Realiza una búsqueda en tiempo real en los datos de transporte.
+
+### Interacción con Base de Datos
+No aplica. El archivo no realiza ninguna interacción con bases de datos.
+
+### Estado y Variables Globales
+- `chartInstance` - Almacena la instancia actual del gráfico.
+- `allTransporteData` - Almacena todos los datos de transporte cargados desde la API.
+- `currentChartGroup` - Almacena el grupo actual seleccionado para el gráfico (mensual o semanal).
+- `transporteSearchTimeout` - Almacena el timeout para el debouncer del buscador.
+
+### Dependencias y Flujo
+- **Librerías Externas**: `fetch`, `Chart.js`, `ChartDataLabels`.
+- **Flujo Interno**: El archivo se carga al DOMContentLoaded, luego llama a `loadData()`. `loadData()` realiza una solicitud fetch a la API para obtener los datos de transporte, que luego son renderizados en el gráfico y la tabla. Los eventos como el cambio de grupo del gráfico o la búsqueda activan funciones específicas para actualizar el contenido visual.
 
 
 ---

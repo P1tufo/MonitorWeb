@@ -1,5 +1,5 @@
 # Sugerencias de Mejora - Directorio: routes
-Compilado el: 2026-05-24 23:35:28
+Compilado el: 2026-05-28 23:22:17
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -26,6 +26,13 @@ CÓDIGO ÓPTIMO
 ---
 
 ## Sugerencias para: ./routes/config.py
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./routes/consumos.py
 
 CÓDIGO ÓPTIMO
 
@@ -89,6 +96,13 @@ CÓDIGO ÓPTIMO
 ---
 
 ## Sugerencias para: ./routes/tasks.py
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./routes/transporte.py
 
 CÓDIGO ÓPTIMO
 

@@ -243,7 +243,7 @@ ORDER BY fecha ASC;""",
                 FROM outbound_deliveries v
                 WHERE v.fecha_carga IS NOT NULL AND v.fecha_carga != ''
                 GROUP BY month_sort, area ORDER BY month_sort ASC""",
-                visual_state='{"baseTable": "outbound_deliveries", "joins": [], "filters": [{"column": "outbound_deliveries.fecha_carga", "operator": "isnotnull", "value": ""}], "metric": {"column": "outbound_deliveries.dias_retraso", "aggregation": "SLA_EFFICIENCY", "format": "percent"}, "timeAxis": {"column": "outbound_deliveries.fecha_carga", "granularity": "MONTH"}, "breakdown": "outbound_deliveries.area_negocio", "chartType": "line"}'
+                visual_state='{"baseTable": "outbound_deliveries", "joins": [], "filters": [{"column": "outbound_deliveries.fecha_carga", "operator": "isnotnull", "value": ""}], "metric": {"column": "outbound_deliveries.dias_retraso", "aggregation": "SLA_EFFICIENCY", "format": "percent"}, "timeAxis": {"column": "outbound_deliveries.fecha_carga", "granularity": "MONTH"}, "breakdown": "outbound_deliveries.area_negocio", "secondMetric": {"column": "outbound_deliveries.material", "aggregation": "COUNT", "label": "Materiales_Solicitados"}, "chartType": "line"}'
             ),
             ConfigQuery(
                 query_id="vl_sla_trend",

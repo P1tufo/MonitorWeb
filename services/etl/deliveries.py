@@ -51,6 +51,11 @@ class OutboundDeliveryAdapter(BaseWMSProcessor):
             new_cols.append(name)
         return new_cols
 
+    def _post_process(self, conn, table_name: str):
+        """Crear índices para outbound_deliveries."""
+        if table_name == "outbound_deliveries":
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_out_ceco_upper ON outbound_deliveries(UPPER(TRIM(centro_costo)))")
+
     # Para Deliveries, el UPSERT original era distinto (borrado atómico por entrega y pos_).
     # Como BaseWMSProcessor ya implementa Deduplicación por Primary Keys, es suficiente.
     # Pero el DB_UPSERT original permitía agregar columnas dinámicas al esquema en SQLite.

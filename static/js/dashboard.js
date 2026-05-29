@@ -627,16 +627,18 @@ function renderSaaSTrellis(container, queryId, data) {
     if (!labelKey) labelKey = keys.find(k => k !== areaKey);
 
     const numericKey = keys.find(k => k !== areaKey && k !== labelKey && typeof data[0][k] === 'number');
+    const matKey = keys.find(k => k !== areaKey && k !== labelKey && k !== numericKey && typeof data[0][k] === 'number');
 
     // Agrupar por área
     const grouped = {};
     data.forEach(r => {
         const area = r[areaKey];
-        if (!grouped[area]) grouped[area] = { labels: [], data: [], sum: 0, count: 0 };
+        if (!grouped[area]) grouped[area] = { labels: [], data: [], sum: 0, count: 0, totalMats: 0 };
         grouped[area].labels.push(r[labelKey]);
         grouped[area].data.push(r[numericKey]);
         grouped[area].sum += r[numericKey];
         grouped[area].count += 1;
+        if (matKey) grouped[area].totalMats += (r[matKey] || 0);
     });
 
     const premiumColors = ["#22c55e", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899"];
@@ -659,7 +661,8 @@ function renderSaaSTrellis(container, queryId, data) {
         wrapper.style.cssText = 'background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; height: 220px;';
         
         const title = document.createElement('h4');
-        title.innerHTML = `${area} <span style="color: ${statusColor}; margin-left: 8px; font-weight: bold;">Avg: ${avg}%</span>`;
+        const matsHtml = matKey ? ` <span style="color:#94a3b8; font-weight:normal; font-size:0.7rem;">(${areaData.totalMats} mats)</span>` : '';
+        title.innerHTML = `${area}${matsHtml} <span style="color: ${statusColor}; margin-left: 8px; font-weight: bold;">Avg: ${avg}%</span>`;
         title.style.cssText = 'font-size: 0.75rem; color: #94a3b8; margin-bottom: 8px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;';
         wrapper.appendChild(title);
         

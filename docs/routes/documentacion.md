@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: routes
-Compilado el: 2026-05-24 23:35:28
+Compilado el: 2026-05-28 23:22:17
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -89,7 +89,7 @@ No aplica
 ## Archivo: ./routes/config.py
 
 ### Resumen Funcional
-El archivo `config.py` es un módulo que se encarga de registrar todos los routers de una aplicación FastAPI. Estos routers corresponden a diferentes funcionalidades como autenticación, dashboards, entregas, inventario, análisis proyecciones, filtros, PDFs, sincronización, documentación, configuraciones, tareas y widgets.
+El archivo `config.py` es un módulo que se encarga de registrar todos los routers de una aplicación FastAPI. Estos routers corresponden a diferentes funcionalidades del sistema, como autenticación, dashboards, entregas, inventario, análisis proyecciones, filtros, PDFs, sincronización, documentos, configuraciones, tareas, widgets, consumos y transporte.
 
 ### Catálogo de Funciones y Clases
 - `register_routes(app: FastAPI) -> None` - Registra todos los routers de la aplicación de forma centralizada. Maneja errores para evitar que un router mal configurado detenga el arranque completo del servidor.
@@ -98,18 +98,55 @@ El archivo `config.py` es un módulo que se encarga de registrar todos los route
 No aplica
 
 ### Estado y Variables Globales
-- `logger` - Variable global que almacena el objeto de registro de logs.
+- `ROUTERS: List[APIRouter]` - Una lista declarativa de routers con tipado estático. Almacena todos los routers que se van a registrar en la aplicación FastAPI.
 
 ### Dependencias y Flujo
 - **Dependencias**: 
-  - `fastapi`: Se utiliza para crear la aplicación FastAPI y los routers.
+  - `fastapi`: Se utiliza para crear y gestionar la aplicación FastAPI.
   - `logging`: Para el registro de errores y mensajes de depuración.
   
 - **Flujo**:
   - El archivo importa varios módulos que contienen routers específicos (`dashboard`, `deliveries`, etc.).
-  - La función `register_routes` itera sobre una lista de routers y los registra en la aplicación FastAPI, capturando cualquier error que pueda ocurrir durante el proceso.
+  - La función `register_routes` itera sobre la lista de routers, intentando registrar cada uno en la aplicación FastAPI.
+  - Si ocurre un error al registrar un router, se registra el error y continúa con el siguiente router.
 
-Este archivo es crucial para mantener la estructura organizada de un proyecto FastAPI, centralizando la configuración de rutas y proporcionando un punto de control para el registro de errores.
+Este archivo es crucial para mantener una estructura organizada y modular de los endpoints de la API, facilitando su mantenimiento y escalabilidad.
+
+
+---
+
+## Archivo: ./routes/consumos.py
+
+### Resumen Funcional
+El archivo `consumos.py` define dos endpoints para obtener información de los consumos (CMV 201) en función del CeCo y una lista de materiales. Utiliza FastAPI para crear las rutas, SQLAlchemy para interactuar con la base de datos y pandas para procesar los resultados.
+
+### Catálogo de Funciones y Clases
+- `get_consumos_ceco(ceco: str, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Obtiene los consumos agrupados por material para un CeCo específico.
+- `get_consumos_materiales(req: MaterialesRequest, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Obtiene qué CeCos han consumido una lista de materiales.
+
+### Interacción con Base de Datos
+- Motor: SQLite (inferred from the use of `session.connection()`).
+- Tablas:
+  - `inventory_movements`
+  - `outbound_deliveries`
+- Columnas:
+  - `inventory_movements`: `material`, `texto_breve_material`, `cantidad`, `importe_ml`, `cmv`, `ce_coste`, `fe_contab`.
+  - `outbound_deliveries`: `centro_costo`, `area_negocio`.
+
+### Estado y Variables Globales
+- No aplica.
+
+### Dependencias y Flujo
+- Librerías externas utilizadas:
+  - `fastapi`
+  - `sqlalchemy`
+  - `pandas`
+  - `pydantic`
+  - `logging`
+  - `datetime`
+
+- Flujo de comunicación:
+  - El archivo se comunica con el resto del proyecto a través de dependencias como `get_current_user` y `get_session_dep`.
 
 
 ---
@@ -117,7 +154,7 @@ Este archivo es crucial para mantener la estructura organizada de un proyecto Fa
 ## Archivo: ./routes/dashboard.py
 
 ### Resumen Funcional
-El archivo `dashboard.py` define rutas para un panel de control (dashboard) que incluye endpoints para obtener ubicaciones de materiales y cargar la vista principal del dashboard con KPIs y búsqueda rápida. También proporciona una API JSON para el mismo propósito.
+El archivo `dashboard.py` define rutas para un dashboard que incluye endpoints para obtener ubicaciones de materiales y la vista principal del dashboard con KPIs. Utiliza FastAPI para definir las rutas, SQLAlchemy para interactuar con una base de datos SQLite, y pandas para procesar los resultados.
 
 ### Catálogo de Funciones y Clases
 - `get_ubicaciones(material: str, user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - Obtiene las ubicaciones de un material específico.
@@ -125,41 +162,18 @@ El archivo `dashboard.py` define rutas para un panel de control (dashboard) que 
 - `dashboard_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - API JSON para el dashboard con KPIs y búsqueda rápida.
 
 ### Interacción con Base de Datos
-- Motor de base de datos: SQLite
+- Motor: SQLite
 - Tablas:
   - `stock_levels`
-  - `warehouse_tasks`
 - Columnas:
-  - `ubicacion_bin`, `ubicacin`, `ubicacion` (dependiendo del origen de la importación)
-  - `denominacion`, `texto_breve_de_material`
-  - `fecha_conf`, `fe_creac`, `material`, `tp_dest`, `ubic_dest`, `stock_disp`, `umb`, `ubic_actual`
+  - `ubicacion_bin`, `Ubicación`, `ubicacin`, `denominacion`, `Texto breve de material`, `material`, `UMB`, `Stock disp`
 
 ### Estado y Variables Globales
-- No aplica
+No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
-  - `logging`
-  - `sqlite3`
-  - `itertools`
-  - `pandas`
-  - `datetime`
-  - `timedelta`
-  - `typing`
-  - `fastapi`
-  - `sqlalchemy`
-  - `core.database`
-  - `core.state`
-  - `core.auth`
-  - `core.app_instance`
-  - `services.dashboard_service`
-  - `core.wms_config`
-  - `core.schemas`
-
-- Flujo de comunicación:
-  - El archivo interactúa con el servicio `DashboardService` para obtener el contexto de negocio.
-  - Utiliza la sesión de base de datos (`Session`) proporcionada por `get_session_dep`.
-  - Recupera y establece en caché los contextos del dashboard utilizando `AppState`.
+- Librerías externas utilizadas: `logging`, `sqlite3`, `itertools`, `pandas`, `datetime`, `timedelta`, `typing`, `fastapi`, `sqlalchemy`, `core.database`, `core.state`, `core.auth`, `core.app_instance`, `services.dashboard_service`, `core.wms_config`, `core.schemas`
+- Flujo: El archivo interactúa con el servicio `DashboardService` para obtener datos de negocio y los presenta a través de endpoints FastAPI. Utiliza una sesión de base de datos SQLAlchemy para ejecutar consultas SQL y pandas para procesar los resultados.
 
 
 ---
@@ -395,26 +409,36 @@ El archivo `settings.py` define una API para la gestión dinámica de configurac
 ## Archivo: ./routes/sync.py
 
 ### Resumen Funcional
-El archivo `sync.py` contiene rutas para la gestión de sincronización de datos en una aplicación web. Permite iniciar y monitorear procesos de sincronización asíncrona utilizando un `TaskManager`, y proporciona endpoints para obtener la URL del túnel, el estado de la sincronización actual y detalles sobre las tareas en ejecución.
+Este archivo contiene rutas para la sincronización de datos con gestión de concurrencia. Utiliza `TaskManager` para ejecutar tareas en segundo plano y proporciona endpoints para iniciar, monitorear y obtener el estado de las sincronizaciones.
 
 ### Catálogo de Funciones y Clases
 - `get_tunnel_url(state: AppState = Depends(get_app_state))` - Retorna la URL pública del túnel (Ngrok).
 - `get_sync_status(state: AppState = Depends(get_app_state))` - Retorna el estado actual de la sincronización.
-- `sync_data(state: AppState = Depends(get_app_state), admin=Depends(require_auth))` - Inicia el proceso de sincronización de datos y lo encola en el `TaskManager`.
+- `sync_data(state: AppState = Depends(get_app_state), admin=Depends(require_auth))` - Inicia el proceso de sincronización de datos y lo encola en `TaskManager`.
 - `list_tasks(limit: int = 20, state: AppState = Depends(get_app_state), admin=Depends(require_auth))` - Lista las tareas recientes del sistema.
 - `get_task(task_id: str, state: AppState = Depends(get_app_state), admin=Depends(require_auth))` - Consulta el estado de una tarea específica por su ID.
 - `_run_sync_pipeline()` - Ejecuta el pipeline completo de limpieza y consolidación.
 
 ### Interacción con Base de Datos
-El archivo interactúa con la base de datos a través del módulo `db.consolidator.DataConsolidator`. Se realizan operaciones en las tablas `stock_levels` y otras dependiendo de los archivos procesados. No se especifica el motor de base de datos.
+- Motor: No aplica (No hay consultas SQL crudas o llamadas a ORM).
+- Tablas: `analytics_snapshots` (se intenta eliminar en la sincronización finalizada).
 
 ### Estado y Variables Globales
-- `state.is_syncing`: Indica si la sincronización está en curso.
-- `state.sync_lock`: Un bloqueo para evitar ejecuciones duplicadas de la sincronización.
+- `state.is_syncing`: Indica si una sincronización está en curso.
+- `state.sync_lock`: Bloqueo para evitar ejecuciones duplicadas de la sincronización.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `fastapi`, `logging`, `shutil`, `pathlib`, `typing`.
-- **Flujo Interno**: El archivo se comunica con otros módulos como `core.auth`, `config`, `core.state`, `core.task_manager`, `db.consolidator`, `core.database`, `core.wms_utils`, y `services.etl`.
+- Librerías externas: `logging`, `shutil`, `pathlib`, `typing`.
+- Comunicación con otros archivos:
+  - `core.auth.require_auth` (para autenticación).
+  - `config.DB_PATH`, etc. (para configuraciones globales).
+  - `core.state.AppState` y `get_app_state()` (para el estado de la aplicación).
+  - `core.task_manager.task_manager` (para gestionar tareas en segundo plano).
+  - `db.consolidator.DataConsolidator` (para consolidación de datos).
+  - `core.database.get_session` (para obtener sesiones de base de datos).
+  - `core.wms_utils.is_file_changed`, `mark_file_processed` (para manejo de archivos).
+  - `services.etl.OutboundDeliveryAdapter`, etc. (para procesamiento de datos ETL).
+  - `routes.transporte.sync_transporte_logic` (para sincronización de transporte).
 
 
 ---
@@ -456,26 +480,69 @@ Este archivo es una parte integral del backend que proporciona un endpoint para 
 
 ---
 
+## Archivo: ./routes/transporte.py
+
+### Resumen Funcional
+Este archivo contiene rutas para la sección de Transporte (Avanti), que incluyen funciones para sincronizar datos desde una base de datos externa SQLite, obtener datos consolidados diarios, buscar en los datos de transporte y servir archivos PDF.
+
+### Catálogo de Funciones y Clases
+- `sync_transporte_logic(session: Session)` - Lógica core para sincronizar la base de datos externa de OneDrive a local.
+- `sync_transporte(session: Session = Depends(get_session_dep), user=Depends(get_current_user))` - Ruta POST para sincronizar datos de transporte manualmente.
+- `get_transporte_data(session: Session = Depends(get_session_dep), user=Depends(get_current_user))` - Ruta GET para obtener los datos consolidados diarios ordenados cronológicamente.
+- `search_transporte(q: str, session: Session = Depends(get_session_dep), user=Depends(get_current_user))` - Ruta GET para buscar en la tabla cruda de transporte_entregas por OT, GD o OC.
+- `serve_pdf(filename: str, user=Depends(get_current_user))` - Ruta GET para servir el archivo PDF desde el disco.
+
+### Interacción con Base de Datos
+- Motor: SQLite
+- Tablas:
+  - `transporte_entregas`
+    - Columnas: `ot`, `proveedor`, `gd`, `oc`, `bulto`, `servicio`, `archivo`, `fecha`
+  - `transporte_diario`
+    - Columnas: `fecha`, `total_entregas`, `pdf_path`
+- Consultas SQL crudas:
+  - Creación de tablas si no existen
+  - Lectura de datos desde la base de datos externa
+  - Inserción de datos en las tablas locales
+  - Consolidación de datos
+  - Mapeo de PDFs
+
+### Estado y Variables Globales
+- `EXTERNAL_DB_PATH` - Ruta a la base de datos externa SQLite.
+- `PDF_DIR_PATH` - Directorio donde se almacenan los archivos PDF.
+
+### Dependencias y Flujo
+- Librerías utilizadas: `os`, `sqlite3`, `logging`, `typing`, `fastapi`, `sqlalchemy`.
+- Comunicación con otros archivos del proyecto:
+  - `core.app_instance.templates` (no se muestra el contenido, pero probablemente para renderizar plantillas HTML).
+  - `core.database.get_session_dep` y `core.auth.get_current_user` (para manejar la sesión y autenticación).
+
+
+---
+
 ## Archivo: ./routes/widgets.py
 
 ### Resumen Funcional
-El archivo `widgets.py` contiene endpoints FastAPI que manejan la lógica de negocio para obtener datos de widgets y realizar drilldowns. Los endpoints interactúan con una base de datos para recuperar configuraciones de widgets y ejecutar consultas SQL dinámicas.
+El archivo `widgets.py` contiene endpoints FastAPI que manejan la lógica de negocio para obtener datos de widgets y realizar drilldowns. Los endpoints interactúan con una base de datos SQL para recuperar y procesar los datos, y utilizan un estado global para almacenar en caché resultados recientes.
 
 ### Catálogo de Funciones y Clases
-- `get_widget_data(query_id: str, year: Optional[str] = None, area: Optional[str] = None, granularity: Optional[str] = None, db: Session = Depends(get_session_dep), user = Depends(get_current_user), state: AppState = Depends(get_app_state))` - Endpoint para obtener datos de un widget.
-- `get_widget_drilldown(query_id: str, segment: str, material: Optional[str] = None, year: Optional[str] = None, area: Optional[str] = None, db: Session = Depends(get_session_dep), user = Depends(get_current_user))` - Endpoint para obtener el detalle subyacente de un segmento de un widget.
+- `get_widget_data(query_id: str, year: Optional[str] = None, area: Optional[str] = None, granularity: Optional[str] = None, db: Session = Depends(get_session_dep), user = Depends(get_current_user), state: AppState = Depends(get_app_state))` - Ejecuta el VisualQueryBuilderPayload y retorna la data estructurada.
+- `get_widget_drilldown(query_id: str, segment: str, material: Optional[str] = None, year: Optional[str] = None, area: Optional[str] = None, db: Session = Depends(get_session_dep), user = Depends(get_current_user))` - Obtiene el detalle subyacente de un segmento de un widget.
 
 ### Interacción con Base de Datos
 - **Motor:** SQLAlchemy ORM.
-- **Tablas:** `ConfigQuery`.
-- **Columnas:** `query_id`, `visual_state`, `sql_text`.
+- **Tablas:** `ConfigQuery`, `outbound_deliveries`.
+- **Columnas:**
+  - `ConfigQuery`: `query_id`, `visual_state`, `sql_text`.
+  - `outbound_deliveries`: `fecha_carga`, `entrega`, `pos_`, `cantidad`, `dias_retraso`, `material`.
 
 ### Estado y Variables Globales
-- No aplica.
+- **Variables Globales:** No aplica.
 
 ### Dependencias y Flujo
-- **Librerías Externas:** FastAPI, SQLAlchemy, Pandas, logging.
-- **Flujo Interno:** El archivo interactúa con otros módulos como `core.database`, `core.models`, `core.auth`, `core.helpers.dynamic_executor`, `core.utils`, `core.state`, y `repositories.deliveries`.
+- **Librerías Externas:** FastAPI, SQLAlchemy, Pandas.
+- **Flujo Interno:**
+  - Los endpoints dependen de funciones como `get_session_dep`, `get_current_user`, `execute_visual_query`, `sanitize_for_json`, y `build_sql_from_payload`.
+  - Utilizan el estado global `AppState` para almacenar en caché resultados.
 
 
 ---

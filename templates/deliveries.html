@@ -68,14 +68,20 @@
                 <div class="actions">
                     <a href="/" class="btn btn-secondary">🏠 Dashboard</a>
                     <!-- Guest View -->
-                    <button id="btn-login-trigger" class="btn btn-secondary" style="background:#5DBAA9; color:#0f172a; text-decoration:none; {% if user.username != 'invitado' %}display:none;{% endif %}" onclick="document.getElementById('quickLoginModal').classList.add('active')">🔑 Entrar</button>
+                    {% if user.username == 'invitado' %}
+                    <button id="btn-login-trigger" class="btn btn-secondary" style="background:#5DBAA9; color:#0f172a; text-decoration:none;" onclick="document.getElementById('quickLoginModal').classList.add('active')">🔑 Entrar</button>
+                    {% endif %}
 
                     <!-- Authenticated View -->
-                    <span id="user-greeting" style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px; {% if user.username == 'invitado' %}display:none;{% endif %}">👤 <span id="user-name-display">{{ user.username }}</span></span>
+                    {% if user.username != 'invitado' %}
+                    <span id="user-greeting" style="font-size: 0.8rem; color: #94a3b8; margin-right: 10px;">👤 <span id="user-name-display">{{ user.username }}</span></span>
                     
-                    <button id="btn-logout-trigger" class="btn btn-secondary" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); {% if user.username == 'invitado' %}display:none;{% endif %}" onclick="logout()">🚪 Salir</button>
+                    <button id="btn-logout-trigger" class="btn btn-secondary" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);" onclick="logout()">🚪 Salir</button>
+                    {% endif %}
                     
-                    <a href="/settings" id="btn-settings-trigger" class="btn btn-secondary" style="background: rgba(93, 186, 169, 0.1); border-color: rgba(93, 186, 169, 0.3); color: #5DBAA9; {% if user.role != 'admin' %}display:none;{% endif %}">⚙️ Configuración</a>
+                    {% if user.role == 'admin' %}
+                    <a href="/settings" id="btn-settings-trigger" class="btn btn-secondary" style="background: rgba(93, 186, 169, 0.1); border-color: rgba(93, 186, 169, 0.3); color: #5DBAA9;">⚙️ Configuración</a>
+                    {% endif %}
                 </div>
             </div>
         </header>
@@ -83,11 +89,12 @@
         <div class="tabs-header">
             <button id="btn-deliveries" class="tab-btn active" onclick="switchTab('deliveries', this)">📊 Entregas
                 </button>
-            <button id="btn-inventory" class="tab-btn" onclick="switchTab('inventory', this)">📦 Movimientos
-                </button>
+            <button id="btn-inventory" class="tab-btn" onclick="switchTab('inventory', this)">📦 Movimientos</button>
+            <button id="btn-consumos" class="tab-btn" onclick="switchTab('consumos', this)">💸 Consumos y Costos</button>
             <button id="btn-ots" class="tab-btn" onclick="switchTab('ots', this)">📑 Gestión de OTs</button>
             <button id="btn-ia" class="tab-btn" onclick="switchTab('ia', this)">🧠 IA Insomnio y Ansiedad</button>
             <button id="btn-docs" class="tab-btn" onclick="switchTab('docs', this)">📚 Documentación</button>
+            <button id="btn-transporte" class="tab-btn" onclick="switchTab('transporte', this)">🚚 Transporte</button>
             <button id="btn-historial" class="tab-btn" onclick="switchTab('historial', this)">📍 Historial de
                 Ubicaciones</button>
         </div>
@@ -97,7 +104,9 @@
         {% include "partials/_tab_ia.html" %}
         {% include "partials/_tab_deliveries.html" %}
         {% include "partials/_tab_inventory.html" %}
+        {% include "partials/_tab_consumos.html" %}
         {% include "partials/_tab_ots.html" %}
+        {% include "partials/_tab_transporte.html" %}
 
         <script>
             function switchTab(tabId, btnElement) {
@@ -424,8 +433,12 @@
         <script type="application/json" id="data_avg_mensual_año">{{ (avg_mensual_año or 0) | tojson | safe }}</script>
         <script src="{{ url_for('static', path='js/core_ui.js') }}?v=2"></script>
         <script src="{{ url_for('static', path='js/dashboard.js') }}?v=18"></script>
-        <script src="{{ url_for('static', path='js/saas_engine.js') }}?v=3"></script>
+        <script src="{{ url_for('static', path='js/saas_engine.js') }}?v=10"></script>
         <script src="{{ url_for('static', path='js/deliveries.js') }}?v=20"></script>
+        <script src="{{ url_for('static', path='js/consumos.js') }}?v=11"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+        <script src="{{ url_for('static', path='js/transporte.js') }}?v=3"></script>
         <script type="application/json" id="data_volumen">{{ (volumen_data or []) | tojson | safe }}</script>
         <script type="application/json"
             id="data_area_stats_inv">{{ (inv_area_stats_json or []) | tojson | safe }}</script>
