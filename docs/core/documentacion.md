@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: core
-Compilado el: 2026-05-29 00:41:03
+Compilado el: 2026-05-30 00:23:08
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -507,13 +507,16 @@ Este archivo contiene utilidades centralizadas de seguridad y validación, espec
 - `validate_table(table_name: str) -> None` - Valida el nombre de la tabla contra la lista blanca para prevenir SQL Injection.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no realiza ninguna interacción con bases de datos.
+- **Motor:** No aplica.
+- **Tablas:** No aplica.
+- **Columnas:** No aplica.
 
 ### Estado y Variables Globales
 - `WHITELIST_TABLES: Final[Set[str]]` - Variable global que almacena una lista blanca de tablas permitidas para evitar SQL Injection.
 
 ### Dependencias y Flujo
-No depende de ninguna librería externa. No comunica con otros archivos del proyecto.
+- **Librerías Externas:** `typing`
+- **Flujo Interno:** La función `validate_table` utiliza la variable global `WHITELIST_TABLES` para validar el nombre de la tabla proporcionado.
 
 
 ---

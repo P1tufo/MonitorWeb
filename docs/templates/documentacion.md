@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: templates
-Compilado el: 2026-05-29 00:41:03
+Compilado el: 2026-05-30 00:23:08
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -71,6 +71,7 @@ El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario d
 
 ### Catálogo de Funciones y Clases
 - `switchTab(tabId, btnElement)` - Cambia la pestaña activa.
+- `switchSubTab(subTabId, btnElement)` - Cambia la subpestaña activa.
 - `openNonPalletizedDetails(user, claseMov)` - Abre un modal con detalles no paletizados.
 - `initTableFilters()` - Inicializa los filtros de tablas.
 - `filterOTTable()` - Filtra la tabla de OTs según los criterios seleccionados.
@@ -84,18 +85,21 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
+- **Librerías externas utilizadas:**
   - Chart.js
-  - marked.js
+  - Chartjs-plugin-datalabels
   - Font Awesome
-- Archivos JavaScript incluidos:
+  - marked.js
+
+- **Archivos JavaScript que se comunican con este archivo:**
   - `core_ui.js`
   - `dashboard.js`
   - `saas_engine.js`
   - `deliveries.js`
   - `consumos.js`
   - `transporte.js`
-- Variables JSON inyectadas dinámicamente desde el backend.
+
+Estos archivos JavaScript probablemente contienen la lógica de negocio y los controladores que interactúan con el backend para cargar datos y manejar eventos.
 
 #### --- PARTE 2 de 2 ---
 
@@ -103,25 +107,24 @@ No aplica
 El archivo `deliveries.html` es una plantilla HTML que contiene scripts para cargar datos JSON y referencias a archivos JavaScript. También incluye varios modales parciales.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este fragmento de código.
+No se detectan funciones ni clases definidas en este fragmento de código.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `ots_user_confirmed`: Almacena datos del usuario confirmado.
-- `ots_type_labels`: Almacena etiquetas de tipo OTS.
-- `ots_type_data`: Almacena datos de tipo OTS.
+No se detectan variables globales, de sesión o de entorno quemadas en el código.
 
 ### Dependencias y Flujo
-- **Librerías externas**: No se mencionan librerías externas específicas en este fragmento.
+- **Librerías externas utilizadas**: No se mencionan librerías específicas.
 - **Archivos JavaScript incluidos**:
-  - `js/tasks.js`
-  - `js/inventory.js`
-  - `js/analytics_proyecciones.js`
-  - `js/docs_explorer.js`
+  - `js/tasks.js` (versión 5)
+  - `js/inventory.js` (versión 11)
+  - `js/analytics_proyecciones.js` (versión 3)
+  - `js/docs_explorer.js` (versión 5)
+  - `js/productivity.js` (versión 21)
 
-- **Modales parciales incluidos**:
+- **Modales incluidos**:
   - `_modals.html`
   - `_deliveries_modals.html`
   - `_inventory_modals.html`
@@ -130,7 +133,7 @@ No aplica
   - `_quick_login_modal.html`
   - `_logout.html`
 
-Este archivo se utiliza para cargar datos y recursos necesarios en una página web, incluyendo modales que probablemente contienen funcionalidades adicionales.
+Este archivo se utiliza para cargar datos JSON y referencias a scripts JavaScript, además de incluir varios modales parciales que probablemente contienen funcionalidades específicas del sistema.
 
 
 ---

@@ -1,5 +1,5 @@
 # Documentación Técnica Global - MonitorWeb
-Compilado el: 2026-05-29 00:41:03
+Compilado el: 2026-05-30 00:23:08
 Modelo: qwen2.5-coder:7b | Hardware: M1 Pro Optimized
 
 ---
@@ -8,69 +8,51 @@ Modelo: qwen2.5-coder:7b | Hardware: M1 Pro Optimized
 
 ### Arquitectura General Detectada
 
-La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que separan diferentes aspectos del sistema, como el núcleo (`core`), las rutas (`routes`), los servicios (`services`), los repositorios (`repositories`), y las pruebas (`tests`). Además, la presencia de un archivo `Dockerfile` en la carpeta `deploy` indica que se utiliza Docker para la despliegue del sistema.
+La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que separan diferentes aspectos del sistema, como el núcleo (`core`), las rutas (`routes`), los servicios (`services`), las pruebas (`tests`), las dependencias (`setup`) y los documentos (`docs`). Además, la presencia de una carpeta `repositories` para manejar la lógica de acceso a datos también es un indicativo de una arquitectura modular.
 
 ### Propósito Probable de las Carpetas Principales
 
-- **core/**: Contiene el código central del sistema, incluyendo la lógica de negocio, modelos de datos, y utilidades.
-  - **auth.py**: Manejo de autenticación y autorización.
-  - **database.py**: Interacción con la base de datos.
-  - **models.py**: Definición de los modelos de datos.
-  - **utils.py**: Funciones útiles y herramientas generales.
+- **core/**: Contiene el código central del sistema, incluyendo la configuración, autenticación, base de datos, modelos y utilidades. Este módulo es fundamental para mantener el núcleo funcional del proyecto.
+  
+- **bin/**: Almacena herramientas binarias como `ngrok`, que puede ser utilizado para exponer aplicaciones locales a Internet.
 
-- **bin/**: Contiene archivos binarios necesarios para el proyecto, como `ngrok` para tunelización.
+- **deploy/**: Contiene archivos de configuración y scripts necesarios para la despliegue del sistema, incluyendo Dockerfiles y archivos de configuración de Docker Compose.
 
-- **deploy/**: Archivos relacionados con la despliegue del sistema, incluyendo Dockerfiles y configuraciones de entorno.
-  - **Dockerfile**: Define cómo se construye la imagen del contenedor.
-  - **docker-compose.yml**: Configuración para el despliegue multi-contenedor.
+- **setup/**: Almacena los archivos de configuración y dependencias del proyecto, como `package.json`, `requirements.txt` y `pytest.ini`.
 
-- **setup/**: Archivos de configuración y scripts para el desarrollo y pruebas.
-  - **requirements.txt**: Lista de dependencias del proyecto.
-  - **run_tests.sh**: Script para ejecutar las pruebas.
+- **tests/**: Contiene todos los tests unitarios y de integración para asegurar la calidad del código.
 
-- **tests/**: Contiene los archivos de prueba unitaria y de integración.
-  - **test_api.py**: Pruebas de la API.
-  - **test_auth.py**: Pruebas de autenticación.
+- **repositories/**: Define las interfaces de acceso a datos, lo que es crucial en una arquitectura orientada a objetos.
 
-- **repositories/**: Define los repositorios de datos, que son capas de acceso a la base de datos.
-  - **deliveries.py**: Repositorio para operaciones relacionadas con entregas.
+- **docs/**: Documentación del proyecto, incluyendo documentación técnica y mejoras propuestas.
 
-- **docs/**: Documentación del proyecto y sus componentes.
-  - **documentacion_global.md**: Documentación general del sistema.
-  - **core/**: Documentación específica del módulo core.
-    - **helpers/**: Documentación de las helpers dentro del core.
+- **DELIVERIES_cleansed/**: Almacena archivos limpios de entregas, posiblemente para análisis o procesamiento posterior.
 
-- **DELIVERIES_cleansed/**: Archivos limpios de entregas, posiblemente para pruebas o análisis.
+- **static/**: Archivos estáticos como CSS y JavaScript que se utilizan en la interfaz de usuario.
 
-- **static/**: Archivos estáticos como CSS y JavaScript.
-  - **css/**: Hojas de estilo.
-  - **js/**: Scripts JavaScript.
+- **scripts/**: Scripts Python que pueden ser ejecutados para tareas específicas del sistema, como generación de documentos o limpieza de memoria RAM.
 
-- **scripts/**: Scripts Python útiles para el proyecto.
-  - **doc_generator.py**: Generador de documentación.
+- **db/**: Contiene archivos relacionados con la base de datos, incluyendo archivos de configuración y scripts de consolidación.
 
-- **db/**: Archivos relacionados con la base de datos.
-  - **data.db**: Base de datos principal del sistema.
+- **templates/**: Plantillas HTML utilizadas en la interfaz de usuario, que pueden ser renderizadas por un motor de plantillas como Jinja2.
 
-- **templates/**: Plantillas HTML para las vistas web.
-  - **analytics_proyecciones.html**: Plantilla para el análisis de proyecciones.
-  - **dashboard.html**: Plantilla para el panel de control.
+- **routes/**: Define las rutas del sistema web, mapeando URLs a funciones o controladores.
 
-- **routes/**: Definición de las rutas y endpoints del API.
-  - **analytics_proyecciones.py**: Ruta para el análisis de proyecciones.
-
-- **services/**: Servicios que encapsulan la lógica de negocio.
-  - **dashboard_service.py**: Servicio para el panel de control.
+- **services/**: Contiene los servicios que implementan la lógica de negocio, separados en submódulos según su funcionalidad.
 
 ### Organización Lógica de las Dependencias
 
-La organización de dependencias es coherente con una arquitectura modular. El núcleo (`core`) contiene los componentes básicos del sistema, mientras que las capas superiores (`routes`, `services`, `repositories`) dependen de estos componentes. Por ejemplo:
+La organización de dependencias es coherente con una arquitectura modular:
 
-- **routes/** depende de **core/** para acceder a la lógica de negocio y modelos de datos.
-- **services/** depende de **core/** para interactuar con los modelos y repositorios.
-- **repositories/** depende de **core/** para definir las operaciones de base de datos.
+- **Dependencias Internas**: Los módulos dentro del mismo paquete (`core`, `routes`, `services`, etc.) se comunican entre sí a través de interfaces claras y definidas.
 
-Esta estructura facilita el mantenimiento, escalabilidad y reutilización del código.
+- **Dependencias Externas**: Dependencias externas, como bibliotecas de terceros para bases de datos, autenticación o procesamiento de PDFs, están gestionadas en el archivo `requirements.txt` y instaladas mediante `pip`.
+
+- **Pruebas Independientes**: Los tests se organizan por módulo correspondiente, lo que facilita la localización y ejecución de pruebas específicas.
+
+- **Documentación Separada**: La documentación está separada en diferentes carpetas para cada módulo, lo que facilita el mantenimiento y acceso a la información relevante.
+
+Esta estructura permite una organización clara y escalable del proyecto, facilitando el desarrollo, mantenimiento y despliegue.
 
 
 ---
@@ -682,13 +664,16 @@ Este archivo contiene utilidades centralizadas de seguridad y validación, espec
 - `validate_table(table_name: str) -> None` - Valida el nombre de la tabla contra la lista blanca para prevenir SQL Injection.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no realiza ninguna interacción con bases de datos.
+- **Motor:** No aplica.
+- **Tablas:** No aplica.
+- **Columnas:** No aplica.
 
 ### Estado y Variables Globales
 - `WHITELIST_TABLES: Final[Set[str]]` - Variable global que almacena una lista blanca de tablas permitidas para evitar SQL Injection.
 
 ### Dependencias y Flujo
-No depende de ninguna librería externa. No comunica con otros archivos del proyecto.
+- **Librerías Externas:** `typing`
+- **Flujo Interno:** La función `validate_table` utiliza la variable global `WHITELIST_TABLES` para validar el nombre de la tabla proporcionado.
 
 
 ---
@@ -952,30 +937,45 @@ No aplica
 ## Archivo: ./db/db_enrichment.py
 
 ### Resumen Funcional
-El archivo `db_enrichment.py` contiene funciones que realizan el enriquecimiento de datos en una base de datos SQLite, utilizando SQL directo y pandas para manipular los datos. Las principales operaciones incluyen rellenar columnas vacías en tablas como `outbound_deliveries`, actualizar mapeos de frecuencia Autor -> Área, aplicar aprendizaje basado en autores a transacciones, enriquecer transacciones con descripciones y ubicaciones físicas de stock, y actualizar la métrica de SLA usando fechas de confirmación de tareas.
+El archivo `db_enrichment.py` contiene funciones para enriquecer datos de entrega y movimiento mediante consultas SQL directas a una base de datos SQLite. Las funciones realizan tareas como rellenar columnas vacías, aprender mapeos de autor a área, aplicar aprendizaje al mapeo de áreas, enriquecer transacciones con datos de stock, rellenar descripciones y UMBs faltantes, actualizar métrica SLA y enriquecer movimientos con información de órdenes PM.
 
 ### Catálogo de Funciones y Clases
-- `backfill_deliveries_from_movements(conn: sqlite3.Connection, trans_table: str = "outbound_deliveries", movements_table: str = "inventory_movements")` - Rellena columnas vacías en Entregas (autor, ubicacion, textos) cruzando con Movimientos.
+- `backfill_deliveries_from_movements(conn: sqlite3.Connection, trans_table: str = "outbound_deliveries", movements_table: str = "inventory_movements")` - Rellena columnas vacías en Entregas cruzando con Movimientos.
 - `learn_author_areas(conn: sqlite3.Connection)` - Actualiza el mapeo de frecuencia Autor -> Área.
 - `apply_author_learning(conn: sqlite3.Connection, table_name: str = "outbound_deliveries")` - Asigna áreas de negocio a transacciones 'OTRO' basadas en la memoria del autor.
 - `enrich_deliveries_with_stock(conn: sqlite3.Connection, trans_table: str = "outbound_deliveries", stock_table: str = "stock_levels")` - Enriquece transacciones con descripciones y ubicaciones físicas de Stock.
 - `backfill_material_texts(conn: sqlite3.Connection)` - Rellena descripciones y UMBs faltantes en Entregas usando Stock y Movimientos como fuentes de verdad.
 - `update_sla_with_tasks(conn: sqlite3.Connection)` - Actualiza la métrica de SLA en outbound_deliveries cruzando con la fecha de confirmación real en Tareas.
+- `enrich_movements_with_iw39(conn: sqlite3.Connection)` - Enriquece la tabla inventory_movements con ceco_resp y autor provenientes de iw39_orders.
 
 ### Interacción con Base de Datos
-- **Motor:** SQLite
-- **Tablas y Columnas:**
-  - `outbound_deliveries`: `material`, `usuario`, `ce_coste`, `texto_breve_material`, `entrega`, `autor`, `centro_costo`, `denominacion`, `dias_retraso`, `estado_wms`
-  - `inventory_movements`: `material`, `usuario`, `ce_coste`, `texto_breve_material`, `referencia`
-  - `stock_levels`: `material`, `denominacion`, `ubicacion_bin`, `umb`, `stock_disp`
-  - `warehouse_tasks`: `entrega`, `fecha_conf`
+- Motor: SQLite
+- Tablas:
+  - `outbound_deliveries`
+  - `inventory_movements`
+  - `stock_levels`
+  - `warehouse_tasks`
+  - `iw39_orders`
+- Columnas:
+  - `material`, `usuario`, `ce_coste`, `texto_breve_material`, `referencia` (de `inventory_movements`)
+  - `entrega`, `autor`, `centro_costo`, `denominacion` (de `outbound_deliveries`)
+  - `ubicacion_bin`, `umb`, `stock_disp` (de `stock_levels`)
+  - `orden`, `ceco_resp` (de `inventory_movements` y `iw39_orders`)
+  - `fecha_conf` (de `warehouse_tasks`)
 
 ### Estado y Variables Globales
-- No aplica
+No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas:** `logging`, `pandas`, `sqlite3`, `typing`, `numpy`
-- **Flujo Interno:** El archivo interactúa con múltiples funciones dentro del mismo módulo, utilizando pandas para manipular datos en memoria y SQLite para realizar operaciones de base de datos.
+- Librerías externas utilizadas:
+  - `logging`
+  - `pandas`
+  - `sqlite3`
+  - `typing`
+  - `numpy`
+- Comunicación con otros archivos del proyecto:
+  - `core.security.validate_table`
+  - `core.db_config_manager.get_holidays`
 
 
 ---
@@ -1279,28 +1279,23 @@ No aplica
 ## Archivo: ./routes/config.py
 
 ### Resumen Funcional
-El archivo `config.py` es un módulo que se encarga de registrar todos los routers de una aplicación FastAPI. Estos routers corresponden a diferentes funcionalidades del sistema, como autenticación, dashboards, entregas, inventario, análisis proyecciones, filtros, PDFs, sincronización, documentos, configuraciones, tareas, widgets, consumos y transporte.
+El archivo `config.py` es un módulo que se encarga de registrar todos los routers de una aplicación FastAPI. Incluye manejo básico de errores para evitar que un router mal configurado detenga el arranque completo del servidor.
 
 ### Catálogo de Funciones y Clases
-- `register_routes(app: FastAPI) -> None` - Registra todos los routers de la aplicación de forma centralizada. Maneja errores para evitar que un router mal configurado detenga el arranque completo del servidor.
+- `register_routes(app: FastAPI) -> None` - Registra todos los routers de la aplicación de forma centralizada, incluyendo manejo de errores básico.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `ROUTERS: List[APIRouter]` - Una lista declarativa de routers con tipado estático. Almacena todos los routers que se van a registrar en la aplicación FastAPI.
+No aplica
 
 ### Dependencias y Flujo
-- **Dependencias**: 
-  - `fastapi`: Se utiliza para crear y gestionar la aplicación FastAPI.
-  - `logging`: Para el registro de errores y mensajes de depuración.
-  
-- **Flujo**:
-  - El archivo importa varios módulos que contienen routers específicos (`dashboard`, `deliveries`, etc.).
-  - La función `register_routes` itera sobre la lista de routers, intentando registrar cada uno en la aplicación FastAPI.
-  - Si ocurre un error al registrar un router, se registra el error y continúa con el siguiente router.
+- `fastapi`: Se utiliza para crear y gestionar la aplicación FastAPI.
+- `logging`: Se utiliza para registrar mensajes de depuración y error.
+- Importa varios módulos desde el mismo directorio (`./routes/`), cada uno probablemente contenga un router específico para una parte del sistema.
 
-Este archivo es crucial para mantener una estructura organizada y modular de los endpoints de la API, facilitando su mantenimiento y escalabilidad.
+Este archivo es crucial para la configuración centralizada de rutas en una aplicación FastAPI, asegurando que todos los endpoints estén disponibles y manejando errores de manera graciaosa.
 
 
 ---
@@ -1308,35 +1303,26 @@ Este archivo es crucial para mantener una estructura organizada y modular de los
 ## Archivo: ./routes/consumos.py
 
 ### Resumen Funcional
-El archivo `consumos.py` define dos endpoints para obtener información de los consumos (CMV 201) en función del CeCo y una lista de materiales. Utiliza FastAPI para crear las rutas, SQLAlchemy para interactuar con la base de datos y pandas para procesar los resultados.
+El archivo `consumos.py` define endpoints para obtener datos de consumos (CMV 201) desde una base de datos relacionada con movimientos de inventario. Los endpoints permiten consultar los consumos históricos y actuales por CeCo, así como el consumo mensual de materiales específicos.
 
 ### Catálogo de Funciones y Clases
-- `get_consumos_ceco(ceco: str, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Obtiene los consumos agrupados por material para un CeCo específico.
-- `get_consumos_materiales(req: MaterialesRequest, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Obtiene qué CeCos han consumido una lista de materiales.
+- `get_consumos_ceco(ceco: str, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Obtiene los consumos históricos y actuales por CeCo.
+- `get_consumos_materiales(req: MaterialesRequest, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Obtiene el consumo de materiales específicos.
+- `get_material_trend(req: MaterialTrendRequest, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Devuelve el consumo mensual de un material específico, filtrado por área de negocio.
 
 ### Interacción con Base de Datos
-- Motor: SQLite (inferred from the use of `session.connection()`).
-- Tablas:
-  - `inventory_movements`
-  - `outbound_deliveries`
-- Columnas:
-  - `inventory_movements`: `material`, `texto_breve_material`, `cantidad`, `importe_ml`, `cmv`, `ce_coste`, `fe_contab`.
-  - `outbound_deliveries`: `centro_costo`, `area_negocio`.
+- **Motor:** PostgreSQL (deducido del uso de `sqlalchemy.text`)
+- **Tablas:** `inventory_movements`, `outbound_deliveries`
+- **Columnas:**
+  - `inventory_movements`: `doc_mat`, `ej_mat`, `pos`, `material`, `texto_breve_material`, `umb`, `cantidad`, `importe_ml`, `cmv`, `fe_contab`, `hora`, `ce_coste`
+  - `outbound_deliveries`: `centro_costo`, `area_negocio`
 
 ### Estado y Variables Globales
-- No aplica.
+- No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
-  - `fastapi`
-  - `sqlalchemy`
-  - `pandas`
-  - `pydantic`
-  - `logging`
-  - `datetime`
-
-- Flujo de comunicación:
-  - El archivo se comunica con el resto del proyecto a través de dependencias como `get_current_user` y `get_session_dep`.
+- **Librerías Externas:** `fastapi`, `sqlalchemy`, `pandas`, `pydantic`
+- **Flujo Interno:** El archivo interactúa con el resto del proyecto a través de dependencias como `get_current_user` y `get_session_dep`.
 
 
 ---
@@ -1547,6 +1533,33 @@ No aplica
 
 ---
 
+## Archivo: ./routes/productivity.py
+
+### Resumen Funcional
+Este archivo contiene endpoints para obtener datos de productividad, incluyendo fechas disponibles, un resumen diario y KPIs mensuales. Utiliza FastAPI para definir las rutas y SQLAlchemy para interactuar con la base de datos.
+
+### Catálogo de Funciones y Clases
+- `get_available_dates(user: User, session: Session)` - Retorna las fechas disponibles para el análisis de productividad.
+- `get_productivity_dashboard(date: str = Query(None), user: User, session: Session, state: AppState)` - Retorna los datos necesarios para el dashboard de productividad MB51.
+- `get_monthly_productivity(month: str = Query(None), user: User, session: Session, state: AppState)` - Retorna los KPIs mensuales de productividad.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+- `AppState` - Almacena el estado del sistema, incluyendo la sincronización y el caché.
+- `cache_key` - Clave utilizada para almacenar y recuperar datos en el caché.
+
+### Dependencias y Flujo
+- **Librerías Externas**: FastAPI, SQLAlchemy, logging.
+- **Flujo Interno**: 
+  - Cada endpoint depende de `get_current_user`, `get_session_dep`, y `get_app_state`.
+  - Utiliza `ProductivityService` para obtener los datos necesarios.
+  - Maneja la sincronización y el caché mediante `AppState`.
+
+
+---
+
 ## Archivo: ./routes/settings.py
 
 ### Resumen Funcional
@@ -1747,35 +1760,34 @@ Este archivo está vacío o solo contiene espacios en blanco. No se requiere an�
 ## Archivo: ./scripts/main_processor.py
 
 ### Resumen Funcional
-El archivo `main_processor.py` es el punto de entrada para un proceso automatizado que realiza análisis y consolidación de datos en un sistema de gestión de almacenes (WMS). El script ejecuta una serie de fases, incluyendo la validación de directorios, la ejecución de scripts secundarios, la actualización de una base de datos y el procesamiento de movimientos.
+El archivo `main_processor.py` es el punto de entrada para un proceso automatizado que realiza análisis y consolidación de datos en un sistema de gestión de almacenes (WMS). El script ejecuta una serie de fases, cada una responsable de procesar diferentes tipos de datos (entregas, stock, movimientos, IW39) y actualizar una base de datos SQLite.
 
 ### Catálogo de Funciones y Clases
 - `run_pipeline()` - Ejecuta el proceso completo de análisis y consolidación de WMS.
-  - **Propósito**: Orquesta todas las fases del proceso, desde la validación de directorios hasta el procesamiento final.
+  - **Propósito**: Orquesta todas las fases del pipeline, desde la validación de entrada hasta la finalización del procesamiento.
 
 ### Interacción con Base de Datos
-- **Motor**: SQLite (deducido a partir del nombre del archivo de base de datos `.db`).
-- **Tablas y Columnas**:
-  - Tabla: `stock_levels`
-    - Columnas: No especificadas explícitamente en el código, pero se refiere a la tabla donde se actualizan los niveles de stock.
-- **Consultas SQL Crudas o Llamadas a ORM**: 
-  - Se utiliza un objeto `DataConsolidator` para interactuar con la base de datos y actualizar la tabla `stock_levels`.
-  - Se llama a una función `enrich_deliveries_with_stock` que probablemente realiza consultas SQL internamente.
+- **Motor**: SQLite
+- **Tablas Modificadas**:
+  - `stock_levels`
+  - `inventory_movements`
+  - `iw39_orders`
+- **Columnas Modificadas**: Dependiendo de las operaciones realizadas en cada fase, se pueden modificar varias columnas dentro de estas tablas.
 
 ### Estado y Variables Globales
 - **Variables Globales**:
   - `PROJECT_ROOT`: Ruta al directorio raíz del proyecto.
-  - `DELIVERIES_DIR`, `STOCK_DIR`, `INVENTORY_DIR`, `CLEANSED_DIR`, `DATABASE_PATH`, `ONEDRIVE_PATH`: Rutas a diferentes directorios y archivos, incluyendo la base de datos.
+  - `DELIVERIES_DIR`, `STOCK_DIR`, `INVENTORY_DIR`, `IW39_DIR`, `CLEANSED_DIR`, `DATABASE_PATH`, `ONEDRIVE_PATH` (si se importan correctamente).
+- **Estado Crítico**: No aplica.
 
 ### Dependencias y Flujo
 - **Librerías Externas**:
-  - `subprocess` para ejecutar comandos externos.
-  - `pathlib` para manejar rutas de archivos.
-  - `logging` para registro de eventos.
-- **Flujo Interno**:
-  - El script importa configuraciones globales desde un archivo `config.py`.
-  - Configura el registro de eventos con nivel de logging a INFO.
-  - Ejecuta una serie de fases, cada una realizando tareas específicas como la validación de directorios, ejecución de scripts secundarios y actualización de la base de datos.
+  - `subprocess`
+  - `sys`
+  - `pathlib`
+  - `logging`
+  - `sqlite3`
+- **Flujo Interno**: El script interactúa con varios módulos y clases, incluyendo `analyze_folder.py`, `DataConsolidator` de `db.consolidator`, `InventoryMovementAdapter` y `IW39Processor` de `services.etl.movements` y `services.etl.iw39`, respectivamente.
 
 
 ---
@@ -1881,9 +1893,9 @@ No aplica
 El archivo `base.py` define una clase abstracta `BaseWMSProcessor` que proporciona funcionalidades para procesar archivos WMS (TXT/CSV/XLSX) y cargarlos en una base de datos SQLite. Incluye métodos para validar archivos, leer y limpiar datos, realizar operaciones UPSERT atómicas, y procesar directorios de archivos.
 
 ### Catálogo de Funciones y Clases
-- `BaseWMSProcessor(encodings=None, chunk_size=50000)` - Clase abstracta para procesar archivos WMS.
-  - `validate_file(file_path: Path) -> bool` - Verifica si el archivo es válido para este procesador.
-  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma un chunk de datos crudos (Implementado por cada hijo).
+- `BaseWMSProcessor(encodings=None, chunk_size=50000)` - Clase abstracta que define métodos para procesar archivos WMS.
+  - `validate_file(file_path: Path) -> bool` - Valida si el archivo es válido para este procesador.
+  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma un chunk de datos crudos (implementado por cada hijo).
   - `_detect_file_params(file_path: Path, required_columns: List[str]) -> Tuple[int, str]` - Detecta la fila de encabezado y codificación buscando columnas clave.
   - `read_and_clean_data(file_path: Path) -> pd.DataFrame` - Lee el archivo completo (para testing o archivos pequeños).
   - `_get_required_columns() -> List[str]` - Lista de strings que deben estar en el header para detectar el inicio. Por defecto vacía.
@@ -1910,7 +1922,7 @@ El archivo `base.py` define una clase abstracta `BaseWMSProcessor` que proporcio
   - `typing`: Para tipos de datos anotados.
   - `logging`: Para registro de eventos.
 
-- Flujo: El archivo interactúa con clases y funciones definidas en otros módulos (`core.security.validate_table`) y maneja archivos CSV, TXT, XLSX y XLS.
+- Flujo: El archivo interactúa con clases y funciones definidas en otros módulos, como `core.security.validate_table`, para validar archivos y tablas.
 
 
 ---
@@ -1955,39 +1967,77 @@ No aplica.
 
 ---
 
+## Archivo: ./services/etl/iw39.py
+
+### Resumen Funcional
+El archivo `iw39.py` contiene una clase `IW39Processor` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos en formato IW39 (Órdenes PM), validando su existencia, detectando parámetros necesarios, y limpiando los datos contenidos en ellos.
+
+### Catálogo de Funciones y Clases
+- **IW39Processor(BaseWMSProcessor)** - Adaptador específico para procesar el formato IW39 (Órdenes PM).
+  - **validate_file(file_path: Path) -> bool** - Valida si el archivo existe y contiene los parámetros necesarios.
+  - **_get_required_columns() -> List[str]** - Devuelve una lista de columnas requeridas para el procesamiento del formato IW39.
+  - **_get_primary_keys() -> List[str]** - Devuelve la clave primaria utilizada en el procesamiento.
+  - **_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame** - Limpia y normaliza los datos del DataFrame.
+
+### Interacción con Base de Datos
+No aplica. El archivo no realiza ninguna interacción con una base de datos.
+
+### Estado y Variables Globales
+No aplica. No se definen variables globales, de sesión o de entorno en este archivo.
+
+### Dependencias y Flujo
+- **Librerías externas utilizadas**: `pandas`, `pathlib`.
+- **Flujo interno**: El archivo interactúa con la clase base `BaseWMSProcessor` para procesar archivos IW39.
+
+
+---
+
 ## Archivo: ./services/etl/movements.py
 
 ### Resumen Funcional
-El archivo `movements.py` contiene una clase `InventoryMovementAdapter` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos CSV con movimientos WMS, validando su contenido, limpiándolo y clasificándolo según ciertas reglas. Además, realiza operaciones post-procesamiento en la base de datos para optimizar el rendimiento de las búsquedas.
+El archivo `movements.py` contiene una clase `InventoryMovementAdapter` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos CSV en formato WMS Movimientos, validar su contenido, limpiar y transformar los datos, y cargarlos en una base de datos.
 
 ### Catálogo de Funciones y Clases
-- `InventoryMovementAdapter(BaseWMSProcessor)` - Adaptador específico para procesar el formato WMS Movimientos.
-  - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y contiene los columnas requeridas.
+- **InventoryMovementAdapter(BaseWMSProcessor)** - Adaptador específico para procesar el formato WMS Movimientos.
+  - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y contiene las columnas requeridas.
   - `_get_required_columns() -> List[str]` - Devuelve una lista de columnas requeridas en el archivo.
-  - `_get_primary_keys() -> List[str]` - Devuelve una lista de claves primarias utilizadas en la clasificación.
-  - `_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame` - Limpia y normaliza el DataFrame, aplicando diversas transformaciones y validaciones.
-  - `_vectorized_classify(df: pd.DataFrame) -> pd.DataFrame` - Clasifica las filas del DataFrame según ciertas condiciones.
-  - `_post_process(conn, table_name: str)` - Crea índices en la base de datos para mejorar el rendimiento de las búsquedas.
+  - `_get_primary_keys() -> List[str]` - Devuelve una lista de claves primarias utilizadas para la carga en la base de datos.
+  - `_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma el DataFrame, renombrando columnas, eliminando valores nulos, normalizando tipos de datos, etc.
+  - `_vectorized_classify(df: pd.DataFrame) -> pd.DataFrame` - Clasifica las operaciones según los valores en la columna 'cmv'.
+  - `_post_process(conn, table_name: str)` - Crea índices para mejorar el rendimiento de consultas en la tabla `inventory_movements`.
 
 ### Interacción con Base de Datos
-- Motor: No especificado.
-- Tablas: `inventory_movements`.
-- Columnas:
+- **Motor**: No especificado.
+- **Tablas**: `inventory_movements`.
+- **Columnas**:
+  - `fe_contab`
+  - `alm`
+  - `ce`
   - `cmv`
-  - `ce_coste`
+  - `referencia`
+  - `texto_cab_documento`
+  - `texto_breve_material`
   - `material`
+  - `cantidad`
+  - `umb`
+  - `doc_mat`
+  - `ej_mat`
+  - `registrado`
+  - `hora`
+  - `usuario`
+  - `pedido`
+  - `ce_coste`
+  - `importe_ml`
+  - `mon`
+  - `proveedor`
+  - `orden`
 
 ### Estado y Variables Globales
-No aplica.
+- No aplica.
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
-  - `pandas` (pd)
-  - `numpy` (np)
-  - `pathlib` (Path)
-  - `typing` (List)
-
-- No se comunica con otros archivos del proyecto.
+- **Librerías Externas**: `pandas`, `numpy`.
+- **Flujo Interno**: El archivo se comunica con la clase base `BaseWMSProcessor` para procesar archivos CSV, limpia los datos utilizando pandas, y luego carga los datos en una base de datos mediante consultas SQL.
 
 
 ---
@@ -2076,6 +2126,47 @@ No aplica
 ### Dependencias y Flujo
 - **Librerías Externas**: `sqlalchemy`, `pandas`, `logging`, `datetime`, `typing`
 - **Flujo Interno**: El servicio interactúa con el repositorio de inventario para verificar la existencia de la tabla, obtiene el período más reciente de datos y genera un contexto completo.
+
+
+---
+
+## Archivo: ./services/productivity_service.py
+
+### Resumen Funcional
+El archivo `productivity_service.py` contiene una clase `ProductivityService` que proporciona métodos para obtener datos de productividad, incluyendo fechas disponibles, KPIs diarios, horarios de tendencia, huecos de inactividad y mapas de actividad. Estos datos se obtienen a partir de dos tablas: `inventory_movements` y `warehouse_tasks`.
+
+### Catálogo de Funciones y Clases
+- **ProductivityService(session: Session)** - Inicializa el servicio con una sesión de base de datos.
+- **get_available_dates()** - Devuelve una lista ordenada de fechas únicas (YYYY-MM-DD) que tienen movimientos generados o confirmados.
+- **get_productivity_data(target_date: str)** - Retorna todos los KPIs de productividad para una fecha específica.
+- **_get_daily_summary(date_sap: str)** - Calcula el resumen diario de actividad.
+- **_get_hourly_trend(date_sap: str)** - Calcula la tendencia horaria de actividad.
+- **_get_inactivity_gaps(date_sap: str)** - Identifica los huecos de inactividad en la actividad.
+- **_get_activity_heatmap(date_sap: str)** - Genera un mapa de actividad basado en franjas horarias.
+- **get_monthly_productivity_data(target_month: str)** - Retorna todos los KPIs de productividad para un mes específico.
+- **_get_monthly_summary(month_sap: str)** - Calcula el resumen mensual de actividad.
+- **_get_monthly_shifts(month_sap: str)** - Identifica las horas de trabajo por turno en un mes.
+- **_get_monthly_heatmap(month_sap: str)** - Genera un mapa de actividad basado en días de la semana.
+
+### Interacción con Base de Datos
+El archivo interactúa con una base de datos SQL utilizando SQLAlchemy. Las tablas involucradas son:
+- `inventory_movements`
+  - Columnas utilizadas: `registrado`, `hora`, `usuario`, `doc_mat`
+- `warehouse_tasks`
+  - Columnas utilizadas: `fecha_conf`, `hor_conf`, `usuario_conf`, `numero_ot`
+
+### Estado y Variables Globales
+No aplica.
+
+### Dependencias y Flujo
+Dependencias:
+- `logging` - Para el registro de errores.
+- `pandas` - Para la manipulación de datos.
+- `sqlalchemy.orm.Session` - Para la gestión de sesiones de base de datos.
+- `sqlalchemy.text` - Para ejecutar consultas SQL.
+
+Flujo interno:
+- La clase `ProductivityService` se comunica con el archivo principal del proyecto a través de sus métodos públicos, que realizan consultas a las tablas mencionadas y devuelven los resultados procesados.
 
 
 ---
@@ -2354,28 +2445,29 @@ Dependencias:
 ## Archivo: ./static/js/consumos.js
 
 ### Resumen Funcional
-El archivo `consumos.js` es un script JavaScript que se ejecuta en el navegador y proporciona funcionalidades para interactuar con una interfaz de usuario web, permitiendo la entrada de datos en una grilla similar a Excel, filtrado de tablas y búsqueda de consumos por Centro de Costo (CeCo) o materiales.
+El archivo `consumos.js` contiene funciones y métodos para gestionar la interfaz de usuario y el procesamiento de datos relacionados con los consumos en materiales. Permite buscar y filtrar datos por Centro de Costo (CeCo) o por materiales, muestra resultados en una tabla y permite visualizar tendencias mensuales de consumo.
 
 ### Catálogo de Funciones y Clases
-- `document.addEventListener('DOMContentLoaded', callback)` - Inicializa el script cuando el DOM esté completamente cargado.
-- `handlePaste(e)` - Maneja el evento de pegar en las celdas de la grilla, permitiendo la entrada de múltiples valores a la vez.
-- `limpiarGrilla()` - Limpia los valores de todas las celdas y oculta el contenedor de resultados.
-- `formatearDinero(valor)` - Formatea un valor numérico como dinero con símbolo y formato localizado.
-- `formatearNumero(valor)` - Formatea un valor numérico con formato localizado.
-- `filterTable(tableId)` - Filtra las filas de una tabla según los valores ingresados en las celdas de filtro.
-- `renderVanillaTable(tbodyId, data, columns)` - Renderiza datos en una tabla HTML utilizando JavaScript puro.
-- `buscarPorCeCo()` - Busca y muestra los consumos asociados a un Centro de Costo específico.
-- `buscarPorMateriales()` - Busca y muestra los consumos asociados a materiales ingresados en la grilla.
+- `handlePaste(e)` - Maneja el evento de pegado para rellenar múltiples celdas.
+- `limpiarGrilla()` - Limpia la grilla de entrada y oculta el contenedor de resultados.
+- `formatearDinero(valor)` - Formatea un valor numérico como dinero.
+- `formatearNumero(valor)` - Formatea un valor numérico como número.
+- `filterTable(tableId)` - Filtra una tabla según los valores en las celdas de entrada de la cabecera.
+- `renderVanillaTable(tbodyId, data, columns, onRowClick = null)` - Renderiza una tabla usando elementos HTML y JavaScript puro.
+- `buscarPorCeCo()` - Busca datos por Centro de Costo y muestra los resultados en una tabla.
+- `buscarPorMateriales()` - Busca datos por materiales ingresados en la grilla y muestra los resultados en una tabla.
+- `abrirTendenciaMaterial(material, areaNegocio, descripcion, ceco = '')` - Abre un modal con la tendencia mensual de consumo para un material específico.
+- `cerrarTendenciaMaterial()` - Cierra el modal de tendencia.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no realiza ninguna interacción con una base de datos.
+No aplica
 
 ### Estado y Variables Globales
-No aplica. No se definen variables globales ni se utiliza estado crítico almacenado en variables.
+- `_tendenciaChart` - Variable global que almacena una instancia del gráfico de tendencias mensuales.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: No se utilizan librerías externas.
-- **Flujo Interno**: El script interactúa con elementos del DOM para crear una grilla de entrada, manejar eventos de pegar, filtrar tablas y realizar búsquedas. Los resultados de las búsquedas son renderizados en tablas HTML utilizando funciones JavaScript puro.
+- **Librerías Externas**: `Chart.js` (usado para renderizar el gráfico de tendencias).
+- **Flujo Interno**: El archivo interactúa con elementos HTML para mostrar resultados, manejar eventos de usuario y realizar peticiones a una API para obtener datos.
 
 
 ---
@@ -2595,6 +2687,44 @@ No aplica. No se definen variables globales en este archivo.
 
 ---
 
+## Archivo: ./static/js/productivity.js (Procesado en 1 partes)
+
+#### --- PARTE 1 de 1 ---
+
+### Resumen Funcional
+El archivo `productivity.js` contiene funciones y lógica para cargar, renderizar y gestionar datos de productividad en una interfaz web. Permite cambiar la fecha y mes seleccionados, cargar datos de productividad diaria y mensual, y visualizar estos datos mediante gráficos y tablas.
+
+### Catálogo de Funciones y Clases
+- `loadProductivityData()` - Carga los datos de productividad para una fecha específica.
+- `renderKPI1(summary)` - Renderiza el KPI 1 con resumen de actividad por usuario.
+- `renderKPI2(trend)` - Renderiza el KPI 2 con tendencia diaria de movimientos.
+- `renderKPI3(gaps)` - Renderiza el KPI 3 con baches de inactividad detectados.
+- `renderKPI4(heatmapData)` - Renderiza el KPI 4 con mapa de calor de actividad.
+- `loadMonthlyProductivityData()` - Carga los datos de productividad mensuales para un mes específico.
+- `renderMonthlyKPI1(summary)` - Renderiza el KPI 1 mensual con resumen de actividad por usuario.
+- `renderMonthlyKPI2(shifts)` - Renderiza el KPI 2 mensual con tendencia diaria de movimientos por turno.
+- `renderMonthlyKPI3(heatmapData)` - Renderiza el KPI 3 mensual con mapa de calor de actividad.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+- `productivityTrendChartInst` - Instancia del gráfico de tendencia diaria.
+- `productivityMonthlyTrendChartInst` - Instancia del gráfico de tendencia mensual.
+- `COLORS` - Array con colores institucionales.
+
+### Dependencias y Flujo
+Dependencias:
+- `fetch` - Para hacer solicitudes HTTP.
+- `Chart.js` - Para renderizar gráficos.
+
+Flujo:
+- El archivo se comunica con el servidor a través de endpoints `/api/v1/analytics/productivity` y `/api/v1/analytics/productivity/monthly`.
+- Los datos cargados se utilizan para actualizar las tablas y gráficos en la interfaz web.
+
+
+---
+
 ## Archivo: ./static/js/saas_engine.js (Procesado en 1 partes)
 
 #### --- PARTE 1 de 1 ---
@@ -2764,6 +2894,7 @@ El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario d
 
 ### Catálogo de Funciones y Clases
 - `switchTab(tabId, btnElement)` - Cambia la pestaña activa.
+- `switchSubTab(subTabId, btnElement)` - Cambia la subpestaña activa.
 - `openNonPalletizedDetails(user, claseMov)` - Abre un modal con detalles no paletizados.
 - `initTableFilters()` - Inicializa los filtros de tablas.
 - `filterOTTable()` - Filtra la tabla de OTs según los criterios seleccionados.
@@ -2777,18 +2908,21 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
+- **Librerías externas utilizadas:**
   - Chart.js
-  - marked.js
+  - Chartjs-plugin-datalabels
   - Font Awesome
-- Archivos JavaScript incluidos:
+  - marked.js
+
+- **Archivos JavaScript que se comunican con este archivo:**
   - `core_ui.js`
   - `dashboard.js`
   - `saas_engine.js`
   - `deliveries.js`
   - `consumos.js`
   - `transporte.js`
-- Variables JSON inyectadas dinámicamente desde el backend.
+
+Estos archivos JavaScript probablemente contienen la lógica de negocio y los controladores que interactúan con el backend para cargar datos y manejar eventos.
 
 #### --- PARTE 2 de 2 ---
 
@@ -2796,25 +2930,24 @@ No aplica
 El archivo `deliveries.html` es una plantilla HTML que contiene scripts para cargar datos JSON y referencias a archivos JavaScript. También incluye varios modales parciales.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este fragmento de código.
+No se detectan funciones ni clases definidas en este fragmento de código.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `ots_user_confirmed`: Almacena datos del usuario confirmado.
-- `ots_type_labels`: Almacena etiquetas de tipo OTS.
-- `ots_type_data`: Almacena datos de tipo OTS.
+No se detectan variables globales, de sesión o de entorno quemadas en el código.
 
 ### Dependencias y Flujo
-- **Librerías externas**: No se mencionan librerías externas específicas en este fragmento.
+- **Librerías externas utilizadas**: No se mencionan librerías específicas.
 - **Archivos JavaScript incluidos**:
-  - `js/tasks.js`
-  - `js/inventory.js`
-  - `js/analytics_proyecciones.js`
-  - `js/docs_explorer.js`
+  - `js/tasks.js` (versión 5)
+  - `js/inventory.js` (versión 11)
+  - `js/analytics_proyecciones.js` (versión 3)
+  - `js/docs_explorer.js` (versión 5)
+  - `js/productivity.js` (versión 21)
 
-- **Modales parciales incluidos**:
+- **Modales incluidos**:
   - `_modals.html`
   - `_deliveries_modals.html`
   - `_inventory_modals.html`
@@ -2823,7 +2956,7 @@ No aplica
   - `_quick_login_modal.html`
   - `_logout.html`
 
-Este archivo se utiliza para cargar datos y recursos necesarios en una página web, incluyendo modales que probablemente contienen funcionalidades adicionales.
+Este archivo se utiliza para cargar datos JSON y referencias a scripts JavaScript, además de incluir varios modales parciales que probablemente contienen funcionalidades específicas del sistema.
 
 
 ---
@@ -2910,24 +3043,20 @@ No depende de ninguna librería externa ni comunica con otros archivos del proye
 ## Archivo: ./templates/partials/_deliveries_modals.html
 
 ### Resumen Funcional
-Este archivo contiene fragmentos HTML para varios modales que probablemente se utilizan en una interfaz web para mostrar detalles específicos sobre entregas, actividades de usuarios, desglose de ubicaciones y movimientos no paletizados.
+Este archivo contiene fragmentos HTML para varios modales que probablemente se utilizan en una interfaz web para mostrar detalles específicos sobre entregas, usuarios, ubicaciones y productividad mensual. Cada modal tiene un encabezado, cuerpo y botón de cierre.
 
 ### Catálogo de Funciones y Clases
-- `toggleModalFilter(filterType, isMonth)` - Alterna el filtro del modal según el tipo (area o weekday) y si se selecciona el mes actual.
-- `closeModal(modalId)` - Cierra el modal con el ID especificado.
+No hay funciones o clases definidas en este archivo HTML. Todas las interacciones son realizadas a través de JavaScript.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna.
 
 ### Estado y Variables Globales
-No aplica
+No aplica.
 
 ### Dependencias y Flujo
-Dependencias:
-- `jQuery` (usado para manipular el DOM)
-- `FontAwesome` (usado para iconos)
-
-Flujo: Este archivo no interactúa directamente con otros archivos del proyecto, solo proporciona estructura HTML y JavaScript básico para los modales.
+- **Librerías Externas**: No se mencionan librerías específicas en este fragmento HTML.
+- **Flujo Interno**: El archivo interactúa con JavaScript para controlar el comportamiento de los modales, como mostrar/ocultar, cambiar filtros y cargar datos.
 
 
 ---
@@ -3043,29 +3172,30 @@ No aplica
 ## Archivo: ./templates/partials/_scripts.html
 
 ### Resumen Funcional
-Este fragmento HTML incluye scripts para Chart.js y sus plugins, así como módulos de JavaScript que manejan la lógica del negocio y las utilidades de la interfaz de usuario.
+Este archivo contiene fragmentos de HTML que incluyen scripts para Chart.js, modales rápidos de inicio de sesión y cierre, y lógica de negocio y ayuda de interfaz de usuario para el panel de control. También carga scripts adicionales relacionados con la productividad.
 
 ### Catálogo de Funciones y Clases
-No se detectaron funciones o métodos específicos en este fragmento. Solo se incluyen referencias a scripts externos.
+No se detectaron funciones o métodos específicos en este fragmento HTML.
 
 ### Interacción con Base de Datos
-Ninguna
+No aplica
 
 ### Estado y Variables Globales
 No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**: 
-  - `chart.js`
-  - `chartjs-plugin-datalabels@2.0.0`
+- **Librerías externas utilizadas:**
+  - Chart.js Core
+  - chartjs-plugin-datalabels@2.0.0
 
-- **Archivos Internos**:
-  - `_quick_login_modal.html`
-  - `_logout.html`
-  - `core_ui.js` (v1)
-  - `dashboard.js` (v17)
+- **Archivos JavaScript incluidos:**
+  - `partials/_quick_login_modal.html`
+  - `partials/_logout.html`
+  - `static/js/core_ui.js?v=1`
+  - `static/js/dashboard.js?v=17`
+  - `static/js/productivity.js?v=21`
 
-Este fragmento HTML es una colección de scripts y plantillas que se incluyen en la página, pero no realiza ninguna operación específica relacionada con la base de datos o el estado global del sistema.
+Este fragmento HTML se comunica con otros archivos del proyecto a través de la inclusión de scripts y modales.
 
 
 ---
@@ -3122,12 +3252,14 @@ No aplica
 ## Archivo: ./templates/partials/_tab_consumos.html
 
 ### Resumen Funcional
-Este archivo HTML define una pestaña para el análisis de consumos y costos, que incluye dos paneles: uno para buscar por Centro de Costo (CeCo) y otro para buscar inversa por materiales.
+Este fragmento HTML define una pestaña para el análisis de consumos y costos, que incluye dos paneles: uno para buscar por Centro de Costo (CeCo) y otro para buscar inversamente por materiales. Cada panel contiene tablas interactivas y un modal para mostrar tendencias mensuales.
 
 ### Catálogo de Funciones y Clases
-- `buscarPorCeCo()` - Realiza la búsqueda de historial de retiros y consumo del mes actual por CeCo.
-- `limpiarGrilla()` - Limpia las celdas de la grilla de entrada de materiales.
-- `buscarPorMateriales()` - Analiza una lista de materiales para mostrar los resultados de consumo.
+- `buscarPorCeCo()` - Llama a la función que realiza el análisis de consumos por CeCo.
+- `limpiarGrilla()` - Limpia las celdas de entrada en el panel de búsqueda inversa por materiales.
+- `buscarPorMateriales()` - Realiza el análisis de los materiales ingresados.
+- `filterTable(tableId)` - Filtra las tablas según el texto ingresado en los campos de búsqueda.
+- `cerrarTendenciaMaterial()` - Cierra el modal de tendencias mensuales.
 
 ### Interacción con Base de Datos
 No aplica
@@ -3136,7 +3268,9 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-No depende de ninguna librería externa ni comunica con otros archivos del proyecto.
+Depende de las siguientes funciones y variables globales definidas en otros archivos del proyecto:
+- `filterTable(tableId)` - Función para filtrar tablas.
+- `cerrarTendenciaMaterial()` - Función para cerrar el modal de tendencias mensuales.
 
 
 ---
@@ -3260,22 +3394,22 @@ No aplica
 ## Archivo: ./templates/partials/_tab_ots.html
 
 ### Resumen Funcional
-Este fragmento HTML muestra una pestaña de gestión de Ordenes de Transporte (OTs) con estadísticas, gráficos y tablas interactivas. Permite filtrar y visualizar OTs pendientes, movimientos no paletizados y detalles específicos.
+Este fragmento HTML muestra una pestaña para la gestión de Ordenes de Transporte (OTs), incluyendo estadísticas, gráficos y tablas interactivas que permiten filtrar y visualizar datos relacionados con OTs pendientes, movimientos no paletizados y productividad.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este fragmento HTML.
+No se detectan funciones o clases definidas en este fragmento HTML. Todas las interacciones son realizadas a través de JavaScript y eventos del DOM.
 
 ### Interacción con Base de Datos
-- **Motor:** No aplica (el código no contiene consultas SQL ni interacciones directas con una base de datos).
-- **Tablas:** No aplica.
-- **Columnas:** No aplica.
+- **Motor**: No aplica.
+- **Tablas**: No se mencionan tablas específicas.
+- **Columnas**: No se mencionan columnas específicas.
 
 ### Estado y Variables Globales
-No se detectan variables globales, de sesión o diccionarios quemados en el código.
+No se detectan variables globales, de sesión o de entorno quemadas en el código.
 
 ### Dependencias y Flujo
-- **Librerías Externas:** `FontAwesome` para iconos.
-- **Flujo Interno:** El fragmento interactúa con JavaScript a través de eventos como `onclick`, que llaman funciones como `openEditQueryModal`, `filterOTTable`, `switchSubTab`, etc. No se indica interacción directa con otros archivos del proyecto en este fragmento.
+- **Librerías Externas**: `FontAwesome` para iconos.
+- **Flujo**: Este fragmento interactúa con otros archivos del proyecto a través de funciones JavaScript como `openEditQueryModal`, `switchSubTab`, `filterOTTable`, `filterDiscrepancyTable`, `sortTableDiscrepancy`, `changeProductivityDate`, `loadProductivityData`, `loadMonthlyProductivityData`, y `openModal`.
 
 
 ---

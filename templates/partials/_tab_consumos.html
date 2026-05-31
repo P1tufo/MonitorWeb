@@ -21,7 +21,9 @@
 
             <div id="ceco-results-container" style="display: none;">
                 <!-- Mes Actual -->
-                <h4 style="color: var(--accent); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; cursor: pointer; user-select: none;" onclick="document.getElementById('container-ceco-mes').style.display = document.getElementById('container-ceco-mes').style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.innerHTML.includes('▼') ? '▶ 📅 Mes Actual' : '▼ 📅 Mes Actual';">▼ 📅 Mes Actual</h4>
+                <h4 style="color: var(--accent); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; cursor: pointer; user-select: none;" onclick="document.getElementById('container-ceco-mes').style.display = document.getElementById('container-ceco-mes').style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.innerHTML.includes('▼') ? '▶ 📅 Mes Actual' : '▼ 📅 Mes Actual';">▼ 📅 Mes Actual
+                    <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal; margin-left: 12px;">💡 Click en una fila para ver tendencia mensual</span>
+                </h4>
                 <div id="container-ceco-mes" style="display: block;">
                     <div class="table-container" style="margin-bottom: 2rem;">
                         <table class="data-table" id="table-ceco-mes">
@@ -29,11 +31,13 @@
                                 <tr>
                                     <th>Material</th>
                                     <th>Descripción</th>
-                                    <th style="text-align: right;">Cantidad Total</th>
+                                    <th>UMB</th>
+                                    <th style="text-align: right;">Cantidad Este Mes</th>
                                     <th style="text-align: right;">Precio Unit. ($)</th>
-                                    <th style="text-align: right;" id="th-costo-mes">Costo Total ($)</th>
+                                    <th style="text-align: right;" id="th-costo-mes">Costo Este Mes ($)</th>
                                 </tr>
                                 <tr class="filter-row">
+                                    <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
                                     <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
                                     <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
                                     <th></th>
@@ -46,8 +50,10 @@
                     </div>
                 </div>
 
-                <!-- Histórico -->
-                <h4 style="color: var(--accent); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; cursor: pointer; user-select: none;" onclick="document.getElementById('container-ceco-hist').style.display = document.getElementById('container-ceco-hist').style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.innerHTML.includes('▼') ? '▶ 📚 Histórico Total' : '▼ 📚 Histórico Total';">▼ 📚 Histórico Total</h4>
+                <!-- Histórico (ahora Anual) -->
+                <h4 style="color: var(--accent); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; cursor: pointer; user-select: none;" onclick="document.getElementById('container-ceco-hist').style.display = document.getElementById('container-ceco-hist').style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.innerHTML.includes('▼') ? '▶ 📚 Acumulado Anual' : '▼ 📚 Acumulado Anual';">▼ 📚 Acumulado Anual
+                    <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal; margin-left: 12px;">💡 Click en una fila para ver tendencia mensual</span>
+                </h4>
                 <div id="container-ceco-hist" style="display: block;">
                     <div class="table-container">
                         <table class="data-table" id="table-ceco-hist">
@@ -55,11 +61,13 @@
                                 <tr>
                                 <th>Material</th>
                                 <th>Descripción</th>
-                                <th style="text-align: right;">Cantidad Total</th>
+                                <th>UMB</th>
+                                <th style="text-align: right;">Cantidad Anual</th>
                                 <th style="text-align: right;">Precio Unit. ($)</th>
-                                <th style="text-align: right;" id="th-costo-hist">Costo Total ($)</th>
+                                <th style="text-align: right;" id="th-costo-hist">Costo Anual ($)</th>
                             </tr>
                             <tr class="filter-row">
+                                <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
                                 <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
                                 <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
                                 <th></th>
@@ -80,18 +88,18 @@
             <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Pega directamente una lista de materiales por ejemplo desde Excel para ver qué áreas los han retirado.</p>
             
             <!-- Grid de Ingreso Tipo Excel -->
-            <div class="excel-grid-container" style="margin-bottom: 1.5rem;">
-                <div style="display: grid; grid-template-columns: 1fr; gap: 5px; max-width: 300px; max-height: 400px; overflow-y: auto; padding-right: 5px;" id="material-grid">
-                    <!-- Se generarán 25 celdas por JS -->
-                </div>
+            <div class="excel-grid-container" style="margin-bottom: 1.5rem; max-width: 400px;">
+                <textarea id="material-grid-textarea" placeholder="Pega aquí los materiales..." rows="12" style="width: 100%; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: var(--text); padding: 12px; border-radius: 8px; font-size: 0.95rem; outline: none; resize: vertical; box-sizing: border-box; line-height: 1.5; font-family: monospace;"></textarea>
                 <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-                    <button class="btn btn-small" onclick="limpiarGrilla()" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">Limpiar Celdas</button>
-                    <button class="btn btn-primary" onclick="buscarPorMateriales()">Analizar Materiales</button>
+                    <button class="btn btn-small" onclick="limpiarGrilla()" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">Limpiar</button>
+                    <button class="btn btn-primary" onclick="buscarPorMateriales()">Analizar</button>
                 </div>
             </div>
 
             <div id="materiales-results-container" style="display: none;">
-                <h4 style="color: var(--accent); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; cursor: pointer; user-select: none;" onclick="document.getElementById('container-materiales').style.display = document.getElementById('container-materiales').style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.innerHTML.includes('▼') ? '▶ 📊 Resultados de Consumo' : '▼ 📊 Resultados de Consumo';">▼ 📊 Resultados de Consumo</h4>
+                <h4 style="color: var(--accent); margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; cursor: pointer; user-select: none;" onclick="document.getElementById('container-materiales').style.display = document.getElementById('container-materiales').style.display === 'none' ? 'block' : 'none'; this.innerHTML = this.innerHTML.includes('▼') ? '▶ 📊 Resultados de Consumo' : '▼ 📊 Resultados de Consumo';">▼ 📊 Resultados de Consumo
+                    <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal; margin-left: 12px;">💡 Click en una fila para ver tendencia mensual</span>
+                </h4>
                 <div id="container-materiales" style="display: block;">
                     <div class="table-container">
                         <table class="data-table" id="table-materiales">
@@ -99,14 +107,16 @@
                                 <tr>
                                     <th>Material</th>
                                     <th>Descripción</th>
+                                    <th>UMB</th>
                                     <th>Área de Negocio</th>
                                     <th style="text-align: right;">Cantidad Este Mes</th>
                                     <th style="text-align: right;" id="th-costo-mes-mat">Costo Este Mes ($)</th>
-                                    <th style="text-align: right;">Cantidad Total</th>
+                                    <th style="text-align: right;">Cantidad Anual</th>
                                     <th style="text-align: right;">Precio Unit. ($)</th>
-                                    <th style="text-align: right;" id="th-costo-mat">Costo Total ($)</th>
+                                    <th style="text-align: right;" id="th-costo-mat">Costo Anual ($)</th>
                                 </tr>
                                 <tr class="filter-row">
+                                    <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
                                     <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
                                     <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
                                     <th><input type="text" class="col-filter" placeholder="Buscar..." onkeyup="filterTable(this.closest('table').id)"></th>
@@ -124,5 +134,96 @@
             </div>
         </div>
 
+    </div>
+</div>
+
+<!-- Modal: Tendencia Mensual de Material -->
+<style>
+.tendencia-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 9999;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+}
+.tendencia-modal-overlay.is-open {
+    display: flex;
+}
+.tendencia-modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 820px;
+    width: 92%;
+    position: relative;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.55);
+    animation: tendenciaFadeIn 0.2s ease;
+}
+@keyframes tendenciaFadeIn {
+    from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+.tendencia-modal-close {
+    position: absolute; top: 1rem; right: 1rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 8px;
+    width: 32px; height: 32px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+}
+.tendencia-modal-close:hover { background: rgba(255,255,255,0.12); }
+.tendencia-kpi-row {
+    display: flex; gap: 1.5rem; margin-top: 1.5rem; justify-content: center; flex-wrap: wrap;
+}
+.tendencia-kpi {
+    text-align: center; min-width: 110px;
+}
+.tendencia-kpi-value {
+    font-size: 1.4rem; font-weight: 700;
+}
+.tendencia-kpi-label {
+    font-size: 0.73rem; color: var(--text-muted); margin-top: 2px;
+}
+</style>
+
+<div id="modal-tendencia-material" class="tendencia-modal-overlay" onclick="if(event.target===this) cerrarTendenciaMaterial()">
+    <div class="tendencia-modal-box">
+        <button class="tendencia-modal-close" onclick="cerrarTendenciaMaterial()" title="Cerrar">&times;</button>
+        <h3 id="tendencia-modal-title" style="margin-bottom: 0.2rem; color: var(--accent);">📈 Tendencia de Consumo</h3>
+        <p id="tendencia-modal-subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;"></p>
+        <div style="position: relative; height: 300px;">
+            <canvas id="chart-tendencia-material"></canvas>
+        </div>
+        <div class="tendencia-kpi-row">
+            <div class="tendencia-kpi">
+                <div class="tendencia-kpi-value" id="tendencia-precio-unitario" style="color: #6366f1;">—</div>
+                <div class="tendencia-kpi-label">Precio Unitario</div>
+            </div>
+            <div class="tendencia-kpi">
+                <div class="tendencia-kpi-value" id="tendencia-total-anual" style="color: var(--accent);">—</div>
+                <div class="tendencia-kpi-label" id="tendencia-total-anual-label">Total Anual</div>
+            </div>
+            <div class="tendencia-kpi">
+                <div class="tendencia-kpi-value" id="tendencia-avg-cant" style="color: #34d399;">—</div>
+                <div class="tendencia-kpi-label">Promedio Mensual</div>
+            </div>
+            <div class="tendencia-kpi">
+                <div class="tendencia-kpi-value" id="tendencia-min-cant" style="color: #f87171;">—</div>
+                <div class="tendencia-kpi-label">Mínimo Mensual</div>
+            </div>
+            <div class="tendencia-kpi">
+                <div class="tendencia-kpi-value" id="tendencia-max-cant" style="color: #fbbf24;">—</div>
+                <div class="tendencia-kpi-label">Máximo Mensual</div>
+            </div>
+        </div>
     </div>
 </div>

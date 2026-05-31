@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: services/etl
-Compilado el: 2026-05-29 00:41:03
+Compilado el: 2026-05-30 00:23:08
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -34,9 +34,9 @@ No aplica
 El archivo `base.py` define una clase abstracta `BaseWMSProcessor` que proporciona funcionalidades para procesar archivos WMS (TXT/CSV/XLSX) y cargarlos en una base de datos SQLite. Incluye métodos para validar archivos, leer y limpiar datos, realizar operaciones UPSERT atómicas, y procesar directorios de archivos.
 
 ### Catálogo de Funciones y Clases
-- `BaseWMSProcessor(encodings=None, chunk_size=50000)` - Clase abstracta para procesar archivos WMS.
-  - `validate_file(file_path: Path) -> bool` - Verifica si el archivo es válido para este procesador.
-  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma un chunk de datos crudos (Implementado por cada hijo).
+- `BaseWMSProcessor(encodings=None, chunk_size=50000)` - Clase abstracta que define métodos para procesar archivos WMS.
+  - `validate_file(file_path: Path) -> bool` - Valida si el archivo es válido para este procesador.
+  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma un chunk de datos crudos (implementado por cada hijo).
   - `_detect_file_params(file_path: Path, required_columns: List[str]) -> Tuple[int, str]` - Detecta la fila de encabezado y codificación buscando columnas clave.
   - `read_and_clean_data(file_path: Path) -> pd.DataFrame` - Lee el archivo completo (para testing o archivos pequeños).
   - `_get_required_columns() -> List[str]` - Lista de strings que deben estar en el header para detectar el inicio. Por defecto vacía.
@@ -63,7 +63,7 @@ El archivo `base.py` define una clase abstracta `BaseWMSProcessor` que proporcio
   - `typing`: Para tipos de datos anotados.
   - `logging`: Para registro de eventos.
 
-- Flujo: El archivo interactúa con clases y funciones definidas en otros módulos (`core.security.validate_table`) y maneja archivos CSV, TXT, XLSX y XLS.
+- Flujo: El archivo interactúa con clases y funciones definidas en otros módulos, como `core.security.validate_table`, para validar archivos y tablas.
 
 
 ---
@@ -108,39 +108,77 @@ No aplica.
 
 ---
 
+## Archivo: ./services/etl/iw39.py
+
+### Resumen Funcional
+El archivo `iw39.py` contiene una clase `IW39Processor` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos en formato IW39 (Órdenes PM), validando su existencia, detectando parámetros necesarios, y limpiando los datos contenidos en ellos.
+
+### Catálogo de Funciones y Clases
+- **IW39Processor(BaseWMSProcessor)** - Adaptador específico para procesar el formato IW39 (Órdenes PM).
+  - **validate_file(file_path: Path) -> bool** - Valida si el archivo existe y contiene los parámetros necesarios.
+  - **_get_required_columns() -> List[str]** - Devuelve una lista de columnas requeridas para el procesamiento del formato IW39.
+  - **_get_primary_keys() -> List[str]** - Devuelve la clave primaria utilizada en el procesamiento.
+  - **_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame** - Limpia y normaliza los datos del DataFrame.
+
+### Interacción con Base de Datos
+No aplica. El archivo no realiza ninguna interacción con una base de datos.
+
+### Estado y Variables Globales
+No aplica. No se definen variables globales, de sesión o de entorno en este archivo.
+
+### Dependencias y Flujo
+- **Librerías externas utilizadas**: `pandas`, `pathlib`.
+- **Flujo interno**: El archivo interactúa con la clase base `BaseWMSProcessor` para procesar archivos IW39.
+
+
+---
+
 ## Archivo: ./services/etl/movements.py
 
 ### Resumen Funcional
-El archivo `movements.py` contiene una clase `InventoryMovementAdapter` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos CSV con movimientos WMS, validando su contenido, limpiándolo y clasificándolo según ciertas reglas. Además, realiza operaciones post-procesamiento en la base de datos para optimizar el rendimiento de las búsquedas.
+El archivo `movements.py` contiene una clase `InventoryMovementAdapter` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos CSV en formato WMS Movimientos, validar su contenido, limpiar y transformar los datos, y cargarlos en una base de datos.
 
 ### Catálogo de Funciones y Clases
-- `InventoryMovementAdapter(BaseWMSProcessor)` - Adaptador específico para procesar el formato WMS Movimientos.
-  - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y contiene los columnas requeridas.
+- **InventoryMovementAdapter(BaseWMSProcessor)** - Adaptador específico para procesar el formato WMS Movimientos.
+  - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y contiene las columnas requeridas.
   - `_get_required_columns() -> List[str]` - Devuelve una lista de columnas requeridas en el archivo.
-  - `_get_primary_keys() -> List[str]` - Devuelve una lista de claves primarias utilizadas en la clasificación.
-  - `_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame` - Limpia y normaliza el DataFrame, aplicando diversas transformaciones y validaciones.
-  - `_vectorized_classify(df: pd.DataFrame) -> pd.DataFrame` - Clasifica las filas del DataFrame según ciertas condiciones.
-  - `_post_process(conn, table_name: str)` - Crea índices en la base de datos para mejorar el rendimiento de las búsquedas.
+  - `_get_primary_keys() -> List[str]` - Devuelve una lista de claves primarias utilizadas para la carga en la base de datos.
+  - `_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma el DataFrame, renombrando columnas, eliminando valores nulos, normalizando tipos de datos, etc.
+  - `_vectorized_classify(df: pd.DataFrame) -> pd.DataFrame` - Clasifica las operaciones según los valores en la columna 'cmv'.
+  - `_post_process(conn, table_name: str)` - Crea índices para mejorar el rendimiento de consultas en la tabla `inventory_movements`.
 
 ### Interacción con Base de Datos
-- Motor: No especificado.
-- Tablas: `inventory_movements`.
-- Columnas:
+- **Motor**: No especificado.
+- **Tablas**: `inventory_movements`.
+- **Columnas**:
+  - `fe_contab`
+  - `alm`
+  - `ce`
   - `cmv`
-  - `ce_coste`
+  - `referencia`
+  - `texto_cab_documento`
+  - `texto_breve_material`
   - `material`
+  - `cantidad`
+  - `umb`
+  - `doc_mat`
+  - `ej_mat`
+  - `registrado`
+  - `hora`
+  - `usuario`
+  - `pedido`
+  - `ce_coste`
+  - `importe_ml`
+  - `mon`
+  - `proveedor`
+  - `orden`
 
 ### Estado y Variables Globales
-No aplica.
+- No aplica.
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
-  - `pandas` (pd)
-  - `numpy` (np)
-  - `pathlib` (Path)
-  - `typing` (List)
-
-- No se comunica con otros archivos del proyecto.
+- **Librerías Externas**: `pandas`, `numpy`.
+- **Flujo Interno**: El archivo se comunica con la clase base `BaseWMSProcessor` para procesar archivos CSV, limpia los datos utilizando pandas, y luego carga los datos en una base de datos mediante consultas SQL.
 
 
 ---

@@ -1,27 +1,28 @@
 ## Archivo: ./templates/partials/_scripts.html
 
 ### Resumen Funcional
-Este fragmento HTML incluye scripts para Chart.js y sus plugins, así como módulos de JavaScript que manejan la lógica del negocio y las utilidades de la interfaz de usuario.
+Este archivo contiene fragmentos de HTML que incluyen scripts para Chart.js, modales rápidos de inicio de sesión y cierre, y lógica de negocio y ayuda de interfaz de usuario para el panel de control. También carga scripts adicionales relacionados con la productividad.
 
 ### Catálogo de Funciones y Clases
-No se detectaron funciones o métodos específicos en este fragmento. Solo se incluyen referencias a scripts externos.
+No se detectaron funciones o métodos específicos en este fragmento HTML.
 
 ### Interacción con Base de Datos
-Ninguna
+No aplica
 
 ### Estado y Variables Globales
 No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**: 
-  - `chart.js`
-  - `chartjs-plugin-datalabels@2.0.0`
+- **Librerías externas utilizadas:**
+  - Chart.js Core
+  - chartjs-plugin-datalabels@2.0.0
 
-- **Archivos Internos**:
-  - `_quick_login_modal.html`
-  - `_logout.html`
-  - `core_ui.js` (v1)
-  - `dashboard.js` (v17)
+- **Archivos JavaScript incluidos:**
+  - `partials/_quick_login_modal.html`
+  - `partials/_logout.html`
+  - `static/js/core_ui.js?v=1`
+  - `static/js/dashboard.js?v=17`
+  - `static/js/productivity.js?v=21`
 
-Este fragmento HTML es una colección de scripts y plantillas que se incluyen en la página, pero no realiza ninguna operación específica relacionada con la base de datos o el estado global del sistema.
+Este fragmento HTML se comunica con otros archivos del proyecto a través de la inclusión de scripts y modales.
 

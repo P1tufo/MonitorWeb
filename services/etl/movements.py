@@ -30,7 +30,8 @@ class InventoryMovementAdapter(BaseWMSProcessor):
             "Cantidad": "cantidad", "UMB": "umb", "Doc.mat.": "doc_mat",
             "EjMat": "ej_mat", "Registrado": "registrado", "Hora": "hora",
             "Usuario": "usuario", "Pedido": "pedido", "Ce.coste": "ce_coste",
-            "Importe ML": "importe_ml", "Mon.": "mon", "Proveedor": "proveedor"
+            "Importe ML": "importe_ml", "Mon.": "mon", "Proveedor": "proveedor",
+            "Orden": "orden"
         }
         
         new_cols = []
@@ -54,6 +55,13 @@ class InventoryMovementAdapter(BaseWMSProcessor):
             
         if 'fe_contab' in chunk.columns:
             chunk['fe_contab'] = chunk['fe_contab'].astype(str).str.replace('.', '-', regex=False)
+            
+        # Normalizar ej_mat y pos para que la PRIMARY KEY (doc_mat, ej_mat, pos)
+        # funcione correctamente sin importar el padding del archivo WMS.
+        if 'ej_mat' in chunk.columns:
+            chunk['ej_mat'] = chunk['ej_mat'].astype(str).str.strip()
+        if 'pos' in chunk.columns:
+            chunk['pos'] = chunk['pos'].astype(str).str.strip()
             
         if 'cantidad' in chunk.columns:
             clean_qty = chunk['cantidad'].astype(str).str.replace('.', '', regex=False).str.replace(',', '.', regex=False).str.rstrip('-')
@@ -81,8 +89,9 @@ class InventoryMovementAdapter(BaseWMSProcessor):
         return df
 
     def _post_process(self, conn, table_name: str):
-        """Crear índices estructurales vitales para el rendimiento de búsquedas."""
+        """Crear indices estructurales vitales para el rendimiento de busquedas."""
         if table_name == "inventory_movements":
             conn.execute("CREATE INDEX IF NOT EXISTS idx_inv_cmv ON inventory_movements(cmv)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_inv_ceco_upper ON inventory_movements(UPPER(TRIM(ce_coste)))")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_inv_mat_upper ON inventory_movements(UPPER(TRIM(material)))")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_inv_fecha ON inventory_movements(fe_contab)")

@@ -111,7 +111,7 @@ DATASETS: Dict[str, Dataset] = {
             Metric(
                 id="met_replenishment_rate",
                 label="Tasa Reabastecimiento",
-                physical_column="texto_cab_documento",
+                physical_column="tipo_operacion",
                 aggregation="REPLENISHMENT_RATE",
                 format="percent",
                 is_complex_formula=True,
@@ -120,7 +120,7 @@ DATASETS: Dict[str, Dataset] = {
             Metric(
                 id="met_return_rate",
                 label="Tasa Devolución",
-                physical_column="texto_cab_documento", # Depende de texto_cab_documento y cmv
+                physical_column="tipo_operacion",
                 aggregation="RETURN_RATE",
                 format="percent",
                 is_complex_formula=True,

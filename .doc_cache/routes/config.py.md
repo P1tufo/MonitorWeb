@@ -1,26 +1,21 @@
 ## Archivo: ./routes/config.py
 
 ### Resumen Funcional
-El archivo `config.py` es un módulo que se encarga de registrar todos los routers de una aplicación FastAPI. Estos routers corresponden a diferentes funcionalidades del sistema, como autenticación, dashboards, entregas, inventario, análisis proyecciones, filtros, PDFs, sincronización, documentos, configuraciones, tareas, widgets, consumos y transporte.
+El archivo `config.py` es un módulo que se encarga de registrar todos los routers de una aplicación FastAPI. Incluye manejo básico de errores para evitar que un router mal configurado detenga el arranque completo del servidor.
 
 ### Catálogo de Funciones y Clases
-- `register_routes(app: FastAPI) -> None` - Registra todos los routers de la aplicación de forma centralizada. Maneja errores para evitar que un router mal configurado detenga el arranque completo del servidor.
+- `register_routes(app: FastAPI) -> None` - Registra todos los routers de la aplicación de forma centralizada, incluyendo manejo de errores básico.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `ROUTERS: List[APIRouter]` - Una lista declarativa de routers con tipado estático. Almacena todos los routers que se van a registrar en la aplicación FastAPI.
+No aplica
 
 ### Dependencias y Flujo
-- **Dependencias**: 
-  - `fastapi`: Se utiliza para crear y gestionar la aplicación FastAPI.
-  - `logging`: Para el registro de errores y mensajes de depuración.
-  
-- **Flujo**:
-  - El archivo importa varios módulos que contienen routers específicos (`dashboard`, `deliveries`, etc.).
-  - La función `register_routes` itera sobre la lista de routers, intentando registrar cada uno en la aplicación FastAPI.
-  - Si ocurre un error al registrar un router, se registra el error y continúa con el siguiente router.
+- `fastapi`: Se utiliza para crear y gestionar la aplicación FastAPI.
+- `logging`: Se utiliza para registrar mensajes de depuración y error.
+- Importa varios módulos desde el mismo directorio (`./routes/`), cada uno probablemente contenga un router específico para una parte del sistema.
 
-Este archivo es crucial para mantener una estructura organizada y modular de los endpoints de la API, facilitando su mantenimiento y escalabilidad.
+Este archivo es crucial para la configuración centralizada de rutas en una aplicación FastAPI, asegurando que todos los endpoints estén disponibles y manejando errores de manera graciaosa.
 

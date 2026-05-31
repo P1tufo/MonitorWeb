@@ -342,3 +342,36 @@ def update_sla_with_tasks(conn: sqlite3.Connection):
         logger.info(f"SLA y Estados sincronizados con Tareas para {len(update_data)} registros. Caché invalidada.")
     except Exception as e:
         logger.error(f"Fallo en update_sla_with_tasks: {e}")
+
+def enrich_movements_with_iw39(conn: sqlite3.Connection):
+    """
+    Enriquece la tabla inventory_movements con ceco_resp y autor provenientes de iw39_orders.
+    Agrega las columnas a la tabla dinámicamente si no existen.
+    """
+    logger.info("Enriqueciendo Movimientos con Órdenes PM (IW39)...")
+    try:
+        with conn:
+            cursor = conn.cursor()
+            
+            # Asegurar que existan las columnas en inventory_movements
+            for col in ['ceco_resp', 'autor']:
+                try:
+                    cursor.execute(f"ALTER TABLE inventory_movements ADD COLUMN {col} TEXT")
+                except sqlite3.OperationalError:
+                    pass # La columna ya existe
+            
+            # Realizar el cruce exacto por Orden
+            cursor.execute("""
+                UPDATE inventory_movements
+                SET 
+                    ceco_resp = (SELECT ceco_resp FROM iw39_orders WHERE iw39_orders.orden = inventory_movements.orden LIMIT 1),
+                    autor = (SELECT autor FROM iw39_orders WHERE iw39_orders.orden = inventory_movements.orden LIMIT 1)
+                WHERE orden IS NOT NULL AND orden != ''
+                AND EXISTS (
+                    SELECT 1 FROM iw39_orders WHERE iw39_orders.orden = inventory_movements.orden
+                )
+            """)
+            
+        logger.info(f"Enriquecimiento IW39 completado.")
+    except Exception as e:
+        logger.error(f"Fallo en enrich_movements_with_iw39: {e}")

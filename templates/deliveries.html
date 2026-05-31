@@ -160,6 +160,10 @@
                 btnElement.style.background = 'rgba(93, 186, 169, 0.15)';
                 btnElement.style.borderColor = 'rgba(93, 186, 169, 0.4)';
                 btnElement.style.color = '#5DBAA9';
+                
+                if (subTabId === 'productividad' && typeof loadProductivityData === 'function') {
+                    loadProductivityData();
+                }
             }
 
             async function openNonPalletizedDetails(user, claseMov) {
@@ -435,9 +439,9 @@
         <script src="{{ url_for('static', path='js/dashboard.js') }}?v=18"></script>
         <script src="{{ url_for('static', path='js/saas_engine.js') }}?v=10"></script>
         <script src="{{ url_for('static', path='js/deliveries.js') }}?v=20"></script>
-        <script src="{{ url_for('static', path='js/consumos.js') }}?v=11"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+        <script src="{{ url_for('static', path='js/consumos.js') }}?v=17"></script>
         <script src="{{ url_for('static', path='js/transporte.js') }}?v=3"></script>
         <script type="application/json" id="data_volumen">{{ (volumen_data or []) | tojson | safe }}</script>
         <script type="application/json"
@@ -508,6 +512,7 @@
         <script src="{{ url_for('static', path='js/inventory.js') }}?v=11"></script>
         <script src="{{ url_for('static', path='js/analytics_proyecciones.js') }}?v=3"></script>
         <script src="{{ url_for('static', path='js/docs_explorer.js') }}?v=5"></script>
+        <script src="{{ url_for('static', path='js/productivity.js') }}?v=26"></script>
         {% include "partials/_modals.html" %}
         {% include "partials/_deliveries_modals.html" %}
         {% include "partials/_inventory_modals.html" %}

@@ -110,3 +110,73 @@
     </div>
 </div>
 
+
+<!-- Modal: Productividad Mensual -->
+<div id="modalProductivityMonthly" class="modal-overlay">
+    <div class="modal-content" style="max-width: 95vw; width: 1300px;">
+        <div class="modal-header">
+            <h2 id="modalProductivityMonthlyTitle"><i class="fas fa-chart-line"></i> Reporte Mensual de Productividad</h2>
+            <button class="close-btn" aria-label="Cerrar ventana" onclick="closeModal('modalProductivityMonthly')">&times;</button>
+        </div>
+        <div class="modal-body" style="max-height: 85vh; overflow-y: auto;">
+            
+            <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 1.5rem; gap: 1rem;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button onclick="changeProductivityMonth(-1)" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s;" title="Mes Anterior">
+                        &lt; Anterior
+                    </button>
+                    <input type="month" id="productivity-month-picker" style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.9rem; cursor: pointer;" onchange="loadMonthlyProductivityData()">
+                    <button onclick="changeProductivityMonth(1)" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s;" title="Mes Siguiente">
+                        Siguiente &gt;
+                    </button>
+                </div>
+            </div>
+
+            <div class="row-grid">
+                <!-- KPI 1 Mensual: Resumen General -->
+                <div class="chart-box" style="flex: 1; min-width: 300px; border-top: 4px solid var(--primary);">
+                    <h3 style="margin-top: 0;">Resumen del Mes</h3>
+                    <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                        <table style="color: #e2e8f0; width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th style="width: 120px;">Actividad Total</th>
+                                    <th style="width: 120px;">Volumen</th>
+                                    <th>Días Trabajados</th>
+                                    <th>Promedio Actividad/Día</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productivity-monthly-summary-tbody">
+                                <!-- Renderizado vía JS -->
+                                <tr><td colspan="5" style="text-align: center; color: #64748b; padding: 1rem;">Cargando resumen mensual...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- KPI 2 Mensual: Tendencia Diaria -->
+                <div class="chart-box" style="flex: 1; min-width: 300px; border-top: 4px solid var(--calipso);">
+                    <h3 style="margin-top: 0;">Rendimiento por Turnos</h3>
+                    <p style="font-size: 0.85rem; color: #94a3b8; margin-top: -10px; margin-bottom: 15px;">Movimientos agrupados por Mañana, Tarde y Noche.</p>
+                    <div style="position: relative; height: 350px; width: 100%;">
+                        <canvas id="productivityMonthlyTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI 3 Mensual: Mapa de Calor Semanal -->
+            <div class="chart-box" style="margin-top: 1.5rem; border-top: 4px solid var(--naranja);">
+                <h3 style="margin-top: 0;">Mapa de Calor (Días de la Semana)</h3>
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-top: -10px; margin-bottom: 15px;">Visualiza los días más activos para cada usuario basado en el total de movimientos.</p>
+                <div style="width: 100%; overflow-x: auto;">
+                    <div id="productivity-monthly-heatmap-container" style="min-width: 800px;">
+                        <!-- Renderizado vía JS -->
+                        <div style="text-align: center; color: #64748b; padding: 2rem;">Cargando mapa de calor mensual...</div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>

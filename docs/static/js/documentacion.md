@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: static/js
-Compilado el: 2026-05-29 00:41:03
+Compilado el: 2026-05-30 00:23:08
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -107,28 +107,29 @@ Dependencias:
 ## Archivo: ./static/js/consumos.js
 
 ### Resumen Funcional
-El archivo `consumos.js` es un script JavaScript que se ejecuta en el navegador y proporciona funcionalidades para interactuar con una interfaz de usuario web, permitiendo la entrada de datos en una grilla similar a Excel, filtrado de tablas y búsqueda de consumos por Centro de Costo (CeCo) o materiales.
+El archivo `consumos.js` contiene funciones y métodos para gestionar la interfaz de usuario y el procesamiento de datos relacionados con los consumos en materiales. Permite buscar y filtrar datos por Centro de Costo (CeCo) o por materiales, muestra resultados en una tabla y permite visualizar tendencias mensuales de consumo.
 
 ### Catálogo de Funciones y Clases
-- `document.addEventListener('DOMContentLoaded', callback)` - Inicializa el script cuando el DOM esté completamente cargado.
-- `handlePaste(e)` - Maneja el evento de pegar en las celdas de la grilla, permitiendo la entrada de múltiples valores a la vez.
-- `limpiarGrilla()` - Limpia los valores de todas las celdas y oculta el contenedor de resultados.
-- `formatearDinero(valor)` - Formatea un valor numérico como dinero con símbolo y formato localizado.
-- `formatearNumero(valor)` - Formatea un valor numérico con formato localizado.
-- `filterTable(tableId)` - Filtra las filas de una tabla según los valores ingresados en las celdas de filtro.
-- `renderVanillaTable(tbodyId, data, columns)` - Renderiza datos en una tabla HTML utilizando JavaScript puro.
-- `buscarPorCeCo()` - Busca y muestra los consumos asociados a un Centro de Costo específico.
-- `buscarPorMateriales()` - Busca y muestra los consumos asociados a materiales ingresados en la grilla.
+- `handlePaste(e)` - Maneja el evento de pegado para rellenar múltiples celdas.
+- `limpiarGrilla()` - Limpia la grilla de entrada y oculta el contenedor de resultados.
+- `formatearDinero(valor)` - Formatea un valor numérico como dinero.
+- `formatearNumero(valor)` - Formatea un valor numérico como número.
+- `filterTable(tableId)` - Filtra una tabla según los valores en las celdas de entrada de la cabecera.
+- `renderVanillaTable(tbodyId, data, columns, onRowClick = null)` - Renderiza una tabla usando elementos HTML y JavaScript puro.
+- `buscarPorCeCo()` - Busca datos por Centro de Costo y muestra los resultados en una tabla.
+- `buscarPorMateriales()` - Busca datos por materiales ingresados en la grilla y muestra los resultados en una tabla.
+- `abrirTendenciaMaterial(material, areaNegocio, descripcion, ceco = '')` - Abre un modal con la tendencia mensual de consumo para un material específico.
+- `cerrarTendenciaMaterial()` - Cierra el modal de tendencia.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no realiza ninguna interacción con una base de datos.
+No aplica
 
 ### Estado y Variables Globales
-No aplica. No se definen variables globales ni se utiliza estado crítico almacenado en variables.
+- `_tendenciaChart` - Variable global que almacena una instancia del gráfico de tendencias mensuales.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: No se utilizan librerías externas.
-- **Flujo Interno**: El script interactúa con elementos del DOM para crear una grilla de entrada, manejar eventos de pegar, filtrar tablas y realizar búsquedas. Los resultados de las búsquedas son renderizados en tablas HTML utilizando funciones JavaScript puro.
+- **Librerías Externas**: `Chart.js` (usado para renderizar el gráfico de tendencias).
+- **Flujo Interno**: El archivo interactúa con elementos HTML para mostrar resultados, manejar eventos de usuario y realizar peticiones a una API para obtener datos.
 
 
 ---
@@ -344,6 +345,44 @@ No aplica. No se definen variables globales en este archivo.
 ### Dependencias y Flujo
 - Depende de `core_ui.js` para funciones como `openModal`, `closeModal`, `renderMaterialModal`, y `getData`.
 - Comunica con el servidor a través de una solicitud `fetch` a la ruta `/api/ubicaciones/{valor}` para obtener datos de ubicaciones.
+
+
+---
+
+## Archivo: ./static/js/productivity.js (Procesado en 1 partes)
+
+#### --- PARTE 1 de 1 ---
+
+### Resumen Funcional
+El archivo `productivity.js` contiene funciones y lógica para cargar, renderizar y gestionar datos de productividad en una interfaz web. Permite cambiar la fecha y mes seleccionados, cargar datos de productividad diaria y mensual, y visualizar estos datos mediante gráficos y tablas.
+
+### Catálogo de Funciones y Clases
+- `loadProductivityData()` - Carga los datos de productividad para una fecha específica.
+- `renderKPI1(summary)` - Renderiza el KPI 1 con resumen de actividad por usuario.
+- `renderKPI2(trend)` - Renderiza el KPI 2 con tendencia diaria de movimientos.
+- `renderKPI3(gaps)` - Renderiza el KPI 3 con baches de inactividad detectados.
+- `renderKPI4(heatmapData)` - Renderiza el KPI 4 con mapa de calor de actividad.
+- `loadMonthlyProductivityData()` - Carga los datos de productividad mensuales para un mes específico.
+- `renderMonthlyKPI1(summary)` - Renderiza el KPI 1 mensual con resumen de actividad por usuario.
+- `renderMonthlyKPI2(shifts)` - Renderiza el KPI 2 mensual con tendencia diaria de movimientos por turno.
+- `renderMonthlyKPI3(heatmapData)` - Renderiza el KPI 3 mensual con mapa de calor de actividad.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+- `productivityTrendChartInst` - Instancia del gráfico de tendencia diaria.
+- `productivityMonthlyTrendChartInst` - Instancia del gráfico de tendencia mensual.
+- `COLORS` - Array con colores institucionales.
+
+### Dependencias y Flujo
+Dependencias:
+- `fetch` - Para hacer solicitudes HTTP.
+- `Chart.js` - Para renderizar gráficos.
+
+Flujo:
+- El archivo se comunica con el servidor a través de endpoints `/api/v1/analytics/productivity` y `/api/v1/analytics/productivity/monthly`.
+- Los datos cargados se utilizan para actualizar las tablas y gráficos en la interfaz web.
 
 
 ---

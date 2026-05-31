@@ -2,67 +2,49 @@
 
 ### Arquitectura General Detectada
 
-La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que separan diferentes aspectos del sistema, como el núcleo (`core`), las rutas (`routes`), los servicios (`services`), los repositorios (`repositories`), y las pruebas (`tests`). Además, la presencia de un archivo `Dockerfile` en la carpeta `deploy` indica que se utiliza Docker para la despliegue del sistema.
+La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que separan diferentes aspectos del sistema, como el núcleo (`core`), las rutas (`routes`), los servicios (`services`), las pruebas (`tests`), las dependencias (`setup`) y los documentos (`docs`). Además, la presencia de una carpeta `repositories` para manejar la lógica de acceso a datos también es un indicativo de una arquitectura modular.
 
 ### Propósito Probable de las Carpetas Principales
 
-- **core/**: Contiene el código central del sistema, incluyendo la lógica de negocio, modelos de datos, y utilidades.
-  - **auth.py**: Manejo de autenticación y autorización.
-  - **database.py**: Interacción con la base de datos.
-  - **models.py**: Definición de los modelos de datos.
-  - **utils.py**: Funciones útiles y herramientas generales.
+- **core/**: Contiene el código central del sistema, incluyendo la configuración, autenticación, base de datos, modelos y utilidades. Este módulo es fundamental para mantener el núcleo funcional del proyecto.
+  
+- **bin/**: Almacena herramientas binarias como `ngrok`, que puede ser utilizado para exponer aplicaciones locales a Internet.
 
-- **bin/**: Contiene archivos binarios necesarios para el proyecto, como `ngrok` para tunelización.
+- **deploy/**: Contiene archivos de configuración y scripts necesarios para la despliegue del sistema, incluyendo Dockerfiles y archivos de configuración de Docker Compose.
 
-- **deploy/**: Archivos relacionados con la despliegue del sistema, incluyendo Dockerfiles y configuraciones de entorno.
-  - **Dockerfile**: Define cómo se construye la imagen del contenedor.
-  - **docker-compose.yml**: Configuración para el despliegue multi-contenedor.
+- **setup/**: Almacena los archivos de configuración y dependencias del proyecto, como `package.json`, `requirements.txt` y `pytest.ini`.
 
-- **setup/**: Archivos de configuración y scripts para el desarrollo y pruebas.
-  - **requirements.txt**: Lista de dependencias del proyecto.
-  - **run_tests.sh**: Script para ejecutar las pruebas.
+- **tests/**: Contiene todos los tests unitarios y de integración para asegurar la calidad del código.
 
-- **tests/**: Contiene los archivos de prueba unitaria y de integración.
-  - **test_api.py**: Pruebas de la API.
-  - **test_auth.py**: Pruebas de autenticación.
+- **repositories/**: Define las interfaces de acceso a datos, lo que es crucial en una arquitectura orientada a objetos.
 
-- **repositories/**: Define los repositorios de datos, que son capas de acceso a la base de datos.
-  - **deliveries.py**: Repositorio para operaciones relacionadas con entregas.
+- **docs/**: Documentación del proyecto, incluyendo documentación técnica y mejoras propuestas.
 
-- **docs/**: Documentación del proyecto y sus componentes.
-  - **documentacion_global.md**: Documentación general del sistema.
-  - **core/**: Documentación específica del módulo core.
-    - **helpers/**: Documentación de las helpers dentro del core.
+- **DELIVERIES_cleansed/**: Almacena archivos limpios de entregas, posiblemente para análisis o procesamiento posterior.
 
-- **DELIVERIES_cleansed/**: Archivos limpios de entregas, posiblemente para pruebas o análisis.
+- **static/**: Archivos estáticos como CSS y JavaScript que se utilizan en la interfaz de usuario.
 
-- **static/**: Archivos estáticos como CSS y JavaScript.
-  - **css/**: Hojas de estilo.
-  - **js/**: Scripts JavaScript.
+- **scripts/**: Scripts Python que pueden ser ejecutados para tareas específicas del sistema, como generación de documentos o limpieza de memoria RAM.
 
-- **scripts/**: Scripts Python útiles para el proyecto.
-  - **doc_generator.py**: Generador de documentación.
+- **db/**: Contiene archivos relacionados con la base de datos, incluyendo archivos de configuración y scripts de consolidación.
 
-- **db/**: Archivos relacionados con la base de datos.
-  - **data.db**: Base de datos principal del sistema.
+- **templates/**: Plantillas HTML utilizadas en la interfaz de usuario, que pueden ser renderizadas por un motor de plantillas como Jinja2.
 
-- **templates/**: Plantillas HTML para las vistas web.
-  - **analytics_proyecciones.html**: Plantilla para el análisis de proyecciones.
-  - **dashboard.html**: Plantilla para el panel de control.
+- **routes/**: Define las rutas del sistema web, mapeando URLs a funciones o controladores.
 
-- **routes/**: Definición de las rutas y endpoints del API.
-  - **analytics_proyecciones.py**: Ruta para el análisis de proyecciones.
-
-- **services/**: Servicios que encapsulan la lógica de negocio.
-  - **dashboard_service.py**: Servicio para el panel de control.
+- **services/**: Contiene los servicios que implementan la lógica de negocio, separados en submódulos según su funcionalidad.
 
 ### Organización Lógica de las Dependencias
 
-La organización de dependencias es coherente con una arquitectura modular. El núcleo (`core`) contiene los componentes básicos del sistema, mientras que las capas superiores (`routes`, `services`, `repositories`) dependen de estos componentes. Por ejemplo:
+La organización de dependencias es coherente con una arquitectura modular:
 
-- **routes/** depende de **core/** para acceder a la lógica de negocio y modelos de datos.
-- **services/** depende de **core/** para interactuar con los modelos y repositorios.
-- **repositories/** depende de **core/** para definir las operaciones de base de datos.
+- **Dependencias Internas**: Los módulos dentro del mismo paquete (`core`, `routes`, `services`, etc.) se comunican entre sí a través de interfaces claras y definidas.
 
-Esta estructura facilita el mantenimiento, escalabilidad y reutilización del código.
+- **Dependencias Externas**: Dependencias externas, como bibliotecas de terceros para bases de datos, autenticación o procesamiento de PDFs, están gestionadas en el archivo `requirements.txt` y instaladas mediante `pip`.
+
+- **Pruebas Independientes**: Los tests se organizan por módulo correspondiente, lo que facilita la localización y ejecución de pruebas específicas.
+
+- **Documentación Separada**: La documentación está separada en diferentes carpetas para cada módulo, lo que facilita el mantenimiento y acceso a la información relevante.
+
+Esta estructura permite una organización clara y escalable del proyecto, facilitando el desarrollo, mantenimiento y despliegue.
 

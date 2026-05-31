@@ -16,13 +16,15 @@ try:
         DB_PATH as DATABASE_PATH,
         ONEDRIVE_PATH
     )
+    IW39_DIR = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/IW39"
 except ImportError:
     # Fallback si no se puede importar config (no debería pasar si PROJECT_ROOT está bien)
     DELIVERIES_DIR  = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/Entregas"
     STOCK_DIR       = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/Stock"
     INVENTORY_DIR   = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/Movimientos"
+    IW39_DIR        = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/IW39"
     CLEANSED_DIR    = "/Users/christianykelly/Desktop/MonitorWeb/DELIVERIES_cleansed"
-    DATABASE_PATH   = "/Users/christianykelly/Desktop/MonitorWeb/wms_transactions.db"
+    DATABASE_PATH   = "/Users/christianykelly/Desktop/MonitorWeb/data/wms_transactions.db"
 
 # Configure logging
 logging.basicConfig(
@@ -39,7 +41,7 @@ def run_pipeline():
     print("="*60)
     
     # 0. Validación de Entrada (Seguridad y Robustez)
-    for path_name, path_val in [("Origen Entregas", DELIVERIES_DIR), ("Stock Stock", STOCK_DIR), ("Movimientos Movimientos", INVENTORY_DIR)]:
+    for path_name, path_val in [("Origen Entregas", DELIVERIES_DIR), ("Stock Stock", STOCK_DIR), ("Movimientos Movimientos", INVENTORY_DIR), ("IW39 Órdenes", IW39_DIR)]:
         if not Path(path_val).exists():
             logger.error(f"Error de validación: El directorio de {path_name} no existe: {path_val}")
             print(f"  ❌ Abortando: No se encuentra {path_name}")
@@ -52,55 +54,76 @@ def run_pipeline():
         analyze_script = PROJECT_ROOT / "analyze_folder.py"
         
     if not analyze_script.exists():
-        logger.error(f"No se encontró analyze_folder.py en {PROJECT_ROOT} o {PROJECT_ROOT}/scripts")
-        return
-
-    cmd = [
-        sys.executable, str(analyze_script),
-        str(DELIVERIES_DIR),
-        "--output", str(CLEANSED_DIR),
-        "--db", str(DATABASE_PATH)
-    ]
-    
-    logger.info(f"[Entregas] Ejecutando pipeline para: {DELIVERIES_DIR}")
-    
-    try:
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        for line in process.stdout:
-            print(line, end='')
-        process.wait()
+        logger.error(f"No se encontró analyze_folder.py en {PROJECT_ROOT} o {PROJECT_ROOT}/scripts. Saltando Fase 1 y 2.")
+    else:
+        cmd = [
+            sys.executable, str(analyze_script),
+            str(DELIVERIES_DIR),
+            "--output", str(CLEANSED_DIR),
+            "--db", str(DATABASE_PATH)
+        ]
         
-        if process.returncode == 0:
-            logger.info("[Entregas] Fase completada.")
-
-            # ── Fase 2: Stock (Stock) ─────────────────────────────────────────
-            logger.info("[Stock] Procesando stock...")
-            from db.consolidator import DataConsolidator
-            with DataConsolidator(str(DATABASE_PATH)) as con:
-                con.overwrite_with_latest(str(STOCK_DIR), table_name="stock_levels")
-
-                # ── Fase 3: Enriquecimiento Entregas × Stock ─────────────────────────
-                logger.info("[Enrich] Cruzando Entregas con Stock...")
-                from db.db_enrichment import enrich_deliveries_with_stock
-                enrich_deliveries_with_stock(con.conn)
+        logger.info(f"[Entregas] Ejecutando pipeline para: {DELIVERIES_DIR}")
+        
+        try:
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            for line in process.stdout:
+                print(line, end='')
+            process.wait()
             
-        else:
-            logger.error(f"[Entregas] Pipeline terminó con errores (Código: {process.returncode})")
+            if process.returncode == 0:
+                logger.info("[Entregas] Fase completada.")
 
-    except Exception as e:
-        logger.error(f"[Entregas] Fallo crítico: {e}", exc_info=True)
+                # ── Fase 2: Stock (Stock) ─────────────────────────────────────────
+                logger.info("[Stock] Procesando stock...")
+                from db.consolidator import DataConsolidator
+                with DataConsolidator(str(DATABASE_PATH)) as con:
+                    con.overwrite_with_latest(str(STOCK_DIR), table_name="stock_levels")
+
+                    # ── Fase 3: Enriquecimiento Entregas × Stock ─────────────────────────
+                    logger.info("[Enrich] Cruzando Entregas con Stock...")
+                    from db.db_enrichment import enrich_deliveries_with_stock
+                    enrich_deliveries_with_stock(con.conn)
+                
+            else:
+                logger.error(f"[Entregas] Pipeline terminó con errores (Código: {process.returncode})")
+
+        except Exception as e:
+            logger.error(f"[Entregas] Fallo crítico: {e}", exc_info=True)
 
     # ── Fase 4: Movimientos (Movimientos) ────────────────────────────────────────────
     print("\n" + "-"*60)
     print("📦 PROCESANDO Movimientos (Movimientos de Material)")
     print("-"*60)
     try:
-        from db.inventory_folder_processor import process_inventory_folder
-        total = process_inventory_folder(str(INVENTORY_DIR), str(DATABASE_PATH))
+        from services.etl.movements import InventoryMovementAdapter
+        processor = InventoryMovementAdapter()
+        import sqlite3
+        with sqlite3.connect(DATABASE_PATH) as conn:
+            total = processor.process_directory(str(INVENTORY_DIR), str(DATABASE_PATH), "inventory_movements", conn)
         print(f"  ✅  Movimientos completado: {total:,} filas en inventory_movements")
     except Exception as e:
         logger.error(f"[Movimientos] Fallo: {e}", exc_info=True)
         print(f"  ❌  Movimientos falló: {e}")
+
+    # ── Fase 5: IW39 (Órdenes PM) ────────────────────────────────────────────
+    print("\n" + "-"*60)
+    print("⚙️  PROCESANDO IW39 (Órdenes PM)")
+    print("-"*60)
+    try:
+        from services.etl.iw39 import IW39Processor
+        processor = IW39Processor()
+        with sqlite3.connect(DATABASE_PATH) as conn:
+            total = processor.process_directory(str(IW39_DIR), str(DATABASE_PATH), "iw39_orders", conn)
+            
+            # Enriquecer inventarios con IW39 (Cruza 'Orden')
+            from db.db_enrichment import enrich_movements_with_iw39
+            enrich_movements_with_iw39(conn)
+            
+        print(f"  ✅  IW39 completado: {total:,} filas en iw39_orders")
+    except Exception as e:
+        logger.error(f"[IW39] Fallo: {e}", exc_info=True)
+        print(f"  ❌  IW39 falló: {e}")
 
     # ── Resumen final ─────────────────────────────────────────────────────────
     print("\n" + "="*60)

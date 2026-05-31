@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: templates/partials
-Compilado el: 2026-05-29 00:41:03
+Compilado el: 2026-05-30 00:23:08
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -30,24 +30,20 @@ No depende de ninguna librería externa ni comunica con otros archivos del proye
 ## Archivo: ./templates/partials/_deliveries_modals.html
 
 ### Resumen Funcional
-Este archivo contiene fragmentos HTML para varios modales que probablemente se utilizan en una interfaz web para mostrar detalles específicos sobre entregas, actividades de usuarios, desglose de ubicaciones y movimientos no paletizados.
+Este archivo contiene fragmentos HTML para varios modales que probablemente se utilizan en una interfaz web para mostrar detalles específicos sobre entregas, usuarios, ubicaciones y productividad mensual. Cada modal tiene un encabezado, cuerpo y botón de cierre.
 
 ### Catálogo de Funciones y Clases
-- `toggleModalFilter(filterType, isMonth)` - Alterna el filtro del modal según el tipo (area o weekday) y si se selecciona el mes actual.
-- `closeModal(modalId)` - Cierra el modal con el ID especificado.
+No hay funciones o clases definidas en este archivo HTML. Todas las interacciones son realizadas a través de JavaScript.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna.
 
 ### Estado y Variables Globales
-No aplica
+No aplica.
 
 ### Dependencias y Flujo
-Dependencias:
-- `jQuery` (usado para manipular el DOM)
-- `FontAwesome` (usado para iconos)
-
-Flujo: Este archivo no interactúa directamente con otros archivos del proyecto, solo proporciona estructura HTML y JavaScript básico para los modales.
+- **Librerías Externas**: No se mencionan librerías específicas en este fragmento HTML.
+- **Flujo Interno**: El archivo interactúa con JavaScript para controlar el comportamiento de los modales, como mostrar/ocultar, cambiar filtros y cargar datos.
 
 
 ---
@@ -163,29 +159,30 @@ No aplica
 ## Archivo: ./templates/partials/_scripts.html
 
 ### Resumen Funcional
-Este fragmento HTML incluye scripts para Chart.js y sus plugins, así como módulos de JavaScript que manejan la lógica del negocio y las utilidades de la interfaz de usuario.
+Este archivo contiene fragmentos de HTML que incluyen scripts para Chart.js, modales rápidos de inicio de sesión y cierre, y lógica de negocio y ayuda de interfaz de usuario para el panel de control. También carga scripts adicionales relacionados con la productividad.
 
 ### Catálogo de Funciones y Clases
-No se detectaron funciones o métodos específicos en este fragmento. Solo se incluyen referencias a scripts externos.
+No se detectaron funciones o métodos específicos en este fragmento HTML.
 
 ### Interacción con Base de Datos
-Ninguna
+No aplica
 
 ### Estado y Variables Globales
 No aplica
 
 ### Dependencias y Flujo
-- **Librerías Externas**: 
-  - `chart.js`
-  - `chartjs-plugin-datalabels@2.0.0`
+- **Librerías externas utilizadas:**
+  - Chart.js Core
+  - chartjs-plugin-datalabels@2.0.0
 
-- **Archivos Internos**:
-  - `_quick_login_modal.html`
-  - `_logout.html`
-  - `core_ui.js` (v1)
-  - `dashboard.js` (v17)
+- **Archivos JavaScript incluidos:**
+  - `partials/_quick_login_modal.html`
+  - `partials/_logout.html`
+  - `static/js/core_ui.js?v=1`
+  - `static/js/dashboard.js?v=17`
+  - `static/js/productivity.js?v=21`
 
-Este fragmento HTML es una colección de scripts y plantillas que se incluyen en la página, pero no realiza ninguna operación específica relacionada con la base de datos o el estado global del sistema.
+Este fragmento HTML se comunica con otros archivos del proyecto a través de la inclusión de scripts y modales.
 
 
 ---
@@ -242,12 +239,14 @@ No aplica
 ## Archivo: ./templates/partials/_tab_consumos.html
 
 ### Resumen Funcional
-Este archivo HTML define una pestaña para el análisis de consumos y costos, que incluye dos paneles: uno para buscar por Centro de Costo (CeCo) y otro para buscar inversa por materiales.
+Este fragmento HTML define una pestaña para el análisis de consumos y costos, que incluye dos paneles: uno para buscar por Centro de Costo (CeCo) y otro para buscar inversamente por materiales. Cada panel contiene tablas interactivas y un modal para mostrar tendencias mensuales.
 
 ### Catálogo de Funciones y Clases
-- `buscarPorCeCo()` - Realiza la búsqueda de historial de retiros y consumo del mes actual por CeCo.
-- `limpiarGrilla()` - Limpia las celdas de la grilla de entrada de materiales.
-- `buscarPorMateriales()` - Analiza una lista de materiales para mostrar los resultados de consumo.
+- `buscarPorCeCo()` - Llama a la función que realiza el análisis de consumos por CeCo.
+- `limpiarGrilla()` - Limpia las celdas de entrada en el panel de búsqueda inversa por materiales.
+- `buscarPorMateriales()` - Realiza el análisis de los materiales ingresados.
+- `filterTable(tableId)` - Filtra las tablas según el texto ingresado en los campos de búsqueda.
+- `cerrarTendenciaMaterial()` - Cierra el modal de tendencias mensuales.
 
 ### Interacción con Base de Datos
 No aplica
@@ -256,7 +255,9 @@ No aplica
 No aplica
 
 ### Dependencias y Flujo
-No depende de ninguna librería externa ni comunica con otros archivos del proyecto.
+Depende de las siguientes funciones y variables globales definidas en otros archivos del proyecto:
+- `filterTable(tableId)` - Función para filtrar tablas.
+- `cerrarTendenciaMaterial()` - Función para cerrar el modal de tendencias mensuales.
 
 
 ---
@@ -380,22 +381,22 @@ No aplica
 ## Archivo: ./templates/partials/_tab_ots.html
 
 ### Resumen Funcional
-Este fragmento HTML muestra una pestaña de gestión de Ordenes de Transporte (OTs) con estadísticas, gráficos y tablas interactivas. Permite filtrar y visualizar OTs pendientes, movimientos no paletizados y detalles específicos.
+Este fragmento HTML muestra una pestaña para la gestión de Ordenes de Transporte (OTs), incluyendo estadísticas, gráficos y tablas interactivas que permiten filtrar y visualizar datos relacionados con OTs pendientes, movimientos no paletizados y productividad.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este fragmento HTML.
+No se detectan funciones o clases definidas en este fragmento HTML. Todas las interacciones son realizadas a través de JavaScript y eventos del DOM.
 
 ### Interacción con Base de Datos
-- **Motor:** No aplica (el código no contiene consultas SQL ni interacciones directas con una base de datos).
-- **Tablas:** No aplica.
-- **Columnas:** No aplica.
+- **Motor**: No aplica.
+- **Tablas**: No se mencionan tablas específicas.
+- **Columnas**: No se mencionan columnas específicas.
 
 ### Estado y Variables Globales
-No se detectan variables globales, de sesión o diccionarios quemados en el código.
+No se detectan variables globales, de sesión o de entorno quemadas en el código.
 
 ### Dependencias y Flujo
-- **Librerías Externas:** `FontAwesome` para iconos.
-- **Flujo Interno:** El fragmento interactúa con JavaScript a través de eventos como `onclick`, que llaman funciones como `openEditQueryModal`, `filterOTTable`, `switchSubTab`, etc. No se indica interacción directa con otros archivos del proyecto en este fragmento.
+- **Librerías Externas**: `FontAwesome` para iconos.
+- **Flujo**: Este fragmento interactúa con otros archivos del proyecto a través de funciones JavaScript como `openEditQueryModal`, `switchSubTab`, `filterOTTable`, `filterDiscrepancyTable`, `sortTableDiscrepancy`, `changeProductivityDate`, `loadProductivityData`, `loadMonthlyProductivityData`, y `openModal`.
 
 
 ---

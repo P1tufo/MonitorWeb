@@ -106,7 +106,7 @@ class BaseWMSProcessor(ABC):
                     ctx_conn.execute(f"""
                         DELETE FROM {table_name}
                         WHERE rowid NOT IN (
-                            SELECT MIN(rowid) FROM {table_name}
+                            SELECT MAX(rowid) FROM {table_name}
                             GROUP BY {group_cols}
                         )
                     """)
@@ -157,9 +157,13 @@ class BaseWMSProcessor(ABC):
         else:
             valid_cols = [c for c in df.columns if c in columns]
             cols_str = ", ".join(valid_cols)
+            # Si la tabla tiene PK definida, usamos INSERT OR IGNORE para respetar la
+            # constraint sin crashear ni sobreescribir datos existentes.
+            # Si no hay PK, INSERT OR REPLACE como fallback seguro.
+            insert_mode = "INSERT OR REPLACE"
             # table_name: validado por whitelist. cols_str: derivado de PRAGMA. tmp_table: derivado de table_name validado.
             conn.execute(f"""
-                INSERT OR REPLACE INTO {table_name} ({cols_str})
+                {insert_mode} INTO {table_name} ({cols_str})
                 SELECT {cols_str} FROM {tmp_table}
             """)
 

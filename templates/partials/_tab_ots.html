@@ -53,19 +53,7 @@
                 <canvas id="otsTrendChart"></canvas>
             </div>
         </div>
-        <div class="chart-box">
-            {% if user.role == 'admin' %}
-            <div class="edit-query-btn"
-                onclick="openEditQueryModal('ots_by_user_dual', 'Productividad por Usuario')"
-                title="Editar Consulta SQL">
-                <i class="fas fa-cog"></i>
-            </div>
-            {% endif %}
-            <h3>Productividad por Usuario (Confirmaciones)</h3>
-            <div style="position: relative; height: 300px; width: 100%;">
-                <canvas id="otsUserChart"></canvas>
-            </div>
-        </div>
+
     </div>
 
     <!-- Selector de Subpestañas para Tablas de OTs y Movimientos -->
@@ -86,6 +74,9 @@
                 style="background: rgba(239, 68, 68, 0.15); color: #f87171; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; border: 1px solid rgba(239, 68, 68, 0.3);">
                 {{ non_palletized_total_count if non_palletized_total_count is defined else 0 }}
             </span>
+        <button class="sub-tab-btn" onclick="switchSubTab('productividad', this)"
+            style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); color: #cbd5e1; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-family: inherit;">
+            📊 Productividad 
         </button>
     </div>
 
@@ -309,5 +300,269 @@
                 </table>
             </div>
         </div>
+    </div>
+
+    <!-- Subpestaña 3: Productividad MB51 -->
+    <div id="sub-tab-productividad" class="sub-tab-content" style="display: none; margin-top: 1rem;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h3 style="margin: 0; color: #f8f9fa;">Análisis de Productividad Diaria</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button onclick="changeProductivityDate(-1)" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s;" title="Día Amterior">
+                    &lt; Anterior
+                </button>
+                <select id="productivity-date-picker" style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; font-family: inherit; font-size: 0.9rem; cursor: pointer;" onchange="loadProductivityData()">
+                    <option value="">Cargando fechas...</option>
+                </select>
+                <button onclick="changeProductivityDate(1)" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s;" title="Día Siguiente">
+                    Siguiente &gt;
+                </button>
+                <button onclick="openModal('modalProductivityMonthly'); loadMonthlyProductivityData();" style="background: rgba(93, 186, 169, 0.15); color: #5DBAA9; border: 1px solid rgba(93, 186, 169, 0.3); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s;">
+                    <i class="fas fa-calendar-alt"></i> Ver Reporte Mensual
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI 3: Alertas de Inactividad -->
+        <div id="productivity-gaps-container" style="display: none; margin-bottom: 1.5rem;">
+            <!-- Renderizado vía JS -->
+        </div>
+
+        <div class="row-grid">
+            <!-- KPI 1: Resumen de Jornada -->
+            <div class="chart-box" style="flex: 1; min-width: 300px; border-top: 4px solid var(--primary);">
+                <h3 style="margin-top: 0;">Resumen de Jornada Sistémica</h3>
+                <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                    <table style="color: #e2e8f0; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th style="width: 120px;">Actividad Total</th>
+                                <th style="width: 120px;">Volumen</th>
+                                <th>Primer Mov.</th>
+                                <th>Último Mov.</th>
+                                <th>Tiempo Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productivity-summary-tbody">
+                            <!-- Renderizado vía JS -->
+                            <tr><td colspan="6" style="text-align: center; color: #64748b; padding: 1rem;">Cargando datos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- KPI 2: Rendimiento Horario del Equipo -->
+            <div class="chart-box" style="flex: 1; min-width: 300px; border-top: 4px solid var(--calipso);">
+                <h3 style="margin-top: 0;">Rendimiento Horario del Equipo</h3>
+                <p style="font-size: 0.85rem; color: #94a3b8; margin-top: -10px; margin-bottom: 15px;">Movimientos totales procesados por todo el equipo, agrupados por hora.</p>
+                <div style="position: relative; height: 350px; width: 100%;">
+                    <canvas id="productivityTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI 4: Mapa de Calor -->
+        <div class="chart-box" style="margin-top: 1.5rem; border-top: 4px solid var(--naranja);">
+            <h3 style="margin-top: 0;">Mapa de Calor de Actividad (Movimientos)</h3>
+            <div style="width: 100%; overflow-x: auto;">
+                <div id="productivity-heatmap-container" style="min-width: 800px;">
+                    <!-- Renderizado vía JS -->
+                    <div style="text-align: center; color: #64748b; padding: 2rem;">Cargando mapa de calor...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- Modal: Movimientos de Usuario -->
+<style>
+.user-movs-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 9999;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+}
+.user-movs-modal-overlay.is-open {
+    display: flex;
+}
+.user-movs-modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 900px;
+    width: 92%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.55);
+    animation: userMovsFadeIn 0.2s ease;
+}
+@keyframes userMovsFadeIn {
+    from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+.user-movs-modal-close {
+    position: absolute; top: 1rem; right: 1rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 8px;
+    width: 32px; height: 32px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+}
+.user-movs-modal-close:hover { background: rgba(255,255,255,0.12); }
+</style>
+
+<div id="modal-user-movements" class="user-movs-modal-overlay" onclick="if(event.target===this) cerrarDetalleUsuario()">
+    <div class="user-movs-modal-box">
+        <button class="user-movs-modal-close" onclick="cerrarDetalleUsuario()" title="Cerrar">&times;</button>
+        <h3 id="user-movs-title" style="margin-top: 0; color: var(--accent); margin-bottom: 0.2rem;">👤 Detalle Diario: Usuario</h3>
+        <p id="user-movs-subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;"></p>
+        
+        <!-- NIVEL 1: Agrupado por Operación -->
+        <div id="daily-level1" class="level1-view">
+            <div class="table-container" style="flex: 1; overflow-y: auto;">
+                <table class="data-table" id="table-daily-level1">
+                    <thead style="position: sticky; top: 0; background: var(--surface); z-index: 1;">
+                        <tr>
+                            <th>Origen</th>
+                            <th>Operación (Click para ver detalle)</th>
+                            <th style="text-align: right;">Cantidad Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Llenado por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- NIVEL 2: Detalle Fino -->
+        <div id="daily-level2" class="level2-view">
+            <button class="btn btn-small" onclick="volverNivel1Diario()" style="background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border); width: fit-content; margin-bottom: 1rem;">
+                <i class="fas fa-arrow-left"></i> Volver al Resumen de Operaciones
+            </button>
+            <h4 id="daily-level2-title" style="margin-top: 0; color: var(--calipso); margin-bottom: 0.5rem;">Detalle de la Operación</h4>
+            <div class="table-container" style="flex: 1; overflow-y: auto;">
+                <table class="data-table" id="table-user-movements">
+                    <thead style="position: sticky; top: 0; background: var(--surface); z-index: 1;">
+                        <tr>
+                            <th>Hora</th>
+                            <th>Origen</th>
+                            <th>Operación (CMV)</th>
+                            <th>Material</th>
+                            <th>Descripción</th>
+                            <th style="text-align: right;">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Llenado por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal: Movimientos de Usuario MENSUAL (2 Niveles) -->
+<style>
+.monthly-movs-modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 900px;
+    width: 92%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.55);
+    animation: userMovsFadeIn 0.2s ease;
+}
+.level2-view {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+.level2-view.is-active {
+    display: flex;
+}
+.level1-view {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+.level1-view.is-hidden {
+    display: none;
+}
+</style>
+
+<div id="modal-monthly-user-movements" class="user-movs-modal-overlay" onclick="if(event.target===this) cerrarDetalleMensualUsuario()">
+    <div class="monthly-movs-modal-box">
+        <button class="user-movs-modal-close" onclick="cerrarDetalleMensualUsuario()" title="Cerrar">&times;</button>
+        <h3 id="monthly-user-movs-title" style="margin-top: 0; color: var(--calipso); margin-bottom: 0.2rem;">👤 Resumen Mensual: Usuario</h3>
+        <p id="monthly-user-movs-subtitle" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;"></p>
+        
+        <!-- NIVEL 1: Agrupado por Operación -->
+        <div id="monthly-level1" class="level1-view">
+            <div class="table-container" style="flex: 1; overflow-y: auto;">
+                <table class="data-table" id="table-monthly-level1">
+                    <thead style="position: sticky; top: 0; background: var(--surface); z-index: 1;">
+                        <tr>
+                            <th>Origen</th>
+                            <th>Operación (Click para ver detalle)</th>
+                            <th style="text-align: right;">Cantidad Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Llenado por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- NIVEL 2: Detalle Fino -->
+        <div id="monthly-level2" class="level2-view">
+            <button class="btn btn-small" onclick="volverNivel1Mensual()" style="background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid var(--border); width: fit-content; margin-bottom: 1rem;">
+                <i class="fas fa-arrow-left"></i> Volver al Resumen de Operaciones
+            </button>
+            <h4 id="level2-title" style="margin-top: 0; color: var(--accent); margin-bottom: 0.5rem;">Detalle de la Operación</h4>
+            <div class="table-container" style="flex: 1; overflow-y: auto;">
+                <table class="data-table" id="table-monthly-level2">
+                    <thead style="position: sticky; top: 0; background: var(--surface); z-index: 1;">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Origen</th>
+                            <th>Operación (CMV)</th>
+                            <th>Material</th>
+                            <th>Descripción</th>
+                            <th style="text-align: right;">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Llenado por JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 </div>

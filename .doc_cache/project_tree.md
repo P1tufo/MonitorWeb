@@ -6,8 +6,8 @@
     app.log
     app.py
     config.py
-    db.sqlite3
     main.py
+    wms_transactions.db
     core/
         __init__.py
         app_instance.py
@@ -134,6 +134,7 @@
             deliveries.js
             docs_explorer.js
             inventory.js
+            productivity.js
             saas_engine.js
             sla_table.js
             tasks.js
@@ -199,6 +200,7 @@
         inventory.py
         inventory.py.bak
         pdf.py
+        productivity.py
         settings.py
         sync.py
         tasks.py
@@ -209,12 +211,14 @@
         dashboard_service.py
         deliveries_service.py
         inventory_service.py
+        productivity_service.py
         tasks_service.py
         tunnel.py
         etl/
             __init__.py
             base.py
             deliveries.py
+            iw39.py
             movements.py
             stock.py
             tasks.py

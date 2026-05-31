@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: routes
-Compilado el: 2026-05-29 00:41:03
+Compilado el: 2026-05-30 00:23:08
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -89,28 +89,23 @@ No aplica
 ## Archivo: ./routes/config.py
 
 ### Resumen Funcional
-El archivo `config.py` es un módulo que se encarga de registrar todos los routers de una aplicación FastAPI. Estos routers corresponden a diferentes funcionalidades del sistema, como autenticación, dashboards, entregas, inventario, análisis proyecciones, filtros, PDFs, sincronización, documentos, configuraciones, tareas, widgets, consumos y transporte.
+El archivo `config.py` es un módulo que se encarga de registrar todos los routers de una aplicación FastAPI. Incluye manejo básico de errores para evitar que un router mal configurado detenga el arranque completo del servidor.
 
 ### Catálogo de Funciones y Clases
-- `register_routes(app: FastAPI) -> None` - Registra todos los routers de la aplicación de forma centralizada. Maneja errores para evitar que un router mal configurado detenga el arranque completo del servidor.
+- `register_routes(app: FastAPI) -> None` - Registra todos los routers de la aplicación de forma centralizada, incluyendo manejo de errores básico.
 
 ### Interacción con Base de Datos
 No aplica
 
 ### Estado y Variables Globales
-- `ROUTERS: List[APIRouter]` - Una lista declarativa de routers con tipado estático. Almacena todos los routers que se van a registrar en la aplicación FastAPI.
+No aplica
 
 ### Dependencias y Flujo
-- **Dependencias**: 
-  - `fastapi`: Se utiliza para crear y gestionar la aplicación FastAPI.
-  - `logging`: Para el registro de errores y mensajes de depuración.
-  
-- **Flujo**:
-  - El archivo importa varios módulos que contienen routers específicos (`dashboard`, `deliveries`, etc.).
-  - La función `register_routes` itera sobre la lista de routers, intentando registrar cada uno en la aplicación FastAPI.
-  - Si ocurre un error al registrar un router, se registra el error y continúa con el siguiente router.
+- `fastapi`: Se utiliza para crear y gestionar la aplicación FastAPI.
+- `logging`: Se utiliza para registrar mensajes de depuración y error.
+- Importa varios módulos desde el mismo directorio (`./routes/`), cada uno probablemente contenga un router específico para una parte del sistema.
 
-Este archivo es crucial para mantener una estructura organizada y modular de los endpoints de la API, facilitando su mantenimiento y escalabilidad.
+Este archivo es crucial para la configuración centralizada de rutas en una aplicación FastAPI, asegurando que todos los endpoints estén disponibles y manejando errores de manera graciaosa.
 
 
 ---
@@ -118,35 +113,26 @@ Este archivo es crucial para mantener una estructura organizada y modular de los
 ## Archivo: ./routes/consumos.py
 
 ### Resumen Funcional
-El archivo `consumos.py` define dos endpoints para obtener información de los consumos (CMV 201) en función del CeCo y una lista de materiales. Utiliza FastAPI para crear las rutas, SQLAlchemy para interactuar con la base de datos y pandas para procesar los resultados.
+El archivo `consumos.py` define endpoints para obtener datos de consumos (CMV 201) desde una base de datos relacionada con movimientos de inventario. Los endpoints permiten consultar los consumos históricos y actuales por CeCo, así como el consumo mensual de materiales específicos.
 
 ### Catálogo de Funciones y Clases
-- `get_consumos_ceco(ceco: str, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Obtiene los consumos agrupados por material para un CeCo específico.
-- `get_consumos_materiales(req: MaterialesRequest, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Obtiene qué CeCos han consumido una lista de materiales.
+- `get_consumos_ceco(ceco: str, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Obtiene los consumos históricos y actuales por CeCo.
+- `get_consumos_materiales(req: MaterialesRequest, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Obtiene el consumo de materiales específicos.
+- `get_material_trend(req: MaterialTrendRequest, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Devuelve el consumo mensual de un material específico, filtrado por área de negocio.
 
 ### Interacción con Base de Datos
-- Motor: SQLite (inferred from the use of `session.connection()`).
-- Tablas:
-  - `inventory_movements`
-  - `outbound_deliveries`
-- Columnas:
-  - `inventory_movements`: `material`, `texto_breve_material`, `cantidad`, `importe_ml`, `cmv`, `ce_coste`, `fe_contab`.
-  - `outbound_deliveries`: `centro_costo`, `area_negocio`.
+- **Motor:** PostgreSQL (deducido del uso de `sqlalchemy.text`)
+- **Tablas:** `inventory_movements`, `outbound_deliveries`
+- **Columnas:**
+  - `inventory_movements`: `doc_mat`, `ej_mat`, `pos`, `material`, `texto_breve_material`, `umb`, `cantidad`, `importe_ml`, `cmv`, `fe_contab`, `hora`, `ce_coste`
+  - `outbound_deliveries`: `centro_costo`, `area_negocio`
 
 ### Estado y Variables Globales
-- No aplica.
+- No aplica
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
-  - `fastapi`
-  - `sqlalchemy`
-  - `pandas`
-  - `pydantic`
-  - `logging`
-  - `datetime`
-
-- Flujo de comunicación:
-  - El archivo se comunica con el resto del proyecto a través de dependencias como `get_current_user` y `get_session_dep`.
+- **Librerías Externas:** `fastapi`, `sqlalchemy`, `pandas`, `pydantic`
+- **Flujo Interno:** El archivo interactúa con el resto del proyecto a través de dependencias como `get_current_user` y `get_session_dep`.
 
 
 ---
@@ -353,6 +339,33 @@ No aplica
   - `core.pdf_engine.WMS_Landscape_PDF` y sus métodos (`draw_delivery_page`, `get_ots_for_delivery`) para generar el PDF.
   - `core.pdf_queries` para consultas SQL relacionadas con las entregas.
   - `core.pdf_reports` para dibujar tablas y listas en el PDF.
+
+
+---
+
+## Archivo: ./routes/productivity.py
+
+### Resumen Funcional
+Este archivo contiene endpoints para obtener datos de productividad, incluyendo fechas disponibles, un resumen diario y KPIs mensuales. Utiliza FastAPI para definir las rutas y SQLAlchemy para interactuar con la base de datos.
+
+### Catálogo de Funciones y Clases
+- `get_available_dates(user: User, session: Session)` - Retorna las fechas disponibles para el análisis de productividad.
+- `get_productivity_dashboard(date: str = Query(None), user: User, session: Session, state: AppState)` - Retorna los datos necesarios para el dashboard de productividad MB51.
+- `get_monthly_productivity(month: str = Query(None), user: User, session: Session, state: AppState)` - Retorna los KPIs mensuales de productividad.
+
+### Interacción con Base de Datos
+No aplica
+
+### Estado y Variables Globales
+- `AppState` - Almacena el estado del sistema, incluyendo la sincronización y el caché.
+- `cache_key` - Clave utilizada para almacenar y recuperar datos en el caché.
+
+### Dependencias y Flujo
+- **Librerías Externas**: FastAPI, SQLAlchemy, logging.
+- **Flujo Interno**: 
+  - Cada endpoint depende de `get_current_user`, `get_session_dep`, y `get_app_state`.
+  - Utiliza `ProductivityService` para obtener los datos necesarios.
+  - Maneja la sincronización y el caché mediante `AppState`.
 
 
 ---

@@ -17,7 +17,8 @@ from . import (
     tasks,
     widgets,
     consumos,
-    transporte
+    transporte,
+    productivity
 )
 
 logger = logging.getLogger(__name__)
@@ -44,7 +45,8 @@ def register_routes(app: FastAPI) -> None:
         tasks.router,
         widgets.router,
         consumos.router,
-        transporte.router
+        transporte.router,
+        productivity.router
     ]
 
     for router in ROUTERS:
