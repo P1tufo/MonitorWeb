@@ -18,6 +18,31 @@
         <canvas id="transporteChart"></canvas>
     </div>
 
+    <!-- Alerta: Documentos Pendientes de Ingreso -->
+    <div class="card" style="padding: 1.5rem; margin-bottom: 2rem; border-left: 4px solid #ef4444; background: rgba(239, 68, 68, 0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="color: #ef4444; margin: 0;">🚨 Documentos Pendientes de Ingreso en SAP (Año Actual)</h3>
+            <span id="transportePendingCount" style="background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 4px 10px; border-radius: 20px; font-weight: bold; font-size: 0.85rem;">Cargando...</span>
+        </div>
+        <div style="overflow-x: auto; max-height: 400px;">
+            <table class="data-table" id="transportePendingTable" style="width: 100%; border-collapse: collapse;">
+                <thead style="position: sticky; top: 0; background: var(--surface); z-index: 1;">
+                    <tr>
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid rgba(239, 68, 68, 0.2); color: #fca5a5; font-weight: 600;">OT</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid rgba(239, 68, 68, 0.2); color: #fca5a5; font-weight: 600;">GD</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid rgba(239, 68, 68, 0.2); color: #fca5a5; font-weight: 600;">OC</th>
+                        <th style="padding: 12px; text-align: center; border-bottom: 1px solid rgba(239, 68, 68, 0.2); color: #fca5a5; font-weight: 600;">Bultos</th>
+                        <th style="padding: 12px; text-align: right; border-bottom: 1px solid rgba(239, 68, 68, 0.2); color: #fca5a5; font-weight: 600;">Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Llenado dinámico por JS -->
+                    <tr><td colspan="5" style="text-align: center; padding: 1rem; color: #94a3b8;">Consultando sistema...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Buscador de OT/GD/OC -->
     <div class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
         <h3 style="color: var(--accent); margin-top: 0; margin-bottom: 1rem;">🔍 Búsqueda Rápida de Entregas</h3>

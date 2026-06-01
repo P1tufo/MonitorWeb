@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse
 
 from config import DB_PATH, PDF_STORAGE
 from core.pdf_engine import WMS_Landscape_PDF, draw_delivery_page, get_ots_for_delivery
-from core.pdf_queries import get_deliveries_for_bulk, get_area_lookup, get_picking_items
+from repositories.deliveries import DeliveriesRepository
 from core.pdf_reports import draw_annex_table, draw_picking_list
 
 logger = logging.getLogger("routes-pdf")
@@ -34,7 +34,8 @@ async def generate_pdf(
     """Genera un PDF para una única entrega."""
     try:
         # 1. Obtener datos de la entrega
-        df = pd.read_sql(text("SELECT * FROM outbound_deliveries WHERE entrega = :entrega"), session.connection(), params={"entrega": entrega})
+        repo = DeliveriesRepository(session)
+        df = repo.get_delivery_by_id(entrega)
         if df.empty:
             raise HTTPException(status_code=404, detail="Entrega no encontrada.")
 
@@ -74,11 +75,12 @@ async def generate_pdf_bulk(
     """Genera un reporte masivo con índice y picking list."""
     try:
         # 1. Consultar entregas a procesar
-        all_deliveries = get_deliveries_for_bulk(session.connection().connection, date, area, centro, has_ots_filter, entrega_query)
+        repo = DeliveriesRepository(session)
+        all_deliveries = repo.get_deliveries_for_bulk(date, area, centro, has_ots_filter, entrega_query)
         if all_deliveries.empty:
             return {"error": "No hay datos que coincidan con los filtros."}
             
-        area_lookup = get_area_lookup(session.connection().connection)
+        area_lookup = repo.get_area_lookup()
         all_deliveries = all_deliveries.merge(area_lookup, on='entrega', how='left')
 
         # Rellenar NaN para evitar errores en groupby y desempaquetado de tuplas
@@ -118,14 +120,14 @@ async def generate_pdf_bulk(
         draw_annex_table(pdf, grouped_data)
         
         all_entrega_ids = [e for row in grouped_data for e in row['items']]
-        picking_df = get_picking_items(session.connection().connection, all_entrega_ids)
+        picking_df = repo.get_picking_items(all_entrega_ids)
         draw_picking_list(pdf, picking_df)
 
         # 4. Dibujar Páginas de Entrega
         for row in grouped_data:
             for entrega_id in row['items']:
                 try:
-                    items_df = pd.read_sql(text("SELECT * FROM outbound_deliveries WHERE entrega = :entrega"), session.connection(), params={"entrega": entrega_id})
+                    items_df = repo.get_delivery_by_id(str(entrega_id))
                     if not items_df.empty:
                         ots = get_ots_for_delivery(str(entrega_id), session.connection().connection)
                         pdf.add_page()

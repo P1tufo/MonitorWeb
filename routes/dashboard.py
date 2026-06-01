@@ -17,7 +17,6 @@ from core.state import AppState, get_app_state
 from core.auth import get_current_user
 from core.app_instance import templates
 from services.dashboard_service import DashboardService
-from core.wms_config import get_query
 from core.schemas import DashboardResponse
 
 logger = logging.getLogger("routes-dashboard")
@@ -52,29 +51,11 @@ async def get_ubicaciones(material: str, user = Depends(get_current_user), sessi
     umb_col = '"UMB"' if "UMB" in stock_cols else "umb"
     stock_col = '"Stock disp"' if "Stock disp" in stock_cols else "stock_disp"
 
-    query_db = get_query("inv_historial_ubicaciones")
-    if query_db:
-        # Substitute dynamic column names and normalise bind-params to SQLAlchemy style
-        query = (
-            query_db
-            .replace("s.ubicacion", f"s.{ubi_col}")
-            .replace("s.ubicacin", f"s.{ubi_col}")
-            .replace("s.texto_breve_de_material", f"s.{desc_col}")
-            .replace("s.stock_disp", f"s.{stock_col}")
-            .replace("s.umb", f"s.{umb_col}")
-            .replace("s.material", f"s.{mat_col}")
-            .replace("{ubi_col}", ubi_col)
-            .replace("{desc_col}", desc_col)
-            .replace("{stock_col}", stock_col)
-            .replace("{umb_col}", umb_col)
-            .replace("{mat_col}", mat_col)
-            .replace("?", ":mat")   # convierte posicionales sqlite3 → nombrados SQLAlchemy
-        )
-    else:
-        query = f"""
-        SELECT 
-            l.ubicacion as ubic_dest,
-            MAX(l.fecha) as fecha,
+
+    query = f"""
+    SELECT 
+        l.ubicacion as ubic_dest,
+        MAX(l.fecha) as fecha,
             MAX(l.texto_breve_material) as texto_breve_material,
             SUM(l.stock_disp) as stock_disp,
             MAX(l.umb) as umb,

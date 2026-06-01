@@ -15,6 +15,7 @@ async function loadData() {
         allTransporteData = res.data;
         renderChart();
         renderTable(allTransporteData);
+        loadPendingData();
     } catch (e) {
         console.error("Error cargando datos de transporte:", e);
     }
@@ -31,6 +32,156 @@ function getMonday(dateStr) {
 function updateTransporteChartGroup(group) {
     currentChartGroup = group;
     renderChart();
+}
+
+async function loadPendingData() {
+    const tbody = document.querySelector('#transportePendingTable tbody');
+    const countSpan = document.getElementById('transportePendingCount');
+    
+    try {
+        const response = await fetch('/api/transporte/pending');
+        if (!response.ok) throw new Error('Error fetch pending');
+        
+        const json = await response.json();
+        const data = json.data || [];
+        
+        tbody.innerHTML = '';
+        countSpan.textContent = `${data.length} Pendientes`;
+        
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 1.5rem; color: #10b981;">¡Todo al día! No hay entregas del año actual sin ingresar. 🎉</td></tr>';
+            return;
+        }
+
+        // Agrupar por mes y luego por fecha
+        const groupedByMonth = {};
+        data.forEach(item => {
+            const fecha = item.fecha || 'Sin Fecha';
+            const mes = fecha.length >= 7 ? fecha.substring(0, 7) : 'Sin Mes';
+            
+            if (!groupedByMonth[mes]) groupedByMonth[mes] = { total: 0, fechas: {} };
+            if (!groupedByMonth[mes].fechas[fecha]) groupedByMonth[mes].fechas[fecha] = [];
+            
+            groupedByMonth[mes].fechas[fecha].push(item);
+            groupedByMonth[mes].total++;
+        });
+
+        const sortedMonths = Object.keys(groupedByMonth).sort((a, b) => b.localeCompare(a));
+        
+        const monthNames = {
+            '01': 'Enero', '02': 'Febrero', '03': 'Marzo', '04': 'Abril',
+            '05': 'Mayo', '06': 'Junio', '07': 'Julio', '08': 'Agosto',
+            '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
+        };
+
+        sortedMonths.forEach((mes, mIndex) => {
+            const mesData = groupedByMonth[mes];
+            
+            let mesNombre = mes;
+            if (mes.length === 7) {
+                const [y, m] = mes.split('-');
+                mesNombre = `${monthNames[m] || m} ${y}`;
+            }
+
+            // Month Header
+            const monthHeader = document.createElement('tr');
+            monthHeader.style.cursor = 'pointer';
+            monthHeader.style.background = 'rgba(220, 38, 38, 0.15)';
+            monthHeader.style.borderBottom = '1px solid rgba(239, 68, 68, 0.3)';
+            
+            monthHeader.innerHTML = `
+                <td colspan="5" style="padding: 12px; font-weight: bold; color: #f87171; font-size: 1.05rem;">
+                    <span style="display: inline-block; width: 20px; transition: transform 0.2s;" id="icon-month-${mIndex}">▶</span>
+                    📅 ${mesNombre} <span style="font-size: 0.85rem; color: #fca5a5; margin-left: 10px; background: rgba(220,38,38,0.3); padding: 2px 8px; border-radius: 12px;">${mesData.total} docs pendientes</span>
+                </td>
+            `;
+            tbody.appendChild(monthHeader);
+
+            const sortedFechas = Object.keys(mesData.fechas).sort((a, b) => b.localeCompare(a));
+            const allChildRows = [];
+
+            sortedFechas.forEach((fecha, fIndex) => {
+                const items = mesData.fechas[fecha];
+                
+                // Date Header
+                const dateHeader = document.createElement('tr');
+                dateHeader.style.cursor = 'pointer';
+                dateHeader.style.background = 'rgba(239, 68, 68, 0.05)';
+                dateHeader.style.borderBottom = '1px solid rgba(239, 68, 68, 0.1)';
+                dateHeader.style.display = 'none'; 
+                dateHeader.dataset.isDateHeader = "true";
+                
+                dateHeader.innerHTML = `
+                    <td colspan="5" style="padding: 10px 12px 10px 30px; font-weight: bold; color: #fca5a5;">
+                        <span style="display: inline-block; width: 20px; transition: transform 0.2s;" id="icon-date-${mIndex}-${fIndex}">▶</span>
+                        📆 ${fecha} <span style="font-size: 0.8rem; color: #f87171; margin-left: 10px;">(${items.length} pendientes)</span>
+                    </td>
+                `;
+                tbody.appendChild(dateHeader);
+                allChildRows.push(dateHeader);
+
+                // Items
+                const itemRows = [];
+                items.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.style.display = 'none'; 
+                    tr.style.background = 'rgba(0,0,0,0.2)';
+                    tr.innerHTML = `
+                        <td style="font-weight: 600; color: #f87171; padding-left: 55px;">${item.ot}</td>
+                        <td>${item.gd}</td>
+                        <td>${item.oc}</td>
+                        <td style="text-align: center;">${item.bultos}</td>
+                        <td style="text-align: right; color: var(--text-muted);">${item.fecha}</td>
+                    `;
+                    tbody.appendChild(tr);
+                    itemRows.push(tr);
+                    allChildRows.push(tr); 
+                });
+
+                // Date click
+                dateHeader.onclick = (e) => {
+                    e.stopPropagation();
+                    const icon = document.getElementById(`icon-date-${mIndex}-${fIndex}`);
+                    const isHidden = itemRows[0].style.display === 'none';
+                    icon.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+                    itemRows.forEach(row => {
+                        row.style.display = isHidden ? 'table-row' : 'none';
+                    });
+                };
+            });
+
+            // Month click
+            monthHeader.onclick = () => {
+                const icon = document.getElementById(`icon-month-${mIndex}`);
+                const firstDateHeader = allChildRows.find(r => r.dataset.isDateHeader === "true");
+                if (!firstDateHeader) return;
+                
+                const isHidden = firstDateHeader.style.display === 'none';
+                icon.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+                
+                if (isHidden) {
+                    allChildRows.forEach(row => {
+                        if (row.dataset.isDateHeader === "true") {
+                            row.style.display = 'table-row';
+                        }
+                    });
+                } else {
+                    allChildRows.forEach(row => {
+                        row.style.display = 'none';
+                        if (row.dataset.isDateHeader === "true") {
+                            const dateIcon = row.querySelector('span');
+                            if(dateIcon) dateIcon.style.transform = 'rotate(0deg)';
+                        }
+                    });
+                }
+            };
+        });
+
+    } catch (e) {
+        console.error("Error al cargar pendientes:", e);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 1.5rem; color: #ef4444;">Error al cargar datos pendientes.</td></tr>';
+        countSpan.textContent = 'Error';
+    }
 }
 
 function renderChart() {

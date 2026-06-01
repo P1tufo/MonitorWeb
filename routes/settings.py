@@ -282,7 +282,7 @@ async def api_query_preview(update: QueryUpdate, db: DBSession, state: AppState 
     import pandas as pd
     import json
     from sqlalchemy import text
-    from repositories.deliveries import DeliveriesRepository
+    from core.macros import inject_macros
     from core.query_engine import build_sql_from_payload
     
     AREA_EXPR = DeliveriesRepository.AREA_EXPR

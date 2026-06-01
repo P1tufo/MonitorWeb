@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 
 from core.database import get_session_dep
 from core.auth import get_current_user
-from services.productivity_service import ProductivityService
+from services.productivity_daily import ProductivityDailyService
+from services.productivity_monthly import ProductivityMonthlyService
 from core.state import AppState, get_app_state
 
 logger = logging.getLogger("routes-productivity")
@@ -16,7 +17,7 @@ async def get_available_dates(
     user = Depends(get_current_user),
     session: Session = Depends(get_session_dep)
 ):
-    service = ProductivityService(session)
+    service = ProductivityDailyService(session)
     dates = service.get_available_dates()
     return {"data": dates}
 
@@ -44,7 +45,7 @@ async def get_productivity_dashboard(
     #         return {"data": cached_ctx, "is_syncing": False}
 
     try:
-        service = ProductivityService(session)
+        service = ProductivityDailyService(session)
         data = service.get_productivity_data(date)
         
         state.set_cache(cache_key, data)
@@ -76,7 +77,7 @@ async def get_monthly_productivity(
     #         return {"data": cached_ctx, "is_syncing": False}
 
     try:
-        service = ProductivityService(session)
+        service = ProductivityMonthlyService(session)
         data = service.get_monthly_productivity_data(month)
         
         state.set_cache(cache_key, data)
@@ -94,7 +95,7 @@ async def get_user_movements_summary(
     session: Session = Depends(get_session_dep)
 ):
     try:
-        service = ProductivityService(session)
+        service = ProductivityDailyService(session)
         data = service.get_user_movements_daily_summary(date, usuario)
         return {"data": data}
     except Exception as e:
@@ -110,7 +111,7 @@ async def get_user_movements_details(
     session: Session = Depends(get_session_dep)
 ):
     try:
-        service = ProductivityService(session)
+        service = ProductivityDailyService(session)
         data = service.get_user_movements_daily_details(date, usuario, operacion)
         return {"data": data}
     except Exception as e:
@@ -125,7 +126,7 @@ async def get_user_movements_monthly_summary(
     session: Session = Depends(get_session_dep)
 ):
     try:
-        service = ProductivityService(session)
+        service = ProductivityMonthlyService(session)
         data = service.get_user_movements_monthly_summary(month, usuario)
         return {"data": data}
     except Exception as e:
@@ -141,7 +142,7 @@ async def get_user_movements_monthly_details(
     session: Session = Depends(get_session_dep)
 ):
     try:
-        service = ProductivityService(session)
+        service = ProductivityMonthlyService(session)
         data = service.get_user_movements_monthly_details(month, usuario, operacion)
         return {"data": data}
     except Exception as e:

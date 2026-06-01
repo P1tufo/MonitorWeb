@@ -2,7 +2,7 @@
 core/wms_config.py — Configuración de lógica de negocio y mapeos WMS (SaaS Dinámico).
 """
 from typing import Dict, Any
-from .db_config_manager import get_setting, get_status_mapping, get_cost_center_mapping, get_holidays, get_query
+from .db_config_manager import get_setting, get_status_mapping, get_cost_center_mapping, get_holidays
 
 def validate_wms_maps():
     """Valida la integridad de los mapeos definidos."""

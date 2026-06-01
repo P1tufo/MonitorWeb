@@ -1,21 +1,30 @@
 ## Archivo: ./core/app_instance.py
 
 ### Resumen Funcional
-El archivo `app_instance.py` configura la instancia principal de una aplicación FastAPI, estableciendo su título, descripción, versión y URLs para la documentación. También configura el motor de plantillas Jinja2 con seguridad reforzada.
+Este archivo configura la instancia principal de la aplicación FastAPI, incluyendo su título, descripción y versión. También establece las rutas para la documentación interactiva.
 
 ### Catálogo de Funciones y Clases
-- `FastAPI()` - Crea una instancia de la clase FastAPI.
-- `Jinja2Templates(directory=str(templates_path))` - Configura el motor de plantillas Jinja2 para renderizar vistas HTML.
+- `app: FastAPI` -> Instancia principal de la aplicación FastAPI.
+- `templates_path: Path` -> Ruta al directorio de plantillas.
+- `templates: Jinja2Templates` -> Motor de plantillas configurado con seguridad reforzada.
+
+### Contratos de API / Endpoints
+No aplica.
 
 ### Interacción con Base de Datos
-No aplica
+No aplica.
 
-### Estado y Variables Globales
-- `app: FastAPI` - Instancia principal de la aplicación FastAPI.
-- `templates: Jinja2Templates` - Motor de plantillas Jinja2 configurado.
+### Flujo de Datos y Pipeline
+No aplica.
+
+### Caché y Estado
+No aplica.
+
+### Lógica de Negocio y Reglas
+No aplica.
 
 ### Dependencias y Flujo
-- `fastapi`: Librería para crear aplicaciones web API rápidas.
-- `fastapi.templating`: Módulo para renderizar plantillas HTML con Jinja2.
-- `config`: Módulo que contiene la configuración global de la aplicación, incluyendo el directorio base (`BASE_DIR`).
+- **Importa**: `pathlib`, `fastapi`, `fastapi.templating`, `config`.
+- **Es importado por**: No hay archivos que importen este archivo directamente.
+- **Flujo de datos**: Este archivo no consume ni produce datos, solo configura la instancia de FastAPI y el motor de plantillas.
 

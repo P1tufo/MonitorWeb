@@ -18,7 +18,7 @@ from config import CACHE_DIR, CACHE_DIR_NAME
 STATE_FILE = os.path.join(CACHE_DIR, "doc_generator_state.json")
 def load_gitignore(root_dir):
     ignore_dirs = {".git", "__pycache__", "venv", "node_modules", "PDFs_Generados", "Temp_Assets", "scratch", "_legacy_reference", ".pytest_cache", CACHE_DIR_NAME}
-    ignore_files = {OUTPUT_FILE, OUTPUT_MEJORAS_FILE, STATE_FILE, "scripts/doc_generator.py", "package.json", "package-lock.json", "tunnel_url.txt", "server.log", "free_ram.py"}
+    ignore_files = {OUTPUT_FILE, OUTPUT_MEJORAS_FILE, STATE_FILE, "doc_generator.py", "doc_prompts.py", "package.json", "package-lock.json", "tunnel_url.txt", "server.log", "free_ram.py"}
     
     gitignore_path = os.path.join(root_dir, ".gitignore")
     if os.path.exists(gitignore_path):
@@ -38,135 +38,13 @@ MAX_FILE_SIZE = 500 * 1024
 CHUNK_THRESHOLD = 25000
 CHUNK_SIZE = 30000
 
+from doc_prompts import *
 OLLAMA_OPTIONS = {
-    "num_ctx": 16384,
     "temperature": 0.0,
     "top_p": 0.4,
     "repeat_penalty": 1.1,
     "num_predict": -1
 }
-
-PROMPT_TEMPLATE_SYSTEM = """
-Actúa como Arquitecto de Datos y Software Senior. Documenta el código adjunto extrayendo metadatos técnicos estructurados.
-
-### Resumen Funcional
-(Descripción de 1 a 3 líneas sobre el objetivo del archivo).
-
-### Catálogo de Funciones y Clases
-(Lista estricta de las funciones/métodos detectados. Formato: `nombre_funcion(parametros)` - Breve propósito).
-
-### Interacción con Base de Datos
-(Especifica el motor ej. SQLite, Postgres, etc. Lista explícitamente qué TABLAS y qué COLUMNAS se están leyendo o modificando en este archivo. Si hay consultas SQL crudas o llamadas a ORM, menciónalas. Si no usa BD, escribe "Ninguna").
-
-### Estado y Variables Globales
-(Lista de variables globales, de sesión, de entorno o diccionarios quemados en código que almacenan estado crítico).
-
-### Dependencias y Flujo
-(Librerías externas utilizadas y hacia qué otros archivos del proyecto se comunica).
-
-**REGLAS CRÍTICAS:**
-1. Usa solo los encabezados ### indicados.
-2. NO devuelvas tu respuesta envuelta en formato JSON. Responde estrictamente en texto.
-3. Si el archivo no tiene interacción con bases de datos o no define variables globales, responde "No aplica" en esa sección. No alucines tablas.
-4. Idioma: Español. Sé directo y técnico.
-"""
-
-PROMPT_TEMPLATE_USER = """
-Archivo: {filename} ({filepath}).
-Contenido del fragmento:
-{content}
-"""
-
-PROMPT_IMPROVEMENT_TEMPLATE_SYSTEM = """
-Actúa como un Desarrollador Senior y Auditor de Código extremadamente riguroso. 
-Tu tarea es evaluar la calidad de este código buscando ÚNICAMENTE fallos críticos reales, vulnerabilidades comprobables (ej. inyecciones SQL reales) o cuellos de botella graves de rendimiento.
-
-### Veredicto de Calidad
-(Indica si el código necesita cambios urgentes, o si es lo suficientemente robusto para producción).
-
-### Análisis Crítico (Solo si aplica)
-(Estructura, rendimiento o seguridad. Explica por qué es un problema grave y cómo solucionarlo, adjuntando código si es útil).
-
-**REGLAS CRÍTICAS:**
-1. Si el código es sólido, funcional y seguro, tu respuesta debe ser EXACTAMENTE "CÓDIGO ÓPTIMO". Sin texto adicional.
-2. NO alucines vulnerabilidades. Ej: Si ves que una consulta SQL ya utiliza paso de parámetros (como `?` o `params=()`), NO la marques como inyección SQL.
-3. NO devuelvas tu respuesta envuelta en formato JSON. Responde estrictamente en texto usando Markdown.
-4. Evalúa si el archivo contiene reglas de negocio, diccionarios o configuraciones "quemadas" en código (hardcoded). Si es así, recomienda explícitamente cómo migrar eso a tablas de Base de Datos para cumplir con nuestra visión SaaS (donde el usuario modifica las reglas vía Web). Si ves SQL crudo, sugiere cómo prepararlo para SQLAlchemy/Postgres.
-5. NO sugieras micro-optimizaciones o cambios estéticos (ej. refactorizar variables si el código ya es legible).
-6. NO sugieras sobre-ingeniería (ej. inyección de dependencias compleja para scripts simples).
-7. Usa el idioma Español de forma clara, directa y técnica.
-"""
-
-PROMPT_IMPROVEMENT_TEMPLATE_USER = """
-Archivo: {filename}.
-Contenido del fragmento:
-```python
-{content}
-```
-"""
-
-PROMPT_TREE_ANALYSIS_SYSTEM = """
-Actúa como Arquitecto de Software Senior. Analiza la siguiente estructura de archivos de un proyecto y describe:
-1. La arquitectura general detectada (ej. MVC, Monolito, Modular).
-2. El propósito probable de las carpetas principales.
-3. La organización lógica de las dependencias.
-
-REGLAS CRÍTICAS:
-1. NO devuelvas tu respuesta envuelta en formato JSON. Responde estrictamente en texto usando Markdown.
-2. Estructura la respuesta usando encabezados ###.
-3. Idioma: Español. Sé conciso y técnico.
-4. No añadas introducciones informales.
-"""
-
-PROMPT_TREE_ANALYSIS_USER = """
-Estructura del Proyecto:
-```text
-{tree}
-```
-"""
-
-PROMPT_AUDIT_SYSTEM = """
-Actúa como Auditor Principal de Software. A continuación se te proporciona la documentación técnica extraída de todos los archivos de un proyecto.
-
-Tu objetivo es cruzar la información de todos los archivos para detectar malas prácticas arquitectónicas y deuda técnica a nivel global.
-
-Analiza la documentación y genera un reporte estructurado con estos puntos exactos:
-
-### 1. Funciones Duplicadas o Solapadas
-(Busca funciones que hagan exactamente lo mismo pero estén en diferentes archivos. Enuméralas y sugiere crear un archivo `utils` o `helpers` compartido).
-
-### 2. Inconsistencias en Base de Datos
-(Analiza la sección 'Interacción con Base de Datos'. Detecta si hay múltiples archivos accediendo a las mismas tablas de forma desordenada, o si se mezclan consultas SQL crudas con ORMs).
-
-### 3. Riesgos de Estado Global
-(Analiza la sección 'Estado y Variables Globales'. Identifica variables o diccionarios quemados en código que deberían estar en la base de datos o en variables de entorno `.env`).
-
-### 4. Veredicto de Refactorización
-(Indica los 3 archivos más problemáticos que deberían refactorizarse primero y por qué).
-"""
-
-PROMPT_AUDIT_USER = """
-Documentación Consolidada:
-```markdown
-{documentation}
-```
-"""
-
-PROMPT_SUMMARY_SYSTEM = """
-Actúa como Arquitecto de Software Senior. Tu tarea es leer la documentación técnica de varios archivos de un proyecto y generar un "Resumen Ejecutivo de Arquitectura" conciso.
-
-REGLAS CRÍTICAS:
-1. NO devuelvas tu respuesta envuelta en formato JSON. Responde estrictamente en texto usando Markdown.
-2. Extrae los componentes principales, bases de datos mencionadas, dependencias críticas y el flujo lógico general.
-3. Mantén el idioma Español, sé muy técnico y conciso. Evita texto de relleno.
-"""
-
-PROMPT_SUMMARY_USER = """
-Documentación cruda:
-```markdown
-{documentation}
-```
-"""
 
 def sanitize_output(text):
     if not text:
@@ -287,17 +165,48 @@ def chunk_text(text, max_chars=30000, overlap_lines=10):
         
     return chunks
 
+# --- Contexto Dinámico (M1 Pro 16GB RAM) ---
+MIN_CTX = 8192
+MAX_CTX = 32768  # Límite seguro para qwen2.5-coder:7b con 16GB RAM
+SYSTEM_PROMPT_TOKENS = 1200  # Estimación del prompt de sistema enriquecido
+RESPONSE_BUFFER_TOKENS = 8192  # Espacio reservado para la respuesta (Aumentado para evitar truncadas)
+
+def calculate_num_ctx(content):
+    """Calcula num_ctx dinámicamente basándose en la cantidad de líneas y tamaño del contenido.
+    Heurística: ~3.5 caracteres por token, y garantizamos al menos 15 tokens por línea.
+    Fórmula: system_prompt + content_tokens + response_buffer, clamped a [8192, 32768].
+    """
+    lines_count = content.count('\n') + 1
+    char_tokens = int(len(content) / 3.5)
+    line_tokens = lines_count * 15
+    content_tokens = max(char_tokens, line_tokens)
+    
+    total_needed = SYSTEM_PROMPT_TOKENS + content_tokens + RESPONSE_BUFFER_TOKENS
+    # Redondear al siguiente múltiplo de 1024 para alineación
+    total_aligned = ((total_needed + 1023) // 1024) * 1024
+    result = max(MIN_CTX, min(total_aligned, MAX_CTX))
+    return result
+
 def call_ollama_with_retry(messages, retries=3, options=None):
-    """Llamada a Ollama unificada usando la librería oficial."""
+    """Llamada a Ollama unificada usando la librería oficial.
+    Si no se proporciona num_ctx en options, lo calcula automáticamente
+    a partir del contenido de los mensajes.
+    """
     if isinstance(messages, str):
         messages = [{'role': 'user', 'content': messages}]
+
+    # Calcular num_ctx dinámico si no viene en las opciones
+    merged_options = (options if options else OLLAMA_OPTIONS).copy()
+    if "num_ctx" not in merged_options:
+        total_content = " ".join(m.get("content", "") for m in messages)
+        merged_options["num_ctx"] = calculate_num_ctx(total_content)
         
     for attempt in range(retries):
         try:
             response = ollama.chat(
                 model=MODEL_NAME,
                 messages=messages,
-                options=options if options else OLLAMA_OPTIONS
+                options=merged_options
             )
             
             response_content = response.get("message", {}).get("content", "")

@@ -9,8 +9,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from core.wms_config import COST_CENTER_MAPPING, get_query
-
+from core.wms_config import COST_CENTER_MAPPING
 logger = logging.getLogger(__name__)
 
 def generate_predictions(db_path: str):
@@ -24,8 +23,7 @@ def generate_predictions(db_path: str):
         conn = sqlite3.connect(db_path)
         
         # Leemos la data base de consumos reales
-        query_db = get_query("ia_predictive_movements")
-        query = query_db if query_db else """
+        query = """
             SELECT 
                 fe_contab, ce_coste, material, texto_breve_material, cantidad, cmv
             FROM inventory_movements 

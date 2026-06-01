@@ -34,64 +34,165 @@ async def get_widget_data(
         return cached
 
     row = db.query(ConfigQuery).filter(ConfigQuery.query_id == query_id).first()
-    if not row:
-        raise HTTPException(status_code=404, detail="Widget not found")
+    if not row or not row.visual_state:
+        raise HTTPException(status_code=404, detail="Widget not found or not initialized properly")
+
+    try:
+        from repositories.widgets import WidgetRepository
+        repo = WidgetRepository(db)
+        result = repo.execute_widget(query_id, row.visual_state, year, area, granularity)
+        state.set_cache(cache_key, result)
+        return result
+    except Exception as e:
+        logger.error(f"Error procesando widget {query_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+    try:
+        payload_dict = json.loads(row.visual_state)
+        filters = payload_dict.get("filters", [])
         
-    if not row.visual_state:
-        # Fallback para widgets legacy (solo SQL texto)
-        sql = row.sql_text or ""
-        if not sql:
-            raise HTTPException(status_code=400, detail="Widget no tiene visual_state ni sql_text.")
+        # Sobrescritura con Filtros Globales (Intersección)
+        if year:
+            date_col_updated = False
+            for f in filters:
+                if f.get("valueType") == "value" and f.get("operator") == "contains" and ("fecha" in f.get("column", "") or "fe_contab" in f.get("column", "")):
+                    f["value"] = year
+                    date_col_updated = True
             
-        if "{AREA_EXPR}" in sql:
-            from repositories.deliveries import DeliveriesRepository
-            sql = sql.replace("{AREA_EXPR}", DeliveriesRepository.AREA_EXPR)
+            if not date_col_updated:
+                # Si no existía, inyectamos uno heurístico
+                base_table = payload_dict.get("baseTable", "outbound_deliveries")
+                date_col = f"{base_table}.fecha_carga" if base_table == "outbound_deliveries" else f"{base_table}.fe_contab"
+                filters.append({
+                    "column": date_col,
+                    "operator": "contains",
+                    "value": year,
+                    "valueType": "value"
+                })
+        
+        # Inyectar filtro de área dinámico (evaluando AREA_EXPR en WHERE)
+        if area and area.strip() != "":
+            base_table = payload_dict.get("baseTable", "outbound_deliveries")
+            if base_table == "outbound_deliveries":
+                filters.append({
+                    "column": "__AREA_EXPR__",
+                    "operator": "in",
+                    "value": area,
+                    "valueType": "value"
+                })
+        
+        if granularity and "timeAxis" in payload_dict and payload_dict["timeAxis"]:
+            payload_dict["timeAxis"]["granularity"] = granularity
             
-        try:
-            import pandas as pd
-            from sqlalchemy import text
-            df = pd.read_sql(text(sql), db.connection())
+        payload_dict["filters"] = filters
+        
+        chart_type = payload_dict.get("chartType", "bar")
+        
+        # Ejecutar SQL dinámico
+        df = execute_visual_query(payload_dict, db)
+        
+        # Formatear salida para el Frontend
+        labels = []
+        datasets = []
+        raw_data = []
+        
+        if not df.empty:
+            raw_data = sanitize_for_json(df)
             
-            raw_data = sanitize_for_json(df) if not df.empty else []
-            labels = []
-            datasets = []
-            chart_type = "bar" # Default fallback
-            
-            # Simple heuristic for legacy formatting
-            if not df.empty:
-                if len(df.columns) == 1 and len(df) == 1:
-                    chart_type = "kpi"
-                else:
-                    # Assume first column is labels
-                    labels = [str(x) for x in df.iloc[:, 0].tolist()]
-                    for col in df.columns[1:]:
-                        if pd.api.types.is_numeric_dtype(df[col]):
-                            datasets.append({
-                                "label": str(col).title(),
-                                "data": [float(x) if pd.notna(x) else 0 for x in df[col].tolist()]
-                            })
-                            
-            # Some specific charts override
-            if "abc" in query_id or "pm" in query_id:
-                chart_type = "doughnut"
-                
-            result = {
-                "status": "success",
-                "query_id": query_id,
-                "chartType": chart_type,
-                "title": query_id.replace("_", " ").title(),
-                "labels": labels,
-                "datasets": datasets,
-                "raw_data": raw_data,
-                "isEmpty": df.empty,
-                "legacy": False, # Trick saas_engine into rendering it!
-                "format": "number"
-            }
-            state.set_cache(cache_key, result)
-            return result
-        except Exception as e:
-            logger.error(f"Error executing legacy widget {query_id}: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
+            # Eliminar el eje de tiempo dummy si no hay granularidad real
+            if "fecha" in df.columns and (df["fecha"] == "Total").all():
+                df = df.drop(columns=["fecha"])
+
+            # Formatear para Chart.js si hay desglose o ejes de tiempo
+            if "categoria" in df.columns or "fecha" in df.columns:
+                # Si hay fecha y categoría (series múltiples)
+                if "fecha" in df.columns and "categoria" in df.columns:
+                    pivot = df.pivot_table(index="fecha", columns="categoria", values=df.columns[-1], aggfunc="sum").fillna(0)
+                    labels = pivot.index.tolist()
+                    for col in pivot.columns:
+                        datasets.append({
+                            "label": str(col),
+                            "data": pivot[col].tolist()
+                        })
+                # Si solo hay categoría (ej. Doughnut, Bar simple)
+                elif "categoria" in df.columns:
+                    labels = df["categoria"].tolist()
+                    metric_cols = [c for c in df.columns if c not in ("fecha", "categoria")]
+                    for col in metric_cols:
+                        datasets.append({
+                            "label": str(col),
+                            "data": df[col].tolist()
+                        })
+                # Si solo hay tiempo (ej. Line chart global)
+                elif "fecha" in df.columns:
+                    labels = df["fecha"].tolist()
+                    metric_cols = [c for c in df.columns if c != "fecha"]
+                    for col in metric_cols:
+                        datasets.append({
+                            "label": str(col),
+                            "data": df[col].tolist()
+                        })
+            else:
+                # KPI numérico o tabla sin agrupación explícita
+                pass
+
+        metrics_list = payload_dict.get("metrics", [])
+        if not metrics_list:
+            if payload_dict.get("metric"):
+                metrics_list.append(payload_dict.get("metric"))
+            if payload_dict.get("secondMetric"):
+                metrics_list.append(payload_dict.get("secondMetric"))
+        
+        dataset_formats = {}
+        for m in metrics_list:
+            if m and m.get("label"):
+                dataset_formats[m.get("label")] = m.get("format", "number")
+
+        format_type = payload_dict.get("metric", {}).get("format", "number")
+        result = {
+            "query_id": query_id,
+            "chartType": chart_type,
+            "title": query_id.replace("_", " ").title(),
+            "labels": labels,
+            "datasets": datasets,
+            "raw_data": raw_data,
+            "isEmpty": df.empty,
+            "format": format_type,
+            "dataset_formats": dataset_formats
+        }
+        
+        state.set_cache(cache_key, result)
+        return result
+
+    except Exception as e:
+        logger.error(f"Error procesando widget {query_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/api/widget/{query_id}/drilldown")
+async def get_widget_drilldown(
+    query_id: str,
+    segment: str,
+    material: Optional[str] = None,
+    year: Optional[str] = None,
+    area: Optional[str] = None,
+    db: Session = Depends(get_session_dep),
+    user = Depends(get_current_user)
+):
+    """
+    Endpoint para obtener el detalle subyacente de un segmento de un widget.
+    Actualmente soportado: ABC_ANALYSIS.
+    """
+    row = db.query(ConfigQuery).filter(ConfigQuery.query_id == query_id).first()
+    if not row or not row.visual_state:
+        raise HTTPException(status_code=404, detail="Widget no encontrado o sin estado visual")
+        
+    try:
+        from repositories.widgets import WidgetRepository
+        repo = WidgetRepository(db)
+        return repo.execute_drilldown(query_id, row.visual_state, segment, material, year)
+    except Exception as e:
+        logger.error(f"Error procesando drilldown para widget {query_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
     try:
         payload_dict = json.loads(row.visual_state)
@@ -257,7 +358,7 @@ async def get_widget_drilldown(
         payload_dict["filters"] = filters
 
         if query_id in ("vl_sla_area_monthly_trend", "vl_sla_area_trend") and segment:
-            from core.query_engine import AREA_EXPR_MACRO
+            from core.macros import AREA_EXPR as AREA_EXPR_MACRO
             if material:
                 sql = """
                 SELECT 

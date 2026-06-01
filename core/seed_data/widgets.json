@@ -1,0 +1,150 @@
+[
+    {
+        "query_id": "inv_volumen_stats",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"inventory_movements.material\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "inv_area_stats_prod",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "inv_consumos_abc",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "vl_monthly_evolution",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [{\"column\": \"outbound_deliveries.fecha_carga\", \"operator\": \"isnotnull\", \"value\": \"\"}], \"metric\": {\"column\": \"outbound_deliveries.entrega\", \"aggregation\": \"COUNT_DISTINCT\", \"label\": \"entregas\"}, \"timeAxis\": {\"column\": \"outbound_deliveries.fecha_carga\", \"granularity\": \"MONTH\"}, \"breakdown\": \"\", \"chartType\": \"line\"}"
+    },
+    {
+        "query_id": "vl_weekly_evolution",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [{\"column\": \"outbound_deliveries.fecha_carga\", \"operator\": \"isnotnull\", \"value\": \"\"}], \"metric\": {\"column\": \"outbound_deliveries.entrega\", \"aggregation\": \"COUNT_DISTINCT\", \"label\": \"entregas\"}, \"timeAxis\": {\"column\": \"outbound_deliveries.fecha_carga\", \"granularity\": \"WEEK\"}, \"breakdown\": \"\", \"chartType\": \"line\"}"
+    },
+    {
+        "query_id": "vl_top_locations",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"outbound_deliveries.material\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "inv_dow_stats",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "inv_pm_type_records",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "inv_area_material_prod",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "inv_location_summary",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "inv_top_users",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "vl_sla_monthly_trend",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [{\"column\": \"outbound_deliveries.fecha_carga\", \"operator\": \"isnotnull\", \"value\": \"\"}], \"metric\": {\"column\": \"outbound_deliveries.dias_retraso\", \"aggregation\": \"SLA_EFFICIENCY\", \"format\": \"percent\"}, \"timeAxis\": {\"column\": \"outbound_deliveries.fecha_carga\", \"granularity\": \"MONTH\"}, \"breakdown\": \"\", \"secondMetric\": {\"column\": \"outbound_deliveries.entrega\", \"aggregation\": \"COUNT\", \"label\": \"Materiales Solicitados\"}, \"chartType\": \"line\"}"
+    },
+    {
+        "query_id": "vl_sla_area_monthly_trend",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [{\"column\": \"outbound_deliveries.fecha_carga\", \"operator\": \"isnotnull\", \"value\": \"\"}], \"metric\": {\"column\": \"outbound_deliveries.dias_retraso\", \"aggregation\": \"SLA_EFFICIENCY\", \"format\": \"percent\"}, \"timeAxis\": {\"column\": \"outbound_deliveries.fecha_carga\", \"granularity\": \"MONTH\"}, \"breakdown\": \"outbound_deliveries.area_negocio\", \"secondMetric\": {\"column\": \"outbound_deliveries.material\", \"aggregation\": \"COUNT\", \"label\": \"Materiales_Solicitados\"}, \"chartType\": \"line\"}"
+    },
+    {
+        "query_id": "vl_sla_trend",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [{\"column\": \"outbound_deliveries.fecha_carga\", \"operator\": \"isnotnull\", \"value\": \"\"}], \"metric\": {\"column\": \"outbound_deliveries.dias_retraso\", \"aggregation\": \"SLA_EFFICIENCY\", \"format\": \"percent\"}, \"timeAxis\": {\"column\": \"outbound_deliveries.fecha_carga\", \"granularity\": \"WEEK\"}, \"breakdown\": \"\", \"secondMetric\": {\"column\": \"outbound_deliveries.entrega\", \"aggregation\": \"COUNT\", \"label\": \"Materiales Solicitados\"}, \"chartType\": \"line\"}"
+    },
+    {
+        "query_id": "vl_sla_area_trend",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [{\"column\": \"outbound_deliveries.fecha_carga\", \"operator\": \"isnotnull\", \"value\": \"\"}], \"metric\": {\"column\": \"outbound_deliveries.dias_retraso\", \"aggregation\": \"SLA_EFFICIENCY\", \"format\": \"percent\"}, \"timeAxis\": {\"column\": \"outbound_deliveries.fecha_carga\", \"granularity\": \"WEEK\"}, \"breakdown\": \"outbound_deliveries.area_negocio\", \"chartType\": \"line\"}"
+    },
+    {
+        "query_id": "vl_top_authors",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"outbound_deliveries.entrega\", \"aggregation\": \"COUNT_DISTINCT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "inv_consumos_quick",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "ia_predictive_movements",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "inv_historial_ubicaciones",
+        "visual_state": "{\"baseTable\": \"warehouse_tasks\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "ots_list_pending",
+        "visual_state": "{\"baseTable\": \"warehouse_tasks\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "inv_non_palletized_summary",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "ots_daily_trend",
+        "visual_state": "{\"baseTable\": \"warehouse_tasks\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"warehouse_tasks.material\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "ots_by_movement_type",
+        "visual_state": "{\"baseTable\": \"warehouse_tasks\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"warehouse_tasks.material\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "ots_by_user_dual",
+        "visual_state": "{\"baseTable\": \"warehouse_tasks\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"warehouse_tasks.material\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"bar\"}"
+    },
+    {
+        "query_id": "vl_kpi_total",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"outbound_deliveries.entrega\", \"aggregation\": \"COUNT_DISTINCT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    },
+    {
+        "query_id": "vl_kpi_eff",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [{\"column\": \"outbound_deliveries.fecha_carga\", \"operator\": \"contains\", \"value\": \"2026\"}], \"metric\": {\"column\": \"outbound_deliveries.dias_retraso\", \"aggregation\": \"SLA_EFFICIENCY\", \"format\": \"percent\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"MONTH\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    },
+    {
+        "query_id": "vl_kpi_ontime",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [{\"column\": \"outbound_deliveries.fecha_carga\", \"operator\": \"contains\", \"value\": \"2026\"}, {\"column\": \"outbound_deliveries.dias_retraso\", \"operator\": \"lessthan\", \"value\": \"3\"}], \"metric\": {\"column\": \"outbound_deliveries.entrega\", \"aggregation\": \"COUNT_DISTINCT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"MONTH\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    },
+    {
+        "query_id": "vl_kpi_late",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [{\"column\": \"outbound_deliveries.fecha_carga\", \"operator\": \"contains\", \"value\": \"2026\"}, {\"column\": \"outbound_deliveries.dias_retraso\", \"operator\": \"greaterthan\", \"value\": \"2\"}], \"metric\": {\"column\": \"outbound_deliveries.entrega\", \"aggregation\": \"COUNT_DISTINCT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"MONTH\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    },
+    {
+        "query_id": "inv_kpi_ingresos",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    },
+    {
+        "query_id": "inv_kpi_consumos_prod",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    },
+    {
+        "query_id": "inv_kpi_consumos_mant",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    },
+    {
+        "query_id": "inv_kpi_rate_reabast",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [{\"column\": \"inventory_movements.fe_contab\", \"operator\": \"contains\", \"value\": \"2026\"}], \"metric\": {\"column\": \"inventory_movements.tipo_operacion\", \"aggregation\": \"REPLENISHMENT_RATE\", \"format\": \"percent\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"YEAR\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    },
+    {
+        "query_id": "inv_kpi_traspasos",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"inventory_movements.material\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    },
+    {
+        "query_id": "inv_kpi_rate_devolucion",
+        "visual_state": "{\"baseTable\": \"outbound_deliveries\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"SLA_EFFICIENCY\", \"format\": \"percent\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    },
+    {
+        "query_id": "inv_kpi_rate_eficiencia",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [{\"column\": \"inventory_movements.fe_contab\", \"operator\": \"contains\", \"value\": \"2026\"}], \"metric\": {\"column\": \"inventory_movements.tipo_operacion\", \"aggregation\": \"INV_EFFICIENCY\", \"format\": \"percent\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"YEAR\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    },
+    {
+        "query_id": "ots_kpi_pending",
+        "visual_state": "{\"baseTable\": \"warehouse_tasks\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"warehouse_tasks.material\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    },
+    {
+        "query_id": "ots_kpi_users",
+        "visual_state": "{\"baseTable\": \"warehouse_tasks\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"warehouse_tasks.entrega\", \"aggregation\": \"COUNT_DISTINCT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    }
+]

@@ -1,17 +1,18 @@
 ## Archivo: ./core/models.py
 
 ### Resumen Funcional
-Este archivo define modelos ORM SQLAlchemy para el esquema de configuración SaaS, incluyendo mapeos de estados WMS a etiquetas visuales, centros de costo a áreas de negocio, parámetros de procesamiento configurables, feriados para cálculo de SLA y consultas SQL gestionadas via UI.
+Este archivo define los modelos ORM SQLAlchemy para las tablas de configuración dinámica del sistema de monitoreo de almacén (WMS). Incluye mapeos de estados, centros de costo, parámetros globales, feriados y consultas SQL gestionadas via UI.
 
 ### Catálogo de Funciones y Clases
 - `StatusMapping(code: str, label: str)` - Mapea códigos internos del WMS a etiquetas legibles por humanos.
-- `CostCenterMapping(center_code: str, business_area: str)` - Asocia un código de centro de costo del WMS con un Área de Negocio.
+- `CostCenterMapping(center_code: str, business_area: str)` - Asocia un código de centro de costo con un Área de Negocio.
 - `AppSetting(key: str, value: str, type: str = "str")` - Parámetros de comportamiento del sistema.
+  - `typed_value()` - Retorna el valor con el tipo Python correcto.
 - `Holiday(date_str: str)` - Días no hábiles para el cálculo de SLA.
-- `ConfigQuery(query_id: str, sql_text: str = None, visual_state: str = None)` - Almacena el estado visual (JSON) de las consultas del Analytics Studio.
+- `ConfigQuery(query_id: str, visual_state: str = None)` - Almacena el estado visual de las consultas del Analytics Studio.
 
 ### Interacción con Base de Datos
-- Motor: SQLAlchemy
+- Motor: SQLite
 - Tablas:
   - `config_status_mapping`
   - `config_cost_center_mapping`
@@ -20,12 +21,9 @@ Este archivo define modelos ORM SQLAlchemy para el esquema de configuración Saa
   - `config_queries`
 
 ### Estado y Variables Globales
-No aplica
+Ninguna
 
 ### Dependencias y Flujo
-Dependencias:
-- `sqlalchemy` (ORM SQLAlchemy)
-- `__future__.annotations` (Para futuras anotaciones de tipos)
-
-Flujo: Este archivo comunica con otros archivos del proyecto a través de la definición de modelos ORM que son utilizados para interactuar con la base de datos.
+- Importa de `database.py`: `Base`
+- No se importan archivos del proyecto que lo consuman.
 

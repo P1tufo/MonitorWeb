@@ -1,0 +1,506 @@
+import logging
+from typing import List, Tuple, Optional
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+from fastapi import HTTPException
+from core.macros import AREA_EXPR as AREA_EXPR_MACRO
+
+logger = logging.getLogger("query-engine")
+
+from core.query_validators import validate_identifier, ALLOWED_AGGREGATIONS, ALLOWED_GRANULARITIES
+
+# ─── Motor de construcción SQL ────────────────────────────────────────────────
+
+def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str] = None, drilldown_material: Optional[str] = None) -> Tuple[str, List]:
+    """
+    Compila un VisualQueryBuilderPayload validado en una tupla (sql_text, bound_params).
+
+    Garantías de seguridad:
+      - Todas las tablas y columnas del payload se validan contra ALLOWED_TABLES
+        y el esquema real de la BD antes de usarse en la query.
+      - Los valores de filtro se pasan siempre como bind params (?), nunca
+        interpolados en el string SQL.
+      - Las agregaciones y granularidades se validan contra listas blancas estáticas.
+
+    Lanza HTTPException(400) si algún identificador no es válido.
+    Devuelve (sql_text, bound_params) listos para ejecutar con SQLAlchemy text().
+    """
+    # ── Traducción Semántica (Fase 1) ────────────────────────────────────────
+    from core.semantic_layer import resolve_dataset_physical_table, resolve_physical_mapping, get_metric_formula
+    logical_dataset = getattr(payload, "datasetId", None) or getattr(payload, "baseTable", None)
+    
+    if logical_dataset:
+        try:
+            payload.baseTable = resolve_dataset_physical_table(logical_dataset)
+        except ValueError:
+            pass # Fallback a tabla física
+            
+        for f in payload.filters:
+            f.column = resolve_physical_mapping(logical_dataset, f.column)
+            if getattr(f, "compareColumn", None):
+                f.compareColumn = resolve_physical_mapping(logical_dataset, f.compareColumn)
+                
+        if payload.timeAxis and payload.timeAxis.column:
+            payload.timeAxis.column = resolve_physical_mapping(logical_dataset, payload.timeAxis.column)
+            
+        if payload.breakdown and not payload.breakdown.startswith("__"):
+            payload.breakdown = resolve_physical_mapping(logical_dataset, payload.breakdown)
+            
+        unified_metrics_to_translate = getattr(payload, "metrics", []) if getattr(payload, "metrics", None) else []
+        if not unified_metrics_to_translate:
+            if getattr(payload, "metric", None):
+                unified_metrics_to_translate.append(payload.metric)
+            if getattr(payload, "secondMetric", None) and getattr(payload.secondMetric, "column", None):
+                unified_metrics_to_translate.append(payload.secondMetric)
+                
+        for m in unified_metrics_to_translate:
+            m_col = getattr(m, "column", None)
+            m_agg = getattr(m, "aggregation", "")
+            if m_col:
+                # El ID semántico sirve para extraer la fórmula si la tiene (o fallback legacy)
+                formula = get_metric_formula(logical_dataset, m_col, payload.baseTable, m_agg)
+                if formula:
+                    m.customExpr = formula
+                    m.column = None # Bypass validación física
+                else:
+                    m.column = resolve_physical_mapping(logical_dataset, m_col)
+
+    # ── 1. Validaciones de seguridad ─────────────────────────────────────────
+    if not validate_identifier(payload.baseTable, db):
+        raise HTTPException(status_code=400, detail=f"Tabla principal no válida: {payload.baseTable}")
+
+    for j in payload.joins:
+        if not validate_identifier(j.table, db):
+            raise HTTPException(status_code=400, detail=f"Tabla JOIN no válida: {j.table}")
+        if not validate_identifier(j.onLeft, db) or not validate_identifier(j.onRight, db):
+            raise HTTPException(status_code=400, detail="Parámetro ON de JOIN no válido")
+
+    for f in payload.filters:
+        if not validate_identifier(f.column, db):
+            raise HTTPException(status_code=400, detail=f"Columna de filtro no válida: {f.column}")
+        comp_col = getattr(f, "compareColumn", None)
+        if comp_col and not validate_identifier(comp_col, db):
+            raise HTTPException(status_code=400, detail=f"Columna de comparación no válida: {comp_col}")
+
+    unified_metrics = []
+    if getattr(payload, "metrics", None):
+        unified_metrics.extend(payload.metrics)
+    else:
+        if getattr(payload, "metric", None):
+            unified_metrics.append(payload.metric)
+        if getattr(payload, "secondMetric", None) and getattr(payload.secondMetric, "column", None):
+            unified_metrics.append(payload.secondMetric)
+
+    for m in unified_metrics:
+        custom_expr = getattr(m, "customExpr", None)
+        m_col = getattr(m, "column", None)
+        if custom_expr:
+            # En la capa semántica, customExpr se inyecta desde el backend de forma segura
+            pass
+        elif m_col:
+            if not validate_identifier(m_col, db):
+                raise HTTPException(status_code=400, detail=f"Columna de métrica no válida: {m_col}")
+        
+        m_agg = getattr(m, "aggregation", "").upper()
+        if m_agg and m_agg not in ALLOWED_AGGREGATIONS and not custom_expr:
+            raise HTTPException(status_code=400, detail=f"Operación de agregación no válida: {m_agg}")
+
+        m_cond = getattr(m, "condition", None)
+        if m_cond and m_cond.column:
+            if not validate_identifier(m_cond.column, db):
+                raise HTTPException(status_code=400, detail=f"Columna de condición de métrica no válida: {m_cond.column}")
+
+    if payload.timeAxis and payload.timeAxis.column:
+        if not validate_identifier(payload.timeAxis.column, db):
+            raise HTTPException(status_code=400, detail=f"Columna de fecha no válida: {payload.timeAxis.column}")
+        if payload.timeAxis.granularity.upper() not in ALLOWED_GRANULARITIES:
+            raise HTTPException(status_code=400, detail="Granularidad de tiempo no válida")
+
+    if payload.breakdown and not validate_identifier(payload.breakdown, db):
+        raise HTTPException(status_code=400, detail=f"Columna de desglose no válida: {payload.breakdown}")
+
+    # ── 2. FROM y JOINs ──────────────────────────────────────────────────────
+    from_clause = payload.baseTable
+    join_clauses = []
+    for j in payload.joins:
+        join_clauses.append(f"LEFT JOIN {j.table} ON {j.onLeft} = {j.onRight}")
+    join_str = "\n".join(join_clauses)
+    if join_str:
+        from_clause = f"{from_clause}\n{join_str}"
+
+    # ── Filtros parametrizados (bind params) ────────────────────────────────
+    where_clauses = []
+    bound_params: List = []
+
+    # ── 3. Eje de tiempo ─────────────────────────────────────────────────────
+    if payload.timeAxis and payload.timeAxis.column:
+        col = payload.timeAxis.column
+        table_prefix = col.split(".")[0] if "." in col else payload.baseTable
+
+        has_hora = False
+        try:
+            cols = db.execute(text(f"PRAGMA table_info({table_prefix})")).all()
+            has_hora = any(c[1] == "hora" for c in cols)
+        except Exception:
+            pass
+
+        gran = payload.timeAxis.granularity.upper()
+        if gran == "YEAR":
+            time_func = f"substr({col}, 7, 4)"
+        elif gran == "MONTH":
+            time_func = f"substr({col}, 7, 4) || '-' || substr({col}, 4, 2)"
+        elif gran == "WEEK":
+            time_func = f"strftime('%Y-W%W', substr({col}, 7, 4) || '-' || substr({col}, 4, 2) || '-' || substr({col}, 1, 2))"
+        elif gran == "DAY_OF_WEEK":
+            time_func = f"""CASE cast(strftime('%w', substr({col}, 7, 4) || '-' || substr({col}, 4, 2) || '-' || substr({col}, 1, 2)) as integer)
+                WHEN 1 THEN '1 Lunes'
+                WHEN 2 THEN '2 Martes'
+                WHEN 3 THEN '3 Miércoles'
+                WHEN 4 THEN '4 Jueves'
+                WHEN 5 THEN '5 Viernes'
+                WHEN 6 THEN '6 Sábado'
+                WHEN 0 THEN '7 Domingo'
+            END"""
+            # Strict filter to Monday-Friday as requested
+            where_clauses.append(f"cast(strftime('%w', substr({col}, 7, 4) || '-' || substr({col}, 4, 2) || '-' || substr({col}, 1, 2)) as integer) BETWEEN 1 AND 5")
+        elif gran == "DAY":
+            time_func = f"substr({col}, 7, 4) || '-' || substr({col}, 4, 2) || '-' || substr({col}, 1, 2)"
+        elif gran == "HOUR":
+            if has_hora:
+                time_func = f"substr({col}, 7, 4) || '-' || substr({col}, 4, 2) || '-' || substr({col}, 1, 2) || ' ' || substr({table_prefix}.hora, 1, 2) || ':00'"
+            else:
+                time_func = f"substr({col}, 7, 4) || '-' || substr({col}, 4, 2) || '-' || substr({col}, 1, 2)"
+        else:
+            time_func = col
+    else:
+        time_func = "'Total'"
+
+    # ── 4. Desglose (Breakdown) ───────────────────────────────────────────────
+    breakdown_select = ""
+    breakdown_groupby = ""
+    if payload.breakdown:
+        if payload.breakdown == "__AREA_EXPR__":
+            b_expr = AREA_EXPR_MACRO.replace("v.", f"{payload.baseTable}.")
+        elif payload.breakdown == "__PLAN_VS_UNPLAN__":
+            b_expr = f"""CASE 
+                WHEN {payload.baseTable}.cmv = '201' AND (
+                    {payload.baseTable}.referencia GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.referencia GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR
+                    {payload.baseTable}.texto_cab_documento GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.texto_cab_documento GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*'
+                ) THEN 'Planificado'
+                WHEN {payload.baseTable}.cmv = '261' AND (
+                    ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND 
+                    ({payload.baseTable}.texto_cab_documento IS NULL OR {payload.baseTable}.texto_cab_documento = '')
+                ) THEN 'Planificado'
+                WHEN {payload.baseTable}.cmv IN ('201', '261', '221') THEN 'Desplanificado'
+                ELSE 'Otro'
+            END"""
+        elif payload.breakdown == "__ABAST_VS_CONSUMO__":
+            b_expr = f"""CASE 
+                WHEN {payload.baseTable}.cmv IN ('101', '305') THEN 'Abastecimiento'
+                WHEN {payload.baseTable}.cmv IN ('201', '221', '261') THEN 'Consumo'
+                ELSE 'Otro'
+            END"""
+        elif payload.breakdown == "__PROD_VS_MANT__":
+            b_expr = f"""CASE 
+                WHEN {payload.baseTable}.cmv = '201' AND (
+                    {payload.baseTable}.referencia GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.referencia GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR
+                    {payload.baseTable}.texto_cab_documento GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.texto_cab_documento GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*'
+                ) THEN 'Producción (201)'
+                WHEN {payload.baseTable}.cmv = '261' AND (
+                    ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND 
+                    ({payload.baseTable}.texto_cab_documento IS NULL OR {payload.baseTable}.texto_cab_documento = '')
+                ) THEN 'Mantención (261)'
+                WHEN {payload.baseTable}.cmv IN ('201', '261', '221') THEN 'Desplanificado'
+                ELSE 'Otro'
+            END"""
+        else:
+            b_expr = payload.breakdown
+        breakdown_select = f"{b_expr} AS categoria,\n  "
+        breakdown_groupby = ", categoria"
+
+    # ── 6. Filtros parametrizados (bind params) ───────────────────────────────
+    # Las métricas se procesan después para poder apendear a bound_params
+    metric_selects = []
+    
+    for i, m in enumerate(unified_metrics):
+        custom_expr = getattr(m, "customExpr", None)
+        m_label = getattr(m, "label", "")
+        if not m_label:
+            m_label = "valor" if i == 0 else f"metrica_{i}"
+            
+        if custom_expr:
+            if custom_expr == "__AREA_EXPR__":
+                m_expr = AREA_EXPR_MACRO.replace("v.", f"{payload.baseTable}.")
+            else:
+                m_expr = custom_expr # Fórmula inyectada por la capa semántica
+            metric_selects.append(f'{m_expr} AS "{m_label}"')
+            continue
+
+        metric_col = getattr(m, "column", "*") or "*"
+        agg_upper = getattr(m, "aggregation", "COUNT").upper()
+        condition = getattr(m, "condition", None)
+        
+        cond_str = ""
+        if condition:
+            op = condition.operator.lower()
+            val = condition.value
+            col = condition.column
+            op_map = {
+                "equals": "=", "notequals": "!=",
+                "greaterthan": ">", "lessthan": "<",
+                "greaterthanequal": ">=", "lessthanequal": "<="
+            }
+            sql_op = op_map.get(op, "=")
+            bound_params.append(val)
+            cond_str = f"CASE WHEN {col} {sql_op} ? THEN "
+                
+        if agg_upper == "COUNT_DISTINCT":
+            if cond_str:
+                m_expr = f"COUNT(DISTINCT {cond_str} {metric_col} ELSE NULL END)"
+            else:
+                m_expr = "COUNT(*)" if metric_col == "*" else f"COUNT(DISTINCT {metric_col})"
+        elif agg_upper in ("SUM", "AVG", "MIN", "MAX", "COUNT"):
+            if cond_str:
+                if agg_upper == "COUNT":
+                    m_expr = f"SUM({cond_str} 1 ELSE 0 END)"
+                else:
+                    m_expr = f"{agg_upper}({cond_str} {metric_col} ELSE NULL END)"
+            else:
+                m_expr = f"{agg_upper}({metric_col})"
+        else:
+            # Aggregación no estándar (SLA_EFFICIENCY, REPLENISHMENT_RATE, etc.)
+            # Intentar resolverla via reverse-lookup en la capa semántica
+            from core.semantic_layer import get_formula_by_physical_table
+            legacy_formula = get_formula_by_physical_table(payload.baseTable, agg_upper)
+            if legacy_formula:
+                m_expr = legacy_formula
+            else:
+                # Último recurso: pasar como función (fallará en SQLite si no existe)
+                m_expr = f"{agg_upper}({metric_col})"
+            
+        metric_selects.append(f'{m_expr} AS "{m_label}"')
+
+    metrics_select_str = ",\n  ".join(metric_selects) if metric_selects else "1 AS dummy"
+
+
+
+    for f in payload.filters:
+        op = f.operator.lower()
+        val_type = getattr(f, "valueType", "value") or "value"
+
+        if val_type == "column":
+            comp_col = getattr(f, "compareColumn", None)
+            if comp_col:
+                op_map = {
+                    "equals": "=", "notequals": "!=",
+                    "greaterthan": ">", "lessthan": "<",
+                    "greaterthanequal": ">=", "greaterthanequals": ">=",
+                    "lessthanequal": "<=", "lessthanequals": "<=",
+                }
+                if op in op_map:
+                    where_clauses.append(f"{f.column} {op_map[op]} {comp_col}")
+
+        elif val_type == "date_diff":
+            comp_col = getattr(f, "compareColumn", None)
+            offset   = str(getattr(f, "offsetValue", "2") or "2").strip()
+            diff_op  = getattr(f, "diffOp", None) or "lessthanequal"
+            if comp_col:
+                op_map = {
+                    "equals": "=", "notequals": "!=",
+                    "greaterthan": ">", "lessthan": "<",
+                    "greaterthanequal": ">=", "greaterthanequals": ">=",
+                    "lessthanequal": "<=", "lessthanequals": "<=",
+                }
+                sql_op = op_map.get(diff_op, "<=")
+
+                # Solo estas columnas guardan fecha ISO real
+                _ISO_COLS = {"ingested_at", "created_at", "updated_at"}
+
+                def _date_expr(col: str) -> str:
+                    if col == "today":
+                        return "DATE('now')"
+                    bare = col.split(".")[-1].lower()
+                    if bare in _ISO_COLS:
+                        return col
+                    # Formato DD-MM-YYYY de SAP -> ISO para julianday()
+                    return (f"substr({col}, 7, 4) || '-' || "
+                            f"substr({col}, 4, 2) || '-' || "
+                            f"substr({col}, 1, 2)")
+
+                left_expr  = _date_expr(f.column)
+                right_expr = _date_expr(comp_col)
+                diff_expr  = f"(julianday({right_expr}) - julianday({left_expr}))"
+                where_clauses.append(f"{diff_expr} {sql_op} {offset}")
+
+
+        else:
+            # Valores literales → siempre como bind param
+            if op == "equals":
+                where_clauses.append(f"{f.column} = ?")
+                bound_params.append(f.value)
+            elif op == "notequals":
+                where_clauses.append(f"{f.column} != ?")
+                bound_params.append(f.value)
+            elif op == "greaterthan":
+                where_clauses.append(f"{f.column} > ?")
+                bound_params.append(f.value)
+            elif op == "lessthan":
+                where_clauses.append(f"{f.column} < ?")
+                bound_params.append(f.value)
+            elif op in {"greaterthanequal", "greaterthanequals"}:
+                where_clauses.append(f"{f.column} >= ?")
+                bound_params.append(f.value)
+            elif op in {"lessthanequal", "lessthanequals"}:
+                where_clauses.append(f"{f.column} <= ?")
+                bound_params.append(f.value)
+            elif op == "contains":
+                where_clauses.append(f"{f.column} LIKE ?")
+                bound_params.append(f"%{f.value}%")
+            elif op == "in":
+                vals = [v.strip() for v in str(f.value).split(",") if v.strip()]
+                where_clauses.append(f"{f.column} IN ({','.join(['?' for _ in vals])})")
+                bound_params.extend(vals)
+            elif op == "notcontains":
+                where_clauses.append(f"{f.column} NOT LIKE ?")
+                bound_params.append(f"%{f.value}%")
+            elif op == "isnull":
+                where_clauses.append(f"({f.column} IS NULL OR {f.column} = '')")
+            elif op == "isnotnull":
+                where_clauses.append(f"({f.column} IS NOT NULL AND {f.column} != '')")
+
+    where_str = ("\nWHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+
+    # ── 7. GROUP BY ───────────────────────────────────────────────────────────
+    groupby_clauses = []
+    if payload.timeAxis and payload.timeAxis.column:
+        groupby_clauses.append("fecha")
+    if payload.breakdown:
+        groupby_clauses.append("categoria")
+    groupby_str = ("\nGROUP BY " + ", ".join(groupby_clauses)) if groupby_clauses else ""
+
+    # ── 8. Interceptores Avanzados (Análisis No-Code) ───────────────────────
+    is_abc_analysis = any(getattr(m, "aggregation", "").upper() == "ABC_ANALYSIS" for m in unified_metrics)
+    if is_abc_analysis:
+        metric_col = getattr(unified_metrics[0], "column", "*") if unified_metrics else "*"
+        if metric_col == "*":
+            raise HTTPException(status_code=400, detail="Análisis ABC requiere una columna específica")
+            
+        desc_select = ""
+        desc_propagate = ""
+        desc_drilldown = ""
+        sum_select = ""
+        sum_propagate = ""
+        sum_drilldown = ""
+        if payload.baseTable == "inventory_movements":
+            desc_select = "MAX(texto_breve_material) as descripcion,"
+            desc_propagate = "descripcion,"
+            desc_drilldown = ", descripcion AS \"Descripción\""
+            sum_select = "ROUND(ABS(AVG(cantidad)), 1) as avg_qty,"
+            sum_propagate = "avg_qty,"
+            sum_drilldown = ", avg_qty AS \"Promedio por Retiro\""
+
+        if drilldown_material:
+            area_expr = "COALESCE((SELECT business_area FROM config_cost_center_mapping WHERE center_code = SUBSTR(inventory_movements.ce_coste, 1, 6)), 'Mantencion')" if payload.baseTable == "inventory_movements" else "'OTRO'"
+            sum_flat = ", ROUND(ABS(AVG(cantidad)), 1) AS \"Promedio por Retiro\"" if payload.baseTable == "inventory_movements" else ""
+            where_flat = f"{where_str} AND {metric_col} = ?" if where_str else f"WHERE {metric_col} = ?"
+            sql = f"""
+SELECT 
+    {area_expr} AS "Área de Negocio",
+    COUNT({metric_col}) AS "Frecuencia (Veces)"{sum_flat}
+FROM {from_clause}
+{where_flat}
+GROUP BY 1
+ORDER BY 2 DESC;
+"""
+            bound_params.append(drilldown_material)
+            logger.debug(f"QueryEngine: SQL Drilldown Nivel 2 compilado para material '{drilldown_material}'")
+            return sql, bound_params
+
+        sql = f"""
+WITH MaterialCounts AS (
+    SELECT 
+        {metric_col} as cod_mat,
+        {desc_select}
+        {sum_select}
+        COUNT({metric_col}) as qty
+    FROM {from_clause}
+    {where_str}
+    GROUP BY cod_mat
+),
+TotalQty AS (
+    SELECT SUM(qty) as total FROM MaterialCounts
+),
+CumSum AS (
+    SELECT 
+        cod_mat,
+        {desc_propagate}
+        {sum_propagate}
+        qty,
+        SUM(qty) OVER (ORDER BY qty DESC, cod_mat ASC) as cum_qty
+    FROM MaterialCounts
+),
+Classified AS (
+    SELECT 
+        cod_mat,
+        {desc_propagate}
+        {sum_propagate}
+        qty,
+        CASE 
+            WHEN cum_qty <= (SELECT total FROM TotalQty) * 0.80 THEN 'A: Eje Crítico (Top 80% frecuencia)'
+            WHEN cum_qty <= (SELECT total FROM TotalQty) * 0.95 THEN 'B: Moderados (Sig. 15%)'
+            ELSE 'C: Esporádicos'
+        END as categoria
+    FROM CumSum
+)
+"""
+        if drilldown_segment:
+            sql += f"""
+SELECT cod_mat AS "Material"{desc_drilldown}, qty AS "Frecuencia (Veces)"{sum_drilldown}
+FROM Classified
+WHERE categoria = ?
+ORDER BY qty DESC;
+"""
+            bound_params.append(drilldown_segment)
+        else:
+            sql += f"""
+SELECT categoria AS fecha, COUNT(cod_mat) AS "Valor"
+FROM Classified
+GROUP BY categoria
+ORDER BY categoria ASC;
+"""
+        logger.debug(f"QueryEngine: SQL ABC compilado para tabla '{payload.baseTable}' ({len(bound_params)} params)")
+        return sql, bound_params
+
+    # ── 9. SQL final ─────────────────────────────────────────────────────────
+    if payload.breakdown:
+        sql = (
+            f"SELECT \n"
+            f"  {time_func} AS fecha,\n"
+            f"  {breakdown_select}{metrics_select_str}\n"
+            f"FROM {from_clause}{where_str}{groupby_str}\n"
+            f"ORDER BY fecha ASC;"
+        )
+    else:
+        # Si no hay timeAxis ni breakdown, evitamos seleccionar y ordenar por 'fecha' ('Total')
+        if not (payload.timeAxis and payload.timeAxis.column):
+            sql = (
+                f"SELECT \n"
+                f"  {metrics_select_str}\n"
+                f"FROM {from_clause}{where_str}{groupby_str};"
+            )
+        else:
+            sql = (
+                f"SELECT \n"
+                f"  {time_func} AS fecha,\n"
+                f"  {metrics_select_str}\n"
+                f"FROM {from_clause}{where_str}{groupby_str}\n"
+                f"ORDER BY fecha ASC;"
+            )
+
+    # Post-proceso de macros globales (Ej: AREA_EXPR inyectado en filtros)
+    if "__AREA_EXPR__" in sql:
+        table_prefix = f"{payload.baseTable}." if payload.baseTable else "v."
+        sql = sql.replace("__AREA_EXPR__", AREA_EXPR_MACRO.replace("v.", table_prefix))
+
+    logger.debug(f"QueryEngine: SQL compilado para tabla '{payload.baseTable}' ({len(bound_params)} params)")
+    return sql, bound_params

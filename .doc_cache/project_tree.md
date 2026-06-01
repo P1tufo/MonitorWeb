@@ -7,20 +7,22 @@
     app.py
     config.py
     main.py
-    wms_transactions.db
     core/
         __init__.py
         app_instance.py
         auth.py
         database.py
         db_config_manager.py
+        macros.py
         models.py
         models_auth.py
         models_transaccional.py
         pdf_engine.py
-        pdf_queries.py
         pdf_reports.py
+        query_builder.py
         query_engine.py
+        query_utils.py
+        query_validators.py
         schemas.py
         security.py
         semantic_layer.py
@@ -30,6 +32,8 @@
         watcher.py
         wms_config.py
         wms_utils.py
+        seed_data/
+            widgets.json
         helpers/
             dynamic_executor.py
     bin/
@@ -62,6 +66,7 @@
         deliveries.py
         inventory.py
         tasks.py
+        widgets.py
     docs/
         documentacion_global.md
         mejoras_global.md
@@ -126,22 +131,30 @@
             sla_table.css
         js/
             analytics_proyecciones.js
-            analytics_studio.js
+            analytics_studio_config.js
+            analytics_studio_renderer.js
+            analytics_studio_ui.js
             consumos.js
             core_ui.js
-            dashboard.js
+            dashboard_api.js
             dashboard_charts.js
+            dashboard_core.js
+            dashboard_saas.js
             deliveries.js
             docs_explorer.js
             inventory.js
-            productivity.js
-            saas_engine.js
+            productivity_daily.js
+            productivity_modals.js
+            productivity_monthly.js
+            saas_engine_core.js
+            saas_engine_drilldown.js
             sla_table.js
             tasks.js
             transporte.js
     scripts/
         __init__.py
         doc_generator.py
+        doc_prompts.py
         free_ram.py
         main_processor.py
     db/
@@ -211,7 +224,8 @@
         dashboard_service.py
         deliveries_service.py
         inventory_service.py
-        productivity_service.py
+        productivity_daily.py
+        productivity_monthly.py
         tasks_service.py
         tunnel.py
         etl/

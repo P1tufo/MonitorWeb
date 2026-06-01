@@ -436,13 +436,16 @@
         <script type="application/json" id="data_sla_area_trend_raw_json">{{ (sla_area_trend_raw_json or []) | tojson | safe }}</script>
         <script type="application/json" id="data_avg_mensual_año">{{ (avg_mensual_año or 0) | tojson | safe }}</script>
         <script src="{{ url_for('static', path='js/core_ui.js') }}?v=2"></script>
-        <script src="{{ url_for('static', path='js/dashboard.js') }}?v=18"></script>
-        <script src="{{ url_for('static', path='js/saas_engine.js') }}?v=10"></script>
+        <script src="{{ url_for('static', path='js/dashboard_api.js') }}?v=1"></script>
+        <script src="{{ url_for('static', path='js/dashboard_core.js') }}?v=1"></script>
+        <script src="{{ url_for('static', path='js/dashboard_saas.js') }}?v=1"></script>
+        <script src="{{ url_for('static', path='js/saas_engine_core.js') }}?v=1"></script>
+        <script src="{{ url_for('static', path='js/saas_engine_drilldown.js') }}?v=1"></script>
         <script src="{{ url_for('static', path='js/deliveries.js') }}?v=20"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
         <script src="{{ url_for('static', path='js/consumos.js') }}?v=17"></script>
-        <script src="{{ url_for('static', path='js/transporte.js') }}?v=3"></script>
+        <script src="{{ url_for('static', path='js/transporte.js') }}?v=6"></script>
         <script type="application/json" id="data_volumen">{{ (volumen_data or []) | tojson | safe }}</script>
         <script type="application/json"
             id="data_area_stats_inv">{{ (inv_area_stats_json or []) | tojson | safe }}</script>
@@ -512,7 +515,9 @@
         <script src="{{ url_for('static', path='js/inventory.js') }}?v=11"></script>
         <script src="{{ url_for('static', path='js/analytics_proyecciones.js') }}?v=3"></script>
         <script src="{{ url_for('static', path='js/docs_explorer.js') }}?v=5"></script>
-        <script src="{{ url_for('static', path='js/productivity.js') }}?v=26"></script>
+        <script src="{{ url_for('static', path='js/productivity_daily.js') }}?v=1"></script>
+        <script src="{{ url_for('static', path='js/productivity_monthly.js') }}?v=1"></script>
+        <script src="{{ url_for('static', path='js/productivity_modals.js') }}?v=1"></script>
         {% include "partials/_modals.html" %}
         {% include "partials/_deliveries_modals.html" %}
         {% include "partials/_inventory_modals.html" %}

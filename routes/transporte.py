@@ -203,3 +203,76 @@ def serve_pdf(filename: str, user=Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="El archivo PDF no existe en el servidor.")
         
     return FileResponse(full_path, media_type="application/pdf", headers={"Content-Disposition": f'inline; filename="{filename}"'})
+
+@router.get("/api/transporte/pending")
+def get_pending_transporte(session: Session = Depends(get_session_dep), user=Depends(get_current_user)):
+    """Busca en transporte_entregas los documentos del año actual que NO han sido ingresados al inventario SAP (inventory_movements)."""
+    try:
+        # 1. Fetch Transportes del año actual
+        t_res = session.execute(text("""
+            SELECT ot, gd, oc, bulto, fecha
+            FROM transporte_entregas
+            WHERE substr(fecha, 1, 4) = strftime('%Y', 'now')
+            ORDER BY fecha DESC
+        """)).fetchall()
+
+        # 2. Fetch Inventario del año actual (sólo columnas necesarias) para evitar falsos positivos históricos
+        i_res = session.execute(text("""
+            SELECT texto_cab_documento, referencia, pedido
+            FROM inventory_movements
+            WHERE registrado LIKE '%.' || strftime('%Y', 'now') 
+               OR registrado LIKE strftime('%Y', 'now') || '-%'
+        """)).fetchall()
+
+        # 3. Procesar en memoria usando cruces combinados fuertes
+        import re
+        inv_ot_ints = set()
+        inv_gd_oc_tuples = set()
+
+        for row in i_res:
+            ot_clean = re.sub(r'\D', '', row[0]) if row[0] else ''
+            gd_clean = re.sub(r'\D', '', row[1]) if row[1] else ''
+            oc_clean = re.sub(r'\D', '', row[2]) if row[2] else ''
+            
+            if ot_clean:
+                try: inv_ot_ints.add(int(ot_clean))
+                except: pass
+            
+            if gd_clean and oc_clean:
+                try:
+                    inv_gd_oc_tuples.add((int(gd_clean), int(oc_clean)))
+                except: pass
+
+        data = []
+        for row in t_res:
+            t_ot = re.sub(r'\D', '', row[0]) if row[0] else ''
+            t_gd = re.sub(r'\D', '', row[1]) if row[1] else ''
+            t_oc = re.sub(r'\D', '', row[2]) if row[2] else ''
+            
+            found = False
+            
+            # Comprobar OT (Si la OT existe de forma exacta)
+            if t_ot:
+                try:
+                    if int(t_ot) in inv_ot_ints: found = True
+                except: pass
+                
+            # Comprobar GD + OC (Deben coincidir AMBOS para descartar errores de bodega)
+            if not found and t_gd and t_oc:
+                try:
+                    if (int(t_gd), int(t_oc)) in inv_gd_oc_tuples: found = True
+                except: pass
+                    
+            if not found:
+                data.append({
+                    "ot": row[0] or "-",
+                    "gd": row[1] or "-",
+                    "oc": row[2] or "-",
+                    "bultos": row[3] or "0",
+                    "fecha": row[4] or "-"
+                })
+            
+        return {"data": data}
+    except Exception as e:
+        logger.error(f"Error en búsqueda de transporte pendientes: {e}", exc_info=True)
+        return {"data": []}
