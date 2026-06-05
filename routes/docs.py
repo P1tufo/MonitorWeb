@@ -67,7 +67,7 @@ async def get_docs_tree(state: AppState = Depends(get_app_state)):
     global_doc_rel = "docs/documentacion_global.md"
     if os.path.exists(os.path.join(BASE_DIR, global_doc_rel)):
         global_node = {
-            "name": "📝 Documentación Global (Sistema Completo)",
+            "name": "📝 Documentación Completa",
             "path": global_doc_rel,
             "is_dir": False,
             "has_doc": True,

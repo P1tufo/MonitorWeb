@@ -2,36 +2,34 @@
 
 ### Arquitectura General Detectada
 
-La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que separan diferentes aspectos del sistema, como el código principal (`app.py`), las configuraciones (`config.py`), las rutas (`routes/`), los modelos (`core/models.py`), las bases de datos (`db/`), los servicios (`services/`), etc.
+La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que contienen funcionalidades específicas, como `core`, `repositories`, `tests`, `docs`, entre otras.
 
 ### Propósito Probable de las Carpetas Principales
 
-- **`app.py`**: Es probable que sea el punto de entrada principal del aplicativo, donde se inicie la aplicación y se configuren las rutas.
-- **`config.py`**: Contiene la configuración general del sistema, como variables de entorno, parámetros de conexión a bases de datos, etc.
-- **`core/`**: Esta carpeta contiene el código central del sistema. Incluye módulos como `app_instance.py`, `auth.py`, `database.py`, `models.py`, entre otros, que son fundamentales para la funcionalidad principal del aplicativo.
-- **`bin/`**: Contiene herramientas binarias o scripts adicionales que pueden ser necesarios para el despliegue o ejecución del sistema.
-- **`deploy/`**: Contiene archivos relacionados con el despliegue, como Dockerfiles y configuraciones de docker-compose.
-- **`setup/`**: Contiene los archivos de configuración y dependencias del proyecto, como `requirements.txt`, `package.json`, etc.
-- **`tests/`**: Contiene los tests unitarios y de integración para asegurar la calidad del código.
-- **`repositories/`**: Define las interfaces de acceso a datos (Data Access Objects), separando el acceso a diferentes tipos de bases de datos o fuentes de datos.
-- **`docs/`**: Contiene la documentación del sistema, organizada por módulos y secciones.
-- **`DELIVERIES_cleansed/`**: Almacena los archivos limpios generados durante el proceso de entrega.
-- **`static/`**: Contiene los archivos estáticos como CSS y JavaScript que son necesarios para la interfaz del usuario.
-- **`scripts/`**: Contiene scripts adicionales que pueden ser ejecutados para tareas específicas, como la generación de documentación o el procesamiento de datos.
-- **`db/`**: Contiene los archivos relacionados con las bases de datos, incluyendo modelos y scripts de consolidación.
-- **`templates/`**: Contiene los archivos de plantillas HTML que definen la estructura de las páginas web.
-- **`data/`**: Almacena los archivos de datos necesarios para el funcionamiento del sistema, como bases de datos SQLite o archivos JSON.
-- **`routes/`**: Define las rutas y endpoints del API, separando la lógica de negocio de la presentación.
-- **`services/`**: Contiene los servicios que implementan la lógica de negocio, separados en módulos para facilitar su mantenimiento y escalabilidad.
+1. **`app.py`**: Este archivo probablemente contiene el punto de entrada principal de la aplicación, donde se inicializa y ejecuta la aplicación.
+2. **`config.py`**: Contiene configuraciones globales del proyecto, como variables de entorno, parámetros de conexión a bases de datos, etc.
+3. **`core/`**: Esta carpeta contiene el código central de la aplicación, incluyendo componentes como autenticación (`auth.py`), base de datos (`database.py`), modelos (`models.py`), y utilidades generales (`utils.py`). También incluye subcarpetas para diferentes funcionalidades.
+4. **`repositories/`**: Contiene clases que interactúan con la base de datos, proporcionando una capa de abstracción entre el modelo de dominio y la persistencia de datos.
+5. **`tests/`**: Contiene los archivos de pruebas unitarias y de integración para asegurar que el código funcione correctamente.
+6. **`docs/`**: Contiene documentación detallada del proyecto, incluyendo documentación de módulos específicos.
+7. **`routes/`**: Define las rutas de la API web, asociando URLs con funciones de controlador.
+8. **`services/`**: Contiene servicios que encapsulan lógica de negocio compleja y pueden interactuar con múltiples repositorios o otros servicios.
 
 ### Organización Lógica de las Dependencias
 
-La organización de dependencias es coherente con una arquitectura modular. Los módulos están organizados en carpetas específicas que reflejan su funcionalidad, lo que facilita la localización y el mantenimiento del código. Por ejemplo:
+1. **Dependencias Internas**:
+   - `app.py` depende de `config.py`, `core/`, `repositories/`, `routes/`, y `services/`.
+   - `core/` depende de `database.py`, `models.py`, y otras subcarpetas.
+   - `repositories/` dependen de `database.py` y modelos específicos.
 
-- **`core/`**: Contiene los componentes fundamentales del sistema.
-- **`routes/`**: Define las interfaces de usuario y la lógica de negocio asociada a ellas.
-- **`services/`**: Implementa la lógica de negocio separada en módulos para facilitar su reutilización y mantenimiento.
-- **`repositories/`**: Abstrae el acceso a los datos, lo que permite cambiar fácilmente las fuentes de datos sin afectar el resto del sistema.
+2. **Dependencias Externas**:
+   - El proyecto utiliza bibliotecas externas como `pytest` para pruebas, `Docker` para contenedores, y posiblemente otras dependencias listadas en `requirements.txt`.
 
-Esta estructura promueve una separación clara entre diferentes aspectos del sistema, facilitando la escalabilidad, el mantenimiento y la colaboración en equipos.
+3. **Documentación**:
+   - La carpeta `docs/` contiene documentación detallada de cada módulo, lo que facilita el mantenimiento y la comprensión del código.
+
+4. **Pruebas**:
+   - El proyecto incluye una estructura completa para pruebas unitarias y de integración en la carpeta `tests/`, asegurando que el código funcione como se espera.
+
+En resumen, esta arquitectura modular permite un mantenimiento eficiente del código, facilita la escalabilidad y mejora la comprensión del proyecto.
 

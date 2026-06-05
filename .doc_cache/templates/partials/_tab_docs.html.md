@@ -1,7 +1,7 @@
 ## Archivo: ./templates/partials/_tab_docs.html
 
 ### Resumen Funcional
-Este fragmento HTML es una pestaña dentro de la interfaz de usuario que muestra el explorador de documentación. Muestra un árbol estructurado del proyecto y permite seleccionar archivos para visualizar su análisis técnico.
+Este archivo es un fragmento HTML que define una pestaña de interfaz de usuario en el sistema de monitoreo de almacén (WMS). Muestra un explorador de documentación con opciones para ver la estructura del proyecto y un mapa global generado por Graphify.
 
 ### Catálogo de Funciones y Clases
 Ninguna
@@ -13,8 +13,9 @@ Ninguna
 Ninguna
 
 ### Dependencias y Flujo
-- **Dependencias**: No hay dependencias directas en el código proporcionado.
-- **Flujo**: Este fragmento HTML no interactúa con ninguna función o servicio. Es simplemente una vista estática que se renderiza en la interfaz de usuario.
+- **Librerías Externas**: `fas fa-sitemap`, `fas fa-project-diagram`
+- **Archivos del Proyecto que IMPORTA a este archivo (lo consumen)**: Ninguno
+- **Archivos del Proyecto que ESTE archivo IMPORTA (consume)**: Ninguno
 
-Este archivo es una parte visual del sistema y no realiza ninguna operación lógica, interacción con base de datos ni dependencia externa.
+**Flujo de Datos**: El fragmento HTML no consume ni produce datos. Es una vista estática que interactúa con el backend a través de eventos JavaScript para cargar contenido dinámicamente.
 

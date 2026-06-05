@@ -2,14 +2,19 @@
 <div id="tab-docs" class="tab-content">
     <div class="docs-explorer-container">
         <aside class="docs-sidebar">
-            <h3><i class="fas fa-sitemap"></i> Estructura del Proyecto</h3>
+            <h3>
+                <i class="fas fa-sitemap"></i> Estructura del Proyecto
+            </h3>
+            <button onclick="document.getElementById('docs-content-view').innerHTML = '<iframe src=\'/static/docs/graph.html\' style=\'width: 100%; height: 100%; border: none;\'></iframe>'" style="width: 100%; margin-bottom: 15px; padding: 10px; background: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fas fa-project-diagram"></i> Ver Mapa Global
+            </button>
             <div id="docs-tree-root" class="docs-tree">Cargando árbol...</div>
         </aside>
         <main id="docs-content-view" class="docs-main">
             <div class="empty-state">
                 <i class="fas fa-book-open"></i>
                 <h3>Explorador de Documentación</h3>
-                <p>Selecciona un archivo del árbol para visualizar su análisis técnico.</p>
+                <p>Selecciona un archivo del árbol para visualizar su análisis técnico o haz clic en "Ver Mapa Global" para explorar la arquitectura del proyecto generada por Graphify.</p>
             </div>
         </main>
     </div>

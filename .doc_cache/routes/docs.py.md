@@ -17,8 +17,8 @@ Ninguna. El archivo no interactúa con ninguna base de datos.
 ### Dependencias y Flujo
 - **Dependencias**: Importa `os`, `fastapi`, `config`, `core.state`.
 - **Flujo**:
-  - `docs.py` importado por otros archivos del proyecto.
-  - Otros archivos del proyecto pueden importar `docs.py` para utilizar sus endpoints.
+  - `docs.py` importa a otros archivos del proyecto (`config.py`, `core/state.py`) para obtener dependencias globales y configuraciones.
+  - Los endpoints son invocados por el framework FastAPI, que maneja las solicitudes HTTP.
 
-El flujo de datos es unidireccional, con `docs.py` proporcionando los endpoints y no consumiendo servicios o repositorios externos.
+El flujo de datos es unidireccional: los endpoints procesan las solicitudes HTTP y devuelven respuestas JSON.
 

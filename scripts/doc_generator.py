@@ -17,7 +17,7 @@ OUTPUT_MEJORAS_FILE = "docs/mejoras_global.md"
 from config import CACHE_DIR, CACHE_DIR_NAME
 STATE_FILE = os.path.join(CACHE_DIR, "doc_generator_state.json")
 def load_gitignore(root_dir):
-    ignore_dirs = {".git", "__pycache__", "venv", "node_modules", "PDFs_Generados", "Temp_Assets", "scratch", "_legacy_reference", ".pytest_cache", CACHE_DIR_NAME}
+    ignore_dirs = {".git", "__pycache__", "graphify-out", "venv", "node_modules", "PDFs_Generados", "Temp_Assets", "scratch", "_legacy_reference", ".pytest_cache", CACHE_DIR_NAME}
     ignore_files = {OUTPUT_FILE, OUTPUT_MEJORAS_FILE, STATE_FILE, "doc_generator.py", "doc_prompts.py", "package.json", "package-lock.json", "tunnel_url.txt", "server.log", "free_ram.py"}
     
     gitignore_path = os.path.join(root_dir, ".gitignore")
