@@ -57,7 +57,7 @@ def session_db():
             entrega INTEGER, pos_ INTEGER, material TEXT, denominacion TEXT,
             cantidad TEXT, umb TEXT, fecha_carga TEXT, fecha_sm_real TEXT,
             creado_el TEXT, autor TEXT, centro_costo TEXT, centro TEXT,
-            area_negocio TEXT, ubicacion_bin TEXT, ubicacion_area TEXT,
+            area_negocio TEXT, ubicacion_bin TEXT,
             estado_wms TEXT, dias_retraso INTEGER, week_sort TEXT, week_label TEXT,
             referencia TEXT, ops TEXT, mm TEXT, c TEXT, source_file TEXT,
             ingested_at TEXT, fecha_sm_real_1 TEXT, ubicacion_bin_1 TEXT

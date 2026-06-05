@@ -97,12 +97,12 @@ def test_analytics_sla_route(auth_client, test_db):
 
     # Insertamos datos de prueba en la tabla outbound_deliveries
     test_db.execute(
-        "INSERT INTO outbound_deliveries (entrega, fecha_carga, ubicacion_area, area_negocio, dias_retraso) "
+        "INSERT INTO outbound_deliveries (entrega, fecha_carga, centro_costo, area_negocio, dias_retraso) "
         "VALUES (?, ?, ?, ?, ?)",
         ('8001', f'01-05-{current_year}', 'MOLTR1-106', 'OTRO', 5)
     )
     test_db.execute(
-        "INSERT INTO outbound_deliveries (entrega, fecha_carga, ubicacion_area, area_negocio, dias_retraso) "
+        "INSERT INTO outbound_deliveries (entrega, fecha_carga, centro_costo, area_negocio, dias_retraso) "
         "VALUES (?, ?, ?, ?, ?)",
         ('8002', f'01-05-{current_year}', 'UNMAPPED-XXX', 'OTRO', 5)
     )

@@ -218,7 +218,7 @@ def get_pending_transporte(session: Session = Depends(get_session_dep), user=Dep
 
         # 2. Fetch Inventario del año actual (sólo columnas necesarias) para evitar falsos positivos históricos
         i_res = session.execute(text("""
-            SELECT texto_cab_documento, referencia, pedido
+            SELECT texto_cab_documento, referencia, pedido, cmv
             FROM inventory_movements
             WHERE registrado LIKE '%.' || strftime('%Y', 'now') 
                OR registrado LIKE strftime('%Y', 'now') || '-%'
@@ -228,39 +228,83 @@ def get_pending_transporte(session: Session = Depends(get_session_dep), user=Dep
         import re
         inv_ot_ints = set()
         inv_gd_oc_tuples = set()
+        inv_traspaso_gds = set()
+        inv_oc_to_gds = {}
 
         for row in i_res:
-            ot_clean = re.sub(r'\D', '', row[0]) if row[0] else ''
-            gd_clean = re.sub(r'\D', '', row[1]) if row[1] else ''
-            oc_clean = re.sub(r'\D', '', row[2]) if row[2] else ''
+            ot_clean = re.sub(r'\D', '', str(row[0])) if row[0] else ''
+            gd_clean = re.sub(r'\D', '', str(row[1])) if row[1] else ''
+            oc_clean = re.sub(r'\D', '', str(row[2])) if row[2] else ''
+            cmv_clean = str(row[3]).strip() if row[3] else ''
             
-            if ot_clean:
+            if ot_clean and len(ot_clean) >= 4:
                 try: inv_ot_ints.add(int(ot_clean))
                 except: pass
             
             if gd_clean and oc_clean:
                 try:
-                    inv_gd_oc_tuples.add((int(gd_clean), int(oc_clean)))
+                    g = int(gd_clean)
+                    o = int(oc_clean)
+                    inv_gd_oc_tuples.add((g, o))
+                    if o not in inv_oc_to_gds:
+                        inv_oc_to_gds[o] = set()
+                    inv_oc_to_gds[o].add(g)
                 except: pass
+                
+            if cmv_clean in ('301', '303', '305'):
+                if gd_clean and len(gd_clean) >= 4:
+                    try: inv_traspaso_gds.add(int(gd_clean))
+                    except: pass
+                if ot_clean and len(ot_clean) >= 4:
+                    try: inv_traspaso_gds.add(int(ot_clean))
+                    except: pass
+
+        def is_typo(s1, s2):
+            s1, s2 = str(s1), str(s2)
+            if abs(len(s1) - len(s2)) > 1: return False
+            if s1 == s2: return True
+            if len(s1) == len(s2):
+                diffs = sum(1 for a, b in zip(s1, s2) if a != b)
+                return diffs <= 1
+            longer, shorter = (s1, s2) if len(s1) > len(s2) else (s2, s1)
+            for i in range(len(longer)):
+                if longer[:i] + longer[i+1:] == shorter:
+                    return True
+            return False
 
         data = []
         for row in t_res:
-            t_ot = re.sub(r'\D', '', row[0]) if row[0] else ''
-            t_gd = re.sub(r'\D', '', row[1]) if row[1] else ''
-            t_oc = re.sub(r'\D', '', row[2]) if row[2] else ''
+            t_ot = re.sub(r'\D', '', str(row[0])) if row[0] else ''
+            t_gd = re.sub(r'\D', '', str(row[1])) if row[1] else ''
+            t_oc = re.sub(r'\D', '', str(row[2])) if row[2] else ''
             
             found = False
             
             # Comprobar OT (Si la OT existe de forma exacta)
-            if t_ot:
+            if t_ot and len(t_ot) >= 4:
                 try:
                     if int(t_ot) in inv_ot_ints: found = True
                 except: pass
                 
-            # Comprobar GD + OC (Deben coincidir AMBOS para descartar errores de bodega)
+            # Comprobar GD + OC Exacto o con Fuzzy Typo
             if not found and t_gd and t_oc:
                 try:
-                    if (int(t_gd), int(t_oc)) in inv_gd_oc_tuples: found = True
+                    t_g = int(t_gd)
+                    t_o = int(t_oc)
+                    if (t_g, t_o) in inv_gd_oc_tuples: 
+                        found = True
+                    else:
+                        if t_o in inv_oc_to_gds:
+                            for inv_g in inv_oc_to_gds[t_o]:
+                                if is_typo(str(t_g), str(inv_g)):
+                                    found = True
+                                    break
+                except: pass
+                
+            # Comprobar Traspasos
+            if not found and t_gd and len(t_gd) >= 4:
+                try:
+                    if int(t_gd) in inv_traspaso_gds: found = True
                 except: pass
                     
             if not found:

@@ -347,9 +347,19 @@ def enrich_movements_with_iw39(conn: sqlite3.Connection):
     """
     Enriquece la tabla inventory_movements con ceco_resp y autor provenientes de iw39_orders.
     Agrega las columnas a la tabla dinámicamente si no existen.
+    Optimizada con tabla temporal indexada para procesamiento en O(N log M).
     """
     logger.info("Enriqueciendo Movimientos con Órdenes PM (IW39)...")
     try:
+        # Extraer a Pandas para deduplicar y normalizar rápido
+        iw39_df = pd.read_sql("SELECT orden, ceco_resp, autor FROM iw39_orders", conn)
+        if iw39_df.empty:
+            logger.warning("No hay ordenes IW39 para cruzar.")
+            return
+            
+        iw39_df['orden_match'] = iw39_df['orden'].astype(str).str.strip().str.lstrip('0')
+        iw39_df = iw39_df.drop_duplicates(subset=['orden_match'])
+        
         with conn:
             cursor = conn.cursor()
             
@@ -360,17 +370,23 @@ def enrich_movements_with_iw39(conn: sqlite3.Connection):
                 except sqlite3.OperationalError:
                     pass # La columna ya existe
             
-            # Realizar el cruce exacto por Orden
+            # Subir tabla temporal limpia e indexada
+            iw39_df[['orden_match', 'ceco_resp', 'autor']].to_sql("tmp_iw39_map", conn, if_exists='replace', index=False)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_tmp_iw39_orden ON tmp_iw39_map(orden_match)")
+            
+            # Realizar el cruce indexado
             cursor.execute("""
                 UPDATE inventory_movements
                 SET 
-                    ceco_resp = (SELECT ceco_resp FROM iw39_orders WHERE iw39_orders.orden = inventory_movements.orden LIMIT 1),
-                    autor = (SELECT autor FROM iw39_orders WHERE iw39_orders.orden = inventory_movements.orden LIMIT 1)
+                    ceco_resp = (SELECT ceco_resp FROM tmp_iw39_map WHERE orden_match = ltrim(CAST(inventory_movements.orden AS TEXT), '0')),
+                    autor = (SELECT autor FROM tmp_iw39_map WHERE orden_match = ltrim(CAST(inventory_movements.orden AS TEXT), '0'))
                 WHERE orden IS NOT NULL AND orden != ''
                 AND EXISTS (
-                    SELECT 1 FROM iw39_orders WHERE iw39_orders.orden = inventory_movements.orden
+                    SELECT 1 FROM tmp_iw39_map WHERE orden_match = ltrim(CAST(inventory_movements.orden AS TEXT), '0')
                 )
             """)
+            
+            cursor.execute("DROP TABLE IF EXISTS tmp_iw39_map")
             
         logger.info(f"Enriquecimiento IW39 completado.")
     except Exception as e:

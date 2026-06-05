@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: db
-Compilado el: 2026-05-30 00:23:08
+Compilado el: 2026-06-04 23:43:39
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -14,7 +14,7 @@ Este archivo está vacío o solo contiene espacios en blanco. No se requiere an�
 ## Archivo: ./db/consolidator.py
 
 ### Resumen Funcional
-El archivo `consolidator.py` es un orquestador de consolidación de datos que opera sobre una base de datos SQLite. Se encarga de procesar archivos WMS, actualizar tablas con los datos más recientes y realizar diversas operaciones de enriquecimiento y sincronización.
+El archivo `consolidator.py` es un orquestador de consolidación de datos para un sistema de monitoreo de almacén (WMS) utilizando FastAPI, SQLAlchemy y SQLite. Gestiona la importación y procesamiento de archivos WMS en una base de datos SQLite, aplicando diversas operaciones como UPSERT, actualización de tablas, enriquecimiento de datos y sincronización.
 
 ### Catálogo de Funciones y Clases
 - `DataConsolidator(db_path: str)` - Gestiona la consolidación de archivos WMS en SQLite.
@@ -36,20 +36,23 @@ El archivo `consolidator.py` es un orquestador de consolidación de datos que op
 - Tablas:
   - `outbound_deliveries`
   - `stock_levels`
-- Columnas y Operaciones:
-  - Lectura y escritura en las tablas mencionadas.
-  - Uso de consultas SQL para procesar y actualizar datos.
+- Columnas (no detalladas por brevedad):
+  - Todas las columnas relevantes para cada tabla mencionada.
+- Consultas SQL crudas o llamadas a ORM: Sí, se utilizan métodos de ORM y consultas SQL dentro de los métodos.
 
 ### Estado y Variables Globales
-No aplica
+- `logger` - Variable global que almacena el objeto de registro.
+- `TABLE_DELIVERIES` - Constante con el nombre de la tabla `outbound_deliveries`.
+- `TABLE_STOCK` - Constante con el nombre de la tabla `stock_levels`.
 
 ### Dependencias y Flujo
-- Librerías Externas: `sqlite3`, `logging`, `re`, `pathlib`, `datetime`, `typing`
-- Comunicación con otros archivos:
-  - `services.etl.OutboundDeliveryAdapter` y `services.etl.StockLevelAdapter` para procesar y guardar datos.
-  - `db_enrichment` para funciones de enriquecimiento y sincronización.
-  - `core.security.validate_table` para validar tablas.
-  - `core.wms_utils.is_file_changed` y `core.wms_utils.mark_file_processed` para gestionar archivos procesados.
+- Librerías externas: `sqlite3`, `logging`, `re`, `pathlib`, `datetime`, `typing`.
+- Archivos del proyecto que este archivo importa:
+  - `services.etl.OutboundDeliveryAdapter`
+  - `services.etl.StockLevelAdapter`
+  - `db_enrichment` (varias funciones)
+- Archivos del proyecto que importan a este archivo: Ninguno.
+- Flujo de datos: El archivo se ejecuta como un script principal (`main`) que toma una carpeta como argumento y procesa los archivos dentro de ella utilizando la clase `DataConsolidator`.
 
 
 ---
@@ -57,10 +60,10 @@ No aplica
 ## Archivo: ./db/db_enrichment.py
 
 ### Resumen Funcional
-El archivo `db_enrichment.py` contiene funciones para enriquecer datos de entrega y movimiento mediante consultas SQL directas a una base de datos SQLite. Las funciones realizan tareas como rellenar columnas vacías, aprender mapeos de autor a área, aplicar aprendizaje al mapeo de áreas, enriquecer transacciones con datos de stock, rellenar descripciones y UMBs faltantes, actualizar métrica SLA y enriquecer movimientos con información de órdenes PM.
+El archivo `db_enrichment.py` contiene funciones para enriquecer los datos de la base de datos SQLite del sistema de monitoreo de almacén (WMS) mediante consultas SQL directas y manipulación de DataFrames con Pandas. Las funciones realizan tareas como rellenar columnas vacías, actualizar mapeos de frecuencia, aplicar aprendizaje basado en autores, enriquecer transacciones con datos de stock y movimientos, y sincronizar métricas de SLA.
 
 ### Catálogo de Funciones y Clases
-- `backfill_deliveries_from_movements(conn: sqlite3.Connection, trans_table: str = "outbound_deliveries", movements_table: str = "inventory_movements")` - Rellena columnas vacías en Entregas cruzando con Movimientos.
+- `backfill_deliveries_from_movements(conn: sqlite3.Connection, trans_table: str = "outbound_deliveries", movements_table: str = "inventory_movements")` - Rellena columnas vacías en Entregas (autor, ubicacion, textos) cruzando con Movimientos.
 - `learn_author_areas(conn: sqlite3.Connection)` - Actualiza el mapeo de frecuencia Autor -> Área.
 - `apply_author_learning(conn: sqlite3.Connection, table_name: str = "outbound_deliveries")` - Asigna áreas de negocio a transacciones 'OTRO' basadas en la memoria del autor.
 - `enrich_deliveries_with_stock(conn: sqlite3.Connection, trans_table: str = "outbound_deliveries", stock_table: str = "stock_levels")` - Enriquece transacciones con descripciones y ubicaciones físicas de Stock.
@@ -69,33 +72,38 @@ El archivo `db_enrichment.py` contiene funciones para enriquecer datos de entreg
 - `enrich_movements_with_iw39(conn: sqlite3.Connection)` - Enriquece la tabla inventory_movements con ceco_resp y autor provenientes de iw39_orders.
 
 ### Interacción con Base de Datos
-- Motor: SQLite
-- Tablas:
+- **Motor:** SQLite
+- **TABLAS**: 
   - `outbound_deliveries`
   - `inventory_movements`
   - `stock_levels`
   - `warehouse_tasks`
   - `iw39_orders`
-- Columnas:
-  - `material`, `usuario`, `ce_coste`, `texto_breve_material`, `referencia` (de `inventory_movements`)
-  - `entrega`, `autor`, `centro_costo`, `denominacion` (de `outbound_deliveries`)
-  - `ubicacion_bin`, `umb`, `stock_disp` (de `stock_levels`)
-  - `orden`, `ceco_resp` (de `inventory_movements` y `iw39_orders`)
-  - `fecha_conf` (de `warehouse_tasks`)
+- **COLUMNAS**:
+  - `outbound_deliveries`: entrega, autor, centro_costo, denominacion
+  - `inventory_movements`: orden, ceco_resp, autor
+  - `stock_levels`: material, texto_breve_de_material, ubicacion_bin, stock_disp, umb
+  - `warehouse_tasks`: entrega, fecha_conf
+  - `iw39_orders`: orden, ceco_resp, autor
 
 ### Estado y Variables Globales
-No aplica
+- **Variables Globales**: Ninguna
+- **Sesión**: Ninguna
+- **Entorno**: Ninguna
+- **Diccionarios Quemados**: Ninguno
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
+- **Librerías Externas**:
   - `logging`
-  - `pandas`
+  - `pandas` (pd)
   - `sqlite3`
-  - `typing`
   - `numpy`
-- Comunicación con otros archivos del proyecto:
+- **Archivos del Proyecto que IMPORTA**:
   - `core.security.validate_table`
   - `core.db_config_manager.get_holidays`
+- **Archivos del Proyecto que IMPORTAN a Este Archivo**:
+  - Ninguno
+- **Dirección del Flujo de Datos**: El flujo de datos pasa por las funciones, realizando consultas SQL para leer y actualizar la base de datos SQLite.
 
 
 ---
@@ -103,10 +111,10 @@ No aplica
 ## Archivo: ./db/predictive_engine.py
 
 ### Resumen Funcional
-El archivo `predictive_engine.py` procesa datos de movimientos en una base de datos SQLite para generar modelos predictivos utilizando técnicas como el Análisis del Carrocería (Market Basket Analysis), la Frecuencia vs Volumen y el MTBV (Media Tasa de Venta Bruta) junto con un semáforo de desplanificación.
+El archivo `predictive_engine.py` procesa los movimientos de inventario para generar modelos predictivos utilizando técnicas como el Análisis del Carrocería (Market Basket Analysis), la Relación Frecuencia-Volumen y el Índice MTBV con Semáforo de Desplanificación. El objetivo es identificar patrones, anomalías y tendencias en los datos de inventario para mejorar la gestión del almacén.
 
 ### Catálogo de Funciones y Clases
-- `generate_predictions(db_path: str)` - Procesa los movimientos de inventario para generar modelos predictivos.
+- `generate_predictions(db_path: str)` - Procesa movimientos de inventario para generar modelos predictivos.
 
 ### Interacción con Base de Datos
 - **Motor:** SQLite
@@ -120,10 +128,10 @@ El archivo `predictive_engine.py` procesa datos de movimientos en una base de da
   - `cmv` (Código Movimiento)
 
 ### Estado y Variables Globales
-- No aplica
+- **Variables Globales:** Ninguna
 
 ### Dependencias y Flujo
-- **Librerías Externas:** 
+- **Librerías Externas:**
   - `sqlite3`
   - `pandas`
   - `numpy`
@@ -134,8 +142,22 @@ El archivo `predictive_engine.py` procesa datos de movimientos en una base de da
   - `sys`
   - `os`
 
-- **Flujo Interno:**
-  - El archivo se ejecuta como un script principal para probar la función `generate_predictions` con una base de datos SQLite local.
+- **Archivos del Proyecto que Importan a este Archivo:** Ninguno
+- **Archivos del Proyecto que Este Archivo Importa:**
+  - `core.wms_config.COST_CENTER_MAPPING`
+
+**Flujo de Datos:**
+1. El archivo se ejecuta directamente (`if __name__ == "__main__"`).
+2. Se importan las dependencias necesarias.
+3. La función `generate_predictions` se invoca con la ruta a la base de datos SQLite.
+4. Los movimientos de inventario son leídos desde la tabla `inventory_movements`.
+5. El procesamiento y análisis de los datos ocurren dentro de la función.
+6. Los resultados (combos, scatter data y alertas) se devuelven como un diccionario.
+
+**Dirección del Flujo:**
+- **Entrada:** Ruta a la base de datos SQLite.
+- **Procesamiento:** Análisis de movimientos de inventario.
+- **Salida:** Resultados en formato JSON.
 
 
 ---

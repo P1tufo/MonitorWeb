@@ -124,7 +124,16 @@ DATASETS: Dict[str, Dataset] = {
                 aggregation="RETURN_RATE",
                 format="percent",
                 is_complex_formula=True,
-                formula_template="ROUND(SUM(CASE WHEN TRIM(cmv) IN ('202', '262') THEN 100.0 ELSE 0.0 END) / NULLIF(SUM(CASE WHEN {col} LIKE '%Centro Costo%' OR {col} LIKE '%Orden/Reserva%' THEN 1.0 ELSE 0.0 END), 0), 1)"
+                formula_template="ROUND(SUM(CASE WHEN TRIM(cmv) IN ('202', '262') AND IFNULL(LOWER(texto_cab_documento), '') NOT LIKE '%cierre%' THEN 100.0 ELSE 0.0 END) / NULLIF(SUM(CASE WHEN {col} LIKE '%Centro Costo%' OR {col} LIKE '%Orden/Reserva%' THEN 1.0 ELSE 0.0 END), 0), 1)"
+            ),
+            Metric(
+                id="met_unplanned_rate",
+                label="Tasa Desplanificado",
+                physical_column="cmv",
+                aggregation="UNPLANNED_RATE",
+                format="percent",
+                is_complex_formula=True,
+                formula_template="ROUND(SUM(CASE WHEN TRIM({col}) IN ('201', '261', '221') AND NOT ((TRIM({col}) = '201' AND (IFNULL({table}.referencia, '') GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR IFNULL({table}.referencia, '') GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR IFNULL({table}.texto_cab_documento, '') GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR IFNULL({table}.texto_cab_documento, '') GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*')) OR (TRIM({col}) = '261' AND ((IFNULL({table}.referencia, '') = '' AND IFNULL({table}.texto_cab_documento, '') = '') OR IFNULL({table}.texto_cab_documento, '') GLOB '*PGP*' OR IFNULL({table}.texto_cab_documento, '') GLOB '*PGE*' OR IFNULL({table}.referencia, '') GLOB '*PGP*' OR IFNULL({table}.referencia, '') GLOB '*PGE*'))) THEN 100.0 ELSE 0.0 END) / NULLIF(SUM(CASE WHEN TRIM({col}) IN ('201', '261', '221') THEN 1.0 ELSE 0.0 END), 0), 1)"
             ),
             Metric(
                 id="met_inv_efficiency",
@@ -133,7 +142,7 @@ DATASETS: Dict[str, Dataset] = {
                 aggregation="INV_EFFICIENCY",
                 format="percent",
                 is_complex_formula=True,
-                formula_template="ROUND(SUM(CASE WHEN (julianday(substr(registrado, 7, 4) || '-' || substr(registrado, 4, 2) || '-' || substr(registrado, 1, 2)) - julianday(substr(fe_contab, 7, 4) || '-' || substr(fe_contab, 4, 2) || '-' || substr(fe_contab, 1, 2))) <= 3 THEN 100.0 ELSE 0.0 END) / NULLIF(COUNT(*), 0), 1)"
+                formula_template="ROUND(SUM(CASE WHEN ABS(julianday(substr(registrado, 7, 4) || '-' || substr(registrado, 4, 2) || '-' || substr(registrado, 1, 2)) - julianday(substr(fe_contab, 7, 4) || '-' || substr(fe_contab, 4, 2) || '-' || substr(fe_contab, 1, 2))) <= 2 THEN 100.0 ELSE 0.0 END) / NULLIF(COUNT(*), 0), 1)"
             )
         ]
     )

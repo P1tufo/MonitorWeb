@@ -69,12 +69,91 @@ class InventoryService:
             context["cm_label"] = f"{cm_mes}/{cm_anio}"
             context["cm_anio"] = cm_anio
             context["cm_mes"] = cm_mes
-            
+
+            try:
+                # Calcular las estadisticas de eficiencia
+                query_stats = """
+                SELECT 
+                    substr(fe_contab, 7, 4) || '-' || substr(fe_contab, 4, 2) as mes,
+                    CASE 
+                        WHEN tipo_operacion LIKE '%Ingreso%' THEN 'Ingresos'
+                        ELSE 'Consumos'
+                    END as tipo,
+                    COUNT(*) as volumen_mensual,
+                    ROUND(SUM(CASE WHEN ABS(julianday(substr(registrado, 7, 4) || '-' || substr(registrado, 4, 2) || '-' || substr(registrado, 1, 2)) - julianday(substr(fe_contab, 7, 4) || '-' || substr(fe_contab, 4, 2) || '-' || substr(fe_contab, 1, 2))) <= 2 THEN 100.0 ELSE 0.0 END) / NULLIF(COUNT(*), 0), 1) as eficiencia
+                FROM inventory_movements
+                WHERE substr(fe_contab, 7, 4) IN ('2024', '2025', '2026')
+                GROUP BY mes, tipo
+                HAVING mes IS NOT NULL AND length(mes) = 7
+                ORDER BY mes, tipo
+                """
+                df_stats = pd.read_sql_query(query_stats, self.session.connection().connection)
+                
+                ingresos_stats = {"ideal": 0, "estabilidad": 0, "sobrecarga": 0}
+                consumos_stats = {"ideal": 0, "estabilidad": 0, "sobrecarga": 0}
+                
+                import numpy as np
+                for tipo_name, stats_dict in [('Ingresos', ingresos_stats), ('Consumos', consumos_stats)]:
+                    df_tipo = df_stats[df_stats['tipo'] == tipo_name]
+                    if not df_tipo.empty:
+                        vol = df_tipo['volumen_mensual']
+                        stats_dict["ideal"] = int(np.percentile(vol, 40))
+                        stats_dict["estabilidad"] = int(np.percentile(vol, 70))
+                        stats_dict["sobrecarga"] = int(np.percentile(vol, 90))
+                    else:
+                        stats_dict["ideal"] = 0
+                        stats_dict["estabilidad"] = 0
+                        stats_dict["sobrecarga"] = 0
+
+                context["ingresos_eff_stats"] = ingresos_stats
+                context["consumos_eff_stats"] = consumos_stats
+
+                # Calcular estadisticas SEMANALES
+                query_weekly_stats = """
+                SELECT 
+                    strftime('%Y-%W', substr(fe_contab, 7, 4) || '-' || substr(fe_contab, 4, 2) || '-' || substr(fe_contab, 1, 2)) as semana,
+                    CASE 
+                        WHEN tipo_operacion LIKE '%Ingreso%' THEN 'Ingresos'
+                        ELSE 'Consumos'
+                    END as tipo,
+                    COUNT(*) as volumen_semanal,
+                    ROUND(SUM(CASE WHEN ABS(julianday(substr(registrado, 7, 4) || '-' || substr(registrado, 4, 2) || '-' || substr(registrado, 1, 2)) - julianday(substr(fe_contab, 7, 4) || '-' || substr(fe_contab, 4, 2) || '-' || substr(fe_contab, 1, 2))) <= 2 THEN 100.0 ELSE 0.0 END) / NULLIF(COUNT(*), 0), 1) as eficiencia
+                FROM inventory_movements
+                WHERE substr(fe_contab, 7, 4) IN ('2024', '2025', '2026')
+                GROUP BY semana, tipo
+                HAVING semana IS NOT NULL
+                ORDER BY semana, tipo
+                """
+                df_weekly = pd.read_sql_query(query_weekly_stats, self.session.connection().connection)
+                ingresos_weekly = {"ideal": 0, "estabilidad": 0, "sobrecarga": 0}
+                consumos_weekly = {"ideal": 0, "estabilidad": 0, "sobrecarga": 0}
+                
+                for tipo_name, stats_dict in [('Ingresos', ingresos_weekly), ('Consumos', consumos_weekly)]:
+                    df_tipo = df_weekly[df_weekly['tipo'] == tipo_name]
+                    if not df_tipo.empty:
+                        vol = df_tipo['volumen_semanal']
+                        stats_dict["ideal"] = int(np.percentile(vol, 40))
+                        stats_dict["estabilidad"] = int(np.percentile(vol, 70))
+                        stats_dict["sobrecarga"] = int(np.percentile(vol, 90))
+                    else:
+                        stats_dict["ideal"] = 0
+                        stats_dict["estabilidad"] = 0
+                        stats_dict["sobrecarga"] = 0
+
+                context["ingresos_eff_stats_weekly"] = ingresos_weekly
+                context["consumos_eff_stats_weekly"] = consumos_weekly
+
+            except Exception as e_stats:
+                logger.error(f"Error calculando estadisticas de eficiencia: {e_stats}")
+                context["ingresos_eff_stats"] = {"ideal": 0, "estabilidad": 0, "sobrecarga": 0}
+                context["consumos_eff_stats"] = {"ideal": 0, "estabilidad": 0, "sobrecarga": 0}
+                context["ingresos_eff_stats_weekly"] = {"ideal": 0, "estabilidad": 0, "sobrecarga": 0}
+                context["consumos_eff_stats_weekly"] = {"ideal": 0, "estabilidad": 0, "sobrecarga": 0}
+
             # Guardar en caché
             state.set_cache("/analytics/inventory", context)
             
             return context
-
         except Exception as e:
             logger.error(f"Error generando contexto Movimientos: {e}", exc_info=True)
             return self._get_empty_context()

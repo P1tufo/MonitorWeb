@@ -308,6 +308,20 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
             <h3 style="margin: 0; color: #f8f9fa;">Análisis de Productividad Diaria</h3>
             <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="position: relative;" id="daily-user-filter-container">
+                    <button type="button" onclick="toggleDailyUserFilter()" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s;" title="Filtrar por Usuarios">
+                        <i class="fas fa-users"></i> Filtrar Usuarios
+                    </button>
+                    <div id="daily-user-filter-dropdown" style="display: none; position: absolute; top: 100%; right: 0; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); padding: 10px; z-index: 100; max-height: 250px; overflow-y: auto; min-width: 220px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); margin-top: 5px;">
+                        <div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left;">
+                            <label style="display: block !important; cursor: pointer !important; margin: 0 !important; white-space: nowrap !important; text-align: left !important;">
+                                <input type="checkbox" id="daily-user-filter-all" checked onchange="toggleAllDailyUsers()" style="margin: 0 8px 0 0 !important; padding: 0 !important; vertical-align: middle !important; display: inline-block !important; width: auto !important;">
+                                <span style="color: #ffffff !important; font-size: 14px !important; font-weight: 600 !important; visibility: visible !important; vertical-align: middle !important; display: inline-block !important; padding: 0 !important; margin: 0 !important;">Todos los Usuarios</span>
+                            </label>
+                        </div>
+                        <div id="daily-user-filter-list" style="display: flex; flex-direction: column; gap: 5px;"></div>
+                    </div>
+                </div>
                 <button onclick="changeProductivityDate(-1)" style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s;" title="Día Amterior">
                     &lt; Anterior
                 </button>

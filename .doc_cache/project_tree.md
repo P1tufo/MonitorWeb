@@ -73,6 +73,9 @@
         core/
             documentacion.md
             mejoras.md
+            seed_data/
+                documentacion.md
+                mejoras.md
             helpers/
                 documentacion.md
                 mejoras.md
@@ -121,6 +124,7 @@
         clean_29-04-2026_VL06o.txt.xlsx
         clean_VL06o_4.txt.xlsx
         clean_VL06o_5.txt.xlsx
+        clean_VL06o_6.txt.xlsx
         clean_vl06o_total.txt.xlsx
     static/
         css/

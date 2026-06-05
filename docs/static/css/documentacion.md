@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: static/css
-Compilado el: 2026-05-30 00:23:08
+Compilado el: 2026-06-04 23:43:39
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -7,19 +7,19 @@ Modelo: qwen2.5-coder:7b | Separado por Carpetas
 ## Archivo: ./static/css/analytics_proyecciones.css
 
 ### Resumen Funcional
-El archivo `analytics_proyecciones.css` contiene estilos CSS para una interfaz de usuario que muestra proyecciones y alertas. Define clases para contenedores, gráficos, tarjetas combinadas, tablas de alertas y modales.
+El archivo `analytics_proyecciones.css` contiene estilos CSS para la interfaz de usuario del módulo de análisis de proyecciones en el sistema de monitoreo de almacén (WMS). Define clases y estilos para contenedores, gráficos, tarjetas, tablas y modales.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones específicas en este archivo. Solo se definen clases CSS.
+- Ninguna
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna
 
 ### Estado y Variables Globales
-No aplica
+Ninguna
 
 ### Dependencias y Flujo
-Este archivo no depende de ninguna librería externa ni comunica con otros archivos del proyecto.
+Ninguna
 
 
 ---
@@ -27,19 +27,23 @@ Este archivo no depende de ninguna librería externa ni comunica con otros archi
 ## Archivo: ./static/css/deliveries.css
 
 ### Resumen Funcional
-El archivo `deliveries.css` contiene estilos CSS para una interfaz de usuario que muestra estadísticas, gráficos y listas de materiales en un contexto de entregas o logística.
+El archivo `deliveries.css` contiene estilos CSS para la interfaz de usuario del sistema de monitoreo de almacén (WMS). Define clases y estilos para elementos como contenedores, tarjetas estadísticas, gráficos, listas de clasificación, cuadrículas de materiales, tarjetas de área, modales y encabezados.
 
 ### Catálogo de Funciones y Clases
-No aplica
+- Ninguna
 
 ### Interacción con Base de Datos
-No aplica
+- Ninguna
 
 ### Estado y Variables Globales
-No aplica
+- Ninguna
 
 ### Dependencias y Flujo
-No aplica
+- No hay dependencias externas.
+- Archivos del proyecto que importan a este archivo: Ninguno.
+- Archivos del proyecto que este archivo importa: Ninguno.
+
+El flujo de datos es unidireccional, con el CSS aplicando estilos a elementos HTML en la interfaz de usuario.
 
 
 ---
@@ -47,19 +51,22 @@ No aplica
 ## Archivo: ./static/css/docs_explorer.css
 
 ### Resumen Funcional
-El archivo `docs_explorer.css` define los estilos para una interfaz de usuario que permite explorar y visualizar documentación, con un diseño premium y responsive.
+El archivo `docs_explorer.css` define los estilos para la interfaz de usuario del explorador de documentación en un sistema de monitoreo de almacén (WMS). Incluye estilos para el contenedor principal, el sidebar del árbol y el visor de contenido.
 
 ### Catálogo de Funciones y Clases
-No aplica
+Ninguna
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna
 
 ### Estado y Variables Globales
-No aplica
+Ninguna
 
 ### Dependencias y Flujo
-No aplica
+- **Dependencias**: No hay dependencias externas.
+- **Flujo**: Este archivo no importa ni es importado por otros archivos. Es un recurso estático CSS que se utiliza en la interfaz de usuario del sistema.
+
+El archivo `docs_explorer.css` solo contiene estilos CSS y no interactúa con ninguna base de datos, funciones o variables globales.
 
 
 ---
@@ -67,19 +74,19 @@ No aplica
 ## Archivo: ./static/css/inventory.css
 
 ### Resumen Funcional
-El archivo `inventory.css` contiene estilos CSS para una interfaz de usuario que muestra estadísticas y gráficos en un contenedor de inventario. Incluye clases para contenedores, tarjetas de estadísticas, listas de clasificación, encabezados y modales.
+El archivo `inventory.css` contiene estilos CSS para la interfaz de usuario del sistema de monitoreo de almacén, incluyendo contenedores de análisis, tarjetas estadísticas, gráficos, listas de clasificación y elementos de encabezado.
 
 ### Catálogo de Funciones y Clases
-No aplica
+Ninguna
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna
 
 ### Estado y Variables Globales
-No aplica
+Ninguna
 
 ### Dependencias y Flujo
-No aplica
+Ninguna
 
 
 ---
@@ -87,28 +94,28 @@ No aplica
 ## Archivo: ./static/css/sla_table.css
 
 ### Resumen Funcional
-El archivo `sla_table.css` define estilos CSS para una tabla de auditoría SLA (Service Level Agreement), incluyendo clases para el contenedor principal, los controles del encabezado, la tabla en sí y las celdas. También incluye estilos responsivos para pantallas pequeñas.
+El archivo `sla_table.css` contiene estilos CSS para una tabla de monitoreo de almacén (WMS), incluyendo clases para el contenedor principal, controles del encabezado, wrapper de la tabla y elementos de la tabla como celdas y etiquetas.
 
 ### Catálogo de Funciones y Clases
-- `.container` - Establece el diseño general del contenedor.
-- `.header-controls` - Define el estilo y la disposición de los controles del encabezado.
-- `.table-wrapper` - Estilo para el envoltorio de la tabla.
-- `table` - Estilos generales para la tabla.
-- `th` - Estilos para las celdas de encabezado.
-- `td` - Estilos para las celdas de datos.
-- `.pill` - Estilo general para los elementos pill.
-- `.pill.late` - Estilo específico para los elementos pill que indican retraso.
-- `.pill.ontime` - Estilo específico para los elementos pill que indican cumplimiento a tiempo.
-- `.area-badge` - Estilo para las etiquetas de área.
+- `.container` - Establece estilos para el contenedor principal.
+- `.header-controls` - Define estilos para los controles del encabezado.
+- `.table-wrapper` - Aplica estilos al wrapper de la tabla.
+- `table` - Establece estilos generales para la tabla.
+- `th` - Define estilos para las celdas de encabezado.
+- `td` - Establece estilos para las celdas de datos.
+- `.pill` - Define estilos para etiquetas (pill).
+- `.pill.late` - Aplica estilos específicos para las etiquetas que indican retraso.
+- `.pill.ontime` - Aplica estilos específicos para las etiquetas que indican cumplimiento a tiempo.
+- `.area-badge` - Define estilos para los badges de área.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna.
 
 ### Estado y Variables Globales
-No aplica
+Ninguna.
 
 ### Dependencias y Flujo
-No depende de ninguna librería externa ni comunica con otros archivos del proyecto.
+Ninguna.
 
 
 ---

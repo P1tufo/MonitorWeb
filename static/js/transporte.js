@@ -92,7 +92,7 @@ async function loadPendingData() {
             monthHeader.innerHTML = `
                 <td colspan="5" style="padding: 12px; font-weight: bold; color: #f87171; font-size: 1.05rem;">
                     <span style="display: inline-block; width: 20px; transition: transform 0.2s;" id="icon-month-${mIndex}">▶</span>
-                    📅 ${mesNombre} <span style="font-size: 0.85rem; color: #fca5a5; margin-left: 10px; background: rgba(220,38,38,0.3); padding: 2px 8px; border-radius: 12px;">${mesData.total} docs pendientes</span>
+                    📅 ${mesNombre} <span style="font-size: 0.85rem; color: #fca5a5; margin-left: 10px; background: rgba(220,38,38,0.3); padding: 2px 8px; border-radius: 12px;">${mesData.total} ots pendientes</span>
                 </td>
             `;
             tbody.appendChild(monthHeader);

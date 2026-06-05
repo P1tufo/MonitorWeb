@@ -8,29 +8,30 @@ La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a 
 
 - **`app.py`**: Es probable que sea el punto de entrada principal del aplicativo, donde se inicie la aplicación y se configuren las rutas.
 - **`config.py`**: Contiene la configuración general del sistema, como variables de entorno, parámetros de conexión a bases de datos, etc.
-- **`core/`**: Este directorio contiene el código central del sistema. Incluye módulos para autenticación (`auth.py`), base de datos (`database.py`), modelos (`models.py`), y otras funcionalidades fundamentales.
-- **`bin/`**: Almacena herramientas binarias como `ngrok`, que puede ser utilizado para exponer aplicaciones locales a Internet durante el desarrollo.
-- **`deploy/`**: Contiene archivos necesarios para la implementación del sistema, como Dockerfiles y configuraciones de despliegue.
-- **`setup/`**: Incluye archivos de configuración para el entorno de desarrollo, como `requirements.txt`, `package.json`, y scripts de prueba (`run_tests.sh`).
-- **`tests/`**: Contiene los tests unitarios y de integración del sistema. Cada archivo de test corresponde a una parte específica del sistema.
-- **`repositories/`**: Define las interfaces para interactuar con la base de datos, como `deliveries.py`, `inventory.py`, etc.
-- **`docs/`**: Almacena documentación detallada del sistema, incluyendo documentación general y por módulo.
-- **`DELIVERIES_cleansed/`**: Contiene archivos limpios de entregas, lo que sugiere que el sistema tiene funcionalidades relacionadas con la gestión de entregas.
-- **`static/`**: Almacena recursos estáticos como CSS y JavaScript para la interfaz web.
-- **`scripts/`**: Contiene scripts Python adicionales que pueden ser utilizados para tareas específicas, como generación de documentación (`doc_generator.py`) o procesamiento de datos (`main_processor.py`).
-- **`db/`**: Contiene archivos relacionados con la base de datos, como el archivo principal `data.db`, y módulos para diferentes aspectos del enriquecimiento de datos (`db_enrichment.py`).
-- **`templates/`**: Almacena los archivos HTML de las plantillas de la interfaz web.
-- **`data/`**: Contiene archivos de datos, como una base de datos SQLite (`wms_transactions.db`) y archivos JSON para widgets.
-- **`routes/`**: Define las rutas del sistema, cada archivo correspondiendo a un conjunto específico de endpoints.
-- **`services/`**: Contiene los servicios que implementan la lógica de negocio, como `dashboard_service.py`, `deliveries_service.py`, etc.
+- **`core/`**: Esta carpeta contiene el código central del sistema. Incluye módulos como `app_instance.py`, `auth.py`, `database.py`, `models.py`, entre otros, que son fundamentales para la funcionalidad principal del aplicativo.
+- **`bin/`**: Contiene herramientas binarias o scripts adicionales que pueden ser necesarios para el despliegue o ejecución del sistema.
+- **`deploy/`**: Contiene archivos relacionados con el despliegue, como Dockerfiles y configuraciones de docker-compose.
+- **`setup/`**: Contiene los archivos de configuración y dependencias del proyecto, como `requirements.txt`, `package.json`, etc.
+- **`tests/`**: Contiene los tests unitarios y de integración para asegurar la calidad del código.
+- **`repositories/`**: Define las interfaces de acceso a datos (Data Access Objects), separando el acceso a diferentes tipos de bases de datos o fuentes de datos.
+- **`docs/`**: Contiene la documentación del sistema, organizada por módulos y secciones.
+- **`DELIVERIES_cleansed/`**: Almacena los archivos limpios generados durante el proceso de entrega.
+- **`static/`**: Contiene los archivos estáticos como CSS y JavaScript que son necesarios para la interfaz del usuario.
+- **`scripts/`**: Contiene scripts adicionales que pueden ser ejecutados para tareas específicas, como la generación de documentación o el procesamiento de datos.
+- **`db/`**: Contiene los archivos relacionados con las bases de datos, incluyendo modelos y scripts de consolidación.
+- **`templates/`**: Contiene los archivos de plantillas HTML que definen la estructura de las páginas web.
+- **`data/`**: Almacena los archivos de datos necesarios para el funcionamiento del sistema, como bases de datos SQLite o archivos JSON.
+- **`routes/`**: Define las rutas y endpoints del API, separando la lógica de negocio de la presentación.
+- **`services/`**: Contiene los servicios que implementan la lógica de negocio, separados en módulos para facilitar su mantenimiento y escalabilidad.
 
 ### Organización Lógica de las Dependencias
 
-La organización de dependencias es coherente con una arquitectura modular. El código se divide en módulos específicos para diferentes aspectos del sistema, lo que facilita la mantenibilidad y escalabilidad. Por ejemplo:
+La organización de dependencias es coherente con una arquitectura modular. Los módulos están organizados en carpetas específicas que reflejan su funcionalidad, lo que facilita la localización y el mantenimiento del código. Por ejemplo:
 
-- **`core/`** contiene los componentes fundamentales que son utilizados por todo el sistema.
-- **`routes/`** depende de los servicios (`services/`) para implementar las lógicas de negocio.
-- **`tests/`** dependen de todos los demás módulos para verificar su funcionamiento.
+- **`core/`**: Contiene los componentes fundamentales del sistema.
+- **`routes/`**: Define las interfaces de usuario y la lógica de negocio asociada a ellas.
+- **`services/`**: Implementa la lógica de negocio separada en módulos para facilitar su reutilización y mantenimiento.
+- **`repositories/`**: Abstrae el acceso a los datos, lo que permite cambiar fácilmente las fuentes de datos sin afectar el resto del sistema.
 
-Esta estructura permite una separación clara entre diferentes responsabilidades y facilita la colaboración en equipos, ya que cada parte del sistema puede ser desarrollada y mantenida por individuos o equipos distintos.
+Esta estructura promueve una separación clara entre diferentes aspectos del sistema, facilitando la escalabilidad, el mantenimiento y la colaboración en equipos.
 

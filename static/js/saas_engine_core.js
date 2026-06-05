@@ -299,22 +299,27 @@ async function initSaaSWidgetsV2(params = null, rootElement = document) {
                         }
                     }
                     
-                    // Si tenemos meses ideales, el "Punto Ideal" comprobado es el promedio de esos meses.
-                    // Si no, usamos el promedio global de volumen como punto base.
                     let baseCap = 0;
                     if (idealVols.length > 0) {
-                        baseCap = idealVols.reduce((a, b) => a + b, 0) / idealVols.length;
+                        const maxV = Math.max(...idealVols);
+                        const robustVols = idealVols.filter(v => v > maxV * 0.5); // Ignorar periodos parciales
+                        baseCap = robustVols.length > 0 
+                            ? robustVols.reduce((a, b) => a + b, 0) / robustVols.length
+                            : idealVols.reduce((a, b) => a + b, 0) / idealVols.length;
                     } else {
                         const validVols = volData.map(Number).filter(n => !isNaN(n) && n > 0);
                         if (validVols.length > 0) {
-                            baseCap = validVols.reduce((a, b) => a + b, 0) / validVols.length;
+                            const maxV = Math.max(...validVols);
+                            const robustVols = validVols.filter(v => v > maxV * 0.5);
+                            baseCap = robustVols.length > 0 
+                                ? robustVols.reduce((a, b) => a + b, 0) / robustVols.length
+                                : validVols.reduce((a, b) => a + b, 0) / validVols.length;
                         }
                     }
                     
-                    // Proyección teórica-práctica para garantizar una escala lógica progresiva
                     const valIdeal = Math.floor(baseCap);
-                    const valRisk = Math.floor(baseCap * 1.15); // +15% de exigencia
-                    const valFail = Math.floor(baseCap * 1.30); // +30% de exigencia
+                    const valRisk = Math.floor(baseCap * 1.15);
+                    const valFail = Math.floor(baseCap * 1.30);
                     
                     const isWeek = queryId === 'vl_sla_trend';
                     const suffix = isWeek ? 'mats/sem' : 'mats/mes';

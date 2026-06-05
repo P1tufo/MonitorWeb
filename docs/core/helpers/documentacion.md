@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: core/helpers
-Compilado el: 2026-05-30 00:23:08
+Compilado el: 2026-06-04 23:43:39
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -7,29 +7,39 @@ Modelo: qwen2.5-coder:7b | Separado por Carpetas
 ## Archivo: ./core/helpers/dynamic_executor.py
 
 ### Resumen Funcional
-El archivo `dynamic_executor.py` es un módulo que permite la ejecución de consultas SQL dinámicas a partir de payloads JSON proporcionados por el frontend. Utiliza el motor de consulta `query_engine` para construir y ejecutar las consultas, devolviendo los resultados en forma de DataFrame de Pandas.
+El archivo `dynamic_executor.py` contiene una función que toma un payload JSON crudo, lo valida y compila en una consulta SQL utilizando el módulo `query_engine`. Luego ejecuta la consulta en una base de datos SQLite y devuelve los resultados como un DataFrame de Pandas.
 
 ### Catálogo de Funciones y Clases
-- `execute_visual_query(payload_dict: Dict, db: Session) -> pd.DataFrame` - Toma un payload JSON crudo desde el frontend, lo valida y compila usando el query_engine, y devuelve un DataFrame de Pandas directamente.
+- `execute_visual_query(payload_dict: Dict, db: Session) -> pd.DataFrame` - Toma un payload JSON crudo, lo valida y compila usando el query_engine, y devuelve un DataFrame de Pandas directamente.
 
 ### Interacción con Base de Datos
-- Motor de base de datos: SQLAlchemy.
-- Tablas y Columnas: No aplica (no hay consultas SQL explícitas o llamadas a ORM).
-- Consultas SQL Crudas: Sí, se genera una consulta SQL dinámica a través del `query_engine`.
-- Llamadas a ORM: Sí, se utiliza el método `build_sql_from_payload` del módulo `core.query_engine`.
+- Motor: SQLite
+- Tablas y Columnas: Ninguna (la consulta SQL se genera dinámicamente)
+- Consultas SQL Crudas o Llamadas a ORM: Sí, utiliza `pd.read_sql` para ejecutar la consulta generada por `build_sql_from_payload`.
 
 ### Estado y Variables Globales
-No aplica.
+- Ninguna
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
-  - `pandas`: Para manejar los DataFrames.
-  - `logging`: Para registrar errores.
-  - `typing.Dict`: Para tipar el parámetro de entrada.
-  - `sqlalchemy.orm.Session`: Para la sesión de base de datos.
-  
-- Flujo hacia otros archivos del proyecto:
-  - `core.query_engine.build_sql_from_payload`: Se utiliza para construir la consulta SQL dinámica.
+- Librerías Externas:
+  - `pandas`
+  - `logging`
+  - `typing`
+  - `sqlalchemy.orm.Session`
+- Archivos del Proyecto que Importan a este archivo (lo consumen):
+  - No aplica
+- Archivos del Proyecto que Este Archivo Importa (consume):
+  - `core.query_engine.build_sql_from_payload`
+  - `core.schemas.VisualQueryBuilderPayload`
+
+**Flujo de Datos:**
+1. El frontend envía un payload JSON crudo.
+2. `execute_visual_query` recibe el payload y lo valida contra el esquema `VisualQueryBuilderPayload`.
+3. Utiliza `build_sql_from_payload` para generar una consulta SQL dinámica.
+4. Ejecuta la consulta en la base de datos SQLite utilizando `pd.read_sql`.
+5. Devuelve los resultados como un DataFrame de Pandas.
+
+Este flujo permite que el sistema genere consultas SQL flexibles basadas en los criterios proporcionados por el usuario, lo que es crucial para un sistema de monitoreo de almacén dinámico y adaptable.
 
 
 ---

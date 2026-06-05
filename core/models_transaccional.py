@@ -86,7 +86,6 @@ class OutboundDelivery(Base):
     centro: Mapped[Optional[str]] = mapped_column(String)
     area_negocio: Mapped[Optional[str]] = mapped_column(String)
     ubicacion_bin: Mapped[Optional[str]] = mapped_column(String)
-    ubicacion_area: Mapped[Optional[str]] = mapped_column(String)
     estado_wms: Mapped[Optional[str]] = mapped_column(String)
     dias_retraso: Mapped[Optional[int]] = mapped_column(Integer)
     week_sort: Mapped[Optional[str]] = mapped_column(String, index=True)

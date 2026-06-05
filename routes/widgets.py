@@ -82,7 +82,8 @@ async def get_widget_data(
                 })
         
         if granularity and "timeAxis" in payload_dict and payload_dict["timeAxis"]:
-            payload_dict["timeAxis"]["granularity"] = granularity
+            if query_id != "inv_dow_stats":
+                payload_dict["timeAxis"]["granularity"] = granularity
             
         payload_dict["filters"] = filters
         
@@ -229,7 +230,8 @@ async def get_widget_drilldown(
                 })
         
         if granularity and "timeAxis" in payload_dict and payload_dict["timeAxis"]:
-            payload_dict["timeAxis"]["granularity"] = granularity
+            if query_id != "inv_dow_stats":
+                payload_dict["timeAxis"]["granularity"] = granularity
             
         payload_dict["filters"] = filters
         

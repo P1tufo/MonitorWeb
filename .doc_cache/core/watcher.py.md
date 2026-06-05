@@ -1,44 +1,39 @@
 ## Archivo: ./core/watcher.py
 
 ### Resumen Funcional
-Este archivo implementa un observador de archivos que monitorea cambios en un directorio especificado (ONEDRIVE_PATH) y ejecuta una sincronización de datos cuando se detectan archivos estables. Es parte del sistema de monitoreo de almacén (WMS) y utiliza la arquitectura Routes → Services → Repositories → DB.
+El archivo `watcher.py` implementa un observador de archivos que monitorea cambios en directorios especificados, como OneDrive y otro directorio local. Cuando detecta archivos estables (sin cambios durante 3 segundos), dispara una sincronización del almacén.
 
 ### Catálogo de Funciones y Clases
-- `AwaitWriteFinishHandler(stability_seconds=3.0, poll_interval=1.0)` -> Maneja eventos de archivos y monitorea estabilidad.
-  - Métodos principales: `_should_track(path)`, `on_created(event)`, `on_modified(event)`, `_add_file(path)`, `_poll_files()`, `stop()`
-- `start_watcher()` -> Inicia el observador de archivos.
-- `stop_watcher()` -> Detiene el observador de archivos.
+- `AwaitWriteFinishHandler(stability_seconds=3.0, poll_interval=1.0)` - Maneja eventos de sistema de archivos y monitorea estabilidad de los archivos.
+  - `_should_track(path: str) -> bool` - Determina si un archivo debe ser rastreado.
+  - `on_created(event)` - Llama a `_add_file` cuando se crea un nuevo archivo.
+  - `on_modified(event)` - Llama a `_add_file` cuando se modifica un archivo existente.
+  - `_add_file(path: str)` - Añade o actualiza la información del archivo en el diccionario `tracked_files`.
+  - `_poll_files()` - Monitorea los archivos rastreados y dispara una sincronización si es necesario.
+  - `stop()` - Detiene el observador y las operaciones de monitoreo.
 
-### Contratos de API / Endpoints
-No aplica.
+- `start_watcher()` - Inicia el observador en los directorios especificados.
+- `stop_watcher()` - Detiene el observador.
 
 ### Interacción con Base de Datos
-No aplica.
+Ninguna.
 
-### Flujo de Datos y Pipeline
-1. **Entrada**: Directorio a monitorear (`ONEDRIVE_PATH`).
-2. **Transformaciones**:
-   - Monitorea eventos de creación y modificación de archivos.
-   - Verifica si los archivos son estables (sin cambios durante `stability_seconds`).
-3. **Salida**: Dispara la ejecución de `_run_sync_pipeline()` cuando se detectan archivos estables.
-
-### Caché y Estado
-- Variables globales: `_observer`, `_handler`
-- No aplica caché en memoria o persistente.
-- Mecanismos de invalidación de caché: No aplica.
-- Variables de entorno o sesión utilizadas: `ONEDRIVE_PATH`
-
-### Lógica de Negocio y Reglas
-- **Reglas de negocio**:
-  - Solo se monitorean archivos con extensiones `.txt`, `.csv`, `.xlsx`, `.xls`.
-  - Archivos que comienzan con `~` o `.` no son monitoreados.
-  - Se espera una estabilidad de `stability_seconds` antes de considerar un archivo como estable.
+### Estado y Variables Globales
+- `_observer` - Instancia del observador de archivos.
+- `_handler` - Instancia del manejador de eventos de archivos.
 
 ### Dependencias y Flujo
-- **Librerías externas**: `watchdog`, `logging`, `threading`
-- **Archivos del proyecto que importa**:
-  - `config.py`: Para obtener `ONEDRIVE_PATH`.
-  - `core/task_manager.py`: Para gestionar tareas.
-  - `routes/sync.py`: Para ejecutar `_run_sync_pipeline()`.
-- **Archivos del proyecto que son importados por este archivo**: No aplica.
+- **Librerías Externas**: `watchdog`, `logging`, `threading`.
+- **Archivos Importados**:
+  - `config.py`: Para obtener el camino de OneDrive.
+  - `core.task_manager`: Para gestionar tareas asincrónicas.
+  - `routes.sync`: Para ejecutar la sincronización del almacén.
+
+El flujo de datos es el siguiente:
+1. `start_watcher()` se llama para iniciar el observador en los directorios especificados.
+2. El observador (`_observer`) monitorea los eventos de archivos en los directorios rastreados.
+3. Cuando un archivo es modificado y alcanza la estabilidad requerida, `_poll_files()` detecta esto y dispara `task_manager.submit_task("sync_data", _run_sync_pipeline)`.
+4. `stop_watcher()` se llama para detener el observador y las operaciones de monitoreo.
+
+Este flujo asegura que los cambios en los archivos sean sincronizados con el almacén solo cuando estos son estables, evitando la sobrecarga del sistema con sincronizaciones innecesarias.
 

@@ -105,41 +105,45 @@ class TasksRepository(BaseRepository):
         query = """
             WITH combined AS (
                 SELECT 
+                    usuario,
                     substr(hora, 1, 2) as franja_horaria,
                     COUNT(doc_mat) as movimientos
                 FROM inventory_movements
                 WHERE usuario IS NOT NULL AND usuario != ''
                   AND registrado = :date_sap
                   AND hora IS NOT NULL AND hora != ''
-                GROUP BY franja_horaria
+                GROUP BY usuario, franja_horaria
                 
                 UNION ALL
                 
                 SELECT 
+                    usuario_conf as usuario,
                     substr(hor_conf, 1, 2) as franja_horaria,
                     COUNT(numero_ot) as movimientos
                 FROM warehouse_tasks
                 WHERE usuario_conf IS NOT NULL AND usuario_conf != ''
                   AND fecha_conf = REPLACE(:date_sap, '.', '-')
                   AND hor_conf IS NOT NULL AND hor_conf != ''
-                GROUP BY franja_horaria
+                GROUP BY usuario_conf, franja_horaria
                 
                 UNION ALL
 
                 SELECT 
+                    usuario as usuario,
                     substr(hora, 1, 2) as franja_horaria,
                     COUNT(numero_ot) as movimientos
                 FROM warehouse_tasks
                 WHERE usuario IS NOT NULL AND usuario != ''
                   AND fe_creac = REPLACE(:date_sap, '.', '-')
                   AND hora IS NOT NULL AND hora != ''
-                GROUP BY franja_horaria
+                GROUP BY usuario, franja_horaria
             )
             SELECT 
+                usuario,
                 franja_horaria,
                 SUM(movimientos) as total_actividad
             FROM combined
-            GROUP BY franja_horaria
+            GROUP BY usuario, franja_horaria
             ORDER BY franja_horaria ASC
         """
         try:
@@ -443,6 +447,7 @@ class TasksRepository(BaseRepository):
         query = """
             WITH combined AS (
                 SELECT 
+                    usuario,
                     registrado as fecha,
                     CASE
                         WHEN CAST(substr(hora, 1, 2) AS INTEGER) BETWEEN 6 AND 13 THEN 'Mañana'
@@ -454,11 +459,12 @@ class TasksRepository(BaseRepository):
                 WHERE usuario IS NOT NULL AND usuario != ''
                   AND registrado LIKE :month_sap
                   AND hora IS NOT NULL AND hora != ''
-                GROUP BY registrado, turno
+                GROUP BY usuario, registrado, turno
                 
                 UNION ALL
                 
                 SELECT 
+                    usuario_conf as usuario,
                     REPLACE(fecha_conf, '-', '.') as fecha,
                     CASE
                         WHEN CAST(substr(hor_conf, 1, 2) AS INTEGER) BETWEEN 6 AND 13 THEN 'Mañana'
@@ -470,11 +476,12 @@ class TasksRepository(BaseRepository):
                 WHERE usuario_conf IS NOT NULL AND usuario_conf != ''
                   AND fecha_conf LIKE REPLACE(:month_sap, '.', '-')
                   AND hor_conf IS NOT NULL AND hor_conf != ''
-                GROUP BY fecha_conf, turno
+                GROUP BY usuario_conf, fecha_conf, turno
 
                 UNION ALL
 
                 SELECT 
+                    usuario,
                     REPLACE(fe_creac, '-', '.') as fecha,
                     CASE
                         WHEN CAST(substr(hora, 1, 2) AS INTEGER) BETWEEN 6 AND 13 THEN 'Mañana'
@@ -486,14 +493,15 @@ class TasksRepository(BaseRepository):
                 WHERE usuario IS NOT NULL AND usuario != ''
                   AND fe_creac LIKE REPLACE(:month_sap, '.', '-')
                   AND hora IS NOT NULL AND hora != ''
-                GROUP BY fe_creac, turno
+                GROUP BY usuario, fe_creac, turno
             )
             SELECT 
+                usuario,
                 fecha,
                 turno,
                 SUM(actividad) as total_actividad
             FROM combined
-            GROUP BY fecha, turno
+            GROUP BY usuario, fecha, turno
             ORDER BY substr(fecha, 7, 4), substr(fecha, 4, 2), substr(fecha, 1, 2)
         """
         try:

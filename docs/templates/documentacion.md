@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: templates
-Compilado el: 2026-05-30 00:23:08
+Compilado el: 2026-06-04 23:43:39
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -7,30 +7,35 @@ Modelo: qwen2.5-coder:7b | Separado por Carpetas
 ## Archivo: ./templates/analytics_proyecciones.html
 
 ### Resumen Funcional
-El archivo `analytics_proyecciones.html` es una plantilla HTML para la interfaz de usuario de un módulo de análisis predictivo, que muestra información sobre desplanificaciones y correlaciones entre materiales. Incluye gráficos interactivos y tablas para visualizar datos relevantes.
+El archivo `analytics_proyecciones.html` es una plantilla HTML para la interfaz de usuario del módulo de análisis predictivo en el Sistema de Monitoreo de Almacén (WMS). Muestra información sobre alertas de desplanificación, un gráfico de dispersión y analisis de market basket.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este archivo HTML.
+Ninguna función o clase detectada directamente en este archivo HTML. Todas las interacciones son a través de JavaScript y llamadas a funciones definidas en otros archivos.
 
 ### Interacción con Base de Datos
-Ninguna.
+Ninguna. El archivo no contiene consultas SQL ni interacciones con una base de datos.
 
 ### Estado y Variables Globales
-- `user`: Objeto que contiene información del usuario autenticado.
+- `user`: Objeto que contiene información del usuario actual.
 - `error_msg`: Mensaje de error a mostrar en la interfaz.
 - `alerts`: Lista de alertas de desplanificación.
 - `scatter_data`: Datos para el gráfico de dispersión.
-- `combos`: Lista de combinaciones frecuentes (Market Basket Analysis).
+- `combos`: Datos para el análisis de market basket.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: 
-  - `Chart.js` para gráficos interactivos.
-- **Archivos Incluidos**:
-  - `_styles.html`: Estilos CSS adicionales.
-  - `_analytics_proyecciones_modals.html`: Modales adicionales.
-  - `_scripts.html`: Scripts adicionales.
-- **Scripts Internos**: 
-  - `analytics_proyecciones.js`: Script específico para este módulo.
+- **Dependencias**: 
+  - Chart.js: Para renderizar gráficos.
+  
+- **Archivos Importados**:
+  - `_styles.html`: Archivo que contiene estilos CSS.
+  - `analytics_proyecciones.css`: Hoja de estilo específica para esta página.
+  - `_scripts.html`: Archivo que contiene scripts JavaScript generales.
+  - `analytics_proyecciones.js`: Script específico para esta página.
+
+- **Archivos Exporados**:
+  - No se exportan funciones o clases desde este archivo HTML. Todas las interacciones son a través de eventos y llamadas a funciones en otros archivos JavaScript.
+
+El flujo de datos es principalmente hacia la interfaz del usuario, donde los datos JSON (`data_scatter`, `data_alerts`, `data_combos`) son utilizados para alimentar gráficos y tablas.
 
 
 ---
@@ -38,26 +43,25 @@ Ninguna.
 ## Archivo: ./templates/dashboard.html
 
 ### Resumen Funcional
-El archivo `dashboard.html` es una plantilla HTML para el panel de control del proyecto Onedrive, que muestra información sobre entregas y materiales solicitados. Incluye un encabezado con opciones de navegación, indicadores clave (KPIs) y un menú lateral.
+El archivo `dashboard.html` es una plantilla HTML para el panel de control del sistema de monitoreo de almacén (WMS). Contiene la interfaz de usuario principal que incluye encabezado, indicadores clave (KPIs), menú de acciones y contenido principal dividido en sidebar y tabla.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este archivo HTML.
+Ninguna función o clase detectada directamente en este archivo HTML. Todas las interacciones son realizadas a través de JavaScript y eventos del usuario.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna. El archivo no contiene consultas SQL ni llamadas a ORM para interactuar con una base de datos.
 
 ### Estado y Variables Globales
 - `is_syncing`: Variable que indica si la sincronización está en curso.
-- `user.username`: Nombre del usuario actual.
-- `user.role`: Rol del usuario actual.
-- `kpi_deliveries`: Número total de entregas generadas.
-- `sub_del_abierta`, `sub_del_no_tratada`, `sub_del_reunido`, `sub_del_atrasado`, `sub_del_critico`: Contadores para diferentes estados de las entregas.
-- `kpi_materials`: Número total de materiales solicitados.
-- `sub_mat_abierta`, `sub_mat_no_tratada`, `sub_mat_reunido`, `sub_mat_atrasado`, `sub_mat_critico`: Contadores para diferentes estados de los materiales.
+- `user`: Objeto que contiene información del usuario autenticado, incluyendo su nombre de usuario y rol.
+- `kpi_deliveries`, `sub_del_abierta`, `sub_del_no_tratada`, `sub_del_reunido`, `sub_del_atrasado`, `sub_del_critico`: Variables que almacenan los valores de KPIs relacionados con las entregas.
+- `kpi_materials`, `sub_mat_abierta`, `sub_mat_no_tratada`, `sub_mat_reunido`, `sub_mat_atrasado`, `sub_mat_critico`: Variables que almacenan los valores de KPIs relacionados con los materiales solicitados.
 
 ### Dependencias y Flujo
-- **Librerías externas**: No se detectan librerías externas utilizadas.
-- **Flujo hacia otros archivos**: El archivo incluye parciales HTML (`_styles.html`, `_modals.html`, `_sidebar.html`, `_table.html`, `_scripts.html`) que probablemente contienen el estilo, modales, menú lateral, tabla y scripts necesarios para la funcionalidad del panel de control.
+- **Dependencias**: No se importan librerías externas directamente en este archivo.
+- **Flujo de Datos**: El flujo de datos pasa por el servidor (FastAPI) que renderiza esta plantilla HTML, pasando los valores de las variables globales como contexto. Los eventos del usuario (clics en botones, cambios en la interfaz) se manejan con JavaScript.
+
+Este archivo es una vista HTML que presenta información y permite interacciones al usuario, pero no realiza ninguna operación directamente relacionada con la base de datos o el backend del sistema.
 
 
 ---
@@ -67,7 +71,7 @@ No aplica
 #### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario del proyecto, que incluye elementos como encabezado, botones de pestañas y scripts JavaScript para manejar el comportamiento de las pestañas y cargar datos dinámicamente.
+El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario del sistema de monitoreo de almacén (WMS). Contiene el diseño y las funcionalidades necesarias para mostrar diferentes secciones como entregas, movimientos, consumos, etc., con un menú de pestañas interactiva.
 
 ### Catálogo de Funciones y Clases
 - `switchTab(tabId, btnElement)` - Cambia la pestaña activa.
@@ -75,56 +79,56 @@ El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario d
 - `openNonPalletizedDetails(user, claseMov)` - Abre un modal con detalles no paletizados.
 - `initTableFilters()` - Inicializa los filtros de tablas.
 - `filterOTTable()` - Filtra la tabla de OTs según los criterios seleccionados.
-- `filterDiscrepancyTable()` - Filtra la tabla de Discrepancias según los criterios seleccionados.
-- `sortTableDiscrepancy(columnIndex)` - Ordena la tabla de Discrepancias.
+- `filterDiscrepancyTable()` - Filtra la tabla de discrepancias según los criterios seleccionados.
+- `sortTableDiscrepancy(columnIndex)` - Ordena la tabla de discrepancias.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna
 
 ### Estado y Variables Globales
-No aplica
+No hay variables globales explícitas definidas en el código. Las variables están almacenadas en elementos `<script type="application/json">` que contienen datos JSON serializados.
 
 ### Dependencias y Flujo
-- **Librerías externas utilizadas:**
-  - Chart.js
-  - Chartjs-plugin-datalabels
-  - Font Awesome
-  - marked.js
+- **Librerías externas**: Chart.js, marked.js, Font Awesome.
+- **Archivos del proyecto importados**:
+  - `partials/_styles.html`
+  - `css/deliveries.css`, `css/inventory.css`, `css/analytics_proyecciones.css`
+  - `js/core_ui.js`, `js/dashboard_api.js`, `js/dashboard_core.js`, `js/dashboard_saas.js`, `js/saas_engine_core.js`, `js/saas_engine_drilldown.js`, `js/deliveries.js`, `js/consumos.js`, `js/transporte.js`
+- **Archivos del proyecto que importan a este archivo**: No especificados en el fragmento.
 
-- **Archivos JavaScript que se comunican con este archivo:**
-  - `core_ui.js`
-  - `dashboard.js`
-  - `saas_engine.js`
-  - `deliveries.js`
-  - `consumos.js`
-  - `transporte.js`
-
-Estos archivos JavaScript probablemente contienen la lógica de negocio y los controladores que interactúan con el backend para cargar datos y manejar eventos.
+El flujo de datos se gestiona principalmente mediante eventos JavaScript y la manipulación del DOM.
 
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-El archivo `deliveries.html` es una plantilla HTML que contiene scripts para cargar datos JSON y referencias a archivos JavaScript. También incluye varios modales parciales.
+El archivo `deliveries.html` es una plantilla HTML para el sistema de monitoreo de almacén (WMS). Contiene variables JSON que se utilizan en scripts JavaScript y carga varios archivos JavaScript adicionales.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones ni clases definidas en este fragmento de código.
+Ninguna
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna
 
 ### Estado y Variables Globales
-No se detectan variables globales, de sesión o de entorno quemadas en el código.
+- `ots_trend_created`
+- `ots_trend_confirmed`
+- `ots_user_labels`
+- `ots_user_created`
+- `ots_user_confirmed`
+- `ots_type_labels`
+- `ots_type_data`
 
 ### Dependencias y Flujo
-- **Librerías externas utilizadas**: No se mencionan librerías específicas.
-- **Archivos JavaScript incluidos**:
+- Archivos JavaScript:
   - `js/tasks.js` (versión 5)
-  - `js/inventory.js` (versión 11)
+  - `js/inventory.js` (versión 21)
   - `js/analytics_proyecciones.js` (versión 3)
   - `js/docs_explorer.js` (versión 5)
-  - `js/productivity.js` (versión 21)
+  - `js/productivity_daily.js` (versión 2)
+  - `js/productivity_monthly.js` (versión 2)
+  - `js/productivity_modals.js` (versión 2)
 
-- **Modales incluidos**:
+- Archivos HTML incluidos:
   - `_modals.html`
   - `_deliveries_modals.html`
   - `_inventory_modals.html`
@@ -133,7 +137,7 @@ No se detectan variables globales, de sesión o de entorno quemadas en el códig
   - `_quick_login_modal.html`
   - `_logout.html`
 
-Este archivo se utiliza para cargar datos JSON y referencias a scripts JavaScript, además de incluir varios modales parciales que probablemente contienen funcionalidades específicas del sistema.
+El archivo `deliveries.html` carga varios scripts JavaScript y partials HTML, lo que indica un flujo de datos hacia el cliente para la visualización y interacción con los datos del sistema de almacén.
 
 
 ---
@@ -141,34 +145,37 @@ Este archivo se utiliza para cargar datos JSON y referencias a scripts JavaScrip
 ## Archivo: ./templates/inventory.html
 
 ### Resumen Funcional
-El archivo `inventory.html` es una plantilla HTML para la interfaz de usuario del módulo de inventario. Define la estructura y el diseño de la página, incluyendo encabezados, botones de acción, gráficos y enlaces a otros módulos del sistema.
+El archivo `inventory.html` es una plantilla HTML para la página de análisis del inventario en el sistema de monitoreo de almacén (WMS). Muestra gráficos y KPIs relacionados con las entradas, consumos, traspasos y otras métricas del inventario.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas directamente en este archivo HTML.
+Ninguna.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no contiene consultas SQL ni interacciones con bases de datos.
+Ninguna.
 
 ### Estado y Variables Globales
-No aplica. No hay variables globales, de sesión o diccionarios quemados en el código que almacenen estado crítico.
+Ninguna.
 
 ### Dependencias y Flujo
-- **Librerías externas utilizadas:**
+- **Librerías Externas**: 
   - `Chart.js`
   - `chartjs-plugin-datalabels`
 
-- **Archivos JavaScript incluidos:**
-  - `core_ui.js` (versión 1)
-  - `saas_engine.js` (versión 3)
-  - `inventory.js` (versión 11)
+- **Archivos del Proyecto Importados**:
+  - `partials/_styles.html`
+  - `css/inventory.css`
+  - `partials/_inventory_modals.html`
+  - `js/core_ui.js`
+  - `js/saas_engine_core.js`
+  - `js/saas_engine_drilldown.js`
+  - `js/inventory.js`
+  - `partials/_quick_login_modal.html`
+  - `partials/_logout.html`
 
-- **Interacción con otros archivos del proyecto:**
-  - `_styles.html`
-  - `_inventory_modals.html`
-  - `_quick_login_modal.html`
-  - `_logout.html`
+- **Archivos del Proyecto que Importan a Este Archivo**:
+  - Ninguno.
 
-Este archivo HTML es principalmente una estructura de página que utiliza plantillas Jinja2 para incluir contenido dinámico y scripts JavaScript. No realiza operaciones directas con la base de datos ni maneja variables globales significativas.
+El flujo de datos se realiza principalmente a través de la carga de scripts y estilos, así como el consumo de variables globales y funciones JavaScript definidas en los archivos importados.
 
 
 ---
@@ -176,20 +183,20 @@ Este archivo HTML es principalmente una estructura de página que utiliza planti
 ## Archivo: ./templates/login.html
 
 ### Resumen Funcional
-El archivo `login.html` es una página de inicio de sesión para la aplicación MonitorWeb. Permite a los usuarios ingresar sus credenciales y autenticarse en el sistema.
+El archivo `login.html` es una página de inicio de sesión para el sistema de monitoreo de almacén (WMS). Permite a los usuarios ingresar sus credenciales y autenticarse en la aplicación.
 
 ### Catálogo de Funciones y Clases
-- `handleLogin(event)` - Maneja el evento de envío del formulario de inicio de sesión, realiza la autenticación y redirige al usuario según sea necesario.
+- **handleLogin(event)** - Maneja el evento de envío del formulario de inicio de sesión, realiza una solicitud POST a la API para autenticar al usuario y maneja la respuesta.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna. El archivo no interactúa directamente con una base de datos.
 
 ### Estado y Variables Globales
-No aplica
+- **localStorage** - Se utilizan variables globales en el almacenamiento local del navegador para guardar el token de acceso, nombre de usuario y rol del usuario autenticado.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: No se utilizan librerías externas.
-- **Flujo Interno**: El archivo interactúa con el backend a través de una solicitud POST a la ruta `/api/auth/login`. La respuesta del servidor es manejada para determinar si la autenticación fue exitosa o no, y en consecuencia, se redirige al usuario.
+- **Dependencias**: No hay dependencias externas mencionadas.
+- **Flujo**: El archivo `login.html` se importa por la vista correspondiente en FastAPI. La función `handleLogin` es llamada cuando el formulario de inicio de sesión se envía, lo que desencadena una solicitud POST a `/api/auth/login`. La respuesta del servidor maneja la autenticación y redirige al usuario según sea necesario.
 
 
 ---
@@ -197,37 +204,37 @@ No aplica
 ## Archivo: ./templates/settings.html
 
 ### Resumen Funcional
-El archivo `settings.html` es una página web que permite la gestión dinámica de parámetros globales del sistema, mapeos de estados de entrega y centros de costo a áreas de negocio, así como la sincronización de feriados. La interfaz presenta tablas interactivas para editar y guardar cambios en estos elementos.
+El archivo `settings.html` es una página web que permite la gestión dinámica de parámetros globales del sistema WMS, incluyendo mapeos de estados de entrega, centros de costo a áreas de negocio, calendario de feriados y opciones de exportación de datos. La interfaz permite editar valores, guardar cambios, agregar y eliminar registros, así como sincronizar datos.
 
 ### Catálogo de Funciones y Clases
 - `openPasswordModal()` - Abre el modal para cambiar la contraseña.
 - `closePasswordModal()` - Cierra el modal para cambiar la contraseña.
-- `changePassword()` - Maneja el cambio de contraseña, validando los campos y haciendo una solicitud a la API.
-- `updateSetting(key)` - Actualiza un parámetro global en la base de datos.
-- `updateStatus(code)` - Actualiza un mapeo de estado de entrega en la base de datos.
-- `addStatus()` - Añade un nuevo mapeo de estado de entrega a la base de datos.
-- `deleteStatus(code)` - Elimina un mapeo de estado de entrega de la base de datos.
-- `updateCostCenter(code)` - Actualiza un mapeo de centro de costo a área de negocio en la base de datos.
-- `addCostCenter()` - Añade un nuevo mapeo de centro de costo a área de negocio a la base de datos.
-- `deleteCostCenter(code)` - Elimina un mapeo de centro de costo a área de negocio de la base de datos.
-- `syncHolidays()` - Sincroniza los feriados nacionales de Chile para el año actual y el próximo.
-- `addHoliday()` - Añade una nueva fecha de feriado manualmente.
-- `deleteHoliday(date_str)` - Elimina una fecha de feriado de la base de datos.
-- `updateQuery(id)` - No se menciona en el código proporcionado.
+- `changePassword()` - Maneja el cambio de contraseña a través de una API.
+- `updateSetting(key)` - Actualiza un parámetro global.
+- `updateStatus(code)` - Actualiza un mapeo de estado de entrega.
+- `addStatus()` - Añade un nuevo mapeo de estado de entrega.
+- `deleteStatus(code)` - Elimina un mapeo de estado de entrega.
+- `updateCostCenter(code)` - Actualiza un mapeo de centro de costo a área de negocio.
+- `addCostCenter()` - Añade un nuevo mapeo de centro de costo a área de negocio.
+- `deleteCostCenter(code)` - Elimina un mapeo de centro de costo a área de negocio.
+- `syncHolidays()` - Sincroniza los feriados nacionales de Chile.
+- `addHoliday()` - Añade una nueva fecha de feriado manual.
+- `deleteHoliday(date_str)` - Elimina una fecha de feriado manual.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna. El archivo no realiza consultas SQL ni interactúa directamente con la base de datos.
 
 ### Estado y Variables Globales
-No aplica
+No hay variables globales explícitas definidas en el código.
 
 ### Dependencias y Flujo
-Dependencias:
-- `fetch` para hacer solicitudes HTTP a la API.
-- `apiCall(url, method, data = null)` - Función auxiliar para manejar las solicitudes HTTP.
+- **Dependencias**: No se importan librerías externas específicas.
+- **Archivos del Proyecto Importados**:
+  - `partials/_styles.html` - Estilos CSS adicionales.
+  - `partials/_logout.html` - Código para cerrar sesión.
+- **Archivos que Importan a Este Archivo**: Ninguno.
 
-Flujo:
-- La página interactúa con el backend a través de endpoints como `/api/auth/change-password`, `/api/settings/update`, `/api/settings/status`, etc., para realizar operaciones CRUD en los parámetros globales, mapeos y feriados.
+El flujo de datos se gestiona principalmente a través de eventos de clic en botones y llamadas AJAX a endpoints definidos en el backend (FastAPI).
 
 
 ---
@@ -235,26 +242,22 @@ Flujo:
 ## Archivo: ./templates/sla_table.html
 
 ### Resumen Funcional
-El archivo `sla_table.html` es una plantilla HTML para mostrar una tabla de transacciones que cumplen con ciertos criterios, incluyendo detalles como el número de entrega, autor/creador, área de negocio, días de retraso, fecha de creación y salida de mercancias. La página también proporciona opciones para generar y descargar PDFs relacionados con cada transacción.
+El archivo `sla_table.html` es una plantilla HTML para mostrar una tabla de transacciones que cumplen con ciertos criterios en un sistema de monitoreo de almacén (WMS). La tabla incluye detalles como el número de entrega, autor/creador, área de negocio, días de retraso, fecha de creación y salida, y material involucrado. Además, proporciona opciones para generar y descargar PDFs relacionados con cada transacción.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este archivo HTML.
+Ninguna
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna
 
 ### Estado y Variables Globales
-No aplica
+Ninguna
 
 ### Dependencias y Flujo
-- **Librerías externas utilizadas**: No hay librerías externas directamente importadas.
-- **Flujo hacia otros archivos del proyecto**:
-  - `partials/_styles.html`: Incluye estilos CSS adicionales.
-  - `static/css/sla_table.css`: Archivo de estilo específico para esta página.
-  - `partials/_modals.html`: Incluye modales adicionales.
-  - `js/sla_table.js`: Script JavaScript asociado a esta página.
-
-El archivo HTML interactúa con el backend a través de formularios que envían solicitudes POST a rutas como `/generate-pdf`, lo que implica que el backend debe manejar estas solicitudes para generar y devolver PDFs.
+- **Librerías externas**: No se mencionan librerías externas específicas.
+- **Archivos del proyecto que IMPORTA (consume)**: `partials/_styles.html`, `sla_table.css`, `_modals.html`, `sla_table.js`.
+- **Archivos del proyecto que IMPORTAN a este archivo (lo consumen)**: Ninguno
+- **Dirección del flujo de datos**: El archivo se renderiza en el navegador y no interactúa directamente con la base de datos o servicios externos.
 
 
 ---

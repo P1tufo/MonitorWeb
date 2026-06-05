@@ -146,5 +146,13 @@
     {
         "query_id": "ots_kpi_users",
         "visual_state": "{\"baseTable\": \"warehouse_tasks\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"warehouse_tasks.entrega\", \"aggregation\": \"COUNT_DISTINCT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+    },
+    {
+        "query_id": "inv_cmv_201_mensual",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [{\"column\": \"inventory_movements.cmv\", \"operator\": \"equals\", \"value\": \"201\", \"valueType\": \"value\"}], \"metric\": {\"column\": \"inventory_movements.material\", \"aggregation\": \"COUNT\", \"label\": \"Consumos 201\"}, \"timeAxis\": {\"column\": \"inventory_movements.fe_contab\", \"granularity\": \"MONTH\"}, \"breakdown\": \"__PLAN_VS_UNPLAN__\", \"chartType\": \"line\"}"
+    },
+    {
+        "query_id": "inv_cmv_261_221_mensual",
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [{\"column\": \"inventory_movements.cmv\", \"operator\": \"in\", \"value\": \"261,221\", \"valueType\": \"value\"}], \"metric\": {\"column\": \"inventory_movements.material\", \"aggregation\": \"COUNT\", \"label\": \"Consumos 261/221\"}, \"timeAxis\": {\"column\": \"inventory_movements.fe_contab\", \"granularity\": \"MONTH\"}, \"breakdown\": \"__PLAN_VS_UNPLAN__\", \"chartType\": \"line\"}"
     }
 ]

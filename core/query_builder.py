@@ -150,7 +150,9 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
         elif gran == "MONTH":
             time_func = f"substr({col}, 7, 4) || '-' || substr({col}, 4, 2)"
         elif gran == "WEEK":
-            time_func = f"strftime('%Y-W%W', substr({col}, 7, 4) || '-' || substr({col}, 4, 2) || '-' || substr({col}, 1, 2))"
+            # Formato mes-semana (Ej: 01-S1, 01-S2) calculado como semana del mes
+            iso_date = f"substr({col}, 7, 4) || '-' || substr({col}, 4, 2) || '-' || substr({col}, 1, 2)"
+            time_func = f"strftime('%m-S', {iso_date}) || ((cast(strftime('%d', {iso_date}) as integer) - 1) / 7 + 1)"
         elif gran == "DAY_OF_WEEK":
             time_func = f"""CASE cast(strftime('%w', substr({col}, 7, 4) || '-' || substr({col}, 4, 2) || '-' || substr({col}, 1, 2)) as integer)
                 WHEN 1 THEN '1 Lunes'
@@ -188,8 +190,12 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
                     {payload.baseTable}.texto_cab_documento GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.texto_cab_documento GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*'
                 ) THEN 'Planificado'
                 WHEN {payload.baseTable}.cmv = '261' AND (
-                    ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND 
-                    ({payload.baseTable}.texto_cab_documento IS NULL OR {payload.baseTable}.texto_cab_documento = '')
+                    (
+                        ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND 
+                        ({payload.baseTable}.texto_cab_documento IS NULL OR {payload.baseTable}.texto_cab_documento = '')
+                    ) OR 
+                    {payload.baseTable}.texto_cab_documento GLOB '*PGP*' OR {payload.baseTable}.texto_cab_documento GLOB '*PGE*' OR
+                    {payload.baseTable}.referencia GLOB '*PGP*' OR {payload.baseTable}.referencia GLOB '*PGE*'
                 ) THEN 'Planificado'
                 WHEN {payload.baseTable}.cmv IN ('201', '261', '221') THEN 'Desplanificado'
                 ELSE 'Otro'
@@ -207,8 +213,12 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
                     {payload.baseTable}.texto_cab_documento GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.texto_cab_documento GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*'
                 ) THEN 'Producción (201)'
                 WHEN {payload.baseTable}.cmv = '261' AND (
-                    ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND 
-                    ({payload.baseTable}.texto_cab_documento IS NULL OR {payload.baseTable}.texto_cab_documento = '')
+                    (
+                        ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND 
+                        ({payload.baseTable}.texto_cab_documento IS NULL OR {payload.baseTable}.texto_cab_documento = '')
+                    ) OR 
+                    {payload.baseTable}.texto_cab_documento GLOB '*PGP*' OR {payload.baseTable}.texto_cab_documento GLOB '*PGE*' OR
+                    {payload.baseTable}.referencia GLOB '*PGP*' OR {payload.baseTable}.referencia GLOB '*PGE*'
                 ) THEN 'Mantención (261)'
                 WHEN {payload.baseTable}.cmv IN ('201', '261', '221') THEN 'Desplanificado'
                 ELSE 'Otro'

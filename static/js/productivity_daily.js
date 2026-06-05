@@ -1,6 +1,95 @@
 // static/js/productivity.js
 
 let productivityTrendChartInst = null;
+let currentDailyData = null;
+let selectedDailyUsers = [];
+
+function toggleDailyUserFilter() {
+    const d = document.getElementById('daily-user-filter-dropdown');
+    if(d) {
+        d.style.display = (d.style.display === 'none' || d.style.display === '') ? 'block' : 'none';
+    }
+}
+
+function renderDailyUserCheckboxes(summary) {
+    const list = document.getElementById('daily-user-filter-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!summary || summary.length === 0) return;
+    const users = summary.map(s => s.usuario).sort();
+    users.forEach(u => {
+        const lbl = document.createElement('label');
+        lbl.style.cssText = "display: block !important; cursor: pointer !important; margin: 4px 0 !important; white-space: nowrap !important; text-align: left !important;";
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.className = 'daily-user-cb';
+        chk.value = u;
+        chk.style.cssText = "margin: 0 8px 0 0 !important; padding: 0 !important; vertical-align: middle !important; display: inline-block !important; width: auto !important;";
+        chk.checked = selectedDailyUsers.length === 0 || selectedDailyUsers.includes(u);
+        chk.onchange = onDailyUserCheckboxChange;
+        
+        const span = document.createElement('span');
+        span.textContent = u || "Desconocido";
+        span.style.cssText = "color: #ffffff !important; font-size: 14px !important; visibility: visible !important; vertical-align: middle !important; display: inline-block !important; padding: 0 !important; margin: 0 !important;";
+        
+        lbl.appendChild(chk);
+        lbl.appendChild(span);
+        list.appendChild(lbl);
+    });
+    const allChk = document.getElementById('daily-user-filter-all');
+    if(allChk) allChk.checked = selectedDailyUsers.length === 0;
+}
+
+function toggleAllDailyUsers() {
+    const allChk = document.getElementById('daily-user-filter-all');
+    if(allChk && allChk.checked) {
+        selectedDailyUsers = [];
+    } else {
+        selectedDailyUsers = ['__none__'];
+    }
+    const cbs = document.querySelectorAll('.daily-user-cb');
+    cbs.forEach(c => c.checked = (selectedDailyUsers.length === 0));
+    renderFilteredDaily();
+}
+
+function onDailyUserCheckboxChange() {
+    const cbs = document.querySelectorAll('.daily-user-cb');
+    const checked = Array.from(cbs).filter(c => c.checked).map(c => c.value);
+    
+    if(checked.length === cbs.length || checked.length === 0) {
+        selectedDailyUsers = [];
+        const allChk = document.getElementById('daily-user-filter-all');
+        if(allChk) allChk.checked = true;
+        cbs.forEach(c => c.checked = true);
+    } else {
+        selectedDailyUsers = checked;
+        const allChk = document.getElementById('daily-user-filter-all');
+        if(allChk) allChk.checked = false;
+    }
+    renderFilteredDaily();
+}
+
+function renderFilteredDaily() {
+    if (!currentDailyData) return;
+    let sum = currentDailyData.summary || [];
+    let trn = currentDailyData.trend || [];
+    let gps = currentDailyData.gaps || [];
+    let htm = currentDailyData.heatmap || [];
+    
+    if (selectedDailyUsers.length > 0 && selectedDailyUsers[0] !== '__none__') {
+        sum = sum.filter(x => selectedDailyUsers.includes(x.usuario));
+        trn = trn.filter(x => selectedDailyUsers.includes(x.usuario));
+        gps = gps.filter(x => selectedDailyUsers.includes(x.usuario));
+        htm = htm.filter(x => selectedDailyUsers.includes(x.usuario));
+    } else if (selectedDailyUsers.length > 0 && selectedDailyUsers[0] === '__none__') {
+        sum = []; trn = []; gps = []; htm = [];
+    }
+    
+    renderKPI1(sum);
+    renderKPI2(trn);
+    renderKPI3(gps);
+    renderKPI4(htm);
+}
 
 // Colores institucionales de MonitorWeb
 const COLORS = [
@@ -150,12 +239,13 @@ async function loadProductivityData() {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #5DBAA9; padding: 1rem;">[DEBUG] Fetch OK. Procesando JSON...</td></tr>';
         
         const json = await res.json();
-        const data = json.data;
+        currentDailyData = json.data;
 
-        renderKPI1(data.summary);
-        renderKPI2(data.trend);
-        renderKPI3(data.gaps);
-        renderKPI4(data.heatmap);
+        // Limpiar selección al cambiar de fecha si se desea, o mantenerla si coincide
+        // Por ahora la mantenemos, pero actualizamos los checkboxes con los usuarios del día
+        renderDailyUserCheckboxes(currentDailyData.summary);
+        
+        renderFilteredDaily();
     } catch (e) {
         console.error("Error al cargar productividad:", e);
         if(tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 1rem;">Error: ' + e.message + '</td></tr>';
@@ -231,8 +321,8 @@ function renderKPI2(trend) {
     const horas = Array.from(horasSet).sort();
     
     const data = horas.map(h => {
-        const found = trend.find(t => t.franja_horaria === h);
-        return found ? found.total_actividad : 0;
+        const filtered = trend.filter(t => t.franja_horaria === h);
+        return filtered.reduce((acc, curr) => acc + curr.total_actividad, 0);
     });
 
     const datasets = [{

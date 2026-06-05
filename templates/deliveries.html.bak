@@ -694,7 +694,7 @@
                     <div class="value"
                         style="color: {% if (rate_eficiencia | default(0)) < 85 %}var(--rojo){% else %}var(--verde){% endif %};">
                         {{ rate_eficiencia | default(0) }}%</div>
-                    <div class="desc">A tiempo vs Fecha Doc.</div>
+                    <div class="desc">Fecha Registro vs Fecha Contable</div>
                 </div>
             </div>
 

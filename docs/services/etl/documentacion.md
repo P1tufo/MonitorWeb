@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: services/etl
-Compilado el: 2026-05-30 00:23:08
+Compilado el: 2026-06-04 23:43:39
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -7,23 +7,37 @@ Modelo: qwen2.5-coder:7b | Separado por Carpetas
 ## Archivo: ./services/etl/__init__.py
 
 ### Resumen Funcional
-Este archivo contiene funciones para procesar diferentes tipos de archivos relacionados con inventario y entregas. Cada función utiliza un adaptador específico para interactuar con la base de datos y realizar operaciones como procesar directorios o archivos individuales.
+Este archivo contiene funciones para procesar diferentes tipos de archivos y directorios relacionados con el inventario y las tareas del almacén. Utiliza adaptadores específicos para cada tipo de dato (inventario, tareas, entregas) y guarda los datos en una base de datos SQLite.
 
 ### Catálogo de Funciones y Clases
-- `OutboundDeliveryAdapter` - Adaptador para manejar operaciones relacionadas con las entregas.
-- `InventoryMovementAdapter` - Adaptador para manejar movimientos de inventario.
-- `WarehouseTaskAdapter` - Adaptador para manejar tareas del almacén.
-- `StockLevelAdapter` - Adaptador para manejar niveles de stock.
+- `process_inventory_folder(folder_path: str, db_path: str, table_name: str = "inventory_movements", conn=None) -> int` - Procesa un directorio de archivos de inventario y guarda los datos en la base de datos.
+- `process_inventory_file(file_path: str, db_path: str, table_name: str = "inventory_movements", conn=None) -> int` - Procesa un archivo de inventario y guarda los datos en la base de datos.
+- `process_tasks_file(file_path: str, db_path: str, table_name: str = "warehouse_tasks", conn=None) -> int` - Procesa un archivo de tareas del almacén y guarda los datos en la base de datos.
+- `process_lx02_pendientes(folder_path: str, db_path: str, table_name: str = "lx02_pendientes", conn=None) -> int` - Procesa un directorio de archivos pendientes relacionados con el LX02 y guarda los datos en la base de datos.
+- `process_deliveries_file(file_path: str, db_path: str, table_name: str = "outbound_deliveries", conn=None) -> int` - Procesa un archivo de entregas y guarda los datos en la base de datos.
 
 ### Interacción con Base de Datos
-No aplica
+- Motor de BD: SQLite
+- Tablas modificadas:
+  - `inventory_movements`
+  - `warehouse_tasks`
+  - `lx02_pendientes`
+  - `outbound_deliveries`
 
 ### Estado y Variables Globales
-No aplica
+Ninguna
 
 ### Dependencias y Flujo
-- **Librerías Externas**: No se mencionan librerías externas específicas.
-- **Flujo Interno**: Las funciones interactúan con adaptadores para procesar archivos o directorios, lo que implica una comunicación interna entre el archivo y los adaptadores definidos en otros módulos del proyecto.
+- **Dependencias Externas**: Ninguna
+- **Archivos del Proyecto que Importan a este Archivo**:
+  - `./services/etl/deliveries.py`
+  - `./services/etl/movements.py`
+  - `./services/etl/tasks.py`
+  - `./services/etl/stock.py`
+- **Archivos del Proyecto que Este Archivo Importa**:
+  - Ninguno
+
+El flujo de datos es desde los archivos de entrada (directorios o archivos) hasta la base de datos SQLite, utilizando adaptadores específicos para cada tipo de dato.
 
 
 ---
@@ -48,22 +62,22 @@ El archivo `base.py` define una clase abstracta `BaseWMSProcessor` que proporcio
 
 ### Interacción con Base de Datos
 - Motor: SQLite.
-- Tablas: No aplica (se espera que las tablas sean proporcionadas como parámetros).
-- Columnas: No aplica (se espera que las columnas sean proporcionadas como parámetros).
+- Tablas: Ninguna (operaciones directas en la base de datos).
+- Columnas: Ninguna (operaciones directas en la base de datos).
 
 ### Estado y Variables Globales
-- `logger` - Variable global para el registro de eventos.
+- `logger` - Variable global que almacena el objeto de registro.
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
-  - `abc`: Para definir clases abstractas.
-  - `pandas`: Para manipulación de datos.
-  - `pathlib`: Para manejo de rutas de archivos.
-  - `sqlite3`: Para interacción con la base de datos SQLite.
-  - `typing`: Para tipos de datos anotados.
-  - `logging`: Para registro de eventos.
-
-- Flujo: El archivo interactúa con clases y funciones definidas en otros módulos, como `core.security.validate_table`, para validar archivos y tablas.
+- Librerías externas:
+  - `pandas`
+  - `pathlib`
+  - `sqlite3`
+  - `typing`
+  - `logging`
+- Archivos del proyecto que este archivo importa: Ninguno.
+- Archivos del proyecto que importan a este archivo: Ninguno.
+- Flujo de datos: El archivo procesa archivos WMS y carga los datos en una base de datos SQLite.
 
 
 ---
@@ -71,39 +85,44 @@ El archivo `base.py` define una clase abstracta `BaseWMSProcessor` que proporcio
 ## Archivo: ./services/etl/deliveries.py
 
 ### Resumen Funcional
-El archivo `deliveries.py` contiene una clase `OutboundDeliveryAdapter` que extiende `BaseWMSProcessor`. Esta clase se encarga de procesar archivos de entregas de salida (Deliveries) utilizando pandas y SQLite. El proceso incluye la validación del archivo, la limpieza y transformación de los datos, así como la inserción o actualización en una base de datos.
+El archivo `deliveries.py` contiene una clase `OutboundDeliveryAdapter` que extiende `BaseWMSProcessor`. Esta clase se encarga de procesar archivos de entregas de salida (Deliveries) en un sistema de gestión de almacén (WMS). El proceso incluye la validación del archivo, la limpieza y transformación de los datos, así como la inserción o actualización de estos datos en una base de datos SQLite.
 
 ### Catálogo de Funciones y Clases
 - `OutboundDeliveryAdapter(BaseWMSProcessor)` - Adaptador para procesar Entregas de Salida (Deliveries).
   - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y tiene una extensión permitida.
   - `_get_required_columns() -> List[str]` - Devuelve las columnas requeridas en el DataFrame.
   - `_get_primary_keys() -> List[str]` - Devuelve las claves primarias utilizadas para la deduplicación.
-  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma el DataFrame.
-  - `_sanitizar_nombres_columnas(columns: pd.Index) -> list` - Sanitiza los nombres de las columnas.
-  - `_post_process(conn, table_name: str)` - Crea índices en la tabla `outbound_deliveries`.
-  - `_upsert_chunk(conn: sqlite3.Connection, df: pd.DataFrame, table_name: str)` - Inserta o actualiza datos en la base de datos.
+  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma el DataFrame de entrada.
+  - `_sanitizar_nombres_columnas(columns: pd.Index) -> list` - Sanitiza los nombres de las columnas del DataFrame.
+  - `_post_process(conn, table_name: str)` - Crea índices adicionales en la tabla especificada.
+  - `_upsert_chunk(conn: sqlite3.Connection, df: pd.DataFrame, table_name: str)` - Inserta o actualiza datos en la base de datos SQLite.
 
 ### Interacción con Base de Datos
-- Motor: SQLite.
-- Tablas: `outbound_deliveries`.
-- Columnas:
-  - `entrega`
-  - `pos_`
-  - `centro_costo`
+- Motor de BD: SQLite
+- Tablas modificadas:
+  - `outbound_deliveries`
+- Columnas modificadas:
+  - Todas las columnas presentes en el DataFrame, incluyendo nuevas columnas dinámicas.
+- Consultas SQL crudas:
+  - `CREATE INDEX IF NOT EXISTS idx_out_ceco_upper ON outbound_deliveries(UPPER(TRIM(centro_costo)))`
+  - `PRAGMA table_info({table_name})`
 
 ### Estado y Variables Globales
-No aplica.
+Ninguna.
 
 ### Dependencias y Flujo
-- Librerías externas utilizadas:
-  - `pandas` (para el procesamiento de datos)
-  - `sqlite3` (para la interacción con SQLite)
-  - `pathlib` (para manejar rutas de archivos)
-  - `typing` (para definir tipos de variables)
+- Librerías externas:
+  - `pandas`
+  - `pathlib`
+  - `typing`
+  - `sqlite3`
+- Archivos del proyecto que importan a este archivo (`deliveries.py`):
+  - No se mencionan dependencias específicas en el fragmento proporcionado.
+- Archivos del proyecto que este archivo importa:
+  - `base.py`
+  - `wms_utils.py`
 
-- Flujo hacia otros archivos del proyecto:
-  - Importa funciones desde `core.wms_utils`, lo que sugiere que interactúa con módulos de utilidades generales.
-  - Extiende `BaseWMSProcessor`, lo que indica una arquitectura orientada a objetos donde `OutboundDeliveryAdapter` es un componente específico dentro del sistema.
+El flujo de datos es desde los archivos de entrada (Excel, TXT) hasta la base de datos SQLite, pasando por la limpieza y transformación de los datos en el adaptador.
 
 
 ---
@@ -111,24 +130,24 @@ No aplica.
 ## Archivo: ./services/etl/iw39.py
 
 ### Resumen Funcional
-El archivo `iw39.py` contiene una clase `IW39Processor` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos en formato IW39 (Órdenes PM), validando su existencia, detectando parámetros necesarios, y limpiando los datos contenidos en ellos.
+El archivo `iw39.py` contiene una clase `IW39Processor` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos en formato IW39, validando su contenido y limpiándolo para su uso en el sistema de monitoreo de almacén (WMS).
 
 ### Catálogo de Funciones y Clases
 - **IW39Processor(BaseWMSProcessor)** - Adaptador específico para procesar el formato IW39 (Órdenes PM).
-  - **validate_file(file_path: Path) -> bool** - Valida si el archivo existe y contiene los parámetros necesarios.
-  - **_get_required_columns() -> List[str]** - Devuelve una lista de columnas requeridas para el procesamiento del formato IW39.
-  - **_get_primary_keys() -> List[str]** - Devuelve la clave primaria utilizada en el procesamiento.
-  - **_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame** - Limpia y normaliza los datos del DataFrame.
+  - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y contiene las columnas requeridas.
+  - `_get_required_columns() -> List[str]` - Devuelve una lista de columnas requeridas para el procesamiento del IW39.
+  - `_get_primary_keys() -> List[str]` - Devuelve la clave primaria utilizada en el procesamiento del IW39.
+  - `_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame` - Limpia y normaliza un DataFrame de pandas, eliminando columnas vacías, renombrando columnas según un mapeo específico, filtrando filas sin clave primaria, y normalizando datos como fechas y cadenas.
 
 ### Interacción con Base de Datos
-No aplica. El archivo no realiza ninguna interacción con una base de datos.
+Ninguna.
 
 ### Estado y Variables Globales
-No aplica. No se definen variables globales, de sesión o de entorno en este archivo.
+Ninguna.
 
 ### Dependencias y Flujo
-- **Librerías externas utilizadas**: `pandas`, `pathlib`.
-- **Flujo interno**: El archivo interactúa con la clase base `BaseWMSProcessor` para procesar archivos IW39.
+- **Dependencias**: pandas, pathlib.
+- **Flujo**: El archivo no importa ni es importado por otros archivos dentro del proyecto.
 
 
 ---
@@ -136,49 +155,43 @@ No aplica. No se definen variables globales, de sesión o de entorno en este arc
 ## Archivo: ./services/etl/movements.py
 
 ### Resumen Funcional
-El archivo `movements.py` contiene una clase `InventoryMovementAdapter` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos CSV en formato WMS Movimientos, validar su contenido, limpiar y transformar los datos, y cargarlos en una base de datos.
+El archivo `movements.py` contiene una clase `InventoryMovementAdapter` que se encarga de procesar archivos CSV con movimientos del sistema WMS, validar su contenido, limpiar y transformar los datos para su almacenamiento en la base de datos SQLite.
 
 ### Catálogo de Funciones y Clases
-- **InventoryMovementAdapter(BaseWMSProcessor)** - Adaptador específico para procesar el formato WMS Movimientos.
-  - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y contiene las columnas requeridas.
-  - `_get_required_columns() -> List[str]` - Devuelve una lista de columnas requeridas en el archivo.
-  - `_get_primary_keys() -> List[str]` - Devuelve una lista de claves primarias utilizadas para la carga en la base de datos.
-  - `_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma el DataFrame, renombrando columnas, eliminando valores nulos, normalizando tipos de datos, etc.
-  - `_vectorized_classify(df: pd.DataFrame) -> pd.DataFrame` - Clasifica las operaciones según los valores en la columna 'cmv'.
-  - `_post_process(conn, table_name: str)` - Crea índices para mejorar el rendimiento de consultas en la tabla `inventory_movements`.
+- **Clase:** `InventoryMovementAdapter`
+  - Propósito: Adaptador específico para procesar el formato WMS Movimientos.
+  
+- **Función:** `validate_file(file_path: Path) -> bool`
+  - Propósito: Valida si el archivo CSV existe y contiene las columnas requeridas.
+
+- **Función:** `_get_required_columns() -> List[str]`
+  - Propósito: Devuelve una lista de columnas requeridas para el procesamiento del archivo.
+
+- **Función:** `_get_primary_keys() -> List[str]`
+  - Propósito: Devuelve una lista de claves primarias utilizadas en la base de datos.
+
+- **Función:** `_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame`
+  - Propósito: Limpia y transforma el DataFrame, eliminando columnas vacías, renombrando columnas, normalizando valores y aplicando validaciones específicas.
+
+- **Función:** `_vectorized_classify(df: pd.DataFrame) -> pd.DataFrame`
+  - Propósito: Clasifica las operaciones según los valores en la columna 'cmv' y agrega una nueva columna 'tipo_operacion'.
+
+- **Función:** `_post_process(conn, table_name: str)`
+  - Propósito: Crea índices estructurales para mejorar el rendimiento de búsquedas en la tabla `inventory_movements`.
 
 ### Interacción con Base de Datos
-- **Motor**: No especificado.
-- **Tablas**: `inventory_movements`.
-- **Columnas**:
-  - `fe_contab`
-  - `alm`
-  - `ce`
-  - `cmv`
-  - `referencia`
-  - `texto_cab_documento`
-  - `texto_breve_material`
-  - `material`
-  - `cantidad`
-  - `umb`
-  - `doc_mat`
-  - `ej_mat`
-  - `registrado`
-  - `hora`
-  - `usuario`
-  - `pedido`
-  - `ce_coste`
-  - `importe_ml`
-  - `mon`
-  - `proveedor`
-  - `orden`
+- Motor: SQLite
+- Tablas: Ninguna (el archivo no realiza operaciones directas sobre tablas)
+- Columnas: Ninguna (el archivo no realiza operaciones directas sobre columnas)
 
 ### Estado y Variables Globales
-- No aplica.
+- Ninguna
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `pandas`, `numpy`.
-- **Flujo Interno**: El archivo se comunica con la clase base `BaseWMSProcessor` para procesar archivos CSV, limpia los datos utilizando pandas, y luego carga los datos en una base de datos mediante consultas SQL.
+- **Librerías Externas:** `pandas`, `numpy`
+- **Archivos del Proyecto que Importa:** Ninguno
+- **Archivos del Proyecto que Son Importados por Este Archivo:** `base.py` (dentro de la misma carpeta)
+- **Dirección del Flujo de Datos:** El archivo recibe un DataFrame, lo limpia y transforma, y luego lo devuelve para su almacenamiento en la base de datos.
 
 
 ---
@@ -186,35 +199,42 @@ El archivo `movements.py` contiene una clase `InventoryMovementAdapter` que exti
 ## Archivo: ./services/etl/stock.py
 
 ### Resumen Funcional
-El archivo `stock.py` contiene una clase `StockLevelAdapter` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos de inventario/stock en formato LX02, validar su contenido, leer y limpiar los datos, y luego guardarlos en una base de datos SQLite.
+El archivo `stock.py` contiene una clase `StockLevelAdapter` que procesa archivos de inventario/stock en formato LX02, los limpia y carga en una base de datos SQLite. Realiza un REPLACE completo en la tabla especificada.
 
 ### Catálogo de Funciones y Clases
-- **StockLevelAdapter(BaseWMSProcessor)** - Adaptador para procesar Inventario/Stock LX02. Realiza REPLACE completo.
-  - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y contiene las columnas requeridas.
-  - `_get_required_columns() -> List[str]` - Devuelve las columnas clave del header SAP LX02.
-  - `read_and_clean_data(file_path: Path) -> pd.DataFrame` - Lee el archivo LX02/Stock, detectando la fila header automáticamente y limpia los datos.
-  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia las filas y columnas vacías y limpia los strings de las columnas de tipo objeto.
-  - `process_directory(folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int` - Combina todos los archivos en el directorio especificado, realiza la limpieza y guarda los datos en una base de datos SQLite.
+- **validate_file(file_path: Path) -> bool** - Valida si el archivo existe y contiene las columnas requeridas.
+- **_get_required_columns() -> List[str]** - Devuelve las columnas clave del header SAP LX02.
+- **read_and_clean_data(file_path: Path) -> pd.DataFrame** - Lee y limpia los datos del archivo, detectando automáticamente la fila de encabezado.
+- **_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame** - Limpia el DataFrame eliminando filas y columnas vacías y normalizando los strings.
+- **process_directory(folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int** - Combina todos los archivos en un directorio, limpia los datos y realiza un REPLACE completo en la tabla especificada.
 
 ### Interacción con Base de Datos
 - **Motor**: SQLite
-- **Tablas**: No aplica (No se mencionan tablas específicas).
-- **Columnas**: No aplica (No se mencionan columnas específicas).
+- **Tablas**: Ninguna (se opera sobre una tabla específica proporcionada como parámetro)
+- **Columnas**: `Material`, `UMB`, `otcuanto`, `source_file`, `ingested_at`
 
 ### Estado y Variables Globales
-- **Variables Globales**: No aplica.
+- **logger**: Objeto de registro para el módulo.
 
 ### Dependencias y Flujo
-- **Librerías Externas**:
-  - `pandas` - Para el procesamiento de datos.
-  - `pathlib` - Para manejar rutas de archivos.
-  - `typing` - Para definir tipos de variables.
-  - `sqlite3` - Para interactuar con la base de datos SQLite.
-  - `os` - Para operaciones del sistema.
-  - `datetime` - Para obtener la fecha y hora actual.
-  - `logging` - Para el registro de errores.
+- **Dependencias Externas**:
+  - `pandas`
+  - `pathlib`
+  - `typing`
+  - `sqlite3`
+  - `os`
+  - `datetime`
+  - `logging`
 
-- **Flujo**: El archivo se comunica con otros archivos dentro del proyecto a través de importaciones relativas (`from .base import BaseWMSProcessor`).
+- **Archivos del Proyecto que Importan a este Archivo**: Ninguno
+- **Archivos del Proyecto que Este Archivo Importa**:
+  - `./services/etl/base.py` (clase base `BaseWMSProcessor`)
+  
+- **Flujo de Datos**: 
+  1. El archivo se procesa y limpia.
+  2. Los datos son combinados en un DataFrame.
+  3. El DataFrame se carga en la base de datos SQLite utilizando `to_sql` con `if_exists="replace"`.
+  4. Se crea un índice en la columna `otcuanto`.
 
 
 ---
@@ -222,24 +242,26 @@ El archivo `stock.py` contiene una clase `StockLevelAdapter` que extiende de `Ba
 ## Archivo: ./services/etl/tasks.py
 
 ### Resumen Funcional
-El archivo `tasks.py` contiene una clase `WarehouseTaskAdapter` que hereda de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos en formato WMS Tareas (Órdenes de Transporte), validando su contenido, obteniendo columnas requeridas y limpiando los datos.
+El archivo `tasks.py` contiene una clase `WarehouseTaskAdapter` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos en formato WMS Tareas (Órdenes de Transporte), validando su contenido, limpiándolo y preparándolo para ser utilizado en el sistema de monitoreo de almacén.
 
 ### Catálogo de Funciones y Clases
-- **WarehouseTaskAdapter(BaseWMSProcessor)** - Adaptador específico para procesar el formato WMS Tareas (Órdenes de Transporte).
+- `WarehouseTaskAdapter(BaseWMSProcessor)` - Adaptador específico para procesar el formato WMS Tareas (Órdenes de Transporte).
   - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y contiene las columnas requeridas.
   - `_get_required_columns() -> List[str]` - Devuelve una lista de columnas requeridas para el procesamiento.
   - `_get_primary_keys() -> List[str]` - Devuelve una lista de claves primarias utilizadas en el procesamiento.
-  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y normaliza los datos del DataFrame.
+  - `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame` - Limpia y normaliza el DataFrame, eliminando duplicados y corrigiendo tipos de datos.
 
 ### Interacción con Base de Datos
-No aplica
+Ninguna.
 
 ### Estado y Variables Globales
-No aplica
+Ninguna.
 
 ### Dependencias y Flujo
-- **Dependencias**: `pandas`, `pathlib`
-- **Flujo**: El archivo interactúa con el módulo `base.py` a través de la herencia de la clase `BaseWMSProcessor`. No realiza interacciones directas con bases de datos o variables globales.
+- **Dependencias Externas**: `pandas`, `pathlib`
+- **Archivos del Proyecto que Importan a este Archivo**: Ninguno.
+- **Archivos del Proyecto que Este Archivo Importa**: `./services/etl/base.py` (clase `BaseWMSProcessor`)
+- **Flujo de Datos**: El archivo importa la clase base y utiliza pandas para procesar archivos CSV, lo cual implica un flujo de datos desde el archivo hasta la limpieza y normalización del DataFrame.
 
 
 ---

@@ -1,0 +1,21 @@
+## Archivo: ./core/query_utils.py
+
+### Resumen Funcional
+Este archivo contiene funciones utilitarias para el procesamiento de parámetros y extracción de métricas desde datos en formato JSON y DataFrames.
+
+### Catálogo de Funciones y Clases
+- `get_bound_params_from_visual_state(visual_state_str: str) -> list` - Extrae los bind params (?) de un visual_state JSON serializado.
+- `extract_metric_value(df, active_year: str = None)` - Extrae el valor numérico principal de un DataFrame de resultado de query.
+
+### Interacción con Base de Datos
+Ninguna
+
+### Estado y Variables Globales
+Ninguna
+
+### Dependencias y Flujo
+- **Dependencias**: `json`
+- **Flujo de Datos**:
+  - `get_bound_params_from_visual_state` importa `json` para procesar el JSON serializado.
+  - `extract_metric_value` no depende de ninguna librería externa.
+

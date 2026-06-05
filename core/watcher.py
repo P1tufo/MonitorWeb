@@ -31,7 +31,7 @@ class AwaitWriteFinishHandler(FileSystemEventHandler):
         if filename.startswith('~') or filename.startswith('.'):
             return False
         ext = os.path.splitext(filename)[1].lower()
-        if ext not in ['.txt', '.csv', '.xlsx', '.xls']:
+        if ext not in ['.txt', '.csv', '.xlsx', '.xls', '.pdf', '.db', '.sqlite']:
             return False
         return True
 
@@ -101,15 +101,30 @@ def start_watcher():
         return
         
     path_to_watch = ONEDRIVE_PATH
-    if not os.path.exists(path_to_watch):
-        logger.warning(f"Watcher: Directorio {path_to_watch} no existe. Observador cancelado.")
-        return
-        
+    avanti_pdf_path = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Pruebas/Avanti/PDFs_por_fecha"
+    
     _handler = AwaitWriteFinishHandler(stability_seconds=3.0)
     _observer = Observer()
-    _observer.schedule(_handler, path=path_to_watch, recursive=True)
-    _observer.start()
-    logger.info(f"Watcher iniciado en {path_to_watch} (recursive=True, awaitWriteFinish=3.0s)")
+    
+    scheduled = False
+    
+    if os.path.exists(path_to_watch):
+        _observer.schedule(_handler, path=path_to_watch, recursive=True)
+        scheduled = True
+    else:
+        logger.warning(f"Watcher: Directorio {path_to_watch} no existe.")
+        
+    if os.path.exists(avanti_pdf_path):
+        _observer.schedule(_handler, path=avanti_pdf_path, recursive=True)
+        scheduled = True
+    else:
+        logger.warning(f"Watcher: Directorio de PDFs {avanti_pdf_path} no existe.")
+        
+    if scheduled:
+        _observer.start()
+        logger.info(f"Watcher iniciado (recursive=True, awaitWriteFinish=3.0s)")
+    else:
+        logger.warning("Watcher cancelado, no hay directorios válidos.")
 
 def stop_watcher():
     global _observer, _handler

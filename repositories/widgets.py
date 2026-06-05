@@ -47,7 +47,21 @@ class WidgetRepository(BaseRepository):
                 })
         
         if granularity and "timeAxis" in payload_dict and payload_dict["timeAxis"]:
-            payload_dict["timeAxis"]["granularity"] = granularity
+            if query_id != "inv_dow_stats":
+                payload_dict["timeAxis"]["granularity"] = granularity
+            
+        # Filtro estricto para ignorar el mes en curso para los gráficos de SLA
+        if query_id in ("vl_sla_monthly_trend", "vl_sla_trend", "vl_sla_area_monthly_trend", "vl_sla_area_trend"):
+            from datetime import datetime
+            curr = datetime.now()
+            curr_str = f"{curr.month:02d}-{curr.year}"
+            base_t = payload_dict.get("baseTable", "outbound_deliveries")
+            filters.append({
+                "column": f"{base_t}.fecha_carga",
+                "operator": "notcontains",
+                "value": curr_str,
+                "valueType": "value"
+            })
             
         payload_dict["filters"] = filters
         chart_type = payload_dict.get("chartType", "bar")

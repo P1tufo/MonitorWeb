@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: scripts
-Compilado el: 2026-05-30 00:23:08
+Compilado el: 2026-06-04 23:43:39
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -14,34 +14,35 @@ Este archivo está vacío o solo contiene espacios en blanco. No se requiere an�
 ## Archivo: ./scripts/main_processor.py
 
 ### Resumen Funcional
-El archivo `main_processor.py` es el punto de entrada para un proceso automatizado que realiza análisis y consolidación de datos en un sistema de gestión de almacenes (WMS). El script ejecuta una serie de fases, cada una responsable de procesar diferentes tipos de datos (entregas, stock, movimientos, IW39) y actualizar una base de datos SQLite.
+El archivo `main_processor.py` es el punto de entrada del sistema de monitoreo de almacén (WMS). Ejecuta un pipeline completo que incluye la validación de directorios, análisis de carpetas, consolidación de datos, enriquecimiento y procesamiento de movimientos y órdenes PM.
 
 ### Catálogo de Funciones y Clases
-- `run_pipeline()` - Ejecuta el proceso completo de análisis y consolidación de WMS.
-  - **Propósito**: Orquesta todas las fases del pipeline, desde la validación de entrada hasta la finalización del procesamiento.
+- `run_pipeline()` - Ejecuta el pipeline completo del WMS Analysis and Consolidation.
 
 ### Interacción con Base de Datos
-- **Motor**: SQLite
-- **Tablas Modificadas**:
+- **Motor:** SQLite
+- **Tablas Modificadas:**
   - `stock_levels`
   - `inventory_movements`
   - `iw39_orders`
-- **Columnas Modificadas**: Dependiendo de las operaciones realizadas en cada fase, se pueden modificar varias columnas dentro de estas tablas.
+- **Columnas Modificadas:** Dependientes de las tablas mencionadas.
+- **Consultas SQL Crudas:** No se detectan consultas SQL crudas directamente en este archivo. Se usan ORM (Object Relational Mapping) para interactuar con la base de datos.
 
 ### Estado y Variables Globales
-- **Variables Globales**:
-  - `PROJECT_ROOT`: Ruta al directorio raíz del proyecto.
-  - `DELIVERIES_DIR`, `STOCK_DIR`, `INVENTORY_DIR`, `IW39_DIR`, `CLEANSED_DIR`, `DATABASE_PATH`, `ONEDRIVE_PATH` (si se importan correctamente).
-- **Estado Crítico**: No aplica.
+- `PROJECT_ROOT` - Ruta del proyecto.
+- `DELIVERIES_DIR`, `STOCK_DIR`, `INVENTORY_DIR`, `IW39_DIR`, `CLEANSED_DIR`, `DATABASE_PATH`, `ONEDRIVE_PATH` - Directorios y rutas de archivos.
 
 ### Dependencias y Flujo
-- **Librerías Externas**:
-  - `subprocess`
-  - `sys`
-  - `pathlib`
-  - `logging`
-  - `sqlite3`
-- **Flujo Interno**: El script interactúa con varios módulos y clases, incluyendo `analyze_folder.py`, `DataConsolidator` de `db.consolidator`, `InventoryMovementAdapter` y `IW39Processor` de `services.etl.movements` y `services.etl.iw39`, respectivamente.
+- **Librerías Externas:** `subprocess`, `sys`, `pathlib`, `logging`
+- **Archivos Importados:**
+  - `config.py` (para configuraciones globales)
+  - `scripts/analyze_folder.py` (para análisis de carpetas)
+  - `db.consolidator.DataConsolidator` (para consolidación de datos)
+  - `services.etl.movements.InventoryMovementAdapter` (para procesamiento de movimientos)
+  - `services.etl.iw39.IW39Processor` (para procesamiento de órdenes PM)
+- **Archivos que Importan a este Archivo:** Ninguno
+
+El flujo de datos es unidireccional, con el archivo principal (`main_processor.py`) invocando funciones y servicios para realizar las tareas necesarias.
 
 
 ---

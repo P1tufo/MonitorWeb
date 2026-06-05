@@ -3,6 +3,92 @@
 // ==========================================
 
 let productivityMonthlyTrendChartInst = null;
+let currentMonthlyData = null;
+let selectedMonthlyUsers = [];
+
+function toggleMonthlyUserFilter() {
+    const d = document.getElementById('monthly-user-filter-dropdown');
+    if(d) {
+        d.style.display = (d.style.display === 'none' || d.style.display === '') ? 'block' : 'none';
+    }
+}
+
+function renderMonthlyUserCheckboxes(summary) {
+    const list = document.getElementById('monthly-user-filter-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!summary || summary.length === 0) return;
+    const users = summary.map(s => s.usuario).sort();
+    users.forEach(u => {
+        const lbl = document.createElement('label');
+        lbl.style.cssText = "display: block !important; cursor: pointer !important; margin: 4px 0 !important; white-space: nowrap !important; text-align: left !important;";
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.className = 'monthly-user-cb';
+        chk.value = u;
+        chk.style.cssText = "margin: 0 8px 0 0 !important; padding: 0 !important; vertical-align: middle !important; display: inline-block !important; width: auto !important;";
+        chk.checked = selectedMonthlyUsers.length === 0 || selectedMonthlyUsers.includes(u);
+        chk.onchange = onMonthlyUserCheckboxChange;
+        
+        const span = document.createElement('span');
+        span.textContent = u || "Desconocido";
+        span.style.cssText = "color: #ffffff !important; font-size: 14px !important; visibility: visible !important; vertical-align: middle !important; display: inline-block !important; padding: 0 !important; margin: 0 !important;";
+        
+        lbl.appendChild(chk);
+        lbl.appendChild(span);
+        list.appendChild(lbl);
+    });
+    const allChk = document.getElementById('monthly-user-filter-all');
+    if(allChk) allChk.checked = selectedMonthlyUsers.length === 0;
+}
+
+function toggleAllMonthlyUsers() {
+    const allChk = document.getElementById('monthly-user-filter-all');
+    if(allChk && allChk.checked) {
+        selectedMonthlyUsers = [];
+    } else {
+        selectedMonthlyUsers = ['__none__'];
+    }
+    const cbs = document.querySelectorAll('.monthly-user-cb');
+    cbs.forEach(c => c.checked = (selectedMonthlyUsers.length === 0));
+    renderFilteredMonthly();
+}
+
+function onMonthlyUserCheckboxChange() {
+    const cbs = document.querySelectorAll('.monthly-user-cb');
+    const checked = Array.from(cbs).filter(c => c.checked).map(c => c.value);
+    
+    if(checked.length === cbs.length || checked.length === 0) {
+        selectedMonthlyUsers = [];
+        const allChk = document.getElementById('monthly-user-filter-all');
+        if(allChk) allChk.checked = true;
+        cbs.forEach(c => c.checked = true);
+    } else {
+        selectedMonthlyUsers = checked;
+        const allChk = document.getElementById('monthly-user-filter-all');
+        if(allChk) allChk.checked = false;
+    }
+    renderFilteredMonthly();
+}
+
+function renderFilteredMonthly() {
+    if (!currentMonthlyData) return;
+    let sum = currentMonthlyData.summary || [];
+    let sft = currentMonthlyData.shifts || [];
+    let htm = currentMonthlyData.heatmap || [];
+    
+    if (selectedMonthlyUsers.length > 0 && selectedMonthlyUsers[0] !== '__none__') {
+        sum = sum.filter(x => selectedMonthlyUsers.includes(x.usuario));
+        sft = sft.filter(x => selectedMonthlyUsers.includes(x.usuario));
+        htm = htm.filter(x => selectedMonthlyUsers.includes(x.usuario));
+    } else if (selectedMonthlyUsers.length > 0 && selectedMonthlyUsers[0] === '__none__') {
+        sum = []; sft = []; htm = [];
+    }
+    
+    renderMonthlyKPI1(sum);
+    renderMonthlyKPI2(sft);
+    renderMonthlyKPI3(htm);
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
     // Inicializar mes a "Mes actual"
@@ -62,11 +148,10 @@ async function loadMonthlyProductivityData() {
         if (!res.ok) throw new Error("Fallo en la red (Status: " + res.status + ")");
         
         const json = await res.json();
-        const data = json.data;
+        currentMonthlyData = json.data;
 
-        renderMonthlyKPI1(data.summary);
-        renderMonthlyKPI2(data.shifts);
-        renderMonthlyKPI3(data.heatmap);
+        renderMonthlyUserCheckboxes(currentMonthlyData.summary);
+        renderFilteredMonthly();
     } catch (e) {
         console.error("Error al cargar productividad mensual:", e);
         if(tbody) tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #ef4444; padding: 1rem;">Error: ' + e.message + '</td></tr>';
@@ -143,8 +228,8 @@ function renderMonthlyKPI2(shifts) {
 
     const datasets = turnosSet.map(turno => {
         const data = fechas.map(f => {
-            const found = shifts.find(t => t.fecha === f && t.turno === turno);
-            return found ? found.total_actividad : 0;
+            const filtered = shifts.filter(t => t.fecha === f && t.turno === turno);
+            return filtered.reduce((acc, curr) => acc + curr.total_actividad, 0);
         });
 
         return {

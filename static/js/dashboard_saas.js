@@ -42,11 +42,31 @@ async function initSaaSWidgets(params = null) {
                 renderSaaSChart(widget, queryId, data);
             }
 
-            // Calculo Dinámico de la Capacidad (si es el gráfico SLA Global)
+            // Calculo Dinámico de la Capacidad (Ignorando meses/semanas parciales y filtros)
             if (queryId === 'vl_sla_monthly_trend' || queryId === 'vl_sla_trend') {
-                const materials = data.map(r => r["Materiales Solicitados"] || r["Materiales_Solicitados"] || r["material_count"]).filter(v => typeof v === 'number');
+                let baselineData = data;
+                
+                // Si hay filtro de fechas, debemos buscar la info histórica completa para que la capacidad no se achique
+                if (params && params.date) {
+                    try {
+                        const baselineParams = new URLSearchParams(params);
+                        baselineParams.delete('date');
+                        const resBaseline = await DashboardAPI._fetch(`/api/widget/data/${queryId}?${baselineParams.toString()}`);
+                        if (resBaseline && resBaseline.ok) {
+                            const baselinePayload = await resBaseline.json();
+                            baselineData = baselinePayload.data || data;
+                        }
+                    } catch (e) { console.error("Baseline fetch error", e); }
+                }
+
+                const materials = baselineData.map(r => r["Materiales Solicitados"] || r["Materiales_Solicitados"] || r["material_count"]).filter(v => typeof v === 'number');
                 if (materials.length > 0) {
-                    const avg = materials.reduce((a, b) => a + b, 0) / materials.length;
+                    const maxVol = Math.max(...materials);
+                    // Ignorar periodos inconclusos
+                    const validMaterials = materials.filter(v => v > maxVol * 0.5);
+                    const avg = validMaterials.length > 0 
+                                ? validMaterials.reduce((a, b) => a + b, 0) / validMaterials.length 
+                                : materials.reduce((a, b) => a + b, 0) / materials.length;
                     
                     const idealMin = Math.floor(avg * 0.9);
                     const idealMax = Math.floor(avg * 1.15);

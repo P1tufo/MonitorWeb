@@ -95,7 +95,16 @@ def apply_cost_center_mapping(df: pd.DataFrame) -> pd.DataFrame:
     Sustituye el uso de .apply() por una lógica de mapeo más rápida.
     """
     if 'centro_costo' not in df.columns:
-        return df
+        if 'ubicacion_area' in df.columns:
+            df['centro_costo'] = df['ubicacion_area']
+        else:
+            return df
+    elif 'ubicacion_area' in df.columns:
+        df['centro_costo'] = df['centro_costo'].combine_first(df['ubicacion_area'])
+        
+    # Eliminar la columna duplicada para ahorrar memoria y espacio en DB
+    if 'ubicacion_area' in df.columns:
+        df.drop(columns=['ubicacion_area'], inplace=True)
 
     # Inicializar con el valor por defecto
     df['area_negocio'] = 'OTRO'

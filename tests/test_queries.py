@@ -96,7 +96,7 @@ def test_area_expr_fallback_locations(test_db: sqlite3.Connection) -> None:
     ]
     with test_db:
         test_db.executemany(
-            "INSERT INTO outbound_deliveries (entrega, fecha_carga, area_negocio, ubicacion_area, ubicacion_bin_1, ubicacion_bin, dias_retraso) VALUES (?,?,?,?,?,?,?)", 
+            "INSERT INTO outbound_deliveries (entrega, fecha_carga, area_negocio, centro_costo, ubicacion_bin_1, ubicacion_bin, dias_retraso) VALUES (?,?,?,?,?,?,?)", 
             data
         )
 

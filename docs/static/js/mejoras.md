@@ -1,5 +1,5 @@
 # Sugerencias de Mejora - Directorio: static/js
-Compilado el: 2026-05-30 00:23:08
+Compilado el: 2026-06-04 23:43:39
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -11,13 +11,23 @@ CÓDIGO ÓPTIMO
 
 ---
 
-## Sugerencias para: ./static/js/analytics_studio.js (Procesado en 2 partes)
-
-#### --- PARTE 1 de 2 ---
+## Sugerencias para: ./static/js/analytics_studio_config.js
 
 CÓDIGO ÓPTIMO
 
-#### --- PARTE 2 de 2 ---
+
+---
+
+## Sugerencias para: ./static/js/analytics_studio_renderer.js
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./static/js/analytics_studio_ui.js (Procesado en 1 partes)
+
+#### --- PARTE 1 de 1 ---
 
 CÓDIGO ÓPTIMO
 
@@ -38,13 +48,7 @@ CÓDIGO ÓPTIMO
 
 ---
 
-## Sugerencias para: ./static/js/dashboard.js (Procesado en 2 partes)
-
-#### --- PARTE 1 de 2 ---
-
-CÓDIGO ÓPTIMO
-
-#### --- PARTE 2 de 2 ---
+## Sugerencias para: ./static/js/dashboard_api.js
 
 CÓDIGO ÓPTIMO
 
@@ -52,6 +56,20 @@ CÓDIGO ÓPTIMO
 ---
 
 ## Sugerencias para: ./static/js/dashboard_charts.js
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./static/js/dashboard_core.js
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./static/js/dashboard_saas.js
 
 CÓDIGO ÓPTIMO
 
@@ -79,18 +97,35 @@ CÓDIGO ÓPTIMO
 
 ---
 
-## Sugerencias para: ./static/js/productivity.js (Procesado en 1 partes)
-
-#### --- PARTE 1 de 1 ---
+## Sugerencias para: ./static/js/productivity_daily.js
 
 CÓDIGO ÓPTIMO
 
 
 ---
 
-## Sugerencias para: ./static/js/saas_engine.js (Procesado en 1 partes)
+## Sugerencias para: ./static/js/productivity_modals.js
 
-#### --- PARTE 1 de 1 ---
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./static/js/productivity_monthly.js
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./static/js/saas_engine_core.js
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./static/js/saas_engine_drilldown.js
 
 CÓDIGO ÓPTIMO
 

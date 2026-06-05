@@ -392,3 +392,33 @@ def api_build_sql(payload: VisualQueryBuilderPayload, db: DBSession, state: AppS
         # "sql_text": sql,  # Eliminado por seguridad (Leaky Abstraction)
         "bound_params": bound_params,
     }
+
+@router.get("/api/settings/export/missing-orders")
+def api_export_missing_orders(db: DBSession, state: AppState = Depends(get_app_state)):
+    from fastapi.responses import StreamingResponse
+    import io
+    import pandas as pd
+    from sqlalchemy import text
+    
+    sql = """
+        SELECT DISTINCT i.orden 
+        FROM inventory_movements i 
+        LEFT JOIN iw39_orders o ON i.orden = o.orden 
+        WHERE i.orden IS NOT NULL AND i.orden != '' AND o.ceco_resp IS NULL
+    """
+    df = pd.read_sql(text(sql), db.connection())
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Ordenes Sin Ceco')
+    
+    output.seek(0)
+    
+    headers = {
+        'Content-Disposition': 'attachment; filename="ordenes_missing_ceco.xlsx"'
+    }
+    return StreamingResponse(
+        output, 
+        headers=headers, 
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
