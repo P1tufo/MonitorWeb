@@ -11,14 +11,14 @@ EXPECTED_UI_MARKERS = {
         ('href="/analytics"', "Enlace de navegación a analíticas")
     ],
     "/analytics": [
-        ('id="monthlyTrendChart"', "Gráfico de Tendencia Mensual"),
-        ('id="slaMonthlyTrendChart"', "Gráfico SLA Mensual"),
-        ('Entregas', "Etiqueta de entregas")
+        ('Secciones consolidadas', "Título Consolidado"),
+        ('bundle.js', "Script de Frontend React/Alpine"),
+        ('data_lt_data', "JSON Inyectado de Datos")
     ],
     "/inventory": [
-        ('id="abcPieChart"', "Gráfico de segmentación ABC"),
-        ('id="trendChart"', "Gráfico de tendencia histórica"),
-        ('Inventario', "Etiqueta de inventario")
+        ('Secciones consolidadas', "Título Consolidado"),
+        ('bundle.js', "Script de Frontend React/Alpine"),
+        ('data_abc', "JSON Inyectado de ABC")
     ],
     "/settings": [
         ('Configuración del Sistema', "Título de configuración"),

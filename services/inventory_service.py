@@ -6,6 +6,7 @@ import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from core.cache_decorator import analytics_cache
 from core.state import get_cache_manager
 from core.utils import sanitize_for_json
 from core.wms_config import COST_CENTER_MAPPING
@@ -55,6 +56,7 @@ class InventoryService:
             "top_ubicaciones_quick": [], "top_materials_quick": []
         }
 
+    @analytics_cache(key_prefix="inventory")
     def get_full_context(self) -> Dict[str, Any]:
         """Genera el contexto base para el dashboard de Movimientos (Fase 3: SaaS)."""
         cache = get_cache_manager()

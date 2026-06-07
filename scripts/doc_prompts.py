@@ -97,12 +97,20 @@ Analiza la documentación y genera un reporte estructurado con estos puntos exac
 
 ### 4. Veredicto de Refactorización
 (Indica los 3 archivos más problemáticos que deberían refactorizarse primero y por qué).
+
+### 5. Análisis Topológico y God Nodes
+(Analiza el reporte de topología provisto por Graphify adjunto en el prompt. Identifica qué "God Nodes" o "Surprising Connections" representan el mayor riesgo de deuda técnica y cómo solucionarlo).
 """
 
 PROMPT_AUDIT_USER = """
 Documentación Consolidada:
 ```markdown
 {documentation}
+```
+
+Reporte Topológico (Graphify):
+```markdown
+{graph_report}
 ```
 """
 

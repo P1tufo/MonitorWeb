@@ -1,3 +1,4 @@
+from typing import Optional, Any
 """
 core/utils.py — Utilidades transversales y gestión de señales del sistema.
 """
@@ -76,7 +77,7 @@ def _get_bound_params_from_visual_state(visual_state_str: str) -> list:
     from core.query_engine import get_bound_params_from_visual_state
     return get_bound_params_from_visual_state(visual_state_str)
 
-def _extract_metric_value(df, active_year: str = None) -> Any:
+def _extract_metric_value(df, active_year: Optional[str] = None) -> Any:
     """
     Alias de compatibilidad → core/query_engine.extract_metric_value.
     La implementación canónica vive en el motor para evitar duplicación.

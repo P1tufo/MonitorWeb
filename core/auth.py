@@ -114,8 +114,8 @@ def decode_token(token: str) -> Optional[dict]:
 
 # ─── Dependencias FastAPI ──────────────────────────────────────────────────────
 def get_current_user(
+    request: Request,
     token: Optional[str] = Depends(oauth2_scheme),
-    request: Request = None,
     db: Session = Depends(get_session_dep),
 ) -> User:
     """

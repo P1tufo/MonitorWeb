@@ -160,7 +160,7 @@ def _draw_table(pdf: WMS_Landscape_PDF, items_df: pd.DataFrame):
     cols_idx = [2, 3, 4, 5, 9, 10]
     for i, idx in enumerate(cols_idx):
         pdf.set_xy(pdf.get_column_x(idx), TABLE_Y_START + 1)
-        w = pdf.cols.get(idx) if idx != 5 else pdf.cols.get(5) * 4
+        w = pdf.cols.get(idx, 0.0) if idx != 5 else pdf.cols.get(5, 0.0) * 4
         pdf.cell(w, 6, headers[i], align='C' if i != 3 else 'L')
 
     # Datos ordenados
@@ -177,12 +177,12 @@ def _draw_table(pdf: WMS_Landscape_PDF, items_df: pd.DataFrame):
             break
 
         pdf.set_xy(pdf.get_column_x(2), y)
-        pdf.cell(pdf.cols.get(2), ROW_HEIGHT, str(row.get('pos_', i + 1)), align='C')
-        pdf.cell(pdf.cols.get(3), ROW_HEIGHT, str(row.get('ubicacion_bin', '')), align='C')
-        pdf.cell(pdf.cols.get(4), ROW_HEIGHT, str(row.get('material', '')), align='C')
-        pdf.cell(pdf.cols.get(5) * 4, ROW_HEIGHT, str(row.get('denominacion', ''))[:75], align='L')
+        pdf.cell(pdf.cols.get(2, 0.0), ROW_HEIGHT, str(row.get('pos_', i + 1)), align='C')
+        pdf.cell(pdf.cols.get(3, 0.0), ROW_HEIGHT, str(row.get('ubicacion_bin', '')), align='C')
+        pdf.cell(pdf.cols.get(4, 0.0), ROW_HEIGHT, str(row.get('material', '')), align='C')
+        pdf.cell(pdf.cols.get(5, 0.0) * 4, ROW_HEIGHT, str(row.get('denominacion', ''))[:75], align='L')
         pdf.set_xy(pdf.get_column_x(9), y)
-        pdf.cell(pdf.cols.get(9), ROW_HEIGHT, f"{row.get('cantidad', '')} {row.get('umb', '')}".strip(), align='R')
+        pdf.cell(pdf.cols.get(9, 0.0), ROW_HEIGHT, f"{row.get('cantidad', '')} {row.get('umb', '')}".strip(), align='R')
 
         y += ROW_HEIGHT
         pdf.draw_dotted_line(15, y, 260)

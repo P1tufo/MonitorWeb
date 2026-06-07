@@ -160,7 +160,7 @@ def chunk_text(text, max_chars=30000, overlap_lines=10):
 
     current_pos = 0
     while current_pos < len(lines):
-        current_chunk_lines = []
+        current_chunk_lines: list[str] = []
         current_chars = 0
 
         # Añadir líneas hasta alcanzar el límite
@@ -434,9 +434,15 @@ def generate_audit_post_flight(files_ordered):
     audit_options = OLLAMA_OPTIONS.copy()
     audit_options["num_ctx"] = 16384
 
+    graph_report = "Reporte topológico no disponible. Ejecuta scripts/generate_graphify.py primero."
+    graph_report_path = os.path.join(ROOT_DIR, "graphify-out", "GRAPH_REPORT.md")
+    if os.path.exists(graph_report_path):
+        with open(graph_report_path, "r", encoding="utf-8") as gf:
+            graph_report = gf.read()
+
     msgs_audit = [
         {'role': 'system', 'content': PROMPT_AUDIT_SYSTEM},
-        {'role': 'user', 'content': PROMPT_AUDIT_USER.format(documentation=final_summary)}
+        {'role': 'user', 'content': PROMPT_AUDIT_USER.format(documentation=final_summary, graph_report=graph_report)}
     ]
 
     print("   (Analizando resumen global para generar la Auditoría Arquitectónica...)")
@@ -495,7 +501,7 @@ def compile_by_folders(files_ordered):
     print("\nCompilando documentación por carpetas...")
 
     # Agrupar archivos por su carpeta contenedora
-    folder_groups = {}
+    folder_groups: dict[str, list[dict]] = {}
     for filepath in files_ordered:
         # Extraer el directorio relativo
         rel_path = os.path.relpath(filepath, ROOT_DIR)

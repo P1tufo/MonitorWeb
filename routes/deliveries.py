@@ -17,12 +17,9 @@ from core.app_instance import templates
 from core.auth import get_current_user
 from core.database import get_session_dep
 from core.schemas import AnalyticsDeliveriesResponse
-from core.state import CacheManager, SyncStateManager, get_cache_manager, get_sync_manager
+from core.state import SyncStateManager, get_sync_manager
 from core.utils import sanitize_for_json
 from repositories import DeliveriesRepository
-from routes.analytics_proyecciones import get_proyecciones_context
-from routes.inventory import get_inventory_context
-from routes.tasks import get_tasks_context
 from services.deliveries_service import DeliveriesService
 
 logger = logging.getLogger("routes-analytics-deliveries")
@@ -30,63 +27,11 @@ router = APIRouter()
 
 # ─── Dependencias ─────────────────────────────────────────────────────────────
 
-def save_analytics_snapshot(session: Session, key: str, data: Dict[str, Any]):
-    """Guarda una captura de las analíticas en la base de datos para carga instantánea."""
-    try:
-        session.execute(text("CREATE TABLE IF NOT EXISTS analytics_snapshots (key TEXT PRIMARY KEY, data TEXT, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"))
-        # Limpiar request si existe por seguridad
-        data_to_save = {k: v for k, v in data.items() if k != 'request'}
-        json_data = json.dumps(data_to_save)
-        session.execute(
-            text("INSERT OR REPLACE INTO analytics_snapshots (key, data, updated_at) VALUES (:key, :data, CURRENT_TIMESTAMP)"),
-            {"key": key, "data": json_data}
-        )
-        session.commit()
-    except Exception as e:
-        logger.error(f"Error guardando snapshot {key}: {e}")
-
-def load_analytics_snapshot(session: Session, key: str) -> Optional[Dict[str, Any]]:
-    """Recupera la última captura de analíticas desde la base de datos."""
-    try:
-        res = session.execute(text("SELECT data FROM analytics_snapshots WHERE key = :key"), {"key": key}).fetchone()
-        if res:
-            return json.loads(res[0])
-    except Exception:
-        pass
-    return None
-
 # ─── Rutas ───────────────────────────────────────────────────────────────────
 
 @router.get("/analytics", response_class=HTMLResponse)
-async def analytics(request: Request, user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager)):
-    """Renderiza la página principal de analíticas con caché multinivel (Memoria -> DB -> Cálculo)."""
-    # 1. Nivel 1: Memoria (Instantáneo)
-    cached = cache.get_cache("/analytics/deliveries")
-    if cached and "wms_labels" in cached:
-        logger.info("Sirviendo analíticas desde Caché de Memoria.")
-        cached["request"] = request
-        cached["user"] = user
-        response = templates.TemplateResponse(request=request, name="deliveries.html", context=cached)
-        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-        return response
-
-
-    # 2. Nivel 2: Snapshot en BD (Muy rápido, persistente)
-    year_str = datetime.now().strftime("%Y")
-    month_str = datetime.now().strftime("%m")
-    snapshot = load_analytics_snapshot(session, f"deliveries_{year_str}_{month_str}")
-    if snapshot and "wms_labels" in snapshot:
-        logger.info("Sirviendo analíticas desde Snapshot de Base de Datos.")
-        cache.set_cache("/analytics/deliveries", snapshot)
-        snapshot["request"] = request
-        snapshot["user"] = user
-        response = templates.TemplateResponse(request=request, name="deliveries.html", context=snapshot)
-        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-        return response
-
-
-    # 3. Nivel 3: Cálculo (Lento, primera vez o tras limpieza)
-    logger.info("Sin caché disponible. Iniciando cálculo completo...")
+async def analytics(request: Request, user = Depends(get_current_user), session: Session = Depends(get_session_dep)):
+    """Renderiza la página principal de analíticas con caché multinivel gestionado por decorador."""
     context = DeliveriesService(session).get_full_context()
     context["request"] = request
     context["user"] = user
@@ -95,7 +40,6 @@ async def analytics(request: Request, user = Depends(get_current_user), session:
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     return response
 
-from typing import Optional
 
 from routes.filters import _build_unified_where
 
@@ -198,32 +142,12 @@ def get_non_palletized_details(
 
 
 @router.get("/api/v1/analytics/deliveries", response_model=AnalyticsDeliveriesResponse)
-async def analytics_deliveries_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager), sync: SyncStateManager = Depends(get_sync_manager)):
-    """API JSON para analíticas de Entregas (Outbound Deliveries)."""
-
-    # 1. Caché en Memoria
-    cached = cache.get_cache("/api/v1/analytics/deliveries")
-    if cached:
-        return AnalyticsDeliveriesResponse(data=cached, is_syncing=sync.is_syncing)
-
-    # 2. Snapshot en BD
-    year_str = datetime.now().strftime("%Y")
-    month_str = datetime.now().strftime("%m")
-    snapshot = load_analytics_snapshot(session, f"deliveries_{year_str}_{month_str}")
-    if snapshot and "wms_labels" in snapshot:
-        clean_snapshot = {k: v for k, v in snapshot.items() if k not in ('request', 'user', 'is_syncing')}
-        cache.set_cache("/api/v1/analytics/deliveries", clean_snapshot)
-        return AnalyticsDeliveriesResponse(data=clean_snapshot, is_syncing=sync.is_syncing)
-
-    # 3. Cálculo Completo
+async def analytics_deliveries_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), sync: SyncStateManager = Depends(get_sync_manager)):
+    """API JSON para analíticas de Entregas (Outbound Deliveries) con caché multinivel gestionado por decorador."""
     try:
         from services.deliveries_service import DeliveriesService
         context = DeliveriesService(session).get_full_context()
         clean_context = {k: v for k, v in context.items() if k not in ('request', 'user', 'is_syncing')}
-
-        cache.set_cache("/api/v1/analytics/deliveries", clean_context)
-        save_analytics_snapshot(session, f"deliveries_{year_str}_{month_str}", clean_context)
-
         return AnalyticsDeliveriesResponse(data=clean_context, is_syncing=sync.is_syncing)
     except Exception as e:
         logger.error(f"Error cargando API analytics deliveries: {e}", exc_info=True)

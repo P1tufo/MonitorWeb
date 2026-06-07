@@ -1,7 +1,7 @@
 ## Archivo: ./tests/test_api.py
 
 ### Resumen Funcional
-El archivo `test_api.py` contiene pruebas unitarias para endpoints de una API de un sistema de monitoreo de almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite. Las pruebas cubren la funcionalidad del dashboard principal, el endpoint de sincronización, la página de analíticas, la generación de consultas SQL, y la protección contra inyección SQL.
+El archivo `test_api.py` contiene pruebas unitarias para endpoints de una API de un sistema de monitoreo de almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite. Las pruebas cubren la funcionalidad del dashboard principal, el acceso a la página de analíticas, la generación de consultas SQL, y la protección contra inyección SQL.
 
 ### Catálogo de Funciones y Clases
 - `test_read_root(auth_client)` - Verifica que el dashboard principal responda con el título correcto.
@@ -18,22 +18,18 @@ El archivo `test_api.py` contiene pruebas unitarias para endpoints de una API de
 - Tablas:
   - `outbound_deliveries`
 - Columnas:
-  - `entrega`
-  - `fecha_carga`
-  - `centro_costo`
-  - `area_negocio`
-  - `dias_retraso`
+  - `entrega`, `fecha_carga`, `centro_costo`, `area_negocio`, `dias_retraso`, `week_sort`
 
 ### Estado y Variables Globales
 Ninguna.
 
 ### Dependencias y Flujo
-- Librerías externas: `pytest`, `unittest.mock`.
+- Librerías externas: `pytest`, `unittest.mock`
 - Archivos del proyecto que este archivo importa:
   - `core.state.SyncStateManager`
   - `routes.sync.TUNNEL_URL_FILE`
   - `routes.sync._run_sync_pipeline`
   - `routes.sync.task_manager`
 - Archivos del proyecto que importan a este archivo: Ninguno.
-- Flujo de datos: El archivo realiza pruebas unitarias, no interactúa directamente con el flujo de datos del sistema.
+- Flujo de datos: El archivo consume pruebas unitarias y verifica la funcionalidad de endpoints, interactuando con una base de datos SQLite para obtener y modificar datos.
 

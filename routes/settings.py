@@ -237,7 +237,7 @@ def api_get_query(query_id: str, db: DBSession):
         "visual_state":    row.visual_state,
         "has_visual_state": bool(row.visual_state),
         # sql_text solo se expone cuando no hay visual_state (queries de solo SQL sin constructor visual)
-        "sql_text":        row.sql_text if not row.visual_state else None,
+        "sql_text":        None,
     }
 
 @router.post("/api/settings/query")

@@ -39,7 +39,7 @@ ALLOWED_OTS_STATES: frozenset = frozenset({'OT Abierta', 'NO Tratada'})
 # ─── Rutas ───────────────────────────────────────────────────────────────────
 
 
-def _build_unified_where(date: str = None, area: str = None, centro: str = None, has_ots: str = None, min_week: str = None) -> tuple[str, dict]:
+def _build_unified_where(date: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots: Optional[str] = None, min_week: Optional[str] = None) -> tuple[str, dict]:
     where_parts = []
     params = {}
 
@@ -149,22 +149,7 @@ async def api_widget_data(
         raise HTTPException(status_code=404, detail="Widget no encontrado")
 
     if not row.visual_state:
-        # Modo legacy: ejecutar sql_text directamente
-        sql = row.sql_text or ""
-        if not sql:
-            raise HTTPException(status_code=400, detail="Widget no tiene visual_state ni sql_text.")
-
-        if "{AREA_EXPR}" in sql:
-            from core.macros import AREA_EXPR
-            sql = sql.replace("{AREA_EXPR}", AREA_EXPR)
-
-        try:
-            df = pd.read_sql(text(sql), session.connection())
-            records = df.to_dict(orient="records")
-            return {"status": "success", "data": sanitize_for_json(records), "legacy": True}
-        except Exception as e:
-            logger.error(f"Error legacy widget {query_id}: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail="Ha ocurrido un error interno procesando la solicitud.")
+        raise HTTPException(status_code=400, detail="Widget no tiene visual_state (modo legacy deshabilitado).")
     try:
         vs_dict = json.loads(row.visual_state)
         payload = VisualQueryBuilderPayload(**vs_dict)

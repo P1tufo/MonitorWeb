@@ -1,3 +1,4 @@
+from typing import Optional, Any
 import logging
 
 import pandas as pd
@@ -14,7 +15,7 @@ class DashboardRepository(BaseRepository):
     KPIs y listados del dashboard de entregas (outbound_deliveries).
     """
 
-    def build_unified_where(self, date: str, area: str, centro: str, has_ots_filter: str, min_week: str):
+    def build_unified_where(self, date: Optional[str], area: Optional[str], centro: Optional[str], has_ots_filter: Optional[str], min_week: Optional[str]):
         where_clause = " WHERE 1=1"
         raw_params = []
         from core.macros import AREA_EXPR as area_expr
@@ -51,7 +52,7 @@ class DashboardRepository(BaseRepository):
         where_params = {f"p{i}": v for i, v in enumerate(raw_params)}
         return where_clause, where_params
 
-    def get_filtered_transactions(self, date: str, entrega: str, area: str, centro: str, has_ots_filter: str, min_week: str) -> list:
+    def get_filtered_transactions(self, date: Optional[str], entrega: Optional[str], area: Optional[str], centro: Optional[str], has_ots_filter: Optional[str], min_week: Optional[str]) -> list:
         where_clause, where_params = self.build_unified_where(date, area, centro, has_ots_filter, min_week)
         DATE_EXPR = "COALESCE(NULLIF(v.fecha_carga, ''), NULLIF(v.fecha_sm_real, ''), v.creado_el)"
         if entrega:
@@ -99,7 +100,7 @@ class DashboardRepository(BaseRepository):
         df = pd.read_sql(text(query), self.session.connection(), params=where_params)
         return df.to_dict(orient='records')
 
-    def get_filtered_kpis(self, date: str, area: str, centro: str, min_week: str, iso_year: int) -> dict:
+    def get_filtered_kpis(self, date: Optional[str], area: Optional[str], centro: Optional[str], min_week: Optional[str], iso_year: int) -> dict:
         where_clause, where_params = self.build_unified_where(date, area, centro, None, min_week)
         q_kpi = f"""
             SELECT

@@ -5,13 +5,9 @@ from fastapi import Depends
 
 # Importar dependencias directas para FastAPI
 def get_db():
-    from config import DB_PATH
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    try:
-        yield conn
-    finally:
-        conn.close()
+    from core.database import get_session
+    with get_session() as session:
+        yield session
 
 from .base import BaseRepository
 from .deliveries import DeliveriesRepository
@@ -20,17 +16,19 @@ from .productivity import ProductivityRepository
 from .tasks import TasksRepository
 
 
-def get_deliveries_repo(conn: sqlite3.Connection = Depends(get_db)) -> DeliveriesRepository:
-    return DeliveriesRepository(conn)
+from sqlalchemy.orm import Session
 
-def get_inventory_repo(conn: sqlite3.Connection = Depends(get_db)) -> InventoryRepository:
-    return InventoryRepository(conn)
+def get_deliveries_repo(session: Session = Depends(get_db)) -> DeliveriesRepository:
+    return DeliveriesRepository(session)
 
-def get_tasks_repo(conn: sqlite3.Connection = Depends(get_db)) -> TasksRepository:
-    return TasksRepository(conn)
+def get_inventory_repo(session: Session = Depends(get_db)) -> InventoryRepository:
+    return InventoryRepository(session)
 
-def get_productivity_repo(conn: sqlite3.Connection = Depends(get_db)) -> ProductivityRepository:
-    return ProductivityRepository(conn)
+def get_tasks_repo(session: Session = Depends(get_db)) -> TasksRepository:
+    return TasksRepository(session)
+
+def get_productivity_repo(session: Session = Depends(get_db)) -> ProductivityRepository:
+    return ProductivityRepository(session)
 
 __all__ = [
     "BaseRepository",

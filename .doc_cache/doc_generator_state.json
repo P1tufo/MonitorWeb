@@ -3,22 +3,22 @@
         "hash": "adf1a67c962926bd2d402694e5c8b35d3ed706545a6acce202751f68ceaea53e"
     },
     "./app.py": {
-        "hash": "921ac71ab8f6e7aeb4874afda9e81720311f87fe2841e6298f6c826734ff865d"
+        "hash": "1c4f7508a78af2708e850dcd23dc2ba8d62720bcf143564b7bcd9509553bef57"
     },
     "./main.py": {
         "hash": "74b8151c8a1b571f01a05935ef11d23ff6864f1d4ad2394b347badd2e748a605"
     },
     "./core/auth.py": {
-        "hash": "01caffc3f79445a66416570554db3528a5b2f42b5564c53141f978131f7ffed0"
+        "hash": "0ea2a6cb27a86ae9dce1545eee14eea266f776db6163290f3dcc4dac0e41c6c3"
     },
     "./core/pdf_engine.py": {
-        "hash": "d576c8bec6555fe5258bc7927718ddd340ebb0f11d0c3c2af5746e0ee987e82e"
+        "hash": "49484c37f1b25f3a94f0ef08aadba67a4f778456cf39797387038519dc4cb0e3"
     },
     "./core/query_engine.py": {
         "hash": "225ca459c9bdb3a9c790a8d46e0182c83e545a70cd3116fcafa39c2c4eba5abf"
     },
     "./core/models.py": {
-        "hash": "c004c6e54564cda02f289cffeea460ba708b1bc7ab0d5f590f8d94c36cf40935"
+        "hash": "b75366eec5bc4d4236c06218fcf30266c0be7dd3ee78cc9bd3f5683a994c6094"
     },
     "./core/database.py": {
         "hash": "ae492b982d3b8265e42b3bb7489b169eaf23ed945a2136e8a5d718e258010ad2"
@@ -30,7 +30,7 @@
         "hash": "b636d93cde51c8367842a28af7d00a42cb9e40e7048efdf1cecf719556c959aa"
     },
     "./core/semantic_layer.py": {
-        "hash": "b9aa7b31b9b0cf46abc2411865c72350b69f4c433f19225b00ebbf40bd04e68c"
+        "hash": "a635dafa51f379e422d6c5f222449522599df7fdb07a0afa6c1026818bc90433"
     },
     "./core/__init__.py": {
         "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -39,22 +39,22 @@
         "hash": "624f3e8d3677e813741feb97206022d1a763684ab5b7549ce9830b09f6b20dd0"
     },
     "./core/pdf_reports.py": {
-        "hash": "21d19d732a251ad4748aed51d586255a02a5e4ef3903e0bf92a0f0de4cdeb6a2"
+        "hash": "7873b554a89cbc98279d9c9889ce6c5037eefa815c10b9fa5255728e9d7e59e6"
     },
     "./core/utils.py": {
-        "hash": "4bd24b8f1b97ebaeef6bedad2e1a0431bf11e7a69bbec412dc661cec631e3463"
+        "hash": "e00a1d165144a1787d63a4eaf1dd063151b00570b838c859138a0d7215c102e3"
     },
     "./core/app_instance.py": {
-        "hash": "1cfdb7e3826914be0fcfd4a979ebd651605bdc551fed5bb869a2c7e617f7abf6"
+        "hash": "1aa02f74e471cb249b4e03e5363dfb61e64af4184bc2d207d063a2ad19a25bcd"
     },
     "./core/task_manager.py": {
         "hash": "2999c7a098a6481b78fc489b19aba23bf194e435f30b485d17655c0cabbbd673"
     },
     "./core/db_config_manager.py": {
-        "hash": "bddb45aaca3403a7a5b6b3ac18126574cdbc49787784f2832fb6081f8d807262"
+        "hash": "5b4340c9f187bc6665b7a7610151958f147b986d6341ba98df1d01ca7d1900d9"
     },
     "./core/watcher.py": {
-        "hash": "bf8a105a5b2e6db87bffe96490405f7acb4c4e84ce61e8b96fd75b424419f96c"
+        "hash": "58afd585763355fd6b0ad89d4edc7bdd4475c9e9d8d2ad2b4865395e6f5ef152"
     },
     "./core/wms_config.py": {
         "hash": "a6f96efe53778cd0f35d3c764b4edc1b4f39a6fcdb928e9a4cf4c9d3abdc1bd1"
@@ -69,7 +69,7 @@
         "hash": "8c4b2a7f2bf9b0a5e9ca40159117f1d3d26d39d4d9d1023b5a2540edc81ef934"
     },
     "./core/query_utils.py": {
-        "hash": "9379643647583e073135431b31dd1333b2428105b40644172677580c3da56694"
+        "hash": "3a9f851fd00d03ccf5f63f08f578b7368814cc07f6d74e91717f172945ec05b5"
     },
     "./core/state.py": {
         "hash": "2e4b24e7b8f43728df70a211978c815fdb3d2be68ed9c2dc7aa5aed2d461c469"
@@ -90,7 +90,7 @@
         "hash": "a3e72282365a26e2cbf32d3537a0d089c78f18c6a3d0196240474584b3b3cef8"
     },
     "./tests/conftest.py": {
-        "hash": "d3ede893de04b42017eea8db9d6f51c9466f6ffe8d2c2b01903503990ce73537"
+        "hash": "67b23558ba9f17d7b2e51b8eba5bab375cae7e06915c9d92866ef8a2a819a753"
     },
     "./tests/test_pdf.py": {
         "hash": "a41c6862e222f8e726da49979f2b7702bcc9451501664e516376b68e6fec6ac9"
@@ -99,13 +99,13 @@
         "hash": "86d345deecdf6ec42c022f56fb79676baa5a0c028e5975439ec230d3c516681a"
     },
     "./tests/test_ui_smoke.py": {
-        "hash": "09651b208044f415927485c503a2f99eda1badc0a3067755ce19e0d4b428d1af"
+        "hash": "cee9cabff45e475782f14e4a99424caf51b388bb36b5542f43dc2d0edf7234d6"
     },
     "./tests/test_services.py": {
         "hash": "8d10b70baea77458845294217ff771c1989285452ad540215e4f75dd8ae5fc1d"
     },
     "./tests/test_api.py": {
-        "hash": "ce2a8cba76e2b155ea0cea8cd45f67161d845a374ec6c2d33cc8552375d294ed"
+        "hash": "94e58704449537e4d819d5ff6c90221d62b51ee52286a6403f7ecb147c63b843"
     },
     "./tests/test_enrichment.py": {
         "hash": "c81349e32318e4b66292de0d68db697d5e131ef140d2a5a57ed9ea94deaee38e"
@@ -117,13 +117,13 @@
         "hash": "7bee6340c4fb3526ed59ec0acc260b76f19e8b6a68c5715ed6c823f08841c2aa"
     },
     "./repositories/__init__.py": {
-        "hash": "e586fec5b71a00b3c1517175ebd1525fec1ff8f46f4b08aa5ac8377152fd6753"
+        "hash": "efa698cde4a96a82567fac14d87219a817b6b63180b8f075b4c37aa9a0fb5537"
     },
     "./repositories/widgets.py": {
         "hash": "e0a52f28a1dd1a5afb138b242cd2a8d22675ecd3ff227ab4dbb22ca8c4c31a2e"
     },
     "./repositories/deliveries.py": {
-        "hash": "0179a6eb7fcd9d01cd095b23e6b23bd3d51cc25ca2a0b67679e51d62986dbd3a"
+        "hash": "8ad550f2e663646e15d76955a6743489dd8ec02cf94d5ef5679f422d37719311"
     },
     "./repositories/base.py": {
         "hash": "c095eefc8377ffd6d4862807c630ecb7cea1ea6950f19a0293cf26a1d90343e8"
@@ -210,7 +210,7 @@
         "hash": "ba4c8064a8ca540596d36db866415b658fe5df54116eca77a710121bd126582d"
     },
     "./scripts/main_processor.py": {
-        "hash": "5f55fc99de7fed54f3276b6ab7599ba189720842c155f02e0cad1df788e14829"
+        "hash": "47b65d9e592ab81d6c04bbb1b1bd1c136162164f9415eaf61fdb659d6ff6b34e"
     },
     "./scripts/__init__.py": {
         "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -402,7 +402,7 @@
         "hash": "ab40f41fb775ea77e38e22fe307dcd8790c9bd2e2ce12e7abfc4c12aec6665b7"
     },
     "./scripts/generate_graphify.py": {
-        "hash": "60757b8423c25758ad0728ee2336c52e9acd450b3d7a903b657bbe4852950a47"
+        "hash": "dd8cb4f54beaf444e4754d27d3401184015d4aeed0fe7750554d6dc2f486bb02"
     },
     "./templates/partials/_tab_replenishment.html": {
         "hash": "d0d43af53b93983b9ea6d56c987c05effb9baeef9c3cdc12562d8ffbe42f5365"
@@ -411,7 +411,7 @@
         "hash": "5337bb7e7de9d94d7c3810ae373d032f0ab4dd903236b7b596d94ed232b2d2e3"
     },
     "./repositories/dashboard.py": {
-        "hash": "e98fdae5dea06fbc24050a76af651ddaebd71b841c2aaa7b48a449d7e6fd92c0"
+        "hash": "a4e9b956bf7842870f1447dd5625288b309c78c31429cbd63cd43fedef30cd21"
     },
     "./repositories/productivity.py": {
         "hash": "4789ed07d3d6369a4d35082363a9a444f60c35bab51a3d1ef569abd275e5c496"
@@ -423,9 +423,12 @@
         "hash": "c94eed08a9d759e2c2ccd48a7dc00899d4f2b7fd7b2b079cad2928862ecb0bae"
     },
     "./scripts/run_consolidator.py": {
-        "hash": "ec47e7246036a5223bddf244a30cbf3acd425106967a46cd92b693688fd9c0f0"
+        "hash": "c5ca1f1fee487f1a6c3d39c1a3bedb3b65c55dfa2c7c0372a6281433fe573338"
     },
     "./services/background_tasks.py": {
         "hash": "7951b6544cb4b02f7f7feb5c00ec7f189bbc1cbb3924d0d59fe66bd722851414"
+    },
+    "./core/cache_decorator.py": {
+        "hash": "f615229da4ff016817c01907aae8ef6fdcaf3ab43e8e67d781416fd7d2e12420"
     }
 }

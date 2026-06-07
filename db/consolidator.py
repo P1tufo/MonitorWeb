@@ -95,7 +95,7 @@ class DataConsolidator:
                 logger.error(f"Error procesando {file_path.name}: {e}")
 
         # Post-procesamiento (Solo si hubo cambios)
-        if total > 0:
+        if total > 0 and self.conn:
             try:
                 learn_author_areas(self.conn)
                 apply_author_learning(self.conn, table_name)
@@ -135,19 +135,23 @@ class DataConsolidator:
 
     def enrich_deliveries_with_stock(self):
         """Enriquece las transacciones con información de stock actual."""
-        _enrich_with_stock(self.conn)
+        if self.conn:
+            _enrich_with_stock(self.conn)
 
     def backfill_from_movements(self):
         """Sincroniza datos faltantes desde la tabla Movimientos."""
-        _backfill_movements(self.conn)
+        if self.conn:
+            _backfill_movements(self.conn)
 
     def backfill_texts(self):
         """Sincroniza descripciones faltantes desde Stock y Movimientos."""
-        _backfill_texts(self.conn)
+        if self.conn:
+            _backfill_texts(self.conn)
 
     def update_sla_with_tasks(self):
         """Actualiza el SLA cruzando fechas con Tareas."""
-        _update_sla_tasks(self.conn)
+        if self.conn:
+            _update_sla_tasks(self.conn)
 
     def close(self):
         """Cierra la conexión de forma segura."""

@@ -64,7 +64,8 @@ class AppSetting(Base):
 
     def typed_value(self):
         """Retorna el valor con el tipo Python correcto."""
-        converters = {
+        from typing import Any
+        converters: dict[str, Any] = {
             "float": float,
             "int": int,
             "bool": lambda v: v.lower() in ("true", "1"),
@@ -114,3 +115,17 @@ class ConfigQuery(Base):
 
     def __repr__(self) -> str:
         return f"<ConfigQuery id={self.query_id!r}>"
+
+# ─── CONFIGURACIÓN: GRUPOS DE USUARIOS ────────────────────────────────────────
+class UserGroup(Base):
+    """
+    Agrupaciones de usuarios para facilitar el filtrado en analíticas de productividad.
+    Editable desde el panel SaaS en /settings.
+    """
+    __tablename__ = "config_user_groups"
+
+    group_name: Mapped[str] = mapped_column(String(50), primary_key=True)
+    users: Mapped[str] = mapped_column(Text, nullable=False) # Lista separada por comas
+
+    def __repr__(self) -> str:
+        return f"<UserGroup name={self.group_name!r}>"

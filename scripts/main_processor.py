@@ -13,13 +13,13 @@ try:
     IW39_DIR = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/IW39"
 except ImportError:
     # Fallback si no se puede importar config (no debería pasar si PROJECT_ROOT está bien)
-    DELIVERIES_DIR  = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/Entregas"
-    STOCK_DIR       = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/Stock"
-    INVENTORY_DIR   = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/Movimientos"
-    IW39_DIR        = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/IW39"
-    MB5B_DIR        = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/MB5B"
-    CLEANSED_DIR    = "/Users/christianykelly/Desktop/MonitorWeb/DELIVERIES_cleansed"
-    DATABASE_PATH   = "/Users/christianykelly/Desktop/MonitorWeb/data/wms_transactions.db"
+    DELIVERIES_DIR  = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/Entregas" # type: ignore
+    STOCK_DIR       = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/Stock" # type: ignore
+    INVENTORY_DIR   = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/Movimientos" # type: ignore
+    IW39_DIR        = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/IW39" # type: ignore
+    MB5B_DIR        = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/MB5B" # type: ignore
+    CLEANSED_DIR    = "/Users/christianykelly/Desktop/MonitorWeb/DELIVERIES_cleansed" # type: ignore
+    DATABASE_PATH   = "/Users/christianykelly/Desktop/MonitorWeb/data/wms_transactions.db" # type: ignore
 
 # Configure logging
 logging.basicConfig(
@@ -37,7 +37,7 @@ def run_pipeline():
 
     # 0. Validación de Entrada (Seguridad y Robustez)
     for path_name, path_val in [("Origen Entregas", DELIVERIES_DIR), ("Stock Stock", STOCK_DIR), ("Movimientos Movimientos", INVENTORY_DIR), ("IW39 Órdenes", IW39_DIR)]:
-        if not Path(path_val).exists():
+        if not Path(str(path_val)).exists():
             logger.error(f"Error de validación: El directorio de {path_name} no existe: {path_val}")
             print(f"  ❌ Abortando: No se encuentra {path_name}")
             return
@@ -62,8 +62,9 @@ def run_pipeline():
 
         try:
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            for line in process.stdout:
-                print(line, end='')
+            if process.stdout:
+                for line in process.stdout:
+                    print(line, end='')
             process.wait()
 
             if process.returncode == 0:
@@ -107,9 +108,9 @@ def run_pipeline():
     print("-"*60)
     try:
         from services.etl.iw39 import IW39Processor
-        processor = IW39Processor()
+        processor_iw39 = IW39Processor()
         with sqlite3.connect(DATABASE_PATH) as conn:
-            total = processor.process_directory(str(IW39_DIR), str(DATABASE_PATH), "iw39_orders", conn)
+            total = processor_iw39.process_directory(str(IW39_DIR), str(DATABASE_PATH), "iw39_orders", conn)
 
             # Enriquecer inventarios con IW39 (Cruza 'Orden')
             from db.db_enrichment import enrich_movements_with_iw39
@@ -126,9 +127,9 @@ def run_pipeline():
     print("-"*60)
     try:
         from services.etl.mb5b import MB5BProcessor
-        processor = MB5BProcessor()
+        processor_mb5b = MB5BProcessor()
         with sqlite3.connect(DATABASE_PATH) as conn:
-            total = processor.process_directory(str(MB5B_DIR), str(DATABASE_PATH), "mb5b_initial_stock", conn)
+            total = processor_mb5b.process_directory(str(MB5B_DIR), str(DATABASE_PATH), "mb5b_initial_stock", conn)
         print(f"  ✅  MB5B completado: {total:,} filas en mb5b_initial_stock")
     except Exception as e:
         logger.error(f"[MB5B] Fallo: {e}", exc_info=True)

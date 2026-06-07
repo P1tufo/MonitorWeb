@@ -157,7 +157,7 @@ def draw_picking_list(pdf, picking_df):
         pdf.ln()
 
     prev_area = None
-    seen_totals = set()
+    seen_totals: set[str] = set()
     PICK_ROW_H = 7.5
     pdf.set_auto_page_break(False)
     pick_bottom = pdf.h - pdf.b_margin

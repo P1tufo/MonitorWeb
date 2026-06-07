@@ -12,6 +12,7 @@
         __init__.py
         app_instance.py
         auth.py
+        cache_decorator.py
         database.py
         db_config_manager.py
         macros.py
@@ -139,6 +140,25 @@
             etl/
                 documentacion.md
                 mejoras.md
+    .mypy_cache/
+        CACHEDIR.TAG
+        3.13/
+            cache.0.db
+            cache.1.db
+            cache.10.db
+            cache.11.db
+            cache.12.db
+            cache.13.db
+            cache.14.db
+            cache.15.db
+            cache.2.db
+            cache.3.db
+            cache.4.db
+            cache.5.db
+            cache.6.db
+            cache.7.db
+            cache.8.db
+            cache.9.db
     DELIVERIES_cleansed/
         clean_20-02-2026_VL06o.txt.xlsx
         clean_23-02-2026_VL06o.txt.xlsx
@@ -230,10 +250,86 @@
             _tab_replenishment.html
             _tab_transporte.html
             _table.html
+    htmlcov/
+        app_py.html
+        class_index.html
+        config_py.html
+        coverage_html_cb_dd2e7eb5.js
+        favicon_32_cb_c827f16f.png
+        function_index.html
+        index.html
+        keybd_closed_cb_900cfef5.png
+        main_py.html
+        status.json
+        style_cb_4667309f.css
+        z_1f4cdc73c39a6604_consolidator_py.html
+        z_1f4cdc73c39a6604_db_enrichment_py.html
+        z_1f4cdc73c39a6604_predictive_engine_py.html
+        z_57760688d1f824db_app_instance_py.html
+        z_57760688d1f824db_auth_py.html
+        z_57760688d1f824db_cache_decorator_py.html
+        z_57760688d1f824db_database_py.html
+        z_57760688d1f824db_db_config_manager_py.html
+        z_57760688d1f824db_macros_py.html
+        z_57760688d1f824db_models_auth_py.html
+        z_57760688d1f824db_models_py.html
+        z_57760688d1f824db_models_transaccional_py.html
+        z_57760688d1f824db_pdf_engine_py.html
+        z_57760688d1f824db_pdf_reports_py.html
+        z_57760688d1f824db_query_builder_py.html
+        z_57760688d1f824db_query_engine_py.html
+        z_57760688d1f824db_query_utils_py.html
+        z_57760688d1f824db_query_validators_py.html
+        z_57760688d1f824db_schemas_py.html
+        z_57760688d1f824db_security_py.html
+        z_57760688d1f824db_semantic_layer_py.html
+        z_57760688d1f824db_state_py.html
+        z_57760688d1f824db_task_manager_py.html
+        z_57760688d1f824db_utils_py.html
+        z_57760688d1f824db_watcher_py.html
+        z_57760688d1f824db_wms_config_py.html
+        z_57760688d1f824db_wms_utils_py.html
+        z_b526dafce63a2a63_dynamic_executor_py.html
+        z_c89a997b3b8bf802_base_py.html
+        z_c89a997b3b8bf802_deliveries_py.html
+        z_c89a997b3b8bf802_iw39_py.html
+        z_c89a997b3b8bf802_mb5b_py.html
+        z_c89a997b3b8bf802_movements_py.html
+        z_c89a997b3b8bf802_stock_py.html
+        z_c89a997b3b8bf802_tasks_py.html
+        z_de3833460954761d_background_tasks_py.html
+        z_de3833460954761d_dashboard_service_py.html
+        z_de3833460954761d_deliveries_service_py.html
+        z_de3833460954761d_inventory_service_py.html
+        z_de3833460954761d_productivity_daily_py.html
+        z_de3833460954761d_productivity_monthly_py.html
+        z_de3833460954761d_tasks_service_py.html
+        z_de3833460954761d_tunnel_py.html
+        z_f244bf8a352cf537_analytics_proyecciones_py.html
+        z_f244bf8a352cf537_auth_py.html
+        z_f244bf8a352cf537_config_py.html
+        z_f244bf8a352cf537_consumos_py.html
+        z_f244bf8a352cf537_dashboard_py.html
+        z_f244bf8a352cf537_deliveries_py.html
+        z_f244bf8a352cf537_docs_py.html
+        z_f244bf8a352cf537_filters_py.html
+        z_f244bf8a352cf537_inventory_py.html
+        z_f244bf8a352cf537_pdf_py.html
+        z_f244bf8a352cf537_productivity_py.html
+        z_f244bf8a352cf537_settings_py.html
+        z_f244bf8a352cf537_sync_py.html
+        z_f244bf8a352cf537_tasks_py.html
+        z_f244bf8a352cf537_transporte_py.html
+        z_f244bf8a352cf537_widgets_py.html
+        z_f35dcf436292fe87_base_py.html
+        z_f35dcf436292fe87_dashboard_py.html
+        z_f35dcf436292fe87_deliveries_py.html
+        z_f35dcf436292fe87_inventory_py.html
+        z_f35dcf436292fe87_productivity_py.html
+        z_f35dcf436292fe87_tasks_py.html
+        z_f35dcf436292fe87_widgets_py.html
     data/
         wms_transactions.db
-        wms_transactions.db-shm
-        wms_transactions.db-wal
         wms_transactions.db.backup_pre_migration
     routes/
         __init__.py

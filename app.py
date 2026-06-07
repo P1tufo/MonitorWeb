@@ -102,15 +102,22 @@ async def lifespan(fastapi_app: FastAPI):
     # Ejecutar carga de snapshots antes de permitir peticiones
     await load_snapshots_async()
 
-    # Iniciar refresco pesado como tarea de fondo trazable (Pilar 4)
-    task_manager.submit_task("refresh_analytics", refresh_analytics)
+    # Iniciar tareas en segundo plano solo si no estamos en testing (Evita SegFaults en M1)
+    if os.getenv("TESTING") != "1":
+        # Iniciar refresco pesado como tarea de fondo trazable (Pilar 4)
+        task_manager.submit_task("refresh_analytics", refresh_analytics)
 
-    from core.watcher import start_watcher, stop_watcher
-    start_watcher()
+        from core.watcher import start_watcher, stop_watcher
+        start_watcher()
 
     yield
     # --- Lógica de Cierre (Shutdown) ---
-    stop_watcher()
+    if os.getenv("TESTING") != "1":
+        try:
+            from core.watcher import stop_watcher
+            stop_watcher()
+        except Exception:
+            pass
     # Forzar el cierre inmediato de las tareas en segundo plano en lugar de esperar
     task_manager.shutdown(wait=False)
     logger.info(">>> Finalizando ciclo de vida de la aplicación.")

@@ -42,13 +42,13 @@ async def generate_pdf(
 
         # 2. Generar PDF en memoria
         pdf = WMS_Landscape_PDF()
-        ots_list = get_ots_for_delivery(entrega, session.connection().connection)
+        ots_list = get_ots_for_delivery(entrega, session.connection().connection)  # type: ignore  # type: ignore
 
         pdf.add_page()
         draw_delivery_page(pdf, df.iloc[0], df, include_logo, ots_list)
 
         # 3. Stream de respuesta
-        pdf_bytes = bytes(pdf.output(dest='S')) # Forzar conversión a bytes
+        pdf_bytes = bytes(pdf.output(dest='S')) # type: ignore
         disposition = "attachment" if action == "descargar" else "inline"
         filename = f"Entrega_{entrega}.pdf"
 

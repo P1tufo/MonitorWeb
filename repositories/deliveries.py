@@ -1,3 +1,4 @@
+from typing import Optional, Any
 import logging
 
 import pandas as pd
@@ -44,7 +45,7 @@ class DeliveriesRepository(BaseRepository):
     def _get_sla_threshold(self) -> int:
         return int(get_setting("SLA_THRESHOLD", 2))
 
-    def get_sla_audit_records(self, year: str, late: bool = True, limit: int = 500, where_clause: str = None, where_params: dict = None) -> pd.DataFrame:
+    def get_sla_audit_records(self, year: str, late: bool = True, limit: int = 500, where_clause: Optional[str] = None, where_params: Optional[dict] = None) -> pd.DataFrame:
         try:
             self.session.execute(text("CREATE INDEX IF NOT EXISTS idx_warehouse_tasks_entrega ON warehouse_tasks(entrega)"))
         except Exception:
@@ -79,7 +80,7 @@ class DeliveriesRepository(BaseRepository):
 
         return pd.read_sql(text(query), self.session.connection(), params=params)
 
-    def get_deliveries_for_bulk(self, date: str = None, area: str = None, centro: str = None, has_ots_filter: str = None, entrega_query: str = None) -> pd.DataFrame:
+    def get_deliveries_for_bulk(self, date: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, entrega_query: Optional[str] = None) -> pd.DataFrame:
         query = "SELECT v.entrega, MAX(v.autor) as autor FROM outbound_deliveries v WHERE 1=1"
         params = []
         try:

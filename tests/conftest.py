@@ -14,6 +14,7 @@ db_file_dir.mkdir(parents=True, exist_ok=True)
 db_file_path = db_file_dir / f"memdb_session_{TEST_SESSION_ID}"
 MEMORY_DB_URI = f"file:{db_file_path}?mode=memory&cache=shared"
 os.environ["DATABASE_URL"] = f"sqlite:///{MEMORY_DB_URI}&uri=true"
+os.environ["TESTING"] = "1"
 
 import sqlite3
 from unittest.mock import patch

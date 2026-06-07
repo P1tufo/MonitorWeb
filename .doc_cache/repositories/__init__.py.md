@@ -1,26 +1,36 @@
 ## Archivo: ./repositories/__init__.py
 
 ### Resumen Funcional
-Este archivo es el punto de entrada para la configuración y la inyección de dependencias relacionadas con las operaciones de base de datos en un sistema de monitoreo de almacén (WMS). Define funciones para obtener conexiones a la base de datos SQLite y repositorios específicos para diferentes entidades del sistema.
+Este archivo es el punto de entrada para la definición de repositorios en el sistema de monitoreo de almacén (WMS). Define funciones que proporcionan instancias de diferentes tipos de repositorios, cada uno asociado con una tabla específica en la base de datos.
 
 ### Catálogo de Funciones y Clases
-- `get_db()` - Establece una conexión a la base de datos SQLite y la devuelve. La conexión se cierra automáticamente al finalizar el contexto.
-- `get_deliveries_repo(conn: sqlite3.Connection = Depends(get_db))` - Devuelve una instancia del repositorio de entregas utilizando la conexión proporcionada.
-- `get_inventory_repo(conn: sqlite3.Connection = Depends(get_db))` - Devuelve una instancia del repositorio de inventario utilizando la conexión proporcionada.
-- `get_tasks_repo(conn: sqlite3.Connection = Depends(get_db))` - Devuelve una instancia del repositorio de tareas utilizando la conexión proporcionada.
-- `get_productivity_repo(conn: sqlite3.Connection = Depends(get_db))` - Devuelve una instancia del repositorio de productividad utilizando la conexión proporcionada.
+- `get_db()` - Obtiene una sesión de base de datos utilizando el motor SQLAlchemy.
+- `get_deliveries_repo(session: Session = Depends(get_db)) -> DeliveriesRepository` - Devuelve una instancia del repositorio para manejar operaciones relacionadas con las entregas.
+- `get_inventory_repo(session: Session = Depends(get_db)) -> InventoryRepository` - Devuelve una instancia del repositorio para manejar operaciones relacionadas con el inventario.
+- `get_tasks_repo(session: Session = Depends(get_db)) -> TasksRepository` - Devuelve una instancia del repositorio para manejar operaciones relacionadas con las tareas.
+- `get_productivity_repo(session: Session = Depends(get_db)) -> ProductivityRepository` - Devuelve una instancia del repositorio para manejar operaciones relacionadas con la productividad.
 
 ### Interacción con Base de Datos
-- **Motor:** SQLite
-- **Tablas y Columnas:** No se especifican explícitamente en este archivo. Se asume que los repositorios (`DeliveriesRepository`, `InventoryRepository`, `TasksRepository`, `ProductivityRepository`) interactúan con tablas correspondientes, pero no se detalla qué columnas son utilizadas.
-- **Consultas SQL Crudas o ORM:** No hay consultas SQL crudas ni llamadas a ORM directamente en este archivo. Las operaciones de base de datos se realizan a través de los métodos de los repositorios.
+- Motor de BD: SQLite
+- Tablas y Columnas:
+  - **DeliveriesRepository**: No especificado en el fragmento.
+  - **InventoryRepository**: No especificado en el fragmento.
+  - **TasksRepository**: No especificado en el fragmento.
+  - **ProductivityRepository**: No especificado en el fragmento.
 
 ### Estado y Variables Globales
-No se detectan variables globales, de sesión, de entorno o diccionarios quemados en código que almacenen estado crítico.
+Ninguna
 
 ### Dependencias y Flujo
-- **Librerías Externas:** `sqlite3`, `fastapi`
-- **Archivos del Proyecto que IMPORTA (consume):** No se especifican archivos externos que importen este archivo.
-- **Archivos del Proyecto que IMPORTAN a Este Archivo (lo consumen):** Los repositorios (`DeliveriesRepository`, `InventoryRepository`, `TasksRepository`, `ProductivityRepository`) y la configuración de base de datos (`config.py`).
-- **Dirección del Flujo de Datos:** El flujo de datos comienza en las rutas (Routes), pasa por los servicios (Services) hasta llegar a este archivo para obtener una conexión a la base de datos y luego a los repositorios específicos.
+- Librerías externas: `sqlite3`, `fastapi`
+- Archivos del proyecto que IMPORTA a este archivo:
+  - `core.database.get_session` (importada dentro de `get_db`)
+- Archivos del proyecto que este archivo IMPORTA:
+  - `repositories.base.BaseRepository`
+  - `repositories.deliveries.DeliveriesRepository`
+  - `repositories.inventory.InventoryRepository`
+  - `repositories.productivity.ProductivityRepository`
+  - `repositories.tasks.TasksRepository`
+
+Flujo de datos: Este archivo proporciona instancias de repositorios que consumen una sesión de base de datos, lo que permite a los servicios y rutas acceder a la lógica de acceso a datos.
 

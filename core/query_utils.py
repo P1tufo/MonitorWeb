@@ -1,3 +1,4 @@
+from typing import Optional
 # ─── Utilidades de ejecución: parámetros y extracción de métricas ─────────────
 
 def get_bound_params_from_visual_state(visual_state_str: str) -> list:
@@ -41,7 +42,7 @@ def get_bound_params_from_visual_state(visual_state_str: str) -> list:
         return []
 
 
-def extract_metric_value(df, active_year: str = None):
+def extract_metric_value(df, active_year: Optional[str] = None):
     """
     Extrae el valor numérico principal de un DataFrame de resultado de query.
 

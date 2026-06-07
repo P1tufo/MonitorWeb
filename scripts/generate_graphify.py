@@ -34,7 +34,8 @@ def prepare_environment():
 
 def execute_graphify():
     """Ejecuta el CLI de graphify."""
-    env = subprocess.os.environ.copy()
+    import os
+    env = os.environ.copy()
     env["GRAPHIFY_VIZ_NODE_LIMIT"] = "10000"
 
     try:

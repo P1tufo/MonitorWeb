@@ -110,7 +110,7 @@ def start_watcher():
     scheduled = False
 
     if os.path.exists(path_to_watch):
-        _observer.schedule(_handler, path=path_to_watch, recursive=True)
+        _observer.schedule(_handler, path=str(path_to_watch), recursive=True)
         scheduled = True
     else:
         logger.warning(f"Watcher: Directorio {path_to_watch} no existe.")

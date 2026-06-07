@@ -3,6 +3,8 @@ from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 
+from core.cache_decorator import analytics_cache
+
 logger = logging.getLogger("services-deliveries")
 
 class DeliveriesService:
@@ -10,6 +12,7 @@ class DeliveriesService:
         self.session = session
         self.conn = session.connection().connection
 
+    @analytics_cache(key_prefix="deliveries")
     def get_full_context(self) -> Dict[str, Any]:
         """
         Fase 3: SaaS Dinámico.

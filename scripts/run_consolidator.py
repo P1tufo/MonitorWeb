@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 import os
 import sys
 
@@ -14,8 +17,8 @@ def main():
         return
 
     folder = sys.argv[1]
-    with DataConsolidator(DB_PATH) as dc:
-        dc.consolidate_folder(folder)
+    with DataConsolidator(str(PROJECT_ROOT / "data" / "wms_transactions.db")) as consolidator:
+        consolidator.consolidate_folder(folder)
 
 if __name__ == "__main__":
     main()

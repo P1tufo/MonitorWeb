@@ -23,13 +23,17 @@ El archivo `main_processor.py` es el punto de entrada del sistema de monitoreo d
 - **Librerías Externas:** `logging`, `subprocess`, `sys`, `pathlib`
 - **Archivos Importados:**
   - `config.py` (para configuraciones globales)
-  - `scripts/analyze_folder.py` (para análisis de carpetas)
   - `db.consolidator.DataConsolidator` (para consolidación de datos)
+  - `db.db_enrichment.enrich_deliveries_with_stock` y `db.db_enrichment.enrich_movements_with_iw39` (para enriquecimiento de datos)
   - `services.etl.movements.InventoryMovementAdapter` (para procesamiento de Movimientos)
   - `services.etl.iw39.IW39Processor` (para procesamiento de IW39)
   - `services.etl.mb5b.MB5BProcessor` (para procesamiento de MB5B)
-- **Archivos Importados por Otros:**
-  - No se indica explícitamente quiénes importan a este archivo.
 
-El flujo de datos fluye desde el punto de entrada hasta la ejecución de cada fase del pipeline, donde se realizan operaciones en archivos y actualizaciones en la base de datos.
+**Flujo:**
+1. `main_processor.py` importa configuraciones y dependencias.
+2. Llama a `run_pipeline()`.
+3. `run_pipeline()` ejecuta las fases del pipeline, que incluyen análisis de carpetas, consolidación de datos, enriquecimiento y procesamiento de diferentes tipos de archivos.
+4. Los resultados se almacenan en la base de datos SQLite especificada.
+
+Este archivo es el punto central para iniciar el proceso de análisis y consolidación en el sistema WMS, gestionando todas las fases del pipeline desde la validación de entrada hasta la actualización de la base de datos.
 

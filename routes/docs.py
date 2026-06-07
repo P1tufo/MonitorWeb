@@ -13,7 +13,7 @@ async def get_docs_tree():
     ignore_dirs = {".git", "__pycache__", "venv", "node_modules", "PDFs_Generados", "Temp_Assets", "scratch", ".doc_cache"}
     allowed_exts = {".py", ".js", ".html", ".css", ".md", ".json", ".sql", ".txt"}
 
-    tree = []
+    tree: list[dict] = []
 
     def build_tree(path, parent_list):
         try:

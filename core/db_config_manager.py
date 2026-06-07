@@ -88,9 +88,9 @@ def seed_initial_config():
             CostCenterMapping(center_code="PAGEN1", business_area="PLANTA_ENERGIA"),
             CostCenterMapping(center_code="PATAV1", business_area="RANURADO"),
         ]
-        for obj in initial_cost_centers:
-            if not session.query(CostCenterMapping).filter_by(center_code=obj.center_code).first():
-                session.add(obj)
+        for cc_obj in initial_cost_centers:
+            if not session.query(CostCenterMapping).filter_by(center_code=cc_obj.center_code).first():
+                session.add(cc_obj)
 
         # ── Settings de procesamiento ─────────────────────────────────────────
         initial_settings = [
@@ -114,9 +114,9 @@ def seed_initial_config():
             AppSetting(key="SLA_THRESHOLD",            value="2",     type="int"),
             AppSetting(key="AREA_DEFAULT",             value="OTRO",  type="str"),
         ]
-        for obj in initial_settings:
-            if not session.query(AppSetting).filter_by(key=obj.key).first():
-                session.add(obj)
+        for set_obj in initial_settings:
+            if not session.query(AppSetting).filter_by(key=set_obj.key).first():
+                session.add(set_obj)
 
         # ── Feriados ──────────────────────────────────────────────────────────
         holiday_dates = [

@@ -1,7 +1,7 @@
 ## Archivo: ./core/pdf_engine.py
 
 ### Resumen Funcional
-El archivo `pdf_engine.py` es un motor optimizado para la generación de documentos PDF en formato horizontal (landscape) para el sistema de monitoreo de almacén (WMS). Permite crear reportes detallados de entregas, incluyendo códigos de barras y tablas de materiales.
+El archivo `pdf_engine.py` es un motor optimizado para la generación de documentos PDF en formato horizontal (landscape) para el sistema de monitoreo de almacén (WMS). Permite crear páginas de entrega que incluyen encabezados, información detallada, tablas de materiales y códigos de barras.
 
 ### Catálogo de Funciones y Clases
 - `WMS_Landscape_PDF(FPDF)` - Clase base para reportes WMS en formato horizontal.
@@ -61,19 +61,15 @@ El archivo `pdf_engine.py` es un motor optimizado para la generación de documen
   - Columnas: `numero_ot`, `entrega`
 
 ### Estado y Variables Globales
-- No hay variables globales declaradas en este archivo.
+- No hay variables globales declaradas explícitamente.
 
 ### Dependencias y Flujo
 - Librerías externas:
-  - `io`, `logging`, `sqlite3`, `datetime`, `pathlib`, `typing`
-  - `numpy`, `pandas`
-  - `barcode`, `fpdf`
-
+  - `io`, `logging`, `sqlite3`, `datetime`, `pathlib`, `typing`, `numpy`, `pandas`, `barcode`, `FPDF`
 - Archivos del proyecto que importan a este archivo (`pdf_engine.py`):
   - Ninguno
-
 - Archivos del proyecto que este archivo importa:
   - `config`
 
-Flujo de datos: El archivo se utiliza para generar PDFs, por lo tanto, los datos necesarios (encabezado y detalles de entrega) provienen de otros componentes del sistema (probablemente desde el servicio o repositorio correspondientes).
+Flujo de datos: El archivo se utiliza para generar PDFs, por lo tanto, consume datos desde la base de datos y genera flujos de bytes con los documentos PDF.
 

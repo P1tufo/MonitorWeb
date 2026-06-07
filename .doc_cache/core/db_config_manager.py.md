@@ -1,21 +1,21 @@
 ## Archivo: ./core/db_config_manager.py
 
 ### Resumen Funcional
-Este archivo gestiona la configuración dinámica del Sistema de Monitoreo de Almacén (WMS) en tiempo de ejecución, utilizando SQLAlchemy para interactuar con una base de datos SQLite. Incluye funciones para inicializar la base de datos, poblarla con valores por defecto y cargar la configuración en caché para un acceso rápido.
+Este archivo `db_config_manager.py` es el administrador de configuraciones dinámicas SaaS para un sistema de monitoreo de almacén (WMS). Se encarga de la inicialización, carga y acceso a las configuraciones almacenadas en una base de datos SQLite utilizando SQLAlchemy. Ofrece funciones públicas para obtener mapeos de estados, centros de costo, configuraciones generales y consultas SQL.
 
 ### Catálogo de Funciones y Clases
 - `init_config_db()` - Crea las tablas de configuración SaaS via SQLAlchemy si no existen.
 - `seed_initial_config()` - Inserta los valores por defecto si las tablas están vacías.
-- `load_config_to_memory(session=None)` - Carga la configuración en caché (deprecated).
+- `load_config_to_memory(session=None)` - Carga en caché las configuraciones desde la BD (deprecated).
 - `_ensure_loaded()` - No-op para compatibilidad hacia atrás.
-- `get_setting(key: str, default: Any = None) -> Any` - Recupera un valor de configuración por clave.
-- `get_status_mapping() -> Dict[str, str]` - Devuelve el mapeo de estados en formato diccionario.
-- `get_cost_center_mapping() -> Dict[str, str]` - Devuelve el mapeo de centros de costo en formato diccionario.
-- `get_holidays() -> List[str]` - Devuelve la lista de feriados.
+- `get_setting(key: str, default: Any = None) -> Any` - Recupera el valor de una configuración por clave.
+- `get_status_mapping() -> Dict[str, str]` - Devuelve un mapeo de códigos de estado a etiquetas.
+- `get_cost_center_mapping() -> Dict[str, str]` - Devuelve un mapeo de códigos de centro de costo a áreas de negocio.
+- `get_holidays() -> List[str]` - Devuelve una lista de fechas festivas.
 - `get_query_visual_state(query_id: str) -> str` - Recupera el visual_state JSON de una consulta.
 
 ### Interacción con Base de Datos
-- Motor: SQLite
+- Motor de BD: SQLite
 - Tablas:
   - `app_setting`
   - `config_query`
@@ -33,10 +33,7 @@ Este archivo gestiona la configuración dinámica del Sistema de Monitoreo de Al
 - No hay variables globales, de sesión o de entorno explícitas.
 
 ### Dependencias y Flujo
-- Importa: `logging`, `typing`, `sqlalchemy`, `sqlalchemy.orm`, `os`
-- Exporta: Todas las funciones descritas anteriormente.
-- Flujo de datos:
-  - `init_config_db()` crea tablas y añade columnas si no existen.
-  - `seed_initial_config()` inserta valores por defecto en las tablas.
-  - Las funciones públicas (`get_setting`, `get_status_mapping`, etc.) consultan la base de datos para recuperar los valores de configuración.
+- Importa: `logging`, `typing`, `sqlalchemy`, `fastapi`, `sqlalchemy.orm`
+- Exporta: Todas las funciones públicas mencionadas.
+- No se importan ni se exportan archivos del proyecto adicionalmente.
 

@@ -17,11 +17,5 @@ Ninguna.
 
 ### Dependencias y Flujo
 - **Dependencias**: `datetime` (módulo estándar de Python).
-- **Flujo**: Este archivo no importa ni es importado por otros archivos. Es una parte independiente del sistema que se ejecuta directamente en el contexto de la aplicación FastAPI.
-
-El flujo de datos dentro del archivo implica:
-1. La entrada de `grouped_data` para la función `draw_annex_table`.
-2. La entrada de `picking_df` para la función `draw_picking_list`.
-
-La salida es un PDF generado con las tablas y listas correspondientes.
+- **Flujo**: Este archivo no importa ni es importado por otros archivos. Es una parte interna del módulo `core/pdf_reports.py`.
 

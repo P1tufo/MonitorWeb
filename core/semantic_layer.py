@@ -214,7 +214,7 @@ def get_metric_formula(dataset_id: str, metric_id: str, table_alias: str = "", l
             if metric_id == met.physical_column or metric_id.endswith(f".{met.physical_column}"):
                 is_match = True
 
-        if is_match and met.is_complex_formula:
+        if is_match and met.is_complex_formula and met.formula_template:
             col_ref = f"{table_alias}.{met.physical_column}" if table_alias else met.physical_column
             table_ref = table_alias if table_alias else ds.physical_table
             # Reemplaza {col} y {table} en el template
@@ -240,7 +240,7 @@ def get_formula_by_physical_table(physical_table: str, aggregation: str, metric_
 
     ds = DATASETS[dataset_id]
     for met in ds.metrics:
-        if met.aggregation == aggregation and met.is_complex_formula:
+        if met.aggregation == aggregation and met.is_complex_formula and met.formula_template:
             table_ref = physical_table
             # Usar la columna física correcta de la métrica, no la que viene del payload
             col_ref = f"{table_ref}.{met.physical_column}"

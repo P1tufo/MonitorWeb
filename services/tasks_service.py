@@ -5,6 +5,7 @@ import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from core.cache_decorator import analytics_cache
 from core.state import get_cache_manager
 from core.utils import sanitize_for_json
 from repositories import TasksRepository
@@ -15,10 +16,10 @@ class TasksService:
     def __init__(self, session: Session):
         self.session = session
 
+    @analytics_cache(key_prefix="tasks")
     def get_full_context(self) -> dict:
-        """Genera y cachea el contexto analítico para la gestión de OTs."""
+        """Genera el contexto analítico para la gestión de OTs."""
         try:
-            cache = get_cache_manager()
             logger.debug("Generando contexto de Gestión de OTs...")
 
             repo = TasksRepository(self.session)
@@ -165,12 +166,6 @@ class TasksService:
 
             # Sanitizar para JSON
             context = sanitize_for_json(context)
-
-            # Cachear en memoria
-            cache.set_cache("/analytics/ots", context)
-
-            # Opcional: Persistir en la base de datos de snapshots
-            # (Por ahora solo memoria para velocidad)
 
             return context
         except Exception as e:

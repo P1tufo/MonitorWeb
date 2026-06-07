@@ -1,16 +1,16 @@
 # Graph Report - MonitorWeb  (2026-06-07)
 
 ## Corpus Check
-- 170 files · ~246,933 words
+- 177 files · ~462,965 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1700 nodes · 3256 edges · 250 communities (114 shown, 136 thin omitted)
-- Extraction: 85% EXTRACTED · 15% INFERRED · 0% AMBIGUOUS · INFERRED: 487 edges (avg confidence: 0.51)
+- 1831 nodes · 3483 edges · 283 communities (146 shown, 137 thin omitted)
+- Extraction: 87% EXTRACTED · 13% INFERRED · 0% AMBIGUOUS · INFERRED: 463 edges (avg confidence: 0.51)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `012b5b9d`
+- Built from commit: `4b918df1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -66,23 +66,25 @@
 - [[_COMMUNITY_Community 48|Community 48]]
 - [[_COMMUNITY_Community 49|Community 49]]
 - [[_COMMUNITY_Community 50|Community 50]]
-- [[_COMMUNITY_Community 52|Community 52]]
+- [[_COMMUNITY_Community 51|Community 51]]
 - [[_COMMUNITY_Community 53|Community 53]]
 - [[_COMMUNITY_Community 54|Community 54]]
 - [[_COMMUNITY_Community 55|Community 55]]
 - [[_COMMUNITY_Community 56|Community 56]]
 - [[_COMMUNITY_Community 57|Community 57]]
 - [[_COMMUNITY_Community 58|Community 58]]
+- [[_COMMUNITY_Community 59|Community 59]]
 - [[_COMMUNITY_Community 60|Community 60]]
 - [[_COMMUNITY_Community 61|Community 61]]
 - [[_COMMUNITY_Community 62|Community 62]]
 - [[_COMMUNITY_Community 63|Community 63]]
 - [[_COMMUNITY_Community 64|Community 64]]
 - [[_COMMUNITY_Community 65|Community 65]]
-- [[_COMMUNITY_Community 66|Community 66]]
 - [[_COMMUNITY_Community 67|Community 67]]
 - [[_COMMUNITY_Community 68|Community 68]]
 - [[_COMMUNITY_Community 69|Community 69]]
+- [[_COMMUNITY_Community 70|Community 70]]
+- [[_COMMUNITY_Community 71|Community 71]]
 - [[_COMMUNITY_Community 72|Community 72]]
 - [[_COMMUNITY_Community 73|Community 73]]
 - [[_COMMUNITY_Community 74|Community 74]]
@@ -112,8 +114,6 @@
 - [[_COMMUNITY_Community 98|Community 98]]
 - [[_COMMUNITY_Community 99|Community 99]]
 - [[_COMMUNITY_Community 100|Community 100]]
-- [[_COMMUNITY_Community 101|Community 101]]
-- [[_COMMUNITY_Community 102|Community 102]]
 - [[_COMMUNITY_Community 103|Community 103]]
 - [[_COMMUNITY_Community 104|Community 104]]
 - [[_COMMUNITY_Community 105|Community 105]]
@@ -212,22 +212,53 @@
 - [[_COMMUNITY_Community 198|Community 198]]
 - [[_COMMUNITY_Community 199|Community 199]]
 - [[_COMMUNITY_Community 200|Community 200]]
+- [[_COMMUNITY_Community 201|Community 201]]
 - [[_COMMUNITY_Community 202|Community 202]]
+- [[_COMMUNITY_Community 203|Community 203]]
+- [[_COMMUNITY_Community 204|Community 204]]
+- [[_COMMUNITY_Community 205|Community 205]]
 - [[_COMMUNITY_Community 206|Community 206]]
 - [[_COMMUNITY_Community 207|Community 207]]
+- [[_COMMUNITY_Community 208|Community 208]]
+- [[_COMMUNITY_Community 209|Community 209]]
+- [[_COMMUNITY_Community 210|Community 210]]
+- [[_COMMUNITY_Community 211|Community 211]]
+- [[_COMMUNITY_Community 212|Community 212]]
+- [[_COMMUNITY_Community 213|Community 213]]
+- [[_COMMUNITY_Community 214|Community 214]]
+- [[_COMMUNITY_Community 215|Community 215]]
+- [[_COMMUNITY_Community 216|Community 216]]
 - [[_COMMUNITY_Community 217|Community 217]]
+- [[_COMMUNITY_Community 218|Community 218]]
+- [[_COMMUNITY_Community 219|Community 219]]
+- [[_COMMUNITY_Community 220|Community 220]]
+- [[_COMMUNITY_Community 221|Community 221]]
+- [[_COMMUNITY_Community 222|Community 222]]
+- [[_COMMUNITY_Community 223|Community 223]]
+- [[_COMMUNITY_Community 224|Community 224]]
+- [[_COMMUNITY_Community 225|Community 225]]
+- [[_COMMUNITY_Community 226|Community 226]]
+- [[_COMMUNITY_Community 227|Community 227]]
+- [[_COMMUNITY_Community 228|Community 228]]
+- [[_COMMUNITY_Community 229|Community 229]]
+- [[_COMMUNITY_Community 230|Community 230]]
+- [[_COMMUNITY_Community 231|Community 231]]
+- [[_COMMUNITY_Community 233|Community 233]]
+- [[_COMMUNITY_Community 237|Community 237]]
+- [[_COMMUNITY_Community 238|Community 238]]
+- [[_COMMUNITY_Community 248|Community 248]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `CacheManager` - 66 edges
-2. `BaseWMSProcessor` - 54 edges
-3. `SyncStateManager` - 43 edges
-4. `BaseRepository` - 37 edges
-5. `Base` - 35 edges
-6. `ProductivityRepository` - 35 edges
-7. `ConfigQuery` - 33 edges
-8. `InventoryRepository` - 29 edges
-9. `DBSession` - 28 edges
-10. `User` - 26 edges
+1. `BaseWMSProcessor` - 54 edges
+2. `CacheManager` - 48 edges
+3. `nums` - 41 edges
+4. `SyncStateManager` - 40 edges
+5. `BaseRepository` - 37 edges
+6. `Base` - 35 edges
+7. `ProductivityRepository` - 35 edges
+8. `files` - 34 edges
+9. `ConfigQuery` - 33 edges
+10. `url` - 33 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Any` --uses--> `ConfigQuery`  [INFERRED]
@@ -236,297 +267,417 @@
   services/deliveries_service.py → core/models.py
 - `str` --uses--> `ConfigQuery`  [INFERRED]
   services/deliveries_service.py → core/models.py
-- `Request` --uses--> `ConfigQuery`  [INFERRED]
-  routes/filters.py → core/models.py
-- `Session` --uses--> `ConfigQuery`  [INFERRED]
-  routes/filters.py → core/models.py
+- `str` --uses--> `InventoryRepository`  [INFERRED]
+  routes/consumos.py → repositories/inventory.py
+- `get_db()` --calls--> `get_session()`  [EXTRACTED]
+  repositories/__init__.py → core/database.py
 
 ## Import Cycles
 - 1-file cycle: `app.py -> app.py`
 - 1-file cycle: `routes/config.py -> routes/config.py`
 - 1-file cycle: `db/consolidator.py -> db/consolidator.py`
 
-## Communities (250 total, 136 thin omitted)
+## Communities (283 total, 137 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.06
-Nodes (96): BaseModel, Base, get_session(), Clase base para todos los modelos ORM del sistema., Context manager que entrega una sesión SQLAlchemy.     Garantiza commit en éxito, get_cost_center_mapping(), get_holidays(), get_query_visual_state() (+88 more)
+Nodes (87): BaseModel, load_config_to_memory(), Any, Deprecated. No-op for backwards compatibility., Inserta los valores por defecto si las tablas están vacías.     Se ejecuta solo, seed_initial_config(), DataFrame, Session (+79 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.06
-Nodes (53): BytesIO, draw_delivery_page(), _draw_info_block(), _draw_ot_barcodes(), _draw_page_header(), _draw_signature_block(), _draw_table(), _generate_barcode_stream() (+45 more)
+Cohesion: 0.05
+Nodes (65): BytesIO, draw_delivery_page(), _draw_info_block(), _draw_ot_barcodes(), _draw_page_header(), _draw_signature_block(), _draw_table(), _generate_barcode_stream() (+57 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.09
-Nodes (54): ChangePasswordRequest, ChangePasswordRequest, create_access_token(), decode_token(), ensure_admin_exists(), get_current_user(), hash_password(), bool (+46 more)
+Cohesion: 0.05
+Nodes (61): get_session(), Context manager que entrega una sesión SQLAlchemy.     Garantiza commit en éxito, get_cost_center_mapping(), get_holidays(), get_query_visual_state(), get_setting(), get_status_mapping(), str (+53 more)
 
 ### Community 3 - "Community 3"
+Cohesion: 0.06
+Nodes (46): AnalyticsInventoryResponse, DashboardResponse, bool, Gestor especializado en estados de sincronización., SyncStateManager, Lock, DashboardRepository, int (+38 more)
+
+### Community 4 - "Community 4"
 Cohesion: 0.08
 Nodes (28): ProductivityRepository, str, Repositorio para el dominio de Analíticas de Productividad de Usuarios., Retorna la CTE base unificada con todos los eventos de actividad.         Evita, Returns a sorted list of unique dates (YYYY-MM-DD format) that have either, get_available_dates(), get_monthly_productivity(), get_productivity_dashboard() (+20 more)
 
-### Community 4 - "Community 4"
+### Community 5 - "Community 5"
+Cohesion: 0.10
+Nodes (52): ChangePasswordRequest, ChangePasswordRequest, create_access_token(), decode_token(), ensure_admin_exists(), get_current_user(), hash_password(), bool (+44 more)
+
+### Community 6 - "Community 6"
 Cohesion: 0.07
 Nodes (45): analyze_structure_pre_flight(), calculate_num_ctx(), call_ollama_with_retry(), chunk_text(), cleanup_orphaned_cache(), compile_by_folders(), compile_master_file(), document_file() (+37 more)
 
-### Community 5 - "Community 5"
-Cohesion: 0.06
-Nodes (35): initialize_app(), lifespan(), FastAPI, MonitorWeb — Aplicación Principal ================================ Punto de entr, Configura y prepara la aplicación FastAPI., Manejador del ciclo de vida de la aplicación.     Gestiona el arranque asíncrono, ensure_project_structure(), Realiza comprobaciones de salud en la configuración. (+27 more)
+### Community 7 - "Community 7"
+Cohesion: 0.11
+Nodes (25): analytics_cache(), Decorador que implementa el patrón de caché multinivel (Memoria -> DB Snapshot -, get_session_dep(), Session, Dependencia de FastAPI (Depends) para inyección de sesiones en endpoints.      E, get_cache_manager(), get_sync_manager(), _extract_metric_value() (+17 more)
 
-### Community 6 - "Community 6"
+### Community 8 - "Community 8"
 Cohesion: 0.06
 Nodes (11): allTransporteData, COLORS, DashboardAPI, pdfSubmit(), selectedDailyUsers, selectedMonthlyUsers, sortState, startSyncPolling() (+3 more)
 
-### Community 7 - "Community 7"
-Cohesion: 0.08
-Nodes (25): Configura los manejadores de señales (SIGINT, SIGTERM) para un cierre limpio., setup_signal_handlers(), # Trigger uvicorn reload main.py — Punto de entrada oficial de MonitorWeb Analyt, Configura e inicia los servicios de la plataforma., start_application(), NgrokService, Inicia el servicio de túnel de forma segura y thread-safe., Detiene el servicio de túnel de forma segura y thread-safe. (+17 more)
-
-### Community 8 - "Community 8"
-Cohesion: 0.09
-Nodes (29): build_sql_from_payload(), Session, str, Compila un VisualQueryBuilderPayload validado en una tupla (sql_text, bound_para, core/query_engine.py — Facade para el motor de SQL., extract_metric_value(), get_bound_params_from_visual_state(), str (+21 more)
-
 ### Community 9 - "Community 9"
+Cohesion: 0.08
+Nodes (30): core/macros.py — Centralización de reglas de negocio y macros SQL.  Fuente única, build_sql_from_payload(), Session, str, Compila un VisualQueryBuilderPayload validado en una tupla (sql_text, bound_para, core/query_engine.py — Facade para el motor de SQL., extract_metric_value(), get_bound_params_from_visual_state() (+22 more)
+
+### Community 10 - "Community 10"
 Cohesion: 0.06
 Nodes (32): ./app.py, hash, ./core/auth.py, hash, ./core/models_transaccional.py, hash, ./core/query_engine.py, hash (+24 more)
 
-### Community 10 - "Community 10"
-Cohesion: 0.08
-Nodes (21): get_sync_status(), get_task(), get_tunnel_url(), list_tasks(), int, str, SyncStateManager, routes/sync.py — Rutas de sincronización de datos con gestión de concurrencia. U (+13 more)
-
 ### Community 11 - "Community 11"
-Cohesion: 0.10
-Nodes (18): Any, bool, int, core/task_manager.py — Gestor de Tareas en Segundo Plano (Background Task Queue), Retorna el estado de una tarea por su ID., Lista las tareas más recientes (más nueva primero)., Verifica si hay una tarea con el nombre dado en estado RUNNING., Elimina las tareas completadas más antiguas si se supera el límite. (+10 more)
+Cohesion: 0.12
+Nodes (24): AnalyticsDeliveriesResponse, analytics(), analytics_deliveries_api(), get_non_palletized_details(), Any, Request, Session, str (+16 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.13
 Nodes (16): Lógica de Upsert atómico por chunk.          ── Seguridad de los f-strings ─────, Hook opcional para crear índices o post-procesar tras un upsert., Escanea un directorio y procesa todos los archivos compatibles con Upsert acumul, Verifica si el archivo es válido para este procesador., Limpia y transforma un chunk de datos crudos (Implementado por cada hijo)., Detecta la fila de encabezado y codificación buscando columnas clave., Lee el archivo completo (para testing o archivos pequeños)., Lista de strings que deben estar en el header para detectar el inicio. Por defec (+8 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.16
-Nodes (20): AnalyticsInventoryResponse, bool, Gestor especializado en estados de sincronización., SyncStateManager, analytics_inventory_api(), analytics_inventory_redirect(), get_inventory_context(), Any (+12 more)
+Cohesion: 0.12
+Nodes (17): Any, bool, int, core/task_manager.py — Gestor de Tareas en Segundo Plano (Background Task Queue), Retorna el estado de una tarea por su ID., Lista las tareas más recientes (más nueva primero)., Verifica si hay una tarea con el nombre dado en estado RUNNING., Elimina las tareas completadas más antiguas si se supera el límite. (+9 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.13
-Nodes (19): DashboardRepository, int, str, Repositorio para el dashboard principal.     Centraliza las consultas necesarias, Prepara los datos para el gráfico de intensidad semanal., Obtiene listas únicas de fechas y áreas, además de mapeos de autores y centros., api_widget_data(), _build_unified_where() (+11 more)
+Cohesion: 0.12
+Nodes (16): Base, health_check(), bool, core/database.py — Fábrica de sesiones SQLAlchemy (ORM Layer).  Este módulo es e, Verifica la conectividad con la base de datos. Retorna True si OK., Clase base para todos los modelos ORM del sistema., str, core/models_auth.py — Modelo ORM de usuarios para autenticación (Pilar 6). (+8 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.17
-Nodes (15): get_cache_manager(), get_sync_manager(), _extract_metric_value(), _get_bound_params_from_visual_state(), Any, str, core/utils.py — Utilidades transversales y gestión de señales del sistema., Limpia datos para serialización JSON segura de forma recursiva y exhaustiva. (+7 more)
+Cohesion: 0.13
+Nodes (14): # Trigger uvicorn reload main.py — Punto de entrada oficial de MonitorWeb Analyt, Configura e inicia los servicios de la plataforma., start_application(), NgrokService, Inicia el servicio de túnel de forma segura y thread-safe., Detiene el servicio de túnel de forma segura y thread-safe., start_tunnel(), stop_tunnel() (+6 more)
 
 ### Community 16 - "Community 16"
 Cohesion: 0.16
-Nodes (18): process_deliveries_file(), process_inventory_file(), process_inventory_folder(), process_lx02_pendientes(), process_tasks_file(), InventoryMovementAdapter, Crear indices estructurales vitales para el rendimiento de busquedas., Adaptador específico para procesar el formato WMS Movimientos. (+10 more)
+Nodes (17): renderPreviewChart(), addFilter(), getActiveColumns(), initVisualQuery(), loadSchema(), onBaseTableChange(), onQbChange(), onSecondMetricToggle() (+9 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.11
-Nodes (17): InventoryRepository, get_inventory_repo(), InventoryRepository, bool, DataFrame, str, Repositorio para el dominio de Movimientos de Inventario y Consumos., get_consumos_ceco() (+9 more)
+Cohesion: 0.15
+Nodes (11): ABC, BaseWMSProcessor, Clase abstracta unificada para procesar archivos WMS (TXT/CSV/XLSX).     Impleme, MB5BProcessor, Adaptador específico para procesar el formato MB5B (Stock Inicial)., bool, Path, bool (+3 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.16
-Nodes (17): renderPreviewChart(), addFilter(), getActiveColumns(), initVisualQuery(), loadSchema(), onBaseTableChange(), onQbChange(), onSecondMetricToggle() (+9 more)
+Cohesion: 0.14
+Nodes (20): Any, str, Repositorio especializado para ejecutar Data Visualizations (Server-Driven UI)., WidgetRepository, export_replenishment_suggestions(), get_cmv201_area_details(), get_cmv201_summary(), get_cmv261_area_details() (+12 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.11
-Nodes (19): get_session_dep(), health_check(), bool, Session, core/database.py — Fábrica de sesiones SQLAlchemy (ORM Layer).  Este módulo es e, Verifica la conectividad con la base de datos. Retorna True si OK., Dependencia de FastAPI (Depends) para inyección de sesiones en endpoints.      E, draw_annex_table() (+11 more)
+Nodes (12): DataConsolidator, Enriquece las transacciones con información de stock actual., Sincroniza datos faltantes desde la tabla Movimientos., Sincroniza descripciones faltantes desde Stock y Movimientos., Actualiza el SLA cruzando fechas con Tareas., Cierra la conexión de forma segura., Gestiona la consolidación de archivos WMS en SQLite.     Soporta el protocolo de, Establece la conexión y configura optimizaciones de SQLite. (+4 more)
 
 ### Community 20 - "Community 20"
 Cohesion: 0.16
-Nodes (20): Any, str, Repositorio especializado para ejecutar Data Visualizations (Server-Driven UI)., WidgetRepository, export_replenishment_suggestions(), get_cmv201_area_details(), get_cmv201_summary(), get_cmv261_area_details() (+12 more)
+Nodes (12): inject_macros(), str, Inyecta todas las macros globales registradas en el string SQL     proporcionado, DeliveriesRepository, DeliveriesRepository, bool, DataFrame, int (+4 more)
 
 ### Community 21 - "Community 21"
-Cohesion: 0.19
-Nodes (21): AnalyticsDeliveriesResponse, analytics(), analytics_deliveries_api(), get_non_palletized_details(), load_analytics_snapshot(), Any, CacheManager, Request (+13 more)
+Cohesion: 0.16
+Nodes (13): initialize_app(), lifespan(), FastAPI, MonitorWeb — Aplicación Principal ================================ Punto de entr, Configura y prepara la aplicación FastAPI., Manejador del ciclo de vida de la aplicación.     Gestiona el arranque asíncrono, start_watcher(), stop_watcher() (+5 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.12
-Nodes (11): DataConsolidator, Enriquece las transacciones con información de stock actual., Sincroniza datos faltantes desde la tabla Movimientos., Sincroniza descripciones faltantes desde Stock y Movimientos., Actualiza el SLA cruzando fechas con Tareas., Cierra la conexión de forma segura., Gestiona la consolidación de archivos WMS en SQLite.     Soporta el protocolo de, Establece la conexión y configura optimizaciones de SQLite. (+3 more)
+Cohesion: 0.18
+Nodes (14): str, core/security.py — Utilidades centralizadas de seguridad y validación., Valida el nombre de la tabla contra la lista blanca para prevenir SQL Injection., validate_table(), db/consolidator.py — Orquestador de consolidación de datos con persistencia segu, apply_author_learning(), backfill_deliveries_from_movements(), backfill_material_texts() (+6 more)
 
 ### Community 23 - "Community 23"
-Cohesion: 0.18
-Nodes (9): ABC, BaseWMSProcessor, Clase abstracta unificada para procesar archivos WMS (TXT/CSV/XLSX).     Impleme, MB5BProcessor, Adaptador específico para procesar el formato MB5B (Stock Inicial)., bool, DataFrame, Path (+1 more)
-
-### Community 24 - "Community 24"
-Cohesion: 0.15
-Nodes (12): CacheManager, Any, int, str, Gestor especializado en caché.     Implementa límites de seguridad para evitar f, get_analytics_proyecciones(), bool, CacheManager (+4 more)
-
-### Community 25 - "Community 25"
-Cohesion: 0.19
-Nodes (15): apply_cost_center_mapping(), calculate_sla_delays(), generate_time_labels(), map_wms_status(), normalize_date_columns(), DataFrame, core/wms_utils.py — Funciones utilitarias vectorizadas para transformación de da, Estandariza formatos de fecha WMS a dd-mm-yyyy de forma eficiente. (+7 more)
-
-### Community 26 - "Community 26"
-Cohesion: 0.15
-Nodes (18): apply_author_learning(), backfill_deliveries_from_movements(), learn_author_areas(), str, Asigna áreas de negocio a transacciones 'OTRO' basadas en la memoria del autor., Rellena columnas vacías en Entregas (autor, ubicacion, textos) cruzando con Movi, Actualiza el mapeo de frecuencia Autor -> Área., db_with_data() (+10 more)
-
-### Community 27 - "Community 27"
-Cohesion: 0.20
-Nodes (7): inject_macros(), str, core/macros.py — Centralización de reglas de negocio y macros SQL.  Fuente única, Inyecta todas las macros globales registradas en el string SQL     proporcionado, BaseRepository, Session, Clase base para todos los repositorios de datos.
-
-### Community 28 - "Community 28"
 Cohesion: 0.11
 Nodes (17): tests/test_auth.py — Tests de autenticación JWT (Pilar 6)., Verifica que listar usuarios requiera rol admin., Verifica login exitoso con credenciales del admin por defecto., Verifica que credenciales incorrectas retornen 401., Verifica que /me sin token retorne 401., Verifica que /me con token válido retorne el perfil del usuario., Verifica que registrar un usuario requiera token de admin., Verifica el flujo completo: admin registra usuario → nuevo usuario hace login. (+9 more)
 
-### Community 29 - "Community 29"
+### Community 24 - "Community 24"
+Cohesion: 0.26
+Nodes (14): OutboundDeliveryAdapter, Adaptador para procesar Entregas de Salida (Deliveries)., process_deliveries_file(), process_inventory_file(), process_inventory_folder(), process_lx02_pendientes(), process_tasks_file(), InventoryMovementAdapter (+6 more)
+
+### Community 25 - "Community 25"
 Cohesion: 0.18
-Nodes (9): ProductivityRepository, get_productivity_repo(), get_tasks_repo(), Connection, DataFrame, int, Repositorio para el dominio de Warehouse Tasks e interacciones de usuario., TasksRepository (+1 more)
+Nodes (9): ProductivityRepository, get_productivity_repo(), get_tasks_repo(), Session, DataFrame, int, Repositorio para el dominio de Warehouse Tasks e interacciones de usuario., TasksRepository (+1 more)
 
-### Community 30 - "Community 30"
+### Community 26 - "Community 26"
 Cohesion: 0.12
-Nodes (16): Verifica que el dashboard principal responda con el título correcto., Verifica el contrato JSON in/out para preview y la ausencia de texto SQL., Verifica protección contra inyección y que el endpoint solo acepte visual_state., Verifica que el endpoint /url devuelva la dirección del túnel ngrok., Verifica que el endpoint de sincronización inicie el pipeline correctamente., Verifica que la página de analíticas sea accesible.     Se eliminó 'async' ya qu, Verifica que el generador de consultas SQL compile correctamente la métrica SLA_, Verifica que la ruta de auditoría SLA resuelva dinámicamente las áreas     de ne (+8 more)
+Nodes (16): Verifica el contrato JSON in/out para preview y la ausencia de texto SQL., Verifica que el dashboard principal responda con el título correcto., Verifica protección contra inyección y que el endpoint solo acepte visual_state., Verifica que el endpoint /url devuelva la dirección del túnel ngrok., Verifica que el endpoint de sincronización inicie el pipeline correctamente., Verifica que la página de analíticas sea accesible.     Se eliminó 'async' ya qu, Verifica que el generador de consultas SQL compile correctamente la métrica SLA_, Verifica que la ruta de auditoría SLA resuelva dinámicamente las áreas     de ne (+8 more)
 
-### Community 31 - "Community 31"
-Cohesion: 0.21
-Nodes (12): AnalyticsTasksResponse, analytics_tasks_api(), get_tasks_context(), CacheManager, Session, SyncStateManager, API JSON para analíticas de Tareas (Warehouse Tasks)., diag_dashboard() (+4 more)
+### Community 27 - "Community 27"
+Cohesion: 0.17
+Nodes (15): learn_author_areas(), Actualiza la métrica de SLA en outbound_deliveries cruzando con la fecha de conf, Actualiza el mapeo de frecuencia Autor -> Área., update_sla_with_tasks(), db_with_data(), Connection, Verifica que el SLA se actualice correctamente usando las tareas de bodega., Prepara una base de datos con datos de prueba para los procesos de enriquecimien (+7 more)
 
-### Community 32 - "Community 32"
-Cohesion: 0.28
-Nodes (14): DashboardResponse, dashboard(), dashboard_api(), get_ubicaciones(), CacheManager, Request, Session, str (+6 more)
-
-### Community 33 - "Community 33"
-Cohesion: 0.19
-Nodes (13): backfill_material_texts(), enrich_deliveries_with_stock(), enrich_movements_with_iw39(), Connection, db_enrichment.py — Enriquecimiento de datos mediante SQL atómico y seguro., Enriquece transacciones con descripciones y ubicaciones físicas de Stock., Rellena descripciones y UMBs faltantes en Entregas usando Stock y Movimientos co, Actualiza la métrica de SLA en outbound_deliveries cruzando con la fecha de conf (+5 more)
-
-### Community 34 - "Community 34"
-Cohesion: 0.21
-Nodes (9): DeliveriesRepository, DeliveriesRepository, bool, DataFrame, int, str, Repositorio para el dominio de Entregas (outbound_deliveries).      ── Patrón de, Obtiene SQL desde config_queries con fallback explícito.         Si el SQL obten (+1 more)
-
-### Community 35 - "Community 35"
+### Community 28 - "Community 28"
 Cohesion: 0.17
 Nodes (13): get_pending_transporte(), get_transporte_data(), Session, str, routes/transporte.py — Rutas para la nueva sección de Transporte (Avanti)., (Mantenido por compatibilidad) Sincroniza datos de transporte manualmente., Retorna los datos consolidados diarios ordenados cronológicamente., Busca en la tabla cruda de transporte_entregas por OT, GD o OC. (+5 more)
 
-### Community 36 - "Community 36"
+### Community 29 - "Community 29"
+Cohesion: 0.15
+Nodes (14): init_auth_db(), Crea las tablas de autenticación si no existen., init_config_db(), Crea las tablas de configuración SaaS via SQLAlchemy si no existen.     Idempote, auth_client(), client(), Proporciona aislamiento de datos entre pruebas individuales.      Lógica:     -, Cliente de pruebas de FastAPI configurado para interactuar con la BD de sesión. (+6 more)
+
+### Community 30 - "Community 30"
+Cohesion: 0.18
+Nodes (7): InventoryRepository, get_inventory_repo(), InventoryRepository, bool, DataFrame, str, Repositorio para el dominio de Movimientos de Inventario y Consumos.
+
+### Community 31 - "Community 31"
 Cohesion: 0.20
 Nodes (12): applyFilters(), downloadBulk(), executeFilters(), filterTable(), getCheckboxValues(), handleSmartCheckbox(), pdfSubmit(), sortState (+4 more)
 
-### Community 37 - "Community 37"
+### Community 32 - "Community 32"
 Cohesion: 0.22
 Nodes (12): changeProductivityDate(), COLORS, loadProductivityData(), onDailyUserCheckboxChange(), renderDailyUserCheckboxes(), renderFilteredDaily(), renderKPI1(), renderKPI2() (+4 more)
 
-### Community 38 - "Community 38"
-Cohesion: 0.19
-Nodes (11): str, core/security.py — Utilidades centralizadas de seguridad y validación., Valida el nombre de la tabla contra la lista blanca para prevenir SQL Injection., validate_table(), db/consolidator.py — Orquestador de consolidación de datos con persistencia segu, Verifica que el parsing de fechas sea correcto., Verifica la protección contra nombres de tabla no permitidos., Verifica que se tome el archivo más reciente para sobrescribir. (+3 more)
-
-### Community 39 - "Community 39"
-Cohesion: 0.18
-Nodes (9): OutboundDeliveryAdapter, Adaptador para procesar Entregas de Salida (Deliveries)., Crear índices para outbound_deliveries., Sobreescribimos para añadir sincronización de esquema como en db_upsert.py., bool, Connection, DataFrame, Path (+1 more)
-
-### Community 40 - "Community 40"
+### Community 33 - "Community 33"
 Cohesion: 0.19
 Nodes (9): Columnas clave del header SAP LX02 (línea 5 del archivo)., Lee el archivo LX02/Stock, detectando la fila header automáticamente., Sobreescribe process_directory para combinar todos los archivos y hacer REPLACE., bool, Connection, DataFrame, int, Path (+1 more)
 
-### Community 41 - "Community 41"
+### Community 34 - "Community 34"
 Cohesion: 0.24
 Nodes (14): getData(), openModal(), openModalAlerts(), openModalArea(), openModalCombos(), openModalScatter(), openModalUbicacion(), openModalUser() (+6 more)
 
-### Community 42 - "Community 42"
-Cohesion: 0.20
-Nodes (9): generate_predictions(), str, Procesa Movimientos Transactions para generar modelos predictivos:     1. Market, get_proyecciones_context(), routes/analytics_proyecciones.py — Rutas de analíticas de proyecciones., Obtiene el contexto de proyecciones, priorizando la caché., Any, str (+1 more)
+### Community 35 - "Community 35"
+Cohesion: 0.15
+Nodes (5): ensure_project_structure(), Realiza comprobaciones de salud en la configuración., Crea los directorios necesarios para el funcionamiento de la app si no existen., validate_config(), FakeRequest
 
-### Community 43 - "Community 43"
+### Community 36 - "Community 36"
+Cohesion: 0.17
+Nodes (12): z_57760688d1f824db_app_instance_py, nums, n_branches, n_excluded, n_files, n_missing, n_missing_branches, n_partial_branches (+4 more)
+
+### Community 37 - "Community 37"
+Cohesion: 0.32
+Nodes (4): BaseRepository, Session, Clase base para todos los repositorios de datos., get_db()
+
+### Community 38 - "Community 38"
 Cohesion: 0.27
 Nodes (5): abrirTendenciaMaterial(), buscarPorCeCo(), buscarPorMateriales(), formatearDinero(), renderVanillaTable()
 
-### Community 44 - "Community 44"
+### Community 39 - "Community 39"
 Cohesion: 0.31
 Nodes (9): loadMonthlyProductivityData(), onMonthlyUserCheckboxChange(), renderFilteredMonthly(), renderMonthlyKPI1(), renderMonthlyKPI2(), renderMonthlyKPI3(), renderMonthlyUserCheckboxes(), selectedMonthlyUsers (+1 more)
 
-### Community 45 - "Community 45"
+### Community 40 - "Community 40"
 Cohesion: 0.25
 Nodes (6): allTransporteData, loadData(), loadPendingData(), renderChart(), renderTable(), updateTransporteChartGroup()
 
-### Community 46 - "Community 46"
-Cohesion: 0.22
-Nodes (10): is_file_changed(), _manifest_execute(), mark_file_processed(), bool, int, Path, str, Ejecuta una query de manifiesto sobre Session SQLAlchemy o sqlite3.Connection. (+2 more)
+### Community 41 - "Community 41"
+Cohesion: 0.25
+Nodes (10): get_consumos_ceco(), get_consumos_materiales(), get_material_trend(), MaterialesRequest, MaterialTrendRequest, Session, str, Obtiene los consumos (CMV 201) agrupados por material para un CeCo específico. (+2 more)
 
-### Community 47 - "Community 47"
+### Community 42 - "Community 42"
+Cohesion: 0.31
+Nodes (4): AwaitWriteFinishHandler, bool, str, FileSystemEventHandler
+
+### Community 43 - "Community 43"
 Cohesion: 0.24
 Nodes (6): IW39Processor, Adaptador específico para procesar el formato IW39 (Órdenes PM)., bool, DataFrame, Path, str
 
-### Community 48 - "Community 48"
+### Community 44 - "Community 44"
+Cohesion: 0.27
+Nodes (6): Adaptador específico para procesar el formato WMS Tareas (Órdenes de Transporte), WarehouseTaskAdapter, bool, DataFrame, Path, str
+
+### Community 45 - "Community 45"
+Cohesion: 0.20
+Nodes (10): hash, index, app_py, z_1f4cdc73c39a6604_consolidator_py, z_57760688d1f824db_schemas_py, url, hash, index (+2 more)
+
+### Community 46 - "Community 46"
+Cohesion: 0.20
+Nodes (10): hash, index, config_py, z_57760688d1f824db_models_transaccional_py, z_57760688d1f824db_query_engine_py, file, hash, index (+2 more)
+
+### Community 47 - "Community 47"
 Cohesion: 0.20
 Nodes (10): changeProductivityDate(), loadProductivityData(), onDailyUserCheckboxChange(), renderDailyUserCheckboxes(), renderFilteredDaily(), renderKPI1(), renderKPI2(), renderKPI3() (+2 more)
 
-### Community 49 - "Community 49"
+### Community 48 - "Community 48"
 Cohesion: 0.25
 Nodes (5): Path, str, Reemplaza la tabla con los datos del archivo más reciente., Extrae la fecha del nombre del archivo (dd-mm-yyyy)., Consolida archivos cronológicamente mediante lógica UPSERT.
 
+### Community 49 - "Community 49"
+Cohesion: 0.22
+Nodes (5): Crear índices para outbound_deliveries., Sobreescribimos para añadir sincronización de esquema como en db_upsert.py., Connection, DataFrame, str
+
 ### Community 50 - "Community 50"
+Cohesion: 0.22
+Nodes (9): files, main_py, z_57760688d1f824db_query_utils_py, z_57760688d1f824db_task_manager_py, hash, index, hash, hash (+1 more)
+
+### Community 51 - "Community 51"
 Cohesion: 0.22
 Nodes (9): changeProductivityMonth(), loadMonthlyProductivityData(), onMonthlyUserCheckboxChange(), renderFilteredMonthly(), renderMonthlyKPI1(), renderMonthlyKPI2(), renderMonthlyKPI3(), renderMonthlyUserCheckboxes() (+1 more)
 
-### Community 52 - "Community 52"
-Cohesion: 0.25
-Nodes (4): bool, DataFrame, Path, str
-
 ### Community 53 - "Community 53"
+Cohesion: 0.22
+Nodes (8): consolidator(), Fixture que devuelve un DataConsolidator usando la DB en memoria., Verifica que el parsing de fechas sea correcto., Verifica la protección contra nombres de tabla no permitidos., Verifica que se tome el archivo más reciente para sobrescribir., test_overwrite_with_latest_logic(), test_parse_file_date(), test_validate_table_security()
+
+### Community 54 - "Community 54"
+Cohesion: 0.39
+Nodes (7): AnalyticsTasksResponse, analytics_tasks_api(), Session, SyncStateManager, API JSON para analíticas de Tareas (Warehouse Tasks)., Session, TasksService
+
+### Community 55 - "Community 55"
+Cohesion: 0.36
+Nodes (7): enrich_deliveries_with_stock(), enrich_movements_with_iw39(), Connection, Enriquece transacciones con descripciones y ubicaciones físicas de Stock., Enriquece la tabla inventory_movements con ceco_resp y autor provenientes de iw3, Executes the complete WMS Analysis and Consolidation pipeline., run_pipeline()
+
+### Community 56 - "Community 56"
+Cohesion: 0.25
+Nodes (4): Crear indices estructurales vitales para el rendimiento de busquedas., bool, Path, str
+
+### Community 58 - "Community 58"
+Cohesion: 0.25
+Nodes (8): z_57760688d1f824db_watcher_py, z_57760688d1f824db_wms_utils_py, description, index, hash, index, hash, index
+
+### Community 59 - "Community 59"
 Cohesion: 0.36
 Nodes (8): downloadBulk(), executeFilters(), filterTable(), getCheckboxValues(), initSaaSWidgets(), renderSaaSChart(), renderSaaSTrellis(), updateDeliveriesAnalytics()
 
-### Community 54 - "Community 54"
+### Community 60 - "Community 60"
 Cohesion: 0.36
 Nodes (7): execute_graphify(), prepare_environment(), process_and_move_html(), Limpia el directorio anterior y prepara la configuración., Ejecuta el CLI de graphify., Lee el HTML generado, lo traduce y lo guarda en su destino., run_graphify()
 
-### Community 55 - "Community 55"
+### Community 61 - "Community 61"
 Cohesion: 0.25
 Nodes (7): str, Prueba de humo parametrizada que verifica la presencia de componentes visuales c, Verifica que el servidor maneje correctamente las peticiones a rutas inexistente, Verifica que el modal visual exponga los selectores correctos y aísle el SQL., test_ui_smoke_analytics_studio_modal_components(), test_ui_smoke_components_presence(), test_ui_smoke_error_handling()
 
-### Community 56 - "Community 56"
+### Community 62 - "Community 62"
+Cohesion: 0.38
+Nodes (7): load_analytics_snapshot(), Any, Session, str, Guarda una captura de las analíticas en la base de datos para carga instantánea., Recupera la última captura de analíticas desde la base de datos., save_analytics_snapshot()
+
+### Community 63 - "Community 63"
 Cohesion: 0.43
 Nodes (6): openModalAlerts(), openModalCombos(), openModalScatter(), renderAlerts(), renderCombos(), renderScatter()
 
-### Community 57 - "Community 57"
+### Community 64 - "Community 64"
 Cohesion: 0.48
 Nodes (5): getAreaCbs(), getChartAreaCbs(), stackedTotalPlugin, toggleChartSelectAll(), updateChartVisibility()
 
-### Community 60 - "Community 60"
+### Community 67 - "Community 67"
 Cohesion: 0.33
 Nodes (4): bool, str, Devuelve el fallback hardcodeado. (Fase 4 completada: sql_text ha sido eliminado, Retorna True si la query tiene un visual_state JSON almacenado.
 
-### Community 61 - "Community 61"
+### Community 68 - "Community 68"
 Cohesion: 0.33
 Nodes (5): get_doc_content(), get_docs_tree(), str, Genera un árbol de archivos del proyecto indicando cuáles tienen documentación., Obtiene el contenido de la documentación (.md) para un archivo específico.
 
-### Community 62 - "Community 62"
-Cohesion: 0.33
-Nodes (4): _prepare_user_location_analytics(), Any, str, Estadísticas detalladas de usuarios y ubicaciones con actividad mensual.
+### Community 69 - "Community 69"
+Cohesion: 0.50
+Nodes (4): Configura los manejadores de señales (SIGINT, SIGTERM) para un cierre limpio., setup_signal_handlers(), Verifica que el registro de manejadores de señales sea seguro e idempotente., test_setup_signal_handlers_safety()
 
-### Community 63 - "Community 63"
+### Community 70 - "Community 70"
+Cohesion: 0.40
+Nodes (4): format, globals, note, version
+
+### Community 71 - "Community 71"
 Cohesion: 0.50
 Nodes (5): abrirTendenciaMaterial(), buscarPorCeCo(), buscarPorMateriales(), formatearDinero(), renderVanillaTable()
 
-### Community 64 - "Community 64"
+### Community 72 - "Community 72"
 Cohesion: 0.40
 Nodes (5): loadData(), loadPendingData(), renderChart(), renderTable(), updateTransporteChartGroup()
 
-### Community 65 - "Community 65"
+### Community 73 - "Community 73"
+Cohesion: 0.40
+Nodes (5): cache_manager(), CacheManager, Proporciona una instancia limpia de CacheManager.     Encapsula la configuración, Verifica que el gestor de estado respete los límites de memoria.     Valida que, test_state_cache_respects_limits()
+
+### Community 74 - "Community 74"
 Cohesion: 0.50
 Nodes (3): AnalyticsStudioManager, currentSchema, defaultVisualStates
 
-### Community 66 - "Community 66"
+### Community 75 - "Community 75"
 Cohesion: 1.00
 Nodes (3): initSaaSWidgets(), renderSaaSChart(), renderSaaSTrellis()
 
-### Community 68 - "Community 68"
+### Community 77 - "Community 77"
+Cohesion: 0.50
+Nodes (4): SyncStateManager, Valida que la propiedad reactiva de sincronización cambie su estado de forma con, sync_manager(), test_state_sync_flag_reactivity()
+
+### Community 78 - "Community 78"
+Cohesion: 0.67
+Nodes (3): z_1f4cdc73c39a6604_db_enrichment_py, hash, index
+
+### Community 79 - "Community 79"
+Cohesion: 0.67
+Nodes (3): z_1f4cdc73c39a6604_predictive_engine_py, hash, index
+
+### Community 80 - "Community 80"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_auth_py, hash, index
+
+### Community 81 - "Community 81"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_cache_decorator_py, hash, index
+
+### Community 82 - "Community 82"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_database_py, hash, index
+
+### Community 83 - "Community 83"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_db_config_manager_py, hash, index
+
+### Community 84 - "Community 84"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_macros_py, hash, index
+
+### Community 85 - "Community 85"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_models_auth_py, hash, index
+
+### Community 86 - "Community 86"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_models_py, hash, index
+
+### Community 87 - "Community 87"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_pdf_engine_py, hash, index
+
+### Community 88 - "Community 88"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_pdf_reports_py, hash, index
+
+### Community 89 - "Community 89"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_query_builder_py, hash, index
+
+### Community 90 - "Community 90"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_query_validators_py, hash, index
+
+### Community 91 - "Community 91"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_security_py, hash, index
+
+### Community 92 - "Community 92"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_semantic_layer_py, hash, index
+
+### Community 93 - "Community 93"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_state_py, hash, index
+
+### Community 94 - "Community 94"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_utils_py, hash, index
+
+### Community 95 - "Community 95"
+Cohesion: 0.67
+Nodes (3): z_57760688d1f824db_wms_config_py, hash, index
+
+### Community 96 - "Community 96"
+Cohesion: 0.67
+Nodes (3): z_b526dafce63a2a63_dynamic_executor_py, hash, index
+
+### Community 97 - "Community 97"
+Cohesion: 0.67
+Nodes (3): z_f35dcf436292fe87_base_py, hash, index
+
+### Community 98 - "Community 98"
+Cohesion: 0.67
+Nodes (3): z_f35dcf436292fe87_dashboard_py, hash, index
+
+### Community 99 - "Community 99"
 Cohesion: 0.67
 Nodes (3): applyFilters(), handleSmartCheckbox(), toggleSelectAll()
 
 ## Knowledge Gaps
-- **199 isolated node(s):** `hash`, `hash`, `hash`, `hash`, `hash` (+194 more)
+- **244 isolated node(s):** `hash`, `hash`, `hash`, `hash`, `hash` (+239 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **136 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **137 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `datetime` connect `Community 15` to `Community 32`, `Community 1`, `Community 2`, `Community 3`, `Community 38`, `Community 42`, `Community 11`, `Community 10`, `Community 13`, `Community 49`, `Community 19`, `Community 23`, `Community 25`, `Community 27`?**
-  _High betweenness centrality (0.079) - this node is a cross-community bridge._
-- **Why does `BaseWMSProcessor` connect `Community 23` to `Community 39`, `Community 40`, `Community 12`, `Community 47`, `Community 16`, `Community 52`, `Community 25`?**
-  _High betweenness centrality (0.045) - this node is a cross-community bridge._
-- **Why does `BaseRepository` connect `Community 27` to `Community 34`, `Community 3`, `Community 14`, `Community 17`, `Community 20`, `Community 60`, `Community 29`?**
-  _High betweenness centrality (0.037) - this node is a cross-community bridge._
-- **Are the 46 inferred relationships involving `CacheManager` (e.g. with `bool` and `CacheManager`) actually correct?**
-  _`CacheManager` has 46 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `datetime` connect `Community 7` to `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 37`, `Community 35`, `Community 41`, `Community 11`, `Community 13`, `Community 14`, `Community 48`, `Community 17`, `Community 53`, `Community 22`?**
+  _High betweenness centrality (0.066) - this node is a cross-community bridge._
+- **Why does `BaseWMSProcessor` connect `Community 17` to `Community 33`, `Community 2`, `Community 43`, `Community 12`, `Community 44`, `Community 49`, `Community 24`, `Community 56`?**
+  _High betweenness centrality (0.043) - this node is a cross-community bridge._
+- **Why does `OutboundDeliveryAdapter` connect `Community 24` to `Community 2`, `Community 48`, `Community 17`, `Community 49`, `Community 22`?**
+  _High betweenness centrality (0.022) - this node is a cross-community bridge._
 - **Are the 34 inferred relationships involving `BaseWMSProcessor` (e.g. with `OutboundDeliveryAdapter` and `IW39Processor`) actually correct?**
   _`BaseWMSProcessor` has 34 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 29 inferred relationships involving `SyncStateManager` (e.g. with `CacheManager` and `Request`) actually correct?**
-  _`SyncStateManager` has 29 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 31 inferred relationships involving `CacheManager` (e.g. with `bool` and `CacheManager`) actually correct?**
+  _`CacheManager` has 31 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 26 inferred relationships involving `SyncStateManager` (e.g. with `CacheManager` and `Request`) actually correct?**
+  _`SyncStateManager` has 26 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 25 inferred relationships involving `BaseRepository` (e.g. with `DeliveriesRepository` and `InventoryRepository`) actually correct?**
   _`BaseRepository` has 25 INFERRED edges - model-reasoned connections that need verification._
