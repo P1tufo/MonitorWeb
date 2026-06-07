@@ -1,33 +1,23 @@
 ## Archivo: ./core/security.py
 
 ### Resumen Funcional
-Utilidades centralizadas de seguridad y validación, específicamente para validar el nombre de tablas contra una lista blanca para prevenir SQL Injection.
+Este archivo contiene utilidades centralizadas de seguridad y validación, específicamente para validar el nombre de tablas en operaciones relacionales con la base de datos.
 
 ### Catálogo de Funciones y Clases
-- `validate_table(table_name: str) -> None` - Valida el nombre de la tabla contra la lista blanca para prevenir SQL Injection. Lanza `ValueError` si la tabla no está permitida.
-
-### Contratos de API / Endpoints
-No aplica.
+- `validate_table(table_name: str) -> None` - Valida el nombre de la tabla contra una lista blanca predefinida para evitar SQL Injection.
 
 ### Interacción con Base de Datos
-- Motor: SQLite
-- Operación: SELECT (implicada en la validación)
-- Tabla afectada: Todas las tablas mencionadas en `WHITELIST_TABLES`
-- Columnas leídas: Nombre de la tabla
+- **Motor**: SQLite
+- **Tablas**: Ninguna (La validación se realiza en memoria, no hay consultas a la base de datos).
+- **Columnas**: Ninguna
 
-### Flujo de Datos y Pipeline
-No aplica.
-
-### Caché y Estado
-- Variables globales y de módulo:
-  - `WHITELIST_TABLES`: Conjunto inmutable de nombres de tablas permitidas.
-
-### Lógica de Negocio y Reglas
-- Constantes de negocio o umbrales:
-  - `WHITELIST_TABLES`: Lista blanca de tablas permitidas para evitar SQL Injection.
+### Estado y Variables Globales
+- `WHITELIST_TABLES: Final[Set[str]]` - Variable global que almacena una lista blanca de tablas permitidas.
 
 ### Dependencias y Flujo
-- Librerías externas: `typing`
-- Archivos del proyecto que IMPORTA a este archivo (lo consumen): No aplica.
-- Archivos del proyecto que este archivo IMPORTA (consume): No aplica.
+- **Dependencias Externas**: No hay dependencias externas.
+- **Archivos Importados por Este Archivo**: Ninguno.
+- **Archivos que Importan a Este Archivo**: Repositories, Services o cualquier otro componente que necesite validar el nombre de las tablas.
+
+**Flujo de Datos**: El archivo `security.py` se importa en otros componentes del sistema para validar el nombre de las tablas antes de realizar operaciones relacionales con la base de datos.
 

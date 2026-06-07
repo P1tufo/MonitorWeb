@@ -1,27 +1,20 @@
 ## Archivo: ./core/state.py
 
 ### Resumen Funcional
-Gestión centralizada del estado mutable y la caché de la aplicación, implementando límites de seguridad para evitar fugas de memoria.
+Gestión de estado global y caché de la aplicación, incluyendo límites de seguridad para evitar fugas de memoria.
 
 ### Catálogo de Funciones y Clases
-- `AppState()` - Gestiona el estado mutable y la caché de forma centralizada.
-  - `__init__()`
-  - `max_cache_size` (getter/setter) - Devuelve/Configura el límite máximo de entradas en caché.
-  - `sync_lock` (getter) - Devuelve el lock de sincronización para operaciones atómicas.
-  - `is_syncing` (getter/setter) - Verifica y actualiza el estado de sincronización (atómico).
-  - `cache_size` (getter) - Devuelve el número actual de entradas en la caché.
-  - `get_cache(key: str)` - Recupera un valor del caché.
-  - `set_cache(key: str, value: Any)` - Guarda un valor en el caché, respetando los límites de tamaño.
-  - `clear_cache(key: Optional[str] = None)` - Limpia una entrada específica o todo el caché.
-  - `clear_cache_prefix(prefix: str)` - Limpia todas las entradas de caché que comiencen con el prefijo dado.
+- `CacheManager()` - Gestor especializado en caché con métodos para obtener, establecer y limpiar el caché.
+- `SyncStateManager()` - Gestor especializado en estados de sincronización con métodos para controlar el estado de sincronización.
 
 ### Interacción con Base de Datos
 Ninguna
 
 ### Estado y Variables Globales
-- `global_state` - Instancia única de la clase `AppState`, almacenada globalmente para su acceso desde cualquier parte del proyecto.
+- `cache_manager` - Instancia global de `CacheManager`.
+- `sync_manager` - Instancia global de `SyncStateManager`.
 
 ### Dependencias y Flujo
 - **Dependencias**: No importa ninguna librería externa.
-- **Flujo de Datos**: El archivo no consume ni es consumido por otros archivos. Es un componente central que proporciona acceso a la instancia global de `AppState` para gestionar el estado y la caché de la aplicación.
+- **Flujo de Datos**: El archivo no consume ni produce datos desde otros archivos del proyecto.
 

@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
+
 from core.db_config_manager import get_query_visual_state
+
 
 class BaseRepository:
     """Clase base para todos los repositorios de datos."""

@@ -1,7 +1,7 @@
 ## Archivo: ./templates/dashboard.html
 
 ### Resumen Funcional
-El archivo `dashboard.html` es una plantilla HTML para el panel de control del sistema de monitoreo de almacén (WMS). Contiene la interfaz de usuario principal que incluye encabezado, indicadores clave (KPIs), menú de acciones y contenido principal dividido en sidebar y tabla.
+El archivo `dashboard.html` es una plantilla HTML para el panel de control del sistema de monitoreo de almacén (WMS). Contiene la interfaz de usuario principal que incluye encabezado, indicadores clave (KPIs), menú de navegación y contenido principal.
 
 ### Catálogo de Funciones y Clases
 Ninguna función o clase detectada directamente en este archivo HTML. Todas las interacciones son realizadas a través de JavaScript y eventos del usuario.
@@ -17,7 +17,7 @@ Ninguna. El archivo no contiene consultas SQL ni llamadas a ORM para interactuar
 
 ### Dependencias y Flujo
 - **Dependencias**: No se importan librerías externas directamente en este archivo.
-- **Flujo de Datos**: El flujo de datos pasa por el servidor (FastAPI) que renderiza esta plantilla HTML, pasando los valores de las variables globales como contexto. Los eventos del usuario (clics en botones, cambios en la interfaz) se manejan con JavaScript.
+- **Flujo de Datos**: El flujo de datos pasa a través del servidor (FastAPI) al cliente (navegador). Los datos necesarios para renderizar la página son pasados como variables globales desde el backend.
 
-Este archivo es una vista HTML que presenta información y permite interacciones al usuario, pero no realiza ninguna operación directamente relacionada con la base de datos o el backend del sistema.
+Este archivo es una vista HTML que presenta los datos y funcionalidades principales del sistema, pero no realiza ninguna operación directamente en la base de datos ni contiene lógica de negocio.
 

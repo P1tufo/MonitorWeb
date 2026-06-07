@@ -1,29 +1,28 @@
 """
 routes/analytics_deliveries.py — Rutas de analíticas Entregas optimizadas y seguras. [Reload Triggered]
 """
+import json
 import logging
 import sqlite3
-import pandas as pd
-import json
 from datetime import datetime
-from typing import Dict, Any, List, Optional
-from sqlalchemy import text
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Request, HTTPException, Depends
+import pandas as pd
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
-
-from core.database import get_session_dep
+from sqlalchemy import text
 from sqlalchemy.orm import Session
-from core.state import AppState, get_app_state
-from core.app_instance import templates
-from core.schemas import AnalyticsDeliveriesResponse
 
+from core.app_instance import templates
+from core.auth import get_current_user
+from core.database import get_session_dep
+from core.schemas import AnalyticsDeliveriesResponse
+from core.state import CacheManager, SyncStateManager, get_cache_manager, get_sync_manager
+from core.utils import sanitize_for_json
 from repositories import DeliveriesRepository
+from routes.analytics_proyecciones import get_proyecciones_context
 from routes.inventory import get_inventory_context
 from routes.tasks import get_tasks_context
-from routes.analytics_proyecciones import get_proyecciones_context
-from core.auth import get_current_user
-from core.utils import sanitize_for_json
 from services.deliveries_service import DeliveriesService
 
 logger = logging.getLogger("routes-analytics-deliveries")
@@ -59,10 +58,10 @@ def load_analytics_snapshot(session: Session, key: str) -> Optional[Dict[str, An
 # ─── Rutas ───────────────────────────────────────────────────────────────────
 
 @router.get("/analytics", response_class=HTMLResponse)
-async def analytics(request: Request, user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state)):
+async def analytics(request: Request, user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager)):
     """Renderiza la página principal de analíticas con caché multinivel (Memoria -> DB -> Cálculo)."""
     # 1. Nivel 1: Memoria (Instantáneo)
-    cached = state.get_cache("/analytics/deliveries")
+    cached = cache.get_cache("/analytics/deliveries")
     if cached and "wms_labels" in cached:
         logger.info("Sirviendo analíticas desde Caché de Memoria.")
         cached["request"] = request
@@ -71,14 +70,14 @@ async def analytics(request: Request, user = Depends(get_current_user), session:
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         return response
 
-    
+
     # 2. Nivel 2: Snapshot en BD (Muy rápido, persistente)
     year_str = datetime.now().strftime("%Y")
     month_str = datetime.now().strftime("%m")
     snapshot = load_analytics_snapshot(session, f"deliveries_{year_str}_{month_str}")
     if snapshot and "wms_labels" in snapshot:
         logger.info("Sirviendo analíticas desde Snapshot de Base de Datos.")
-        state.set_cache("/analytics/deliveries", snapshot)
+        cache.set_cache("/analytics/deliveries", snapshot)
         snapshot["request"] = request
         snapshot["user"] = user
         response = templates.TemplateResponse(request=request, name="deliveries.html", context=snapshot)
@@ -91,18 +90,20 @@ async def analytics(request: Request, user = Depends(get_current_user), session:
     context = DeliveriesService(session).get_full_context()
     context["request"] = request
     context["user"] = user
-    
+
     response = templates.TemplateResponse(request=request, name="deliveries.html", context=context)
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     return response
 
 from typing import Optional
+
 from routes.filters import _build_unified_where
+
 
 @router.get("/analytics/sla", response_class=HTMLResponse)
 async def sla_details(
-    request: Request, 
-    type: str = "late", 
+    request: Request,
+    type: str = "late",
     date: Optional[str] = None,
     area: Optional[str] = None,
     centro: Optional[str] = None,
@@ -113,28 +114,27 @@ async def sla_details(
     try:
         current_year = str(datetime.now().year)
         is_late = (type != "ontime")
-        
+
         # Si se usa un filtro de área, reflejarlo en el título
         area_title = f" ({area})" if area and area.strip() != "" else ""
         title = f"Auditoría{area_title}: Atrasadas (Peores 500)" if is_late else f"Auditoría{area_title}: A Tiempo (Últimos 500)"
-        
+
         iso_year, iso_week, _ = datetime.now().isocalendar()
-        current_week_str = f"{iso_year}-{iso_week:02d}"
-        
+
         # Generamos la cláusula WHERE usando las reglas unificadas (no limita la fecha si no se envía, para el año actual limitaremos más abajo)
         where_clause, where_params = _build_unified_where(date, area, centro, has_ots_filter, min_week=f"{current_year}-01")
-        
+
         from repositories import DeliveriesRepository
         df = DeliveriesRepository(session).get_sla_audit_records(f"%{current_year}", late=is_late, where_clause=where_clause, where_params=where_params)
-        
+
         # Limpieza de datos profunda para evitar errores de tipo en Jinja2 (NaN -> '')
         df['area_negocio'] = df['area_negocio'].fillna('S/N')
         df['texto_breve'] = df['texto_breve'].fillna('') # Crucial para evitar 'float not subscriptable'
         records = df.to_dict(orient="records")
-        
+
         return templates.TemplateResponse(
-            request=request, 
-            name="sla_table.html", 
+            request=request,
+            name="sla_table.html",
             context={"title": title, "type": type, "records": records}
         )
     except Exception as e:
@@ -166,7 +166,7 @@ def get_non_palletized_details(
     """
     try:
         query = """
-            SELECT 
+            SELECT
                 p.otcuanto as doc_mat,
                 COUNT(p.material) as pos,
                 CASE WHEN COUNT(p.material) > 1 THEN 'Varios Materiales' ELSE MIN(p.material) END as material,
@@ -177,8 +177,8 @@ def get_non_palletized_details(
                 MAX(m.fe_contab || ' ' || m.hora) as created_at
             FROM lx02_pendientes p
             JOIN (
-                SELECT doc_mat, usuario, cmv, MAX(alm) as alm, MAX(ce) as ce, MAX(fe_contab) as fe_contab, MAX(hora) as hora 
-                FROM inventory_movements 
+                SELECT doc_mat, usuario, cmv, MAX(alm) as alm, MAX(ce) as ce, MAX(fe_contab) as fe_contab, MAX(hora) as hora
+                FROM inventory_movements
                 GROUP BY doc_mat, usuario, cmv
             ) m ON p.otcuanto = m.doc_mat
             WHERE m.usuario = :user AND m.cmv = :cmv
@@ -192,19 +192,19 @@ def get_non_palletized_details(
         return {"status": "success", "data": rows}
 
     except Exception as e:
-        logger.error(f"Error cargando detalle no paletizado para {user} / {clase_mov}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error cargando detalle no paletizado para {user} / {clase_mov}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Ha ocurrido un error interno procesando la solicitud.")
 
 
 
 @router.get("/api/v1/analytics/deliveries", response_model=AnalyticsDeliveriesResponse)
-async def analytics_deliveries_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state)):
+async def analytics_deliveries_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager), sync: SyncStateManager = Depends(get_sync_manager)):
     """API JSON para analíticas de Entregas (Outbound Deliveries)."""
-    
+
     # 1. Caché en Memoria
-    cached = state.get_cache("/api/v1/analytics/deliveries")
+    cached = cache.get_cache("/api/v1/analytics/deliveries")
     if cached:
-        return AnalyticsDeliveriesResponse(data=cached, is_syncing=state.is_syncing)
+        return AnalyticsDeliveriesResponse(data=cached, is_syncing=sync.is_syncing)
 
     # 2. Snapshot en BD
     year_str = datetime.now().strftime("%Y")
@@ -212,19 +212,19 @@ async def analytics_deliveries_api(user = Depends(get_current_user), session: Se
     snapshot = load_analytics_snapshot(session, f"deliveries_{year_str}_{month_str}")
     if snapshot and "wms_labels" in snapshot:
         clean_snapshot = {k: v for k, v in snapshot.items() if k not in ('request', 'user', 'is_syncing')}
-        state.set_cache("/api/v1/analytics/deliveries", clean_snapshot)
-        return AnalyticsDeliveriesResponse(data=clean_snapshot, is_syncing=state.is_syncing)
+        cache.set_cache("/api/v1/analytics/deliveries", clean_snapshot)
+        return AnalyticsDeliveriesResponse(data=clean_snapshot, is_syncing=sync.is_syncing)
 
     # 3. Cálculo Completo
     try:
         from services.deliveries_service import DeliveriesService
         context = DeliveriesService(session).get_full_context()
         clean_context = {k: v for k, v in context.items() if k not in ('request', 'user', 'is_syncing')}
-        
-        state.set_cache("/api/v1/analytics/deliveries", clean_context)
+
+        cache.set_cache("/api/v1/analytics/deliveries", clean_context)
         save_analytics_snapshot(session, f"deliveries_{year_str}_{month_str}", clean_context)
-        
-        return AnalyticsDeliveriesResponse(data=clean_context, is_syncing=state.is_syncing)
+
+        return AnalyticsDeliveriesResponse(data=clean_context, is_syncing=sync.is_syncing)
     except Exception as e:
         logger.error(f"Error cargando API analytics deliveries: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Error calculando analíticas.")

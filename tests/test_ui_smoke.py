@@ -1,5 +1,6 @@
-import pytest
 from typing import List, Tuple
+
+import pytest
 
 # Configuración de marcadores de UI esperados por endpoint para facilitar el mantenimiento
 # El formato es (cadena_buscada, descripción_del_componente)
@@ -30,15 +31,15 @@ EXPECTED_UI_MARKERS = {
 def test_ui_smoke_components_presence(auth_client, path: str, markers: List[Tuple[str, str]]) -> None:
     """
     Prueba de humo parametrizada que verifica la presencia de componentes visuales críticos.
-    Asegura que el servidor responda correctamente y que el HTML contenga los IDs necesarios 
+    Asegura que el servidor responda correctamente y que el HTML contenga los IDs necesarios
     para la inicialización de los scripts de frontend (charts, handlers, etc).
     """
     # Realizar la petición al endpoint
     response = auth_client.get(path)
-    
+
     # Validación de disponibilidad (Fail-Fast)
     assert response.status_code == 200, f"Fallo de disponibilidad en {path}. Status: {response.status_code}"
-    
+
     # Búsqueda optimizada sobre el contenido binario para evitar decodificación UTF-8 costosa
     content = response.content
     for marker, description in markers:
@@ -54,11 +55,11 @@ def test_ui_smoke_analytics_studio_modal_components(auth_client) -> None:
     response = auth_client.get("/analytics")
     assert response.status_code == 200
     html = response.text
-    
+
     # Validar presencia de selectores visuales del AST
     assert 'id="qbBaseTable"' in html
     assert 'id="qbMetricColumn"' in html
-    
+
     # Aislamiento de Seguridad: Asegurar que NO existe el textarea de SQL crudo
     # Esto fallará hasta que se ejecute la Fase 1 del Plan Maestro
     assert '<textarea id="editQueryText"' not in html

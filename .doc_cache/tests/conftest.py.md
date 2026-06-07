@@ -1,7 +1,7 @@
 ## Archivo: ./tests/conftest.py
 
 ### Resumen Funcional
-Este archivo `conftest.py` es un archivo de configuración para pruebas unitarias en un proyecto de Sistema de Monitoreo de Almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite. Define varias funciones de prueba que configuran y limpian la base de datos de pruebas, proporcionan clientes de prueba autenticados y gestionan el estado global para las pruebas.
+Este archivo `conftest.py` es un archivo de configuración para pruebas unitarias en un proyecto de Sistema de Monitoreo de Almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite. Define varias funciones de prueba que configuran y limpian la base de datos de pruebas, proporcionan clientes de prueba autenticados y gestionan el entorno de ejecución para las pruebas.
 
 ### Catálogo de Funciones y Clases
 - `TEST_SESSION_ID()` - Genera un identificador criptográficamente seguro para evitar colisiones.
@@ -25,14 +25,15 @@ Este archivo `conftest.py` es un archivo de configuración para pruebas unitaria
 ### Estado y Variables Globales
 - `TEST_SESSION_ID`: Identificador criptográficamente seguro para evitar colisiones.
 - `MEMORY_DB_URI`: URI de la base de datos SQLite en memoria compartida.
+- `os.environ["DATABASE_URL"]`: Variable de entorno que almacena la URL de la base de datos.
 
 ### Dependencias y Flujo
-- Librerías externas: `os`, `secrets`, `pathlib`, `sqlite3`, `unittest.mock`, `pytest`, `fastapi.testclient`.
+- Librerías externas: `secrets`, `sys`, `pathlib`, `sqlite3`, `unittest.mock`, `pytest`, `fastapi.testclient`.
 - Archivos del proyecto que este archivo importa:
   - `config`
   - `app`
-  - `core.db_config_manager`
   - `core.auth`
+  - `core.db_config_manager`
 - Archivos del proyecto que importan a este archivo: Ninguno.
-- Flujo de datos: El archivo configura y limpia la base de datos de pruebas, proporciona clientes de prueba autenticados y gestiona el estado global para las pruebas.
+- Flujo de datos: El archivo configura y limpia la base de datos para las pruebas, proporciona clientes de prueba autenticados y gestiona el entorno de ejecución para las pruebas.
 

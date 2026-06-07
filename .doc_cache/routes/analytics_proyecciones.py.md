@@ -5,31 +5,24 @@ Este archivo define las rutas para obtener analíticas de proyecciones en un sis
 
 ### Catálogo de Funciones y Clases
 - `get_proyecciones_context()` - Obtiene el contexto de proyecciones, priorizando la caché.
-- `get_analytics_proyecciones(request: Request, force_refresh: bool = False, state: AppState = Depends(get_app_state))` - Retorna los datos de proyecciones en formato JSON.
+- `get_analytics_proyecciones(request: Request, force_refresh: bool = False, cache: CacheManager = Depends(get_cache_manager))` - Retorna los datos de proyecciones en formato JSON.
 
 ### Interacción con Base de Datos
 - Motor: SQLite
-- Tablas y Columnas: Ninguna (se utiliza `generate_predictions(_DB)` que es una función externa)
+- Tablas y Columnas: Ninguna (el archivo no interactúa directamente con la base de datos).
 
 ### Estado y Variables Globales
-- `AppState` - Almacena el estado del sistema, incluyendo la caché.
-- `get_app_state()` - Función para obtener el estado actual del sistema.
+- `DB_PATH` - Ruta a la base de datos SQLite.
+- `CacheManager` - Gestor de caché utilizado para almacenar los resultados de las proyecciones.
 
 ### Dependencias y Flujo
-- Librerías Externas: FastAPI, SQLAlchemy (a través de `generate_predictions(_DB)`).
-- Archivos Importados:
-  - `./core/auth.py` - Para la autenticación.
-  - `./core/state.py` - Para el manejo del estado del sistema.
-  - `./db/predictive_engine.py` - Para generar predicciones.
-  - `./config.py` - Para obtener la ruta de la base de datos.
+- Librerías externas: FastAPI, SQLAlchemy, config.py, core.auth, core.state, db.predictive_engine.
+- Archivos del proyecto que importan a este archivo: Ninguno.
+- Archivos del proyecto que este archivo importa:
+  - `config.py` - Para obtener la ruta de la base de datos.
+  - `core/auth.py` - Para autenticar el usuario actual.
+  - `core/state.py` - Para gestionar la caché.
+  - `db/predictive_engine.py` - Para generar las predicciones.
 
-- Flujo de Datos:
-  1. El usuario hace una solicitud a `/analytics/proyecciones`.
-  2. La función `get_analytics_proyecciones` verifica si se debe forzar el refresco de los datos.
-  3. Si no se fuerza el refresco, intenta obtener los datos desde la caché.
-  4. Si la caché está vacía o se requiere un refresco, llama a `get_proyecciones_context()`.
-  5. `get_proyecciones_context()` genera las predicciones utilizando `generate_predictions(_DB)`.
-  6. Las predicciones se almacenan en la caché y se devuelven como respuesta JSON.
-
-Este archivo es crucial para el monitoreo de proyecciones en el sistema WMS, asegurando que los datos sean actualizados regularmente y accesibles rápidamente a través de una interfaz RESTful.
+El flujo de datos es: el cliente hace una solicitud a `/analytics/proyecciones`, que luego llama a `get_proyecciones_context()` para obtener los datos. Si `force_refresh` es True, se limpia la caché antes de obtener los nuevos datos. Los datos son generados por `generate_predictions(_DB)` y almacenados en caché si no hay errores. Finalmente, los datos se devuelven al cliente en formato JSON.
 

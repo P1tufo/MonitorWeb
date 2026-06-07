@@ -1,5 +1,7 @@
 import sqlite3
+
 from fastapi import Depends
+
 
 # Importar dependencias directas para FastAPI
 def get_db():
@@ -14,7 +16,9 @@ def get_db():
 from .base import BaseRepository
 from .deliveries import DeliveriesRepository
 from .inventory import InventoryRepository
+from .productivity import ProductivityRepository
 from .tasks import TasksRepository
+
 
 def get_deliveries_repo(conn: sqlite3.Connection = Depends(get_db)) -> DeliveriesRepository:
     return DeliveriesRepository(conn)
@@ -25,13 +29,18 @@ def get_inventory_repo(conn: sqlite3.Connection = Depends(get_db)) -> InventoryR
 def get_tasks_repo(conn: sqlite3.Connection = Depends(get_db)) -> TasksRepository:
     return TasksRepository(conn)
 
+def get_productivity_repo(conn: sqlite3.Connection = Depends(get_db)) -> ProductivityRepository:
+    return ProductivityRepository(conn)
+
 __all__ = [
     "BaseRepository",
     "DeliveriesRepository",
     "InventoryRepository",
     "TasksRepository",
+    "ProductivityRepository",
     "get_db",
     "get_deliveries_repo",
     "get_inventory_repo",
-    "get_tasks_repo"
+    "get_tasks_repo",
+    "get_productivity_repo"
 ]

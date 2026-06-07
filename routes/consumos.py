@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-from typing import List, Dict, Any
-from pydantic import BaseModel
-import pandas as pd
-from core.database import get_session_dep
-from core.auth import get_current_user
 import logging
 from datetime import datetime
+from typing import Any, Dict, List
+
+import pandas as pd
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from core.auth import get_current_user
+from core.database import get_session_dep
 
 logger = logging.getLogger("routes-consumos")
 router = APIRouter(prefix="/api/consumos", tags=["Consumos"])

@@ -1,22 +1,15 @@
+import logging
 import subprocess
 import sys
 from pathlib import Path
-import logging
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # Importar configuraciones globales
 try:
-    from config import (
-        DELIVERIES_DIR, 
-        STOCK_DIR, 
-        INVENTORY_DIR,
-        CLEANSED_DIR, 
-        DB_PATH as DATABASE_PATH,
-        ONEDRIVE_PATH,
-        MB5B_DIR
-    )
+    from config import CLEANSED_DIR, DELIVERIES_DIR, INVENTORY_DIR, MB5B_DIR, ONEDRIVE_PATH, STOCK_DIR
+    from config import DB_PATH as DATABASE_PATH
     IW39_DIR = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/IW39"
 except ImportError:
     # Fallback si no se puede importar config (no debería pasar si PROJECT_ROOT está bien)
@@ -37,11 +30,11 @@ logger = logging.getLogger(__name__)
 
 def run_pipeline():
     """Executes the complete WMS Analysis and Consolidation pipeline."""
-    
+
     print("\n" + "="*60)
     print("🚀 INICIANDO PROCESADOR MAESTRO WMS")
     print("="*60)
-    
+
     # 0. Validación de Entrada (Seguridad y Robustez)
     for path_name, path_val in [("Origen Entregas", DELIVERIES_DIR), ("Stock Stock", STOCK_DIR), ("Movimientos Movimientos", INVENTORY_DIR), ("IW39 Órdenes", IW39_DIR)]:
         if not Path(path_val).exists():
@@ -54,7 +47,7 @@ def run_pipeline():
     analyze_script = PROJECT_ROOT / "scripts" / "analyze_folder.py"
     if not analyze_script.exists():
         analyze_script = PROJECT_ROOT / "analyze_folder.py"
-        
+
     if not analyze_script.exists():
         logger.error(f"No se encontró analyze_folder.py en {PROJECT_ROOT} o {PROJECT_ROOT}/scripts. Saltando Fase 1 y 2.")
     else:
@@ -64,15 +57,15 @@ def run_pipeline():
             "--output", str(CLEANSED_DIR),
             "--db", str(DATABASE_PATH)
         ]
-        
+
         logger.info(f"[Entregas] Ejecutando pipeline para: {DELIVERIES_DIR}")
-        
+
         try:
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             for line in process.stdout:
                 print(line, end='')
             process.wait()
-            
+
             if process.returncode == 0:
                 logger.info("[Entregas] Fase completada.")
 
@@ -86,7 +79,7 @@ def run_pipeline():
                     logger.info("[Enrich] Cruzando Entregas con Stock...")
                     from db.db_enrichment import enrich_deliveries_with_stock
                     enrich_deliveries_with_stock(con.conn)
-                
+
             else:
                 logger.error(f"[Entregas] Pipeline terminó con errores (Código: {process.returncode})")
 
@@ -117,11 +110,11 @@ def run_pipeline():
         processor = IW39Processor()
         with sqlite3.connect(DATABASE_PATH) as conn:
             total = processor.process_directory(str(IW39_DIR), str(DATABASE_PATH), "iw39_orders", conn)
-            
+
             # Enriquecer inventarios con IW39 (Cruza 'Orden')
             from db.db_enrichment import enrich_movements_with_iw39
             enrich_movements_with_iw39(conn)
-            
+
         print(f"  ✅  IW39 completado: {total:,} filas en iw39_orders")
     except Exception as e:
         logger.error(f"[IW39] Fallo: {e}", exc_info=True)

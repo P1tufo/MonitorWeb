@@ -1,7 +1,7 @@
 ## Archivo: ./routes/consumos.py
 
 ### Resumen Funcional
-Este archivo contiene rutas para obtener datos de consumos en un sistema de almacén (WMS) utilizando FastAPI. Permite consultar los consumos agrupados por material y ceco, así como el consumo histórico de materiales específicos.
+Este archivo contiene endpoints para obtener datos de consumos en un sistema de almacén (WMS) utilizando FastAPI. Permite consultar los consumos agrupados por material y ceco, así como el consumo mensual de materiales específicos.
 
 ### Catálogo de Funciones y Clases
 - `get_consumos_ceco(ceco: str, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Obtiene los consumos agrupados por material para un CeCo específico.
@@ -16,22 +16,20 @@ Este archivo contiene rutas para obtener datos de consumos en un sistema de alma
   - `doc_mat`, `ej_mat`, `pos`
 
 ### Estado y Variables Globales
-- Ninguna
+Ninguna
 
 ### Dependencias y Flujo
 - Librerías externas:
-  - `fastapi`
-  - `sqlalchemy`
-  - `pydantic`
   - `pandas`
-  - `logging`
-  - `datetime`
+  - `fastapi`
+  - `pydantic`
+  - `sqlalchemy`
 - Archivos del proyecto que este archivo importa:
-  - `core.database.get_session_dep`
   - `core.auth.get_current_user`
+  - `core.database.get_session_dep`
   - `repositories.inventory.InventoryRepository`
 - Archivos del proyecto que importan a este archivo:
   - Ninguno
 
-El flujo de datos es desde las rutas hasta el repositorio, donde se realizan las consultas a la base de datos.
+El flujo de datos es desde los endpoints hasta el repositorio, donde se realizan las consultas a la base de datos.
 

@@ -4,7 +4,8 @@ core/models_auth.py — Modelo ORM de usuarios para autenticación (Pilar 6).
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from sqlalchemy import String, Boolean, DateTime, Integer
+
+from sqlalchemy import Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base

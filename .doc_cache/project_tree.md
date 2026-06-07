@@ -7,6 +7,7 @@
     app.py
     config.py
     main.py
+    pyproject.toml
     core/
         __init__.py
         app_instance.py
@@ -42,6 +43,27 @@
         Dockerfile
         docker-compose.dev.yml
         docker-compose.yml
+    .ruff_cache/
+        CACHEDIR.TAG
+        0.15.16/
+            11111118467479419079
+            11202584676495473539
+            12837006568257914528
+            13063805794255128930
+            14520502271748178078
+            17079254108753630497
+            17719973830842396137
+            1787735964361233676
+            18138816813160753094
+            3224601386673831227
+            4375004563196981824
+            4721987616455386308
+            4748534235480522718
+            6128034904735563494
+            6139928237122840040
+            6862559625872415332
+            826904553524788349
+            8340212132171588576
     setup/
         package-lock.json
         package.json
@@ -56,15 +78,16 @@
         test_maintenance.py
         test_pdf.py
         test_pipeline.py
-        test_queries.py
         test_services.py
         test_ui_smoke.py
         test_utils.py
     repositories/
         __init__.py
         base.py
+        dashboard.py
         deliveries.py
         inventory.py
+        productivity.py
         tasks.py
         widgets.py
     docs/
@@ -138,6 +161,7 @@
             analytics_studio_config.js
             analytics_studio_renderer.js
             analytics_studio_ui.js
+            bundle.js
             consumos.js
             core_ui.js
             dashboard_api.js
@@ -159,11 +183,13 @@
             graph.html
     scripts/
         __init__.py
+        bundler.py
         doc_generator.py
         doc_prompts.py
         free_ram.py
         generate_graphify.py
         main_processor.py
+        run_consolidator.py
     db/
         __init__.py
         app.db
@@ -201,6 +227,7 @@
             _tab_ia.html
             _tab_inventory.html
             _tab_ots.html
+            _tab_replenishment.html
             _tab_transporte.html
             _table.html
     data/
@@ -229,6 +256,7 @@
         widgets.py
     services/
         __init__.py
+        background_tasks.py
         dashboard_service.py
         deliveries_service.py
         inventory_service.py
@@ -241,6 +269,7 @@
             base.py
             deliveries.py
             iw39.py
+            mb5b.py
             movements.py
             stock.py
             tasks.py

@@ -1,13 +1,14 @@
 import os
 import subprocess
 
+
 def quit_app(app_name):
     """Cierra una aplicación de forma segura usando AppleScript."""
     script = f'tell application "{app_name}" to quit'
     try:
         subprocess.run(["osascript", "-e", script], capture_output=True, check=True)
         return True
-    except:
+    except Exception:
         return False
 
 def main():
@@ -36,12 +37,12 @@ def main():
         if quit_app(app):
             print(f" [✓] {app} cerrado.")
             closed_count += 1
-    
+
     if closed_count == 0:
         print(" [!] No se encontraron aplicaciones abiertas de la lista.")
     else:
         print(f"\nSe han cerrado {closed_count} aplicaciones.")
-    
+
     print("\n--- Estado de Memoria Actual ---")
     # Mostrar el Top 5 de procesos por memoria (excluyendo Ollama)
     try:
@@ -49,7 +50,7 @@ def main():
         output = subprocess.check_output(cmd, shell=True).decode()
         print("Top 10 procesos (por % de RAM):")
         print(output)
-    except:
+    except Exception:
         pass
 
     print("\nSugerencia: Ejecuta 'ollama gc' en la terminal si quieres forzar la limpieza de modelos antiguos.")

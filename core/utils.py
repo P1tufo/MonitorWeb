@@ -1,12 +1,13 @@
 """
 core/utils.py — Utilidades transversales y gestión de señales del sistema.
 """
+import logging
+import math
 import signal
 import sys
-import logging
+from typing import Any, Final
+
 import pandas as pd
-import math
-from typing import Final, Any
 
 logger = logging.getLogger("app-utils")
 
@@ -16,21 +17,24 @@ _handlers_registered = False
 def setup_signal_handlers() -> None:
     """Configura los manejadores de señales (SIGINT, SIGTERM) para un cierre limpio."""
     global _handlers_registered
-    if _handlers_registered: return
+    if _handlers_registered:
+        return
 
     def _handle_exit(sig: int, frame: object) -> None:
         logger.info(f"Señal de cierre recibida ({sig}). Finalizando procesos...")
         try:
             from services.tunnel import stop_tunnel
             stop_tunnel()
-        except: pass
+        except Exception:
+            pass
         sys.exit(0)
 
     try:
         signal.signal(signal.SIGINT, _handle_exit)
         signal.signal(signal.SIGTERM, _handle_exit)
         _handlers_registered = True
-    except: pass
+    except Exception:
+        pass
 
 def log_startup_banner():
     logger.info("MonitorWeb Core Utility Module Initialized.")
@@ -57,7 +61,7 @@ def sanitize_for_json(data: Any) -> Any:
         if math.isnan(data) or math.isinf(data):
             return None
         return data
-    
+
     # Manejo de fechas de pandas (Timestamp)
     if hasattr(data, 'isoformat'):
         return data.isoformat()

@@ -24,19 +24,27 @@ El archivo `deliveries.py` contiene una clase `OutboundDeliveryAdapter` que exti
   - `PRAGMA table_info({table_name})`
 
 ### Estado y Variables Globales
-Ninguna.
+No se detectaron variables globales, de sesión o de entorno en este archivo.
 
 ### Dependencias y Flujo
 - Librerías externas:
+  - `sqlite3`
   - `pandas`
   - `pathlib`
   - `typing`
-  - `sqlite3`
 - Archivos del proyecto que importan a este archivo (`deliveries.py`):
-  - No se mencionan dependencias específicas en el fragmento proporcionado.
+  - No se detectaron archivos que importen directamente a `deliveries.py`.
 - Archivos del proyecto que este archivo importa:
-  - `base.py`
-  - `wms_utils.py`
+  - `core.wms_utils`: Contiene funciones utilitarias para el procesamiento de datos.
+  - `.base.BaseWMSProcessor`: Clase base para procesadores de WMS.
 
-El flujo de datos es desde los archivos de entrada (Excel, TXT) hasta la base de datos SQLite, pasando por la limpieza y transformación de los datos en el adaptador.
+**Flujo de Datos:**
+1. **Entrada**: Archivo CSV, Excel o TXT con datos de entregas de salida.
+2. **Procesamiento**:
+   - Validación del archivo.
+   - Extracción y limpieza de columnas requeridas.
+   - Transformación de los datos utilizando funciones utilitarias (`map_wms_status`, `apply_cost_center_mapping`, etc.).
+3. **Salida**: Inserción o actualización de los datos en la tabla `outbound_deliveries` de la base de datos SQLite.
+
+Este flujo asegura que los datos de entregas de salida sean procesados y almacenados correctamente en el sistema de gestión de almacén.
 

@@ -1,6 +1,7 @@
 """core/pdf_reports.py — Lógica de construcción de secciones complejas de PDF (Anexos y Picking)."""
 from datetime import datetime
 
+
 def _parse_qty(val):
     """Sanitiza y convierte a float valores de cantidad de WMS."""
     if val is None or val == "":
@@ -9,7 +10,7 @@ def _parse_qty(val):
         s = str(val).strip().replace(' ', '')
         if not s:
             return 0.0
-        
+
         # Manejo de separadores WMS (punto para miles, coma para decimales)
         if ',' in s:
             if '.' in s:
@@ -22,14 +23,14 @@ def _parse_qty(val):
             # Caso 1.234.567 -> 1234567
             s = s.replace('.', '')
         elif s.count('.') == 1:
-            # Caso ambiguo: 1.234 puede ser mil o decimal. 
+            # Caso ambiguo: 1.234 puede ser mil o decimal.
             # Si tiene 3 dígitos después del punto, asumimos miles (WMS standard)
             parts = s.split('.')
             if len(parts[1]) == 3 and len(parts[0]) > 0:
                  s = s.replace('.', '')
-        
+
         return float(s)
-    except (ValueError, TypeError): 
+    except (ValueError, TypeError):
         return 0.0
 
 def _fmt_qty(val):
@@ -134,13 +135,13 @@ def draw_picking_list(pdf, picking_df):
         pdf.cell(W['ubi'], PICK_ROW_H, str(r['ubicacion'])[:20], border=1)
         pdf.cell(W['mat'], PICK_ROW_H, str(r['material'])[:12], border=1)
         pdf.cell(W['desc'], PICK_ROW_H, str(r['descripcion'])[:34] + ("..." if len(str(r['descripcion'])) > 34 else ""), border=1)
-        
+
         # Cantidad por Entrega (Sanitizada)
         qty_val = _fmt_qty(r['cantidad'])
         pdf.cell(W['cant'], PICK_ROW_H, qty_val, border=1, align='C')
-        
+
         pdf.cell(W['umb'], PICK_ROW_H, str(r['umb'])[:5], border=1, align='C')
-        
+
         # Lógica de Total Consolidado (Solo la primera vez por grupo)
         mat_key = (r['area'], str(r['material']))
         if mat_key not in seen_totals:
@@ -151,7 +152,7 @@ def draw_picking_list(pdf, picking_df):
             pdf.set_font("Helvetica", '', 7.5)
         else:
             pdf.cell(W['tot'], PICK_ROW_H, "", border=1)
-            
+
         pdf.cell(W['area'], PICK_ROW_H, str(r['area'])[:15], border=1)
         pdf.ln()
 

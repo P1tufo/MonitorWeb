@@ -1,53 +1,43 @@
 ## Archivo: ./routes/sync.py
 
 ### Resumen Funcional
-Este archivo contiene rutas para la sincronización de datos en un sistema de monitoreo de almacén (WMS). Permite iniciar y gestionar procesos de sincronización en segundo plano utilizando `TaskManager`, y proporciona endpoints para consultar el estado de las tareas.
+Este archivo contiene rutas para la sincronización de datos en un sistema de monitoreo de almacén (WMS). Permite obtener la URL del túnel, el estado de la sincronización y iniciar procesos de sincronización. También proporciona endpoints para listar y consultar el estado de tareas.
 
 ### Catálogo de Funciones y Clases
-- `get_tunnel_url(state: AppState = Depends(get_app_state))` - Retorna la URL pública del túnel (Ngrok).
-- `get_sync_status(state: AppState = Depends(get_app_state))` - Retorna el estado actual de la sincronización.
-- `sync_data(state: AppState = Depends(get_app_state), admin=Depends(require_auth))` - Inicia el proceso de sincronización de datos y lo encola en `TaskManager`.
-- `list_tasks(limit: int = 20, state: AppState = Depends(get_app_state), admin=Depends(require_auth))` - Lista las tareas recientes del sistema.
-- `get_task(task_id: str, state: AppState = Depends(get_app_state), admin=Depends(require_auth))` - Consulta el estado de una tarea específica por su ID.
+- `get_tunnel_url()` - Retorna la URL pública del túnel (Ngrok).
+- `get_sync_status(sync: SyncStateManager = Depends(get_sync_manager))` - Retorna el estado actual de la sincronización.
+- `sync_data(sync: SyncStateManager = Depends(get_sync_manager), admin = Depends(require_auth))` - Inicia el proceso de sincronización de datos y lo encola en el TaskManager para ejecución trazable en segundo plano.
+- `list_tasks(limit: int = 20, admin = Depends(require_auth))` - Lista las tareas recientes del sistema.
+- `get_task(task_id: str, admin = Depends(require_auth))` - Consulta el estado de una tarea específica por su ID.
 - `_run_sync_pipeline()` - Ejecuta el pipeline completo de limpieza y consolidación.
 
 ### Interacción con Base de Datos
-- **Motor:** SQLite
-- **Tablas y Columnas:**
-  - `analytics_snapshots`
-  - Tablas específicas dependen del contenido de los directorios (`deliveries_path`, `stock_path`, `tasks_path`, `inventory_path`, `lx02_pendientes_path`) que se procesan en `_run_sync_pipeline`.
-- **Consultas SQL Crudas:** No hay consultas SQL crudas directamente en este archivo. Se utilizan métodos de ORM.
+- Motor: SQLite (indicado por `DB_PATH`)
+- Tablas modificadas:
+  - `analytics_snapshots` (se borra en caso de cambios)
+- Columnas modificadas:
+  - Todas las tablas que se procesan a través del `DataConsolidator`
 
 ### Estado y Variables Globales
-- **Variables Globales:**
-  - `DB_PATH`
-  - `CLEANSED_DIR`
-  - `PDF_STORAGE`
-  - `DELIVERIES_DIR`
-  - `STOCK_DIR`
-  - `TASKS_DIR`
-  - `INVENTORY_DIR`
-  - `TUNNEL_URL_FILE`
+- No hay variables globales explícitas mencionadas.
 
 ### Dependencias y Flujo
-- **Librerías Externas:**
+- **Dependencias Externas**: 
   - `logging`
   - `shutil`
   - `pathlib`
   - `typing`
   - `fastapi`
-  - `core.auth`
-  - `config`
-  - `core.state`
-  - `core.task_manager`
-  - `db.consolidator`
+  
+- **Archivos del Proyecto Importados**:
+  - `config.py` (para constantes de rutas y archivos)
+  - `core.auth` (para autenticación)
+  - `core.state` (para gestionar estado de sincronización y caché)
+  - `core.task_manager` (para manejo de tareas)
+  - `db.consolidator` (para consolidación de datos)
 
-- **Archivos del Proyecto que Importan a este Archivo:**
-  - `routes/transporte.py` (importado dentro de `_run_sync_pipeline`)
+- **Archivos del Proyecto que Importan a Este Archivo**:
+  - `routes/transporte.py` (importado dentro de `_run_sync_pipeline` para sincronizar transporte)
 
-- **Archivos del Proyecto que Este Archivo Importa:**
-  - No hay imports directos desde otros archivos en este fragmento.
-
-- **Dirección del Flujo de Datos:**
-  - Los datos fluyen a través de los endpoints para iniciar y gestionar la sincronización, luego se procesan en `_run_sync_pipeline` que interactúa con las tablas de la base de datos y realiza operaciones de ETL.
+El flujo de datos es desde el endpoint `/sync`, que inicia la tarea de sincronización, hasta la ejecución de `_run_sync_pipeline` en segundo plano mediante `TaskManager`. Este proceso incluye la lectura y procesamiento de archivos en varios directorios, la consolidación de datos en la base de datos SQLite, y la actualización del estado de las tareas.
 

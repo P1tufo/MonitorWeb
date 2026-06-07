@@ -1,10 +1,6 @@
-## Sugerencias para: ./templates/deliveries.html (Procesado en 2 partes)
+## Sugerencias para: ./templates/deliveries.html (Procesado en 1 partes)
 
-#### --- PARTE 1 de 2 ---
-
-CÓDIGO ÓPTIMO
-
-#### --- PARTE 2 de 2 ---
+#### --- PARTE 1 de 1 ---
 
 CÓDIGO ÓPTIMO
 

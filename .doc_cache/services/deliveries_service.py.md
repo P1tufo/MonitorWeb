@@ -8,7 +8,7 @@ El archivo `deliveries_service.py` contiene la lógica del servicio de entregas 
   - **Propósito**: Prepara el servicio para interactuar con la base de datos proporcionada.
   
 - `get_full_context() -> Dict[str, Any]` - Genera y devuelve un contexto completo para las entregas.
-  - **Propósito**: Recopila y organiza información relevante desde la base de datos y otros servicios para proporcionar un contexto detallado.
+  - **Propósito**: Recopila y organiza información relevante sobre áreas de negocio y widgets configurados.
 
 ### Interacción con Base de Datos
 - **Motor**: SQLite
@@ -18,23 +18,27 @@ El archivo `deliveries_service.py` contiene la lógica del servicio de entregas 
   - `area_negocio`
 
 ### Estado y Variables Globales
-- Ninguna
+Ninguna
 
 ### Dependencias y Flujo
 - **Librerías Externas**: 
-  - `sqlalchemy.orm.Session`
-  - `logging`
-  - `typing.Dict`, `typing.Any`
+  - `logging`, `typing`
   
-- **Archivos del Proyecto que Importan a este Archivo**:
+- **Archivos del Proyecto que Importan a este Archivo (lo consumen)**:
+  - Ninguno
+  
+- **Archivos del Proyecto que Este Archivo IMPORTA (consume)**:
+  - `core.models.ConfigQuery`
+  - `routes.analytics_proyecciones.get_proyecciones_context`
   - `routes.inventory.get_inventory_context`
   - `routes.tasks.get_tasks_context`
-  - `routes.analytics_proyecciones.get_proyecciones_context`
 
-- **Archivos del Proyecto que Este Archivo Importa**:
-  - Ninguno
+**Flujo de Datos**: 
+1. El servicio se inicializa con una sesión de base de datos.
+2. Llama a `get_full_context()` para generar el contexto completo.
+3. Consulta la tabla `outbound_deliveries` para obtener áreas de negocio distintas.
+4. Recupera widgets configurados desde la base de datos.
+5. Intenta cargar contextos adicionales desde otros módulos (`routes.analytics_proyecciones`, `routes.inventory`, `routes.tasks`) y los combina en el contexto final.
 
-- **Flujo de Datos**: 
-  - El servicio recibe una sesión de base de datos y utiliza esta para consultar la tabla `outbound_deliveries`.
-  - Luego, intenta cargar contextos adicionales desde otros servicios (`inventory`, `tasks`, `analytics_proyecciones`) y los combina en el contexto final.
+**Nota**: El archivo importa funciones desde otros archivos, lo que indica un flujo bidireccional de dependencias dentro del proyecto.
 

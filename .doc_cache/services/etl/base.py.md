@@ -22,15 +22,16 @@ El archivo `base.py` define una clase abstracta `BaseWMSProcessor` que proporcio
 - Columnas: Ninguna (operaciones directas en la base de datos).
 
 ### Estado y Variables Globales
-- `logger` - Variable global que almacena el objeto de registro.
+- `logger` - Variable global para el registro de eventos.
 
 ### Dependencias y Flujo
 - Librerías externas:
-  - `pandas`
-  - `pathlib`
-  - `sqlite3`
-  - `typing`
   - `logging`
+  - `sqlite3`
+  - `abc`
+  - `pathlib`
+  - `typing`
+  - `pandas`
 - Archivos del proyecto que este archivo importa: Ninguno.
 - Archivos del proyecto que importan a este archivo: Ninguno.
 - Flujo de datos: El archivo procesa archivos WMS y carga los datos en una base de datos SQLite.

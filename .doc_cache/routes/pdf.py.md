@@ -17,19 +17,29 @@ Este archivo contiene rutas FastAPI para generar PDFs relacionados con el sistem
 
 ### Estado y Variables Globales
 - **Variables Globales:** Ninguna.
-- **Sesiones de Usuario:** Ninguna.
-- **Entorno:** Ninguna.
+- **Variables de Sesión:** Ninguna.
 - **Diccionarios Quemados:** Ninguno.
 
 ### Dependencias y Flujo
 - **Librerías Externas:**
-  - `io`, `logging`, `pandas`, `datetime`, `typing`, `fastapi`, `sqlalchemy`, `text`.
-- **Archivos del Proyecto que Importa a este Archivo (Consumo):** Ninguno.
-- **Archivos del Proyecto que Este Archivo Importa (Lo Consumen):**
+  - `pandas`
+  - `fastapi`
+  - `sqlalchemy`
+  - `logging`
+  - `io`
+  - `datetime`
+  - `typing`
+- **Archivos del Proyecto que Importa a este Archivo:** Ninguno.
+- **Archivos del Proyecto que Este Archivo Importa:**
+  - `config.DB_PATH`
+  - `config.PDF_STORAGE`
   - `core.database.get_session_dep`
+  - `core.pdf_engine.WMS_Landscape_PDF`
+  - `core.pdf_engine.draw_delivery_page`
+  - `core.pdf_engine.get_ots_for_delivery`
+  - `core.pdf_reports.draw_annex_table`
+  - `core.pdf_reports.draw_picking_list`
   - `repositories.deliveries.DeliveriesRepository`
-  - `core.pdf_engine.WMS_Landscape_PDF`, `draw_delivery_page`, `get_ots_for_delivery`
-  - `core.pdf_reports.draw_annex_table`, `draw_picking_list`
 
 **Flujo de Datos:**
 1. **Entrada:** Parámetros del formulario.
@@ -38,8 +48,5 @@ Este archivo contiene rutas FastAPI para generar PDFs relacionados con el sistem
    - Generación del PDF utilizando las funciones definidas en `core.pdf_engine` y `core.pdf_reports`.
 3. **Salida:** Respuesta HTTP con el contenido del PDF.
 
-**Flujo Inverso:**
-1. **Entrada:** Archivos del proyecto que consumen este archivo.
-2. **Procesamiento:** No aplica.
-3. **Salida:** No aplica.
+Este flujo asegura que los datos se procesen correctamente y se generen los PDFs según los parámetros proporcionados.
 

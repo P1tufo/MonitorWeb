@@ -1,5 +1,7 @@
 import pytest
+
 from core.utils import setup_signal_handlers
+
 
 def test_setup_signal_handlers_safety() -> None:
     """

@@ -3,19 +3,20 @@ routes/pdf.py — Rutas optimizadas para generación de reportes WMS.
 """
 import io
 import logging
-from core.database import get_session_dep
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-import pandas as pd
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, Form, Depends, HTTPException, Response
+
+import pandas as pd
+from fastapi import APIRouter, Depends, Form, HTTPException, Response
 from fastapi.responses import FileResponse
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from config import DB_PATH, PDF_STORAGE
+from core.database import get_session_dep
 from core.pdf_engine import WMS_Landscape_PDF, draw_delivery_page, get_ots_for_delivery
-from repositories.deliveries import DeliveriesRepository
 from core.pdf_reports import draw_annex_table, draw_picking_list
+from repositories.deliveries import DeliveriesRepository
 
 logger = logging.getLogger("routes-pdf")
 router = APIRouter()
@@ -42,10 +43,10 @@ async def generate_pdf(
         # 2. Generar PDF en memoria
         pdf = WMS_Landscape_PDF()
         ots_list = get_ots_for_delivery(entrega, session.connection().connection)
-        
+
         pdf.add_page()
         draw_delivery_page(pdf, df.iloc[0], df, include_logo, ots_list)
-        
+
         # 3. Stream de respuesta
         pdf_bytes = bytes(pdf.output(dest='S')) # Forzar conversión a bytes
         disposition = "attachment" if action == "descargar" else "inline"
@@ -79,7 +80,7 @@ async def generate_pdf_bulk(
         all_deliveries = repo.get_deliveries_for_bulk(date, area, centro, has_ots_filter, entrega_query)
         if all_deliveries.empty:
             return {"error": "No hay datos que coincidan con los filtros."}
-            
+
         area_lookup = repo.get_area_lookup()
         all_deliveries = all_deliveries.merge(area_lookup, on='entrega', how='left')
 
@@ -93,7 +94,7 @@ async def generate_pdf_bulk(
         grouped_data = []
         current_p = 2 # El anexo es la pág 1, el picking la pág 2...
         pdf = WMS_Landscape_PDF()
-        
+
         for (area_val, autor), group in all_deliveries_sorted.groupby(['area_negocio', 'autor'], dropna=False):
             area_val = area_val or 'SIN ÁREA'
             autor    = autor    or 'SIN AUTOR'
@@ -101,10 +102,10 @@ async def generate_pdf_bulk(
             num_pages = len(entry_list)
             end_p = current_p + num_pages - 1
             page_range = f"{current_p}" if current_p == end_p else f"{current_p}-{end_p}"
-            
+
             link_id = pdf.add_link()
             pdf.set_link(link_id, page=current_p)
-            
+
             grouped_data.append({
                 'autor': autor,
                 'area': area_val,
@@ -118,7 +119,7 @@ async def generate_pdf_bulk(
 
         # 3. Dibujar Secciones Especiales
         draw_annex_table(pdf, grouped_data)
-        
+
         all_entrega_ids = [e for row in grouped_data for e in row['items']]
         picking_df = repo.get_picking_items(all_entrega_ids)
         draw_picking_list(pdf, picking_df)

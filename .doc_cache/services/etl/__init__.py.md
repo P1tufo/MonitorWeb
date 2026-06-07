@@ -22,7 +22,7 @@ Este archivo contiene funciones para procesar diferentes tipos de archivos y dir
 Ninguna
 
 ### Dependencias y Flujo
-- **Dependencias Externas**: Ninguna
+- **Dependencias Externas**: No hay dependencias externas.
 - **Archivos del Proyecto que Importan a este Archivo**:
   - `./services/etl/deliveries.py`
   - `./services/etl/movements.py`

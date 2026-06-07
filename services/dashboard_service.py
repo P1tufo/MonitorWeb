@@ -1,9 +1,10 @@
 import logging
-from sqlalchemy.orm import Session
-from typing import Dict, Any, List
 from datetime import datetime
+from typing import Any, Dict, List
 
-from repositories.deliveries import DeliveriesRepository
+from sqlalchemy.orm import Session
+
+from repositories.dashboard import DashboardRepository
 
 logger = logging.getLogger("services-dashboard")
 
@@ -14,7 +15,7 @@ class DashboardService:
     """
     def __init__(self, session: Session):
         self.session = session
-        self.repo = DeliveriesRepository(session)
+        self.repo = DashboardRepository(session)
 
     def get_full_context(self) -> Dict[str, Any]:
         iso_year, iso_week, _ = datetime.now().isocalendar()

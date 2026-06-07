@@ -2,16 +2,18 @@
 # Trigger uvicorn reload
 main.py — Punto de entrada oficial de MonitorWeb Analytics.
 """
-import sys
-import uvicorn
 import logging
+import sys
+
+import uvicorn
+
 from app import app
 from config import APP_HOST, APP_PORT, APP_RELOAD
 from services.tunnel import start_tunnel
 
 # Configuración de logging unificada
 logging.basicConfig(
-    level=logging.INFO, 
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger("startup")
@@ -23,22 +25,22 @@ def start_application():
         # Se inicia antes que uvicorn para tener la URL disponible
         logger.info("Activando servicio de túnel remoto...")
         start_tunnel()
-        
+
         # 2. Lanzar Servidor Web
         # Uvicorn gestiona internamente la ocupación de puertos y el recargado.
         # Al no usar manejadores de señales externos, uvicorn puede procesar
         # Ctrl+C correctamente y elevar KeyboardInterrupt.
         logger.info(f"Iniciando MonitorWeb en http://{APP_HOST}:{APP_PORT} (Reload: {APP_RELOAD})")
-        
+
         uvicorn.run(
-            "app:app", 
-            host=APP_HOST, 
-            port=APP_PORT, 
+            "app:app",
+            host=APP_HOST,
+            port=APP_PORT,
             reload=APP_RELOAD,
             log_level="info",
             access_log=False # Evita ruido excesivo en consola por cada asset estático
         )
-        
+
     except KeyboardInterrupt:
         logger.info("Cierre detectado por el usuario (Ctrl+C).")
     except Exception as e:

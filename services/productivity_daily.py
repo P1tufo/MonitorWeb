@@ -1,17 +1,19 @@
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
+
 from sqlalchemy.orm import Session
-from repositories.tasks import TasksRepository
+
+from repositories.productivity import ProductivityRepository
 
 logger = logging.getLogger("services-productivity")
 
 class ProductivityDailyService:
     def __init__(self, session: Session):
         self.session = session
-        self.tasks_repo = TasksRepository(session)
+        self.productivity_repo = ProductivityRepository(session)
 
     def get_available_dates(self) -> list:
-        return self.tasks_repo.get_available_dates()
+        return self.productivity_repo.get_available_dates()
 
     def get_productivity_data(self, target_date: str) -> Dict[str, Any]:
         """
@@ -30,15 +32,15 @@ class ProductivityDailyService:
                 date_sap = f"{parts[0]}.{parts[1]}.{parts[2]}"
             else:
                 date_sap = target_date
-        except:
+        except Exception:
             date_sap = target_date
 
         logger.info(f"Calculando KPIs de productividad para la fecha: {date_sap}")
 
-        summary = self.tasks_repo._get_daily_summary(date_sap)
-        trend = self.tasks_repo._get_hourly_trend(date_sap)
-        gaps = self.tasks_repo._get_inactivity_gaps(date_sap)
-        heatmap = self.tasks_repo._get_activity_heatmap(date_sap)
+        summary = self.productivity_repo._get_daily_summary(date_sap)
+        trend = self.productivity_repo._get_hourly_trend(date_sap)
+        gaps = self.productivity_repo._get_inactivity_gaps(date_sap)
+        heatmap = self.productivity_repo._get_activity_heatmap(date_sap)
 
         return {
             "target_date": target_date,
@@ -50,7 +52,7 @@ class ProductivityDailyService:
         }
 
     def get_user_movements_daily_summary(self, target_date: str, usuario: str) -> list:
-        return self.tasks_repo.get_user_movements_daily_summary(target_date, usuario)
+        return self.productivity_repo.get_user_movements_daily_summary(target_date, usuario)
 
     def get_user_movements_daily_details(self, target_date: str, usuario: str, operacion: str) -> list:
-        return self.tasks_repo.get_user_movements_daily_details(target_date, usuario, operacion)
+        return self.productivity_repo.get_user_movements_daily_details(target_date, usuario, operacion)

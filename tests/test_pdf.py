@@ -1,15 +1,12 @@
-import pytest
-import pandas as pd
 import io
 import sqlite3
 from typing import List
 from unittest.mock import MagicMock, patch
-from core.pdf_engine import (
-    WMS_Landscape_PDF, 
-    _generate_barcode_stream, 
-    draw_delivery_page,
-    get_ots_for_delivery
-)
+
+import pandas as pd
+import pytest
+
+from core.pdf_engine import WMS_Landscape_PDF, _generate_barcode_stream, draw_delivery_page, get_ots_for_delivery
 
 # Constantes de dimensiones estándar para papel Letter (279.4mm x 215.9mm)
 LETTER_WIDTH_MIN, LETTER_WIDTH_MAX = 279, 280
@@ -69,7 +66,7 @@ def test_get_ots_logic() -> None:
     """
     mock_conn = MagicMock(spec=sqlite3.Connection)
     mock_data = pd.DataFrame({"numero_ot": [1001, 1002, 0, None]})
-    
+
     with patch("pandas.read_sql", return_value=mock_data):
         ots = get_ots_for_delivery("8000123", mock_conn)
         assert "1001" in ots
@@ -77,18 +74,18 @@ def test_get_ots_logic() -> None:
         assert "0" not in ots, "La lógica debe excluir OTs con valor numérico 0"
         assert all(isinstance(ot, str) for ot in ots), "Todos los IDs de OT deben ser convertidos a string"
 
-def test_draw_delivery_page_generates_content(pdf_instance: WMS_Landscape_PDF, 
-                                              sample_header: pd.Series, 
+def test_draw_delivery_page_generates_content(pdf_instance: WMS_Landscape_PDF,
+                                              sample_header: pd.Series,
                                               sample_items: pd.DataFrame) -> None:
     """
     Valida que el motor de dibujo escriba contenido binario en el buffer del PDF.
     Asegura la orquestación correcta entre cabecera, items de entrega y lista de OTs.
     """
     pdf_instance.add_page()
-    
+
     # Ejecutar el dibujo
     draw_delivery_page(pdf_instance, sample_header, sample_items, ots_list=["1001", "1002"])
-    
+
     # Validar salida
     pdf_output = pdf_instance.output()
     assert len(pdf_output) > 0, "El PDF resultante no contiene datos tras el proceso de dibujo"

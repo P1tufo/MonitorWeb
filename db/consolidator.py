@@ -1,23 +1,21 @@
 """
 db/consolidator.py — Orquestador de consolidación de datos con persistencia segura.
 """
-import os
-import sqlite3
 import logging
+import os
 import re
-from pathlib import Path
+import sqlite3
 from datetime import datetime
-from typing import List, Optional, Final
+from pathlib import Path
+from typing import Final, List, Optional
 
 from services.etl import OutboundDeliveryAdapter, StockLevelAdapter
-from .db_enrichment import (
-    learn_author_areas, 
-    apply_author_learning, 
-    enrich_deliveries_with_stock as _enrich_with_stock, 
-    backfill_deliveries_from_movements as _backfill_movements,
-    backfill_material_texts as _backfill_texts,
-    update_sla_with_tasks as _update_sla_tasks
-)
+
+from .db_enrichment import apply_author_learning, learn_author_areas
+from .db_enrichment import backfill_deliveries_from_movements as _backfill_movements
+from .db_enrichment import backfill_material_texts as _backfill_texts
+from .db_enrichment import enrich_deliveries_with_stock as _enrich_with_stock
+from .db_enrichment import update_sla_with_tasks as _update_sla_tasks
 
 # Configuración de Logging
 logger = logging.getLogger("db-consolidator")
@@ -83,7 +81,7 @@ class DataConsolidator:
 
         total = 0
         from core.wms_utils import is_file_changed, mark_file_processed
-        
+
         for file_path in files:
             try:
                 if is_file_changed(self.conn, file_path):
@@ -104,7 +102,7 @@ class DataConsolidator:
                 logger.info(f"Procesamiento completado. Registros afectados: {total}")
             except Exception as e:
                 logger.error(f"Error en post-procesamiento de autores: {e}")
-            
+
         return total
 
     def overwrite_with_latest(self, folder_path: str, table_name: str = TABLE_STOCK):
@@ -158,18 +156,4 @@ class DataConsolidator:
             self.conn = None
             logger.debug("Conexión a DB cerrada.")
 
-# Lógica de CLI separada
-def main():
-    import sys
-    from config import DB_PATH
-    
-    if len(sys.argv) < 2:
-        print("Uso: python -m db.consolidator <folder_path>")
-        return
 
-    folder = sys.argv[1]
-    with DataConsolidator(DB_PATH) as dc:
-        dc.consolidate_folder(folder)
-
-if __name__ == "__main__":
-    main()

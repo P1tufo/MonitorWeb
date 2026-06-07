@@ -4,8 +4,8 @@
 Este archivo `test_pdf.py` contiene pruebas unitarias para validar la funcionalidad del módulo `pdf_engine`, que se encarga de generar documentos PDF en formato Landscape utilizando la orientación de papel Letter. Las pruebas cubren la creación de instancias de PDF, generación de códigos de barras, recuperación lógica de órdenes de transporte (OTs) y el dibujo de páginas de entrega.
 
 ### Catálogo de Funciones y Clases
-- `pdf_instance() -> WMS_Landscape_PDF` - Proporciona una instancia limpia de `WMS_Landscape_PDF` para cada test.
-- `sample_header() -> pd.Series` - Genera datos de cabecera de entrega ficticios para pruebas de renderizado de metadatos.
+- `pdf_instance() -> WMS_Landscape_PDF` - Proporciona una instancia limpia de la clase `WMS_Landscape_PDF`.
+- `sample_header() -> pd.Series` - Genera datos ficticios para pruebas de renderizado de metadatos.
 - `sample_items() -> pd.DataFrame` - Genera un listado de materiales ficticios para validar el cuerpo dinámico del PDF.
 - `test_pdf_instantiation(pdf_instance: WMS_Landscape_PDF) -> None` - Verifica que la clase PDF se instancie con la orientación Landscape y dimensiones Letter.
 - `test_barcode_generation(barcode_data: str) -> None` - Valida que la utilidad de códigos de barras produzca un stream binario válido.
@@ -15,25 +15,23 @@ Este archivo `test_pdf.py` contiene pruebas unitarias para validar la funcionali
 ### Interacción con Base de Datos
 - Motor de BD: SQLite
 - Tablas y Columnas:
-  - `get_ots_for_delivery("8000123", mock_conn)`:
-    - Tabla: No especificada (mocked)
-    - Columna: `numero_ot`
+  - `numero_ot`: Columna utilizada para recuperar OTs válidas.
 
 ### Estado y Variables Globales
-Ninguna.
+Ninguna
 
 ### Dependencias y Flujo
 - Librerías externas:
-  - `pytest`
-  - `pandas`
   - `io`
   - `sqlite3`
   - `typing`
   - `unittest.mock`
+  - `pandas`
+  - `pytest`
 - Archivos del proyecto que este archivo importa (consume):
-  - `core.pdf_engine` (`WMS_Landscape_PDF`, `_generate_barcode_stream`, `draw_delivery_page`, `get_ots_for_delivery`)
+  - `core.pdf_engine` (contiene las clases y funciones a probar)
 - Archivos del proyecto que importan a este archivo (lo consumen):
   - Ninguno
 - Flujo de datos:
-  - El archivo se ejecuta como parte de las pruebas unitarias, no tiene flujo de entrada/salida directo con otros archivos.
+  - El archivo se ejecuta como parte de pruebas unitarias, no tiene un flujo de entrada/salida directo con otros componentes del sistema.
 

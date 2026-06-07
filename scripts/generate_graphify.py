@@ -1,87 +1,88 @@
 #!/usr/bin/env python3
-import os
-import subprocess
 import shutil
+import subprocess
+from pathlib import Path
 
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+ROOT_DIR = Path(__file__).resolve().parent.parent
+OUT_DIR = ROOT_DIR / "graphify-out"
+DEST_DIR = ROOT_DIR / "static" / "docs"
 
-def run_graphify():
-    print("Iniciando escaneo con Graphify...")
+TRANSLATIONS = {
+    'placeholder="Search nodes..."': 'placeholder="Buscar archivos o funciones..."',
+    '<h3>Node Info</h3>': '<h3>Información</h3>',
+    '>Click a node to inspect it<': '>Haz clic en un elemento para ver sus detalles<',
+    '<h3>Communities</h3>': '<h3>Grupos de Código</h3>',
+    '>Select All<': '>Mostrar Todo<',
+    'nodes &middot;': 'elementos &middot;',
+    'edges &middot;': 'conexiones &middot;',
+    ' communities<': ' grupos<',
+    '<div class="field">Type:': '<div class="field">Tipo:',
+    '<div class="field">Community:': '<div class="field">Grupo:',
+    '<div class="field">Source:': '<div class="field">Archivo origen:',
+    '<div class="field">Degree:': '<div class="field">Conexiones:',
+    '>Neighbors (': '>Relacionados (',
+    '"Community ': '"Grupo '
+}
+
+def prepare_environment():
+    """Limpia el directorio anterior y prepara la configuración."""
+    if OUT_DIR.exists():
+        shutil.rmtree(OUT_DIR)
+
+    ignore_path = ROOT_DIR / ".graphifyignore"
+    ignore_path.write_text("*.md\n", encoding="utf-8")
+
+def execute_graphify():
+    """Ejecuta el CLI de graphify."""
+    env = subprocess.os.environ.copy()
+    env["GRAPHIFY_VIZ_NODE_LIMIT"] = "10000"
+
     try:
-        # Limpiar salida anterior para forzar la regeneración del mapa HTML
-        out_dir = os.path.join(ROOT_DIR, "graphify-out")
-        if os.path.exists(out_dir):
-            shutil.rmtree(out_dir)
-
-        # Crear .graphifyignore para ignorar archivos markdown (.md)
-        ignore_path = os.path.join(ROOT_DIR, ".graphifyignore")
-        with open(ignore_path, "w") as f:
-            f.write("*.md\n")
-
-        # Ejecuta la extracción de AST (ultra rápida) sin depender del LLM local,
-        # y aumenta el límite de visualización ya que el proyecto tiene >5000 nodos.
-        env = os.environ.copy()
-        env["GRAPHIFY_VIZ_NODE_LIMIT"] = "10000"
-        
         subprocess.run(
             ["graphify", "update", "."],
-            cwd=ROOT_DIR,
+            cwd=str(ROOT_DIR),
             env=env,
             check=True
         )
     except FileNotFoundError:
         print("Error: 'graphify' no está instalado o no se encuentra en el PATH.")
-        print("Por favor instala graphify ejecutando: pip install graphifyy")
-        return
+        print("Por favor instala graphify ejecutando: pip install graphify")
+        return False
     except subprocess.CalledProcessError as e:
         print(f"Error al ejecutar graphify: {e}")
-        return
+        return False
+    return True
 
-    # El output suele estar en graphify-out/
-    source_html = os.path.join(ROOT_DIR, "graphify-out", "graph.html")
-    dest_dir = os.path.join(ROOT_DIR, "static", "docs")
-    
-    # Crea el directorio de destino si no existe
-    os.makedirs(dest_dir, exist_ok=True)
-    
-    dest_html = os.path.join(dest_dir, "graph.html")
+def process_and_move_html():
+    """Lee el HTML generado, lo traduce y lo guarda en su destino."""
+    source_html = OUT_DIR / "graph.html"
+    dest_html = DEST_DIR / "graph.html"
 
-    if os.path.exists(source_html):
-        shutil.copy(source_html, dest_html)
-        
-        # --- POST-PROCESAMIENTO ---
-        # Traducir al español y ocultar todo por defecto
-        with open(dest_html, "r", encoding="utf-8") as f:
-            html_content = f.read()
-            
-        replacements = {
-            'placeholder="Search nodes..."': 'placeholder="Buscar archivos o funciones..."',
-            '<h3>Node Info</h3>': '<h3>Información</h3>',
-            '>Click a node to inspect it<': '>Haz clic en un elemento para ver sus detalles<',
-            '<h3>Communities</h3>': '<h3>Grupos de Código</h3>',
-            '>Select All<': '>Mostrar Todo<',
-            'nodes &middot;': 'elementos &middot;',
-            'edges &middot;': 'conexiones &middot;',
-            ' communities<': ' grupos<',
-            # Panel de info individual
-            '<div class="field">Type:': '<div class="field">Tipo:',
-            '<div class="field">Community:': '<div class="field">Grupo:',
-            '<div class="field">Source:': '<div class="field">Archivo origen:',
-            '<div class="field">Degree:': '<div class="field">Conexiones:',
-            '>Neighbors (': '>Relacionados (',
-            '"Community ': '"Grupo '  # Cambia 'Community 1' a 'Grupo 1'
-        }
-        for old, new in replacements.items():
-            html_content = html_content.replace(old, new)
-            
-        with open(dest_html, "w", encoding="utf-8") as f:
-            f.write(html_content)
-            
-        print(f"\n¡Éxito! Mapa interactivo generado y movido a: {dest_html}")
-        print("El mapa está listo para ser visualizado en la aplicación web.")
-    else:
+    if not source_html.exists():
         print(f"\nError: No se encontró el archivo generado en {source_html}")
         print("Verifica si Graphify cambió la ubicación de salida.")
+        return
+
+    DEST_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Leer archivo origen
+    html_content = source_html.read_text(encoding="utf-8")
+
+    # Aplicar traducciones
+    for old, new in TRANSLATIONS.items():
+        html_content = html_content.replace(old, new)
+
+    # Escribir directamente en el destino
+    dest_html.write_text(html_content, encoding="utf-8")
+
+    print(f"\n¡Éxito! Mapa interactivo generado y movido a: {dest_html}")
+    print("El mapa está listo para ser visualizado en la aplicación web.")
+
+def run_graphify():
+    print("Iniciando escaneo con Graphify...")
+    prepare_environment()
+    if execute_graphify():
+        process_and_move_html()
 
 if __name__ == "__main__":
     run_graphify()

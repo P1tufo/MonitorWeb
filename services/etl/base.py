@@ -1,9 +1,10 @@
-from abc import ABC, abstractmethod
-import pandas as pd
-from pathlib import Path
-import sqlite3
-from typing import Optional, Tuple, List
 import logging
+import sqlite3
+from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import List, Optional, Tuple
+
+import pandas as pd
 
 from core.security import validate_table
 
@@ -35,7 +36,8 @@ class BaseWMSProcessor(ABC):
             try:
                 with open(file_path, 'r', encoding=enc) as f:
                     for i, line in enumerate(f):
-                        if i > 100: break
+                        if i > 100:
+                            break
                         if all(col in line for col in required_columns):
                             return i, enc
             except (UnicodeDecodeError, LookupError):
@@ -46,12 +48,12 @@ class BaseWMSProcessor(ABC):
         """Lee el archivo completo (para testing o archivos pequeños)."""
         skip, encoding = self._detect_file_params(file_path, self._get_required_columns())
         ext = file_path.suffix.lower()
-        
+
         if ext in ['.xlsx', '.xls']:
             df_raw = pd.read_excel(file_path, skiprows=skip)
         else:
             df_raw = pd.read_csv(file_path, sep='\t', skiprows=skip, encoding=encoding, dtype=str)
-            
+
         return self._clean_dataframe(df_raw)
 
     def _get_required_columns(self) -> List[str]:
@@ -66,11 +68,11 @@ class BaseWMSProcessor(ABC):
         """Orquestador unificado de procesamiento Chunked + Upsert SQLite."""
         validate_table(table_name)
         path_obj = Path(file_path)
-        
+
         if not self.validate_file(path_obj):
             logger.warning(f"Archivo no válido o no encontrado: {file_path}")
             return 0
-            
+
         skip, encoding = self._detect_file_params(path_obj, self._get_required_columns())
         ext = path_obj.suffix.lower()
         total_processed = 0
@@ -90,7 +92,7 @@ class BaseWMSProcessor(ABC):
                         total_processed += len(df_clean)
                 else:
                     reader = pd.read_csv(
-                        path_obj, sep='\t', skiprows=skip, 
+                        path_obj, sep='\t', skiprows=skip,
                         encoding=encoding, dtype=str, chunksize=self.chunk_size
                     )
                     for chunk in reader:
@@ -98,7 +100,7 @@ class BaseWMSProcessor(ABC):
                         if not df_clean.empty:
                             self._upsert_chunk(ctx_conn, df_clean, table_name)
                             total_processed += len(df_clean)
-                            
+
                 # Deduplicación final si hay primary keys
                 pks = self._get_primary_keys()
                 if pks:
@@ -113,13 +115,13 @@ class BaseWMSProcessor(ABC):
 
                 # Hook para índices u otros post-procesos específicos de cada clase
                 self._post_process(ctx_conn, table_name)
-                    
+
             if conn is None:
                 ctx_conn.close()
 
             logger.info(f"Procesado exitosamente: {total_processed} registros integrados en {table_name}.")
             return total_processed
-            
+
         except Exception as e:
             logger.error(f"Fallo crítico procesando {file_path}: {e}")
             return 0
@@ -172,7 +174,7 @@ class BaseWMSProcessor(ABC):
 
     def _post_process(self, conn: sqlite3.Connection, table_name: str):
         """Hook opcional para crear índices o post-procesar tras un upsert."""
-        pass
+        return
 
 
     def process_directory(self, folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int:
@@ -181,19 +183,20 @@ class BaseWMSProcessor(ABC):
         if not folder.exists():
             logger.warning(f"Carpeta no encontrada: {folder}")
             return 0
-            
+
         files = sorted(
             [f for f in folder.iterdir() if f.suffix.lower() in {'.txt', '.csv', '.xlsx', '.xls'} and not f.name.startswith('~')],
             key=lambda f: f.stat().st_mtime
         )
-        
-        if not files: return 0
-        
+
+        if not files:
+            return 0
+
         total_rows = 0
         for f in files:
             if self.validate_file(f):
                 logger.info(f"Procesando archivo en lote: {f.name}")
                 rows = self.process_and_save(str(f), db_path, table_name, conn)
                 total_rows += rows
-                
+
         return total_rows

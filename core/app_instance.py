@@ -1,6 +1,8 @@
 from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.templating import Jinja2Templates
+
 from config import BASE_DIR
 
 # Configuración de Identidad de la Aplicación

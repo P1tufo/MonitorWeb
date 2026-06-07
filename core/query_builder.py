@@ -1,13 +1,15 @@
 import logging
-from typing import List, Tuple, Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import text
+from typing import List, Optional, Tuple
+
 from fastapi import HTTPException
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
 from core.macros import AREA_EXPR as AREA_EXPR_MACRO
 
 logger = logging.getLogger("query-engine")
 
-from core.query_validators import validate_identifier, ALLOWED_AGGREGATIONS, ALLOWED_GRANULARITIES
+from core.query_validators import ALLOWED_AGGREGATIONS, ALLOWED_GRANULARITIES, validate_identifier
 
 # ─── Motor de construcción SQL ────────────────────────────────────────────────
 
@@ -26,33 +28,33 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
     Devuelve (sql_text, bound_params) listos para ejecutar con SQLAlchemy text().
     """
     # ── Traducción Semántica (Fase 1) ────────────────────────────────────────
-    from core.semantic_layer import resolve_dataset_physical_table, resolve_physical_mapping, get_metric_formula
+    from core.semantic_layer import get_metric_formula, resolve_dataset_physical_table, resolve_physical_mapping
     logical_dataset = getattr(payload, "datasetId", None) or getattr(payload, "baseTable", None)
-    
+
     if logical_dataset:
         try:
             payload.baseTable = resolve_dataset_physical_table(logical_dataset)
         except ValueError:
             pass # Fallback a tabla física
-            
+
         for f in payload.filters:
             f.column = resolve_physical_mapping(logical_dataset, f.column)
             if getattr(f, "compareColumn", None):
                 f.compareColumn = resolve_physical_mapping(logical_dataset, f.compareColumn)
-                
+
         if payload.timeAxis and payload.timeAxis.column:
             payload.timeAxis.column = resolve_physical_mapping(logical_dataset, payload.timeAxis.column)
-            
+
         if payload.breakdown and not payload.breakdown.startswith("__"):
             payload.breakdown = resolve_physical_mapping(logical_dataset, payload.breakdown)
-            
+
         unified_metrics_to_translate = getattr(payload, "metrics", []) if getattr(payload, "metrics", None) else []
         if not unified_metrics_to_translate:
             if getattr(payload, "metric", None):
                 unified_metrics_to_translate.append(payload.metric)
             if getattr(payload, "secondMetric", None) and getattr(payload.secondMetric, "column", None):
                 unified_metrics_to_translate.append(payload.secondMetric)
-                
+
         for m in unified_metrics_to_translate:
             m_col = getattr(m, "column", None)
             m_agg = getattr(m, "aggregation", "")
@@ -100,7 +102,7 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
         elif m_col:
             if not validate_identifier(m_col, db):
                 raise HTTPException(status_code=400, detail=f"Columna de métrica no válida: {m_col}")
-        
+
         m_agg = getattr(m, "aggregation", "").upper()
         if m_agg and m_agg not in ALLOWED_AGGREGATIONS and not custom_expr:
             raise HTTPException(status_code=400, detail=f"Operación de agregación no válida: {m_agg}")
@@ -179,21 +181,20 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
 
     # ── 4. Desglose (Breakdown) ───────────────────────────────────────────────
     breakdown_select = ""
-    breakdown_groupby = ""
     if payload.breakdown:
         if payload.breakdown == "__AREA_EXPR__":
             b_expr = AREA_EXPR_MACRO.replace("v.", f"{payload.baseTable}.")
         elif payload.breakdown == "__PLAN_VS_UNPLAN__":
-            b_expr = f"""CASE 
+            b_expr = f"""CASE
                 WHEN {payload.baseTable}.cmv = '201' AND (
                     {payload.baseTable}.referencia GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.referencia GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR
                     {payload.baseTable}.texto_cab_documento GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.texto_cab_documento GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*'
                 ) THEN 'Planificado'
                 WHEN {payload.baseTable}.cmv = '261' AND (
                     (
-                        ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND 
+                        ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND
                         ({payload.baseTable}.texto_cab_documento IS NULL OR {payload.baseTable}.texto_cab_documento = '')
-                    ) OR 
+                    ) OR
                     {payload.baseTable}.texto_cab_documento GLOB '*PGE*' OR
                     {payload.baseTable}.referencia GLOB '*PGE*'
                 ) THEN 'Planificado'
@@ -201,7 +202,7 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
                     {payload.baseTable}.texto_cab_documento GLOB '*PGP*' OR
                     {payload.baseTable}.referencia GLOB '*PGP*'
                 ) THEN 'Otro'
-                WHEN {payload.baseTable}.cmv IN ('201', '221') AND 
+                WHEN {payload.baseTable}.cmv IN ('201', '221') AND
                     COALESCE({payload.baseTable}.texto_cab_documento, '') NOT LIKE '%cierre%' AND
                     COALESCE({payload.baseTable}.texto_cab_documento, '') NOT LIKE '%dev%' AND
                     COALESCE({payload.baseTable}.texto_cab_documento, '') NOT LIKE '%mes%' AND
@@ -213,22 +214,22 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
                 ELSE 'Otro'
             END"""
         elif payload.breakdown == "__ABAST_VS_CONSUMO__":
-            b_expr = f"""CASE 
+            b_expr = f"""CASE
                 WHEN {payload.baseTable}.cmv IN ('101', '305') THEN 'Abastecimiento'
                 WHEN {payload.baseTable}.cmv IN ('201', '221', '261') THEN 'Consumo'
                 ELSE 'Otro'
             END"""
         elif payload.breakdown == "__PROD_VS_MANT__":
-            b_expr = f"""CASE 
+            b_expr = f"""CASE
                 WHEN {payload.baseTable}.cmv = '201' AND (
                     {payload.baseTable}.referencia GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.referencia GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR
                     {payload.baseTable}.texto_cab_documento GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR {payload.baseTable}.texto_cab_documento GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*'
                 ) THEN 'Producción (201)'
                 WHEN {payload.baseTable}.cmv = '261' AND (
                     (
-                        ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND 
+                        ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND
                         ({payload.baseTable}.texto_cab_documento IS NULL OR {payload.baseTable}.texto_cab_documento = '')
-                    ) OR 
+                    ) OR
                     {payload.baseTable}.texto_cab_documento GLOB '*PGE*' OR
                     {payload.baseTable}.referencia GLOB '*PGE*'
                 ) THEN 'Mantención (261)'
@@ -236,7 +237,7 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
                     {payload.baseTable}.texto_cab_documento GLOB '*PGP*' OR
                     {payload.baseTable}.referencia GLOB '*PGP*'
                 ) THEN 'Otro'
-                WHEN {payload.baseTable}.cmv IN ('201', '221') AND 
+                WHEN {payload.baseTable}.cmv IN ('201', '221') AND
                     COALESCE({payload.baseTable}.texto_cab_documento, '') NOT LIKE '%cierre%' AND
                     COALESCE({payload.baseTable}.texto_cab_documento, '') NOT LIKE '%dev%' AND
                     COALESCE({payload.baseTable}.texto_cab_documento, '') NOT LIKE '%mes%' AND
@@ -250,18 +251,17 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
         else:
             b_expr = payload.breakdown
         breakdown_select = f"{b_expr} AS categoria,\n  "
-        breakdown_groupby = ", categoria"
 
     # ── 6. Filtros parametrizados (bind params) ───────────────────────────────
     # Las métricas se procesan después para poder apendear a bound_params
     metric_selects = []
-    
+
     for i, m in enumerate(unified_metrics):
         custom_expr = getattr(m, "customExpr", None)
         m_label = getattr(m, "label", "")
         if not m_label:
             m_label = "valor" if i == 0 else f"metrica_{i}"
-            
+
         if custom_expr:
             if custom_expr == "__AREA_EXPR__":
                 m_expr = AREA_EXPR_MACRO.replace("v.", f"{payload.baseTable}.")
@@ -273,7 +273,7 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
         metric_col = getattr(m, "column", "*") or "*"
         agg_upper = getattr(m, "aggregation", "COUNT").upper()
         condition = getattr(m, "condition", None)
-        
+
         cond_str = ""
         if condition:
             op = condition.operator.lower()
@@ -287,7 +287,7 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
             sql_op = op_map.get(op, "=")
             bound_params.append(val)
             cond_str = f"CASE WHEN {col} {sql_op} ? THEN "
-                
+
         if agg_upper == "COUNT_DISTINCT":
             if cond_str:
                 m_expr = f"COUNT(DISTINCT {cond_str} {metric_col} ELSE NULL END)"
@@ -311,7 +311,7 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
             else:
                 # Último recurso: pasar como función (fallará en SQLite si no existe)
                 m_expr = f"{agg_upper}({metric_col})"
-            
+
         metric_selects.append(f'{m_expr} AS "{m_label}"')
 
     metrics_select_str = ",\n  ".join(metric_selects) if metric_selects else "1 AS dummy"
@@ -350,11 +350,11 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
                 # Solo estas columnas guardan fecha ISO real
                 _ISO_COLS = {"ingested_at", "created_at", "updated_at"}
 
-                def _date_expr(col: str) -> str:
+                def _date_expr(col: str, _iso_cols=_ISO_COLS) -> str:
                     if col == "today":
                         return "DATE('now')"
                     bare = col.split(".")[-1].lower()
-                    if bare in _ISO_COLS:
+                    if bare in _iso_cols:
                         return col
                     # Formato DD-MM-YYYY de SAP -> ISO para julianday()
                     return (f"substr({col}, 7, 4) || '-' || "
@@ -418,7 +418,7 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
         metric_col = getattr(unified_metrics[0], "column", "*") if unified_metrics else "*"
         if metric_col == "*":
             raise HTTPException(status_code=400, detail="Análisis ABC requiere una columna específica")
-            
+
         desc_select = ""
         desc_propagate = ""
         desc_drilldown = ""
@@ -438,7 +438,7 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
             sum_flat = ", ROUND(ABS(AVG(cantidad)), 1) AS \"Promedio por Retiro\"" if payload.baseTable == "inventory_movements" else ""
             where_flat = f"{where_str} AND {metric_col} = ?" if where_str else f"WHERE {metric_col} = ?"
             sql = f"""
-SELECT 
+SELECT
     {area_expr} AS "Área de Negocio",
     COUNT({metric_col}) AS "Frecuencia (Veces)"{sum_flat}
 FROM {from_clause}
@@ -452,7 +452,7 @@ ORDER BY 2 DESC;
 
         sql = f"""
 WITH MaterialCounts AS (
-    SELECT 
+    SELECT
         {metric_col} as cod_mat,
         {desc_select}
         {sum_select}
@@ -465,7 +465,7 @@ TotalQty AS (
     SELECT SUM(qty) as total FROM MaterialCounts
 ),
 CumSum AS (
-    SELECT 
+    SELECT
         cod_mat,
         {desc_propagate}
         {sum_propagate}
@@ -474,12 +474,12 @@ CumSum AS (
     FROM MaterialCounts
 ),
 Classified AS (
-    SELECT 
+    SELECT
         cod_mat,
         {desc_propagate}
         {sum_propagate}
         qty,
-        CASE 
+        CASE
             WHEN cum_qty <= (SELECT total FROM TotalQty) * 0.80 THEN 'A: Eje Crítico (Top 80% frecuencia)'
             WHEN cum_qty <= (SELECT total FROM TotalQty) * 0.95 THEN 'B: Moderados (Sig. 15%)'
             ELSE 'C: Esporádicos'
@@ -496,7 +496,7 @@ ORDER BY qty DESC;
 """
             bound_params.append(drilldown_segment)
         else:
-            sql += f"""
+            sql += """
 SELECT categoria AS fecha, COUNT(cod_mat) AS "Valor"
 FROM Classified
 GROUP BY categoria

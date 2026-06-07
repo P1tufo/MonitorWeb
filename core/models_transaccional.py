@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from sqlalchemy import String, Float, Integer, Boolean, Text, Index
+from sqlalchemy import Boolean, Float, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.database import Base
@@ -158,17 +158,4 @@ class SyncManifest(Base):
     row_count: Mapped[Optional[int]] = mapped_column(Integer)
 
 
-class AnalyticsSnapshot(Base):
-    __tablename__ = "analytics_snapshots"
 
-    key: Mapped[str] = mapped_column(String, primary_key=True)
-    data: Mapped[Optional[str]] = mapped_column(Text)
-    updated_at: Mapped[Optional[str]] = mapped_column(String)
-
-
-class AutorAreaMapping(Base):
-    __tablename__ = "autor_area_mapping"
-
-    autor: Mapped[str] = mapped_column(String, primary_key=True)
-    area_negocio: Mapped[str] = mapped_column(String, primary_key=True)
-    frequency: Mapped[Optional[int]] = mapped_column(Integer)

@@ -4,7 +4,7 @@
 Este archivo contiene funciones utilitarias vectorizadas para transformación de datos en un sistema de monitoreo de almacén (WMS). Las funciones se centran en la limpieza, mapeo y normalización de datos, así como en el cálculo de métricas y la gestión del estado de archivos.
 
 ### Catálogo de Funciones y Clases
-- `sanitize_string(text: str) -> str` - Normaliza un string para usarlo como encabezado de columna.
+- `sanitize_string(text: str) -> str` - Normaliza un string para usarlo como encabezado de columna (snake_case).
 - `map_wms_status(df: pd.DataFrame) -> pd.DataFrame` - Concatena columnas de estado y mapea al valor legible de negocio.
 - `apply_cost_center_mapping(df: pd.DataFrame) -> pd.DataFrame` - Clasifica ubicaciones WMS en áreas de negocio de forma vectorizada.
 - `normalize_date_columns(df: pd.DataFrame) -> pd.DataFrame` - Estandariza formatos de fecha WMS a dd-mm-yyyy de forma eficiente.
@@ -22,14 +22,20 @@ Este archivo contiene funciones utilitarias vectorizadas para transformación de
   - `file_path`, `last_modified`, `file_size`, `processed_at`, `row_count`
 
 ### Estado y Variables Globales
-- `logger` - Objeto de logging para el módulo.
+- Variables globales:
+  - `logger` (Logger para el módulo)
+- Diccionarios quemados en código:
+  - `COST_CENTER_MAPPING`
+  - `STATUS_MAPPING`
 
 ### Dependencias y Flujo
-- Librerías externas: `re`, `logging`, `numpy`, `pandas`, `datetime`, `pathlib`, `typing`.
-- Archivos del proyecto que importa:
-  - `core.wms_config`
+- Librerías externas:
+  - `numpy`, `pandas`, `sqlalchemy`, `logging`, `re`, `datetime`, `pathlib`
+- Archivos del proyecto que IMPORTA a este archivo (lo consumen):
   - `core.db_config_manager`
-- Archivos del proyecto que son importados por este archivo:
+  - `core.wms_config`
+- Archivos del proyecto que ESTE archivo IMPORTA (consume):
   - Ninguno
-- Flujo de datos: El flujo principal es el procesamiento y transformación de DataFrames, con interacciones ocasionales con la base de datos para gestionar el estado de archivos.
+- Flujo de datos:
+  - El flujo de datos pasa por las funciones para limpiar, mapear y normalizar los datos, y luego se almacenan en la base de datos o se utilizan para cálculos adicionales.
 

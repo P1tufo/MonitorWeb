@@ -1,8 +1,11 @@
-import pytest
 import subprocess
-from unittest.mock import patch, MagicMock
-from scripts.free_ram import quit_app
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from scripts.doc_generator import should_process
+from scripts.free_ram import quit_app
+
 
 def test_quit_app_success() -> None:
     """Verifica que quit_app retorne True cuando el comando de sistema tiene éxito."""
@@ -10,10 +13,10 @@ def test_quit_app_success() -> None:
     with patch("subprocess.run") as mock_run:
         # Simular un objeto CompletedProcess exitoso
         mock_run.return_value = MagicMock(spec=subprocess.CompletedProcess, returncode=0)
-        
+
         app_name = "TestApp"
         result = quit_app(app_name)
-        
+
         assert result is True, f"quit_app debería haber retornado True para la aplicación {app_name}"
         mock_run.assert_called_once()
         # Verificar que se intentó cerrar la aplicación correcta inspeccionando la lista de argumentos
@@ -33,7 +36,7 @@ def test_quit_app_failure() -> None:
 
 @pytest.mark.parametrize("filename, filepath, expected", [
     ("app.py", "./app.py", True),
-    ("dashboard.js", "./static/js/dashboard.js", True),
+    ("bundle.js", "./static/js/bundle.js", True),
     ("index.js", "./node_modules/index.js", False),
     (".gitconfig", "./.git/config", False),
     ("package.json", "./package.json", False),

@@ -1,18 +1,19 @@
 """
 routes/transporte.py — Rutas para la nueva sección de Transporte (Avanti).
 """
+import logging
 import os
 import sqlite3
-import logging
-from typing import List, Dict, Any
-from fastapi import APIRouter, Request, Depends, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
-from sqlalchemy.orm import Session
+from typing import Any, Dict, List
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from core.app_instance import templates
-from core.database import get_session_dep
 from core.auth import get_current_user
+from core.database import get_session_dep
 
 logger = logging.getLogger("routes-transporte")
 router = APIRouter()
@@ -59,23 +60,23 @@ def sync_transporte_logic(session: Session):
 
         # 3. Insertar datos crudos
         session.execute(text("DELETE FROM transporte_entregas"))
-        
+
         insert_query = text("""
-            INSERT INTO transporte_entregas (ot, proveedor, gd, oc, bulto, servicio, archivo, fecha) 
+            INSERT INTO transporte_entregas (ot, proveedor, gd, oc, bulto, servicio, archivo, fecha)
             VALUES (:ot, :proveedor, :gd, :oc, :bulto, :servicio, :archivo, :fecha)
         """)
-        
+
         params_list = [
             {"ot": r[0], "proveedor": r[1], "gd": r[2], "oc": r[3], "bulto": r[4], "servicio": r[5], "archivo": r[6], "fecha": r[7]}
             for r in rows
         ]
-        
+
         if params_list:
             session.execute(insert_query, params_list)
-        
+
         # 4. Consolidar datos
         session.execute(text("DELETE FROM transporte_diario"))
-        
+
         consolidation_query = text("""
             INSERT INTO transporte_diario (fecha, total_entregas, total_bultos, pdf_path)
             SELECT fecha, COUNT(*) as total_entregas, SUM(CAST(bulto AS INTEGER)) as total_bultos, NULL
@@ -84,17 +85,17 @@ def sync_transporte_logic(session: Session):
             GROUP BY fecha
         """)
         session.execute(consolidation_query)
-        
+
         # 5. Mapear PDFs
         fechas = session.execute(text("SELECT fecha FROM transporte_diario")).fetchall()
         for f_row in fechas:
             fecha_str = f_row[0]
             expected_pdf_name = f"Reporte_{fecha_str}.pdf"
             full_pdf_path = os.path.join(PDF_DIR_PATH, expected_pdf_name)
-            
+
             if os.path.exists(full_pdf_path):
                 session.execute(text("UPDATE transporte_diario SET pdf_path = :path WHERE fecha = :fecha"), {"path": expected_pdf_name, "fecha": fecha_str})
-                
+
         session.commit()
         return True
 
@@ -136,12 +137,12 @@ def get_transporte_data(session: Session = Depends(get_session_dep), user=Depend
             pass # Si ya existe, ignorar error
 
         query = text("""
-            SELECT fecha, total_entregas, total_bultos, pdf_path 
-            FROM transporte_diario 
+            SELECT fecha, total_entregas, total_bultos, pdf_path
+            FROM transporte_diario
             ORDER BY fecha ASC
         """)
         res = session.execute(query).fetchall()
-        
+
         data = []
         for r in res:
             data.append({
@@ -151,7 +152,7 @@ def get_transporte_data(session: Session = Depends(get_session_dep), user=Depend
                 "has_pdf": r[3] is not None,
                 "pdf_filename": r[3]
             })
-            
+
         return {"data": data}
     except Exception as e:
         logger.warning(f"Aviso de datos de transporte: {e}")
@@ -162,18 +163,18 @@ def search_transporte(q: str, session: Session = Depends(get_session_dep), user=
     """Busca en la tabla cruda de transporte_entregas por OT, GD o OC."""
     if not q or len(q) < 3:
         return {"data": []}
-    
+
     try:
         search_query = f"%{q}%"
         query = text("""
-            SELECT fecha, ot, gd, oc, proveedor, bulto, servicio 
-            FROM transporte_entregas 
+            SELECT fecha, ot, gd, oc, proveedor, bulto, servicio
+            FROM transporte_entregas
             WHERE ot LIKE :q OR gd LIKE :q OR oc LIKE :q
             ORDER BY fecha DESC
             LIMIT 5
         """)
         res = session.execute(query, {"q": search_query}).fetchall()
-        
+
         data = []
         for r in res:
             data.append({
@@ -185,7 +186,7 @@ def search_transporte(q: str, session: Session = Depends(get_session_dep), user=
                 "bultos": r[5] or "0",
                 "servicio": r[6] or "-"
             })
-            
+
         return {"data": data}
     except Exception as e:
         logger.warning(f"Error en búsqueda de transporte: {e}")
@@ -197,11 +198,11 @@ def serve_pdf(filename: str, user=Depends(get_current_user)):
     # Validación básica de seguridad
     if ".." in filename or "/" in filename:
         raise HTTPException(status_code=400, detail="Nombre de archivo inválido.")
-        
+
     full_path = os.path.join(PDF_DIR_PATH, filename)
     if not os.path.exists(full_path):
         raise HTTPException(status_code=404, detail="El archivo PDF no existe en el servidor.")
-        
+
     return FileResponse(full_path, media_type="application/pdf", headers={"Content-Disposition": f'inline; filename="{filename}"'})
 
 @router.get("/api/transporte/pending")
@@ -220,7 +221,7 @@ def get_pending_transporte(session: Session = Depends(get_session_dep), user=Dep
         i_res = session.execute(text("""
             SELECT texto_cab_documento, referencia, pedido, cmv
             FROM inventory_movements
-            WHERE registrado LIKE '%.' || strftime('%Y', 'now') 
+            WHERE registrado LIKE '%.' || strftime('%Y', 'now')
                OR registrado LIKE strftime('%Y', 'now') || '-%'
         """)).fetchall()
 
@@ -236,11 +237,13 @@ def get_pending_transporte(session: Session = Depends(get_session_dep), user=Dep
             gd_clean = re.sub(r'\D', '', str(row[1])) if row[1] else ''
             oc_clean = re.sub(r'\D', '', str(row[2])) if row[2] else ''
             cmv_clean = str(row[3]).strip() if row[3] else ''
-            
+
             if ot_clean and len(ot_clean) >= 4:
-                try: inv_ot_ints.add(int(ot_clean))
-                except: pass
-            
+                try:
+                    inv_ot_ints.add(int(ot_clean))
+                except Exception:
+                    pass
+
             if gd_clean and oc_clean:
                 try:
                     g = int(gd_clean)
@@ -249,22 +252,29 @@ def get_pending_transporte(session: Session = Depends(get_session_dep), user=Dep
                     if o not in inv_oc_to_gds:
                         inv_oc_to_gds[o] = set()
                     inv_oc_to_gds[o].add(g)
-                except: pass
-                
+                except Exception:
+                    pass
+
             if cmv_clean in ('301', '303', '305'):
                 if gd_clean and len(gd_clean) >= 4:
-                    try: inv_traspaso_gds.add(int(gd_clean))
-                    except: pass
+                    try:
+                        inv_traspaso_gds.add(int(gd_clean))
+                    except Exception:
+                        pass
                 if ot_clean and len(ot_clean) >= 4:
-                    try: inv_traspaso_gds.add(int(ot_clean))
-                    except: pass
+                    try:
+                        inv_traspaso_gds.add(int(ot_clean))
+                    except Exception:
+                        pass
 
         def is_typo(s1, s2):
             s1, s2 = str(s1), str(s2)
-            if abs(len(s1) - len(s2)) > 1: return False
-            if s1 == s2: return True
+            if abs(len(s1) - len(s2)) > 1:
+                return False
+            if s1 == s2:
+                return True
             if len(s1) == len(s2):
-                diffs = sum(1 for a, b in zip(s1, s2) if a != b)
+                diffs = sum(1 for a, b in zip(s1, s2, strict=False) if a != b)
                 return diffs <= 1
             longer, shorter = (s1, s2) if len(s1) > len(s2) else (s2, s1)
             for i in range(len(longer)):
@@ -277,21 +287,23 @@ def get_pending_transporte(session: Session = Depends(get_session_dep), user=Dep
             t_ot = re.sub(r'\D', '', str(row[0])) if row[0] else ''
             t_gd = re.sub(r'\D', '', str(row[1])) if row[1] else ''
             t_oc = re.sub(r'\D', '', str(row[2])) if row[2] else ''
-            
+
             found = False
-            
+
             # Comprobar OT (Si la OT existe de forma exacta)
             if t_ot and len(t_ot) >= 4:
                 try:
-                    if int(t_ot) in inv_ot_ints: found = True
-                except: pass
-                
+                    if int(t_ot) in inv_ot_ints:
+                        found = True
+                except Exception:
+                    pass
+
             # Comprobar GD + OC Exacto o con Fuzzy Typo
             if not found and t_gd and t_oc:
                 try:
                     t_g = int(t_gd)
                     t_o = int(t_oc)
-                    if (t_g, t_o) in inv_gd_oc_tuples: 
+                    if (t_g, t_o) in inv_gd_oc_tuples:
                         found = True
                     else:
                         if t_o in inv_oc_to_gds:
@@ -299,14 +311,17 @@ def get_pending_transporte(session: Session = Depends(get_session_dep), user=Dep
                                 if is_typo(str(t_g), str(inv_g)):
                                     found = True
                                     break
-                except: pass
-                
+                except Exception:
+                    pass
+
             # Comprobar Traspasos
             if not found and t_gd and len(t_gd) >= 4:
                 try:
-                    if int(t_gd) in inv_traspaso_gds: found = True
-                except: pass
-                    
+                    if int(t_gd) in inv_traspaso_gds:
+                        found = True
+                except Exception:
+                    pass
+
             if not found:
                 data.append({
                     "ot": row[0] or "-",
@@ -315,7 +330,7 @@ def get_pending_transporte(session: Session = Depends(get_session_dep), user=Dep
                     "bultos": row[3] or "0",
                     "fecha": row[4] or "-"
                 })
-            
+
         return {"data": data}
     except Exception as e:
         logger.error(f"Error en búsqueda de transporte pendientes: {e}", exc_info=True)

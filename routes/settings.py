@@ -3,20 +3,26 @@ routes/settings.py — API para la gestión dinámica de configuraciones SaaS.
 Usa SQLAlchemy ORM (Pilar 3) para todas las operaciones de escritura.
 """
 import logging
-from typing import Annotated, Optional, List, Any
+from typing import Annotated, Any, List, Optional
 
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from core.app_instance import templates
 from core.auth import require_admin
 from core.database import get_session_dep
-from core.models import StatusMapping, CostCenterMapping, AppSetting, Holiday, ConfigQuery
-from core.db_config_manager import load_config_to_memory, get_setting, get_status_mapping, get_cost_center_mapping, get_holidays
-from core.app_instance import templates
+from core.db_config_manager import (
+    get_cost_center_mapping,
+    get_holidays,
+    get_setting,
+    get_status_mapping,
+    load_config_to_memory,
+)
+from core.models import AppSetting, ConfigQuery, CostCenterMapping, Holiday, StatusMapping
+from core.state import CacheManager, get_cache_manager
 from core.utils import sanitize_for_json
-from core.state import AppState, get_app_state
 
 logger = logging.getLogger("routes-settings")
 router = APIRouter(dependencies=[Depends(require_admin)])
@@ -26,14 +32,16 @@ DBSession = Annotated[Session, Depends(get_session_dep)]
 
 def invalidate_caches(db: Session):
     """Limpia el caché global en memoria y elimina todos los snapshots de base de datos."""
-    from core.state import AppState, get_app_state
     from sqlalchemy import text
+
+    from core.state import CacheManager, get_cache_manager
     try:
-        state.clear_cache()
+        cache = get_cache_manager()
+        cache.clear_cache()
         logger.info("Caché en memoria invalidado por actualización de configuración.")
     except Exception as e:
         logger.warning(f"Error al limpiar caché en memoria: {e}")
-        
+
     try:
         db.execute(text("DELETE FROM analytics_snapshots"))
         db.flush()
@@ -61,13 +69,12 @@ class QueryUpdate(BaseModel):
     query_id: str
     visual_state: str
 
-from core.schemas import (
-    JoinDef, FilterDef, MetricDef, TimeAxisDef, SecondMetricDef, VisualQueryBuilderPayload
-)
+from core.schemas import FilterDef, JoinDef, MetricDef, SecondMetricDef, TimeAxisDef, VisualQueryBuilderPayload
+
 
 # ─── Vista (UI) ───────────────────────────────────────────────────────────────
 @router.get("/settings", response_class=HTMLResponse)
-async def settings_view(request: Request, db: DBSession, state: AppState = Depends(get_app_state)):
+async def settings_view(request: Request, db: DBSession):
     """Renderiza el panel de control de configuraciones SaaS."""
     context = {
         "request": request,
@@ -90,7 +97,7 @@ async def settings_view(request: Request, db: DBSession, state: AppState = Depen
 
 # ─── API: Settings Generales ─────────────────────────────────────────────────
 @router.get("/api/settings")
-def api_get_settings(state: AppState = Depends(get_app_state)):
+def api_get_settings():
     return {
         "status_mapping": get_status_mapping(),
         "cost_centers": get_cost_center_mapping(),
@@ -103,7 +110,7 @@ def api_get_settings(state: AppState = Depends(get_app_state)):
     }
 
 @router.post("/api/settings/update")
-def api_update_setting(update: SettingUpdate, db: DBSession, state: AppState = Depends(get_app_state)):
+def api_update_setting(update: SettingUpdate, db: DBSession):
     row = db.query(AppSetting).filter(AppSetting.key == update.key).first()
     if not row:
         raise HTTPException(status_code=404, detail="Configuración no encontrada")
@@ -115,7 +122,7 @@ def api_update_setting(update: SettingUpdate, db: DBSession, state: AppState = D
 
 
 @router.post("/api/settings/status")
-def api_upsert_status(update: StatusMappingUpdate, db: DBSession, state: AppState = Depends(get_app_state)):
+def api_upsert_status(update: StatusMappingUpdate, db: DBSession):
     row = db.query(StatusMapping).filter(StatusMapping.code == update.code).first()
     if row:
         row.label = update.label
@@ -127,7 +134,7 @@ def api_upsert_status(update: StatusMappingUpdate, db: DBSession, state: AppStat
     return {"status": "success", "message": "Estado actualizado"}
 
 @router.delete("/api/settings/status/{code}")
-def api_delete_status(code: str, db: DBSession, state: AppState = Depends(get_app_state)):
+def api_delete_status(code: str, db: DBSession):
     row = db.query(StatusMapping).filter(StatusMapping.code == code).first()
     if not row:
         raise HTTPException(status_code=404, detail="Código no encontrado")
@@ -139,7 +146,7 @@ def api_delete_status(code: str, db: DBSession, state: AppState = Depends(get_ap
 
 
 @router.post("/api/settings/cost_center")
-def api_upsert_cost_center(update: CostCenterMappingUpdate, db: DBSession, state: AppState = Depends(get_app_state)):
+def api_upsert_cost_center(update: CostCenterMappingUpdate, db: DBSession):
     row = db.query(CostCenterMapping).filter(CostCenterMapping.center_code == update.center_code).first()
     if row:
         row.business_area = update.business_area
@@ -151,7 +158,7 @@ def api_upsert_cost_center(update: CostCenterMappingUpdate, db: DBSession, state
     return {"status": "success", "message": "Centro de costo actualizado"}
 
 @router.delete("/api/settings/cost_center/{code}")
-def api_delete_cost_center(code: str, db: DBSession, state: AppState = Depends(get_app_state)):
+def api_delete_cost_center(code: str, db: DBSession):
     row = db.query(CostCenterMapping).filter(CostCenterMapping.center_code == code).first()
     if not row:
         raise HTTPException(status_code=404, detail="Centro de costo no encontrado")
@@ -164,7 +171,7 @@ def api_delete_cost_center(code: str, db: DBSession, state: AppState = Depends(g
 
 # ─── API: Feriados ────────────────────────────────────────────────────────────
 @router.post("/api/settings/holiday")
-def api_add_holiday(h: HolidayAdd, db: DBSession, state: AppState = Depends(get_app_state)):
+def api_add_holiday(h: HolidayAdd, db: DBSession):
     existing = db.query(Holiday).filter(Holiday.date_str == h.date_str).first()
     if existing:
         return {"status": "exists", "message": "El feriado ya existe"}
@@ -175,24 +182,25 @@ def api_add_holiday(h: HolidayAdd, db: DBSession, state: AppState = Depends(get_
     return {"status": "success", "message": f"Feriado {h.date_str} añadido"}
 
 @router.post("/api/settings/holidays/sync")
-def api_sync_holidays(db: DBSession, state: AppState = Depends(get_app_state)):
+def api_sync_holidays(db: DBSession):
     """Sincroniza automáticamente los feriados nacionales (Chile) usando la librería holidays."""
-    import holidays
     from datetime import datetime
+
+    import holidays
     try:
         # Años actual y siguiente
         years = [datetime.now().year, datetime.now().year + 1]
         cl_holidays = holidays.Chile(years=years)
-        
+
         added_count = 0
-        for date_obj, name in cl_holidays.items():
+        for date_obj, _name in cl_holidays.items():
             # El objeto date de la librería holidays es compatible con strftime
             d_str = date_obj.strftime("%Y-%m-%d")
             existing = db.query(Holiday).filter(Holiday.date_str == d_str).first()
             if not existing:
                 db.add(Holiday(date_str=d_str))
                 added_count += 1
-        
+
         db.flush()
         load_config_to_memory(db)
         invalidate_caches(db)
@@ -202,7 +210,7 @@ def api_sync_holidays(db: DBSession, state: AppState = Depends(get_app_state)):
         raise HTTPException(status_code=500, detail=f"Error en la sincronización: {str(e)}")
 
 @router.delete("/api/settings/holiday/{date_str}")
-def api_delete_holiday(date_str: str, db: DBSession, state: AppState = Depends(get_app_state)):
+def api_delete_holiday(date_str: str, db: DBSession):
     row = db.query(Holiday).filter(Holiday.date_str == date_str).first()
     if not row:
         raise HTTPException(status_code=404, detail="Feriado no encontrado")
@@ -215,7 +223,7 @@ def api_delete_holiday(date_str: str, db: DBSession, state: AppState = Depends(g
 
 # ─── API: Consultas SQL ───────────────────────────────────────────────────────
 @router.get("/api/queries/{query_id}")
-def api_get_query(query_id: str, db: DBSession, state: AppState = Depends(get_app_state)):
+def api_get_query(query_id: str, db: DBSession):
     """
     Retorna el estado visual (JSON) de una consulta del Analytics Studio.
     No expone sql_text al cliente: el SQL se compila en tiempo de ejecución
@@ -233,7 +241,7 @@ def api_get_query(query_id: str, db: DBSession, state: AppState = Depends(get_ap
     }
 
 @router.post("/api/settings/query")
-def api_update_query(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state)):
+def api_update_query(update: QueryUpdate, db: DBSession, cache: CacheManager = Depends(get_cache_manager)):
     """
     Persiste el estado visual (JSON) de una consulta. Solo acepta visual_state;
     nunca escribe sql_text desde la UI: el SQL es siempre derivado en tiempo
@@ -248,25 +256,26 @@ def api_update_query(update: QueryUpdate, db: DBSession, state: AppState = Depen
     db.flush()
     load_config_to_memory(db)
     # Invalidación granular del widget editado (no borra todo el caché)
-    state.clear_cache_prefix(f"widget_{update.query_id}")
+    cache.clear_cache_prefix(f"widget_{update.query_id}")
     return {"status": "success", "message": "Estado visual actualizado correctamente"}
 
 # ─── API: Estudio de Analíticas (Introspección y Preview) ───────────────────
 @router.get("/api/studio/schema")
-def api_get_schema(db: DBSession, state: AppState = Depends(get_app_state)):
+def api_get_schema(db: DBSession):
     """Retorna el catálogo semántico de datos para el editor, ocultando las tablas físicas."""
     from core.semantic_layer import get_frontend_schema
     try:
         return get_frontend_schema()
     except Exception as e:
-        logger.error(f"Error cargando el catálogo semántico: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error cargando el catálogo semántico: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Ha ocurrido un error interno procesando la solicitud.")
 
 @router.get("/api/studio/preview_table/{dataset_id}")
-def api_preview_table(dataset_id: str, db: DBSession, state: AppState = Depends(get_app_state)):
-    from core.semantic_layer import resolve_dataset_physical_table
-    from sqlalchemy import text
+def api_preview_table(dataset_id: str, db: DBSession):
     import pandas as pd
+    from sqlalchemy import text
+
+    from core.semantic_layer import resolve_dataset_physical_table
     try:
         physical_table = resolve_dataset_physical_table(dataset_id)
         df = pd.read_sql(text(f"SELECT * FROM {physical_table} LIMIT 5"), db.connection())
@@ -277,50 +286,50 @@ def api_preview_table(dataset_id: str, db: DBSession, state: AppState = Depends(
         return []
 
 @router.post("/api/studio/preview")
-async def api_query_preview(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state)):
+async def api_query_preview(update: QueryUpdate, db: DBSession):
     """Ejecuta una consulta temporal y retorna datos para previsualización."""
-    import pandas as pd
     import json
+
+    import pandas as pd
     from sqlalchemy import text
-    from core.macros import inject_macros
+
+    from core.macros import AREA_EXPR, inject_macros
     from core.query_engine import build_sql_from_payload
-    
-    AREA_EXPR = DeliveriesRepository.AREA_EXPR
-    
+
     sql = ""
     params_dict = {}
-    
+
     # Modo Fase 1: Compilar AST a SQL internamente
     try:
         vs_dict = json.loads(update.visual_state)
         payload = VisualQueryBuilderPayload(**vs_dict)
         sql, bound_params = build_sql_from_payload(payload, db)
-        
+
         for i, p in enumerate(bound_params):
             params_dict[f"p{i}"] = p
-            
+
         import re
         for i in range(len(bound_params)):
             sql = sql.replace("?", f":p{i}", 1)
-            
+
     except Exception as e:
         logger.error(f"Error compilando AST en preview: {e}")
         return {"error": f"Error construyendo consulta visual: {e}"}
 
     if "{AREA_EXPR}" in sql:
         sql = sql.replace("{AREA_EXPR}", AREA_EXPR)
-        
+
     try:
         df = pd.read_sql(text(sql), db.connection(), params=params_dict)
-        
+
         raw_data = []
         labels = []
         datasets = []
         chart_type = vs_dict.get("chartType", "bar")
-        
+
         if not df.empty:
             raw_data = sanitize_for_json(df.head(100))
-            
+
             # Formatting logic identical to routes/widgets.py
             if "categoria" in df.columns or "fecha" in df.columns:
                 if "fecha" in df.columns and "categoria" in df.columns:
@@ -359,7 +368,7 @@ async def api_query_preview(update: QueryUpdate, db: DBSession, state: AppState 
                                 "label": str(col).title(),
                                 "data": [float(x) if pd.notna(x) else 0 for x in df[col].tolist()]
                             })
-                            
+
         return {
             "query_id": "preview",
             "chartType": chart_type,
@@ -379,8 +388,9 @@ async def api_query_preview(update: QueryUpdate, db: DBSession, state: AppState 
 # Este endpoint es una capa de transporte HTTP delgada que delega al motor.
 from core.query_engine import build_sql_from_payload
 
+
 @router.post("/api/studio/build_sql")
-def api_build_sql(payload: VisualQueryBuilderPayload, db: DBSession, state: AppState = Depends(get_app_state)):
+def api_build_sql(payload: VisualQueryBuilderPayload, db: DBSession):
     """
     Compila el estado visual del constructor en SQL parametrizado seguro.
     La validación de identifiers y la construcción SQL están en core/query_engine.
@@ -394,31 +404,32 @@ def api_build_sql(payload: VisualQueryBuilderPayload, db: DBSession, state: AppS
     }
 
 @router.get("/api/settings/export/missing-orders")
-def api_export_missing_orders(db: DBSession, state: AppState = Depends(get_app_state)):
-    from fastapi.responses import StreamingResponse
+def api_export_missing_orders(db: DBSession):
     import io
+
     import pandas as pd
+    from fastapi.responses import StreamingResponse
     from sqlalchemy import text
-    
+
     sql = """
-        SELECT DISTINCT i.orden 
-        FROM inventory_movements i 
-        LEFT JOIN iw39_orders o ON i.orden = o.orden 
+        SELECT DISTINCT i.orden
+        FROM inventory_movements i
+        LEFT JOIN iw39_orders o ON i.orden = o.orden
         WHERE i.orden IS NOT NULL AND i.orden != '' AND o.ceco_resp IS NULL AND i.cmv = '261' AND length(i.orden) = 8
     """
     df = pd.read_sql(text(sql), db.connection())
-    
+
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Ordenes Sin Ceco')
-    
+
     output.seek(0)
-    
+
     headers = {
         'Content-Disposition': 'attachment; filename="ordenes_missing_ceco.xlsx"'
     }
     return StreamingResponse(
-        output, 
-        headers=headers, 
+        output,
+        headers=headers,
         media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )

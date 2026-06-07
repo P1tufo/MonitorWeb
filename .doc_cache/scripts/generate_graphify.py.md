@@ -1,26 +1,27 @@
 ## Archivo: ./scripts/generate_graphify.py
 
 ### Resumen Funcional
-El archivo `generate_graphify.py` es un script que ejecuta el proceso de generación y procesamiento de un mapa interactivo utilizando la herramienta Graphify. El script limpia cualquier salida anterior, configura las variables de entorno necesarias, ejecuta Graphify para generar el mapa, y luego realiza una serie de reemplazos en el HTML generado para adaptarlo al español e incluir traducciones específicas.
+El archivo `generate_graphify.py` es un script que prepara y ejecuta el proceso de generación de un mapa interactivo utilizando la herramienta `graphify`. El script limpia el directorio de salida, ejecuta el CLI de `graphify`, procesa el HTML generado para aplicar traducciones y finalmente mueve el archivo HTML resultante a una ubicación específica dentro del proyecto.
 
 ### Catálogo de Funciones y Clases
-- `run_graphify()` - Inicia el escaneo con Graphify, limpia la salida anterior, ejecuta Graphify, y procesa el archivo HTML generado.
+- `prepare_environment()` - Limpia el directorio anterior y prepara la configuración.
+- `execute_graphify()` - Ejecuta el CLI de graphify.
+- `process_and_move_html()` - Lee el HTML generado, lo traduce y lo guarda en su destino.
+- `run_graphify()` - Inicia el escaneo con Graphify.
 
 ### Interacción con Base de Datos
 Ninguna.
 
 ### Estado y Variables Globales
 - `ROOT_DIR` - Directorio raíz del proyecto.
+- `OUT_DIR` - Directorio donde se genera el HTML por `graphify`.
+- `DEST_DIR` - Directorio de destino para el archivo HTML final.
+- `TRANSLATIONS` - Diccionario con traducciones para elementos HTML.
 
 ### Dependencias y Flujo
-- **Dependencias**: 
-  - `os`
-  - `subprocess`
-  - `shutil`
-
+- **Dependencias**: `shutil`, `subprocess`, `pathlib`.
 - **Flujo**:
-  - El archivo se ejecuta directamente (`if __name__ == "__main__":`).
-  - Llama a la función `run_graphify()`.
-
-El flujo de datos es simple: el script ejecuta Graphify, procesa su salida y guarda el resultado en un directorio específico dentro del proyecto.
+  - `generate_graphify.py` importa `shutil`, `subprocess` y `pathlib`.
+  - No hay archivos del proyecto que importen a este archivo.
+  - El flujo de datos es desde el script hasta la ejecución del CLI de `graphify`, procesamiento del HTML y finalmente su movimiento al directorio de destino.
 

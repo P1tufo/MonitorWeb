@@ -16,13 +16,13 @@ Inicialización:
   - `load_config_to_memory()` → rellena la caché desde la BD.
 """
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 
-from .database import engine, get_session, Base
-from .models import StatusMapping, CostCenterMapping, AppSetting, Holiday, ConfigQuery
+from .database import Base, engine, get_session
+from .models import AppSetting, ConfigQuery, CostCenterMapping, Holiday, StatusMapping
 
 logger = logging.getLogger("db-config")
 
@@ -35,7 +35,7 @@ def init_config_db():
     Idempotente: seguro llamarlo en cada startup.
     """
     Base.metadata.create_all(bind=engine)
-    
+
     # Asegurar que exista la columna 'visual_state' en 'config_queries' para instalaciones existentes
     from sqlalchemy import text
     try:
@@ -46,7 +46,7 @@ def init_config_db():
     except Exception:
         # Ya existe la columna o la tabla no está creada aún (se creará con metadata.create_all)
         pass
-        
+
     logger.debug("Tablas de configuración SaaS verificadas/creadas via ORM.")
 
 

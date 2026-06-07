@@ -1,29 +1,18 @@
 ## Archivo: ./routes/__init__.py
 
 ### Resumen Funcional
-Este archivo es el punto de entrada para las rutas del sistema de monitoreo de almacén (WMS). Importa y registra todas las subrutas relacionadas con diferentes funcionalidades como el panel de control, entregas, inventario, análisis proyecciones, filtros, PDFs, sincronización y configuraciones.
+El archivo `__init__.py` es el inicializador del paquete `routes`, encargado de cargar las rutas dinámicamente a través del archivo `config.py`.
 
 ### Catálogo de Funciones y Clases
-Ninguna
+Ninguna.
 
 ### Interacción con Base de Datos
-Ninguna
+Ninguna.
 
 ### Estado y Variables Globales
-Ninguna
+Ninguna.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: FastAPI.
-- **Archivos del Proyecto que IMPORTAN a este archivo**:
-  - `dashboard`
-  - `deliveries`
-  - `inventory`
-  - `analytics_proyecciones`
-  - `filters`
-  - `pdf`
-  - `sync`
-  - `docs`
-  - `settings`
-
-Este archivo no importa ninguna clase o función específica, solo registra las subrutas. El flujo de datos se maneja a través de FastAPI para la definición y gestión de rutas.
+- **Dependencias**: No hay dependencias directas en este archivo.
+- **Flujo**: Este archivo no importa ni es importado por otros archivos dentro del proyecto. Es un inicializador de paquete que carga rutas dinámicamente a través de `config.py`.
 

@@ -1,0 +1,64 @@
+[tool.ruff]
+# Set the maximum line length to 120 (Standard for modern python, matching current style)
+line-length = 120
+
+[tool.ruff.lint]
+# Enable Pyflakes (F) and a subset of the pycodestyle (E) codes by default.
+select = ["E", "F", "W", "B", "I"]
+
+# Ignore some overly strict rules initially to avoid breaking the CI completely
+ignore = [
+    "E501",  # Line too long
+    "F401",  # Module imported but unused (We have some lazy imports or exports)
+    "E402",  # Module level import not at top of file
+    "B008",  # Do not perform function call in argument defaults (Needed for FastAPI Depends)
+    "B904",  # Within an except clause, raise exceptions with raise ... from err
+]
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Ignore `E402` (import violations) in all `__init__.py` files, and in `app.py`.
+"__init__.py" = ["E402"]
+"app.py" = ["E402"]
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"

@@ -22,30 +22,28 @@ El archivo `predictive_engine.py` procesa los movimientos de inventario para gen
 
 ### Dependencias y Flujo
 - **Librerías Externas:**
-  - `sqlite3`
-  - `pandas`
-  - `numpy`
-  - `datetime`
   - `logging`
-  - `itertools`
-  - `collections`
-  - `sys`
   - `os`
+  - `sqlite3`
+  - `sys`
+  - `collections.Counter`
+  - `datetime`
+  - `itertools.combinations`
+  - `numpy`
+  - `pandas`
 
-- **Archivos del Proyecto que Importan a este Archivo:** Ninguno
+- **Archivos del Proyecto que Importan a este Archivo:**
+  - Ninguno
+
 - **Archivos del Proyecto que Este Archivo Importa:**
   - `core.wms_config.COST_CENTER_MAPPING`
 
-**Flujo de Datos:**
-1. El archivo se ejecuta directamente (`if __name__ == "__main__"`).
-2. Se importan las dependencias necesarias.
-3. La función `generate_predictions` se invoca con la ruta a la base de datos SQLite.
-4. Los movimientos de inventario son leídos desde la tabla `inventory_movements`.
-5. El procesamiento y análisis de los datos ocurren dentro de la función.
-6. Los resultados (combos, scatter data y alertas) se devuelven como un diccionario.
+- **Flujo de Datos:**
+  - El archivo importa configuraciones y dependencias necesarias.
+  - Llama a la función `generate_predictions` con el camino a la base de datos.
+  - La función procesa los datos, realiza análisis predictivos y devuelve resultados.
 
-**Dirección del Flujo:**
-- **Entrada:** Ruta a la base de datos SQLite.
-- **Procesamiento:** Análisis de movimientos de inventario.
-- **Salida:** Resultados en formato JSON.
+### Notas Adicionales
+- La función `generate_predictions` maneja excepciones y registra errores utilizando `logging`.
+- El archivo incluye un bloque de prueba al final para ejecutar la función y mostrar el número de combos, puntos de dispersión y alertas generados.
 

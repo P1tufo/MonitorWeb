@@ -1,7 +1,7 @@
 from .deliveries import OutboundDeliveryAdapter
 from .movements import InventoryMovementAdapter
-from .tasks import WarehouseTaskAdapter
 from .stock import StockLevelAdapter
+from .tasks import WarehouseTaskAdapter
 
 __all__ = [
     "OutboundDeliveryAdapter",

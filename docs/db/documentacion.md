@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: db
-Compilado el: 2026-06-05 14:46:00
+Compilado el: 2026-06-07 12:50:47
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -14,12 +14,12 @@ Este archivo está vacío o solo contiene espacios en blanco. No se requiere an�
 ## Archivo: ./db/consolidator.py
 
 ### Resumen Funcional
-El archivo `consolidator.py` es un orquestador de consolidación de datos para un sistema de monitoreo de almacén (WMS) utilizando FastAPI, SQLAlchemy y SQLite. Gestiona la importación y procesamiento de archivos WMS en una base de datos SQLite, aplicando diversas operaciones como UPSERT, actualización de tablas, enriquecimiento de datos y sincronización.
+El archivo `consolidator.py` es un orquestador que gestiona la consolidación de datos en una base de datos SQLite para un sistema de monitoreo de almacén (WMS). Realiza tareas como la lectura, procesamiento y almacenamiento de archivos WMS, así como el enriquecimiento de los datos con información adicional.
 
 ### Catálogo de Funciones y Clases
 - `DataConsolidator(db_path: str)` - Gestiona la consolidación de archivos WMS en SQLite.
   - `__init__(self, db_path: str)` - Inicializa el objeto con la ruta a la base de datos.
-  - `__enter__(self)` - Establece la conexión a la base de datos.
+  - `__enter__(self)` - Establece la conexión a la base de datos y devuelve el objeto.
   - `__exit__(self, exc_type, exc_val, exc_tb)` - Cierra la conexión a la base de datos.
   - `connect(self)` - Establece la conexión y configura optimizaciones de SQLite.
   - `_parse_file_date(self, file_path: Path) -> datetime` - Extrae la fecha del nombre del archivo (dd-mm-yyyy).
@@ -38,21 +38,21 @@ El archivo `consolidator.py` es un orquestador de consolidación de datos para u
   - `stock_levels`
 - Columnas (no detalladas por brevedad):
   - Todas las columnas relevantes para cada tabla mencionada.
-- Consultas SQL crudas o llamadas a ORM: Sí, se utilizan métodos de ORM y consultas SQL dentro de los métodos.
+- Consultas SQL crudas o llamadas a ORM: Sí, se utilizan funciones que interactúan con la base de datos.
 
 ### Estado y Variables Globales
-- `logger` - Variable global que almacena el objeto de registro.
-- `TABLE_DELIVERIES` - Constante con el nombre de la tabla `outbound_deliveries`.
-- `TABLE_STOCK` - Constante con el nombre de la tabla `stock_levels`.
+- `logger` - Variable global para el registro de eventos.
+- `TABLE_DELIVERIES` - Constante con el nombre de la tabla de entregas.
+- `TABLE_STOCK` - Constante con el nombre de la tabla de niveles de stock.
 
 ### Dependencias y Flujo
-- Librerías externas: `sqlite3`, `logging`, `re`, `pathlib`, `datetime`, `typing`.
+- Librerías externas: `sqlite3`, `datetime`, `re`, `os`, `pathlib`, `typing`.
 - Archivos del proyecto que este archivo importa:
-  - `services.etl.OutboundDeliveryAdapter`
-  - `services.etl.StockLevelAdapter`
+  - `services.etl`
   - `db_enrichment` (varias funciones)
-- Archivos del proyecto que importan a este archivo: Ninguno.
-- Flujo de datos: El archivo se ejecuta como un script principal (`main`) que toma una carpeta como argumento y procesa los archivos dentro de ella utilizando la clase `DataConsolidator`.
+- Archivos del proyecto que importan a este archivo:
+  - Ninguno
+- Flujo de datos: El archivo se utiliza para procesar y consolidar archivos WMS, interactuar con la base de datos SQLite y llamar a funciones de enriquecimiento y actualización.
 
 
 ---
@@ -94,16 +94,13 @@ El archivo `db_enrichment.py` contiene funciones para enriquecer los datos de la
 
 ### Dependencias y Flujo
 - **Librerías Externas**:
-  - `logging`
-  - `pandas` (pd)
   - `sqlite3`
+  - `pandas`
+  - `logging`
   - `numpy`
-- **Archivos del Proyecto que IMPORTA**:
-  - `core.security.validate_table`
-  - `core.db_config_manager.get_holidays`
-- **Archivos del Proyecto que IMPORTAN a Este Archivo**:
-  - Ninguno
-- **Dirección del Flujo de Datos**: El flujo de datos pasa por las funciones, realizando consultas SQL para leer y actualizar la base de datos SQLite.
+- **Archivos del Proyecto que IMPORTA (consume)**: Ninguno
+- **Archivos del Proyecto que IMPORTAN a este archivo (lo consumen)**: Ninguno
+- **Dirección del Flujo de Datos**: El flujo de datos pasa por la lectura y escritura directa en la base de datos SQLite, con el procesamiento intermedio realizado mediante Pandas.
 
 
 ---
@@ -132,32 +129,30 @@ El archivo `predictive_engine.py` procesa los movimientos de inventario para gen
 
 ### Dependencias y Flujo
 - **Librerías Externas:**
-  - `sqlite3`
-  - `pandas`
-  - `numpy`
-  - `datetime`
   - `logging`
-  - `itertools`
-  - `collections`
-  - `sys`
   - `os`
+  - `sqlite3`
+  - `sys`
+  - `collections.Counter`
+  - `datetime`
+  - `itertools.combinations`
+  - `numpy`
+  - `pandas`
 
-- **Archivos del Proyecto que Importan a este Archivo:** Ninguno
+- **Archivos del Proyecto que Importan a este Archivo:**
+  - Ninguno
+
 - **Archivos del Proyecto que Este Archivo Importa:**
   - `core.wms_config.COST_CENTER_MAPPING`
 
-**Flujo de Datos:**
-1. El archivo se ejecuta directamente (`if __name__ == "__main__"`).
-2. Se importan las dependencias necesarias.
-3. La función `generate_predictions` se invoca con la ruta a la base de datos SQLite.
-4. Los movimientos de inventario son leídos desde la tabla `inventory_movements`.
-5. El procesamiento y análisis de los datos ocurren dentro de la función.
-6. Los resultados (combos, scatter data y alertas) se devuelven como un diccionario.
+- **Flujo de Datos:**
+  - El archivo importa configuraciones y dependencias necesarias.
+  - Llama a la función `generate_predictions` con el camino a la base de datos.
+  - La función procesa los datos, realiza análisis predictivos y devuelve resultados.
 
-**Dirección del Flujo:**
-- **Entrada:** Ruta a la base de datos SQLite.
-- **Procesamiento:** Análisis de movimientos de inventario.
-- **Salida:** Resultados en formato JSON.
+### Notas Adicionales
+- La función `generate_predictions` maneja excepciones y registra errores utilizando `logging`.
+- El archivo incluye un bloque de prueba al final para ejecutar la función y mostrar el número de combos, puntos de dispersión y alertas generados.
 
 
 ---

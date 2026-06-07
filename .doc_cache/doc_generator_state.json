@@ -1,138 +1,135 @@
 {
     "./config.py": {
-        "hash": "04ff61322444725f27ca9f7cf01a8dfc6efc93364c37ad9194ec92a532d00348"
+        "hash": "adf1a67c962926bd2d402694e5c8b35d3ed706545a6acce202751f68ceaea53e"
     },
     "./app.py": {
-        "hash": "cef71fc8642e643c2b87ba53e026f10b45f30d87f817d852d4ff1085ea8a975c"
+        "hash": "921ac71ab8f6e7aeb4874afda9e81720311f87fe2841e6298f6c826734ff865d"
     },
     "./main.py": {
-        "hash": "a7e55a35d93a7eadc2be941666ddf4867c9aaf5673ad52081752b217adc41f26"
+        "hash": "74b8151c8a1b571f01a05935ef11d23ff6864f1d4ad2394b347badd2e748a605"
     },
     "./core/auth.py": {
-        "hash": "157780019b988703cf8c8da5f5bf706baf006107a3af19374eda4aaf820c6428"
+        "hash": "01caffc3f79445a66416570554db3528a5b2f42b5564c53141f978131f7ffed0"
     },
     "./core/pdf_engine.py": {
-        "hash": "95555723cf2ecd94bb28bd8bcf2c2969b1a70a3ef85993b0f002da0a59249053"
+        "hash": "d576c8bec6555fe5258bc7927718ddd340ebb0f11d0c3c2af5746e0ee987e82e"
     },
     "./core/query_engine.py": {
-        "hash": "86c63d00b01ba8490bea425973c82d1dd5381c856b8d7845f2cf1c2b20666f27"
+        "hash": "225ca459c9bdb3a9c790a8d46e0182c83e545a70cd3116fcafa39c2c4eba5abf"
     },
     "./core/models.py": {
-        "hash": "890434b26f45ee070fec4064bfc7bf184bbff081a3d4033de6b11398b8b0f0d9"
+        "hash": "c004c6e54564cda02f289cffeea460ba708b1bc7ab0d5f590f8d94c36cf40935"
     },
     "./core/database.py": {
-        "hash": "847a795b5984e9ab27b77d8461e286993cd53acd6033b526c6d46a83ae01441a"
+        "hash": "ae492b982d3b8265e42b3bb7489b169eaf23ed945a2136e8a5d718e258010ad2"
     },
     "./core/security.py": {
-        "hash": "ba9bfe0f0d4dec78c03bfff6b0d22b534dbad608f35ee479850448485cd40966"
+        "hash": "33edfa2184663865c791e7162f5865e98f680eb07c518470c857adde0eb2be86"
     },
     "./core/models_auth.py": {
-        "hash": "8276135eac87a2ce708e6656dc402faf5ca22e5c7186e07a4f7c1a12777ea1db"
+        "hash": "b636d93cde51c8367842a28af7d00a42cb9e40e7048efdf1cecf719556c959aa"
     },
     "./core/semantic_layer.py": {
-        "hash": "00a367dc4ce339c20b86714a3cf17e671a4450aa151f967bced633f707e4bda2"
+        "hash": "b9aa7b31b9b0cf46abc2411865c72350b69f4c433f19225b00ebbf40bd04e68c"
     },
     "./core/__init__.py": {
         "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "./core/schemas.py": {
-        "hash": "df2b7521f627f212c81155df256f027d868c9d2a4acea152f718e912857215c7"
+        "hash": "624f3e8d3677e813741feb97206022d1a763684ab5b7549ce9830b09f6b20dd0"
     },
     "./core/pdf_reports.py": {
-        "hash": "3c7bac394f60942610c3ba98ff27fc79b17e8ad087fe9c82e785e4159ae6cc3d"
+        "hash": "21d19d732a251ad4748aed51d586255a02a5e4ef3903e0bf92a0f0de4cdeb6a2"
     },
     "./core/utils.py": {
-        "hash": "a5c27658689fcab3999ebd166b5f41be2005d32f3f9d7d87fe839a5327c9de5f"
+        "hash": "4bd24b8f1b97ebaeef6bedad2e1a0431bf11e7a69bbec412dc661cec631e3463"
     },
     "./core/app_instance.py": {
-        "hash": "4089d37dfe421e41576247244852ce72b18d56d7401bb05af39f3cc639296e45"
+        "hash": "1cfdb7e3826914be0fcfd4a979ebd651605bdc551fed5bb869a2c7e617f7abf6"
     },
     "./core/task_manager.py": {
-        "hash": "08d3d3390063c5da646ee7566a262314ff7f0344f24e678c51eb6a0e5ba83d41"
+        "hash": "2999c7a098a6481b78fc489b19aba23bf194e435f30b485d17655c0cabbbd673"
     },
     "./core/db_config_manager.py": {
-        "hash": "bec7131e5f464f8a3af4bcde15200f970ee67f84bb666e9e3fa68a8c75f7774e"
+        "hash": "bddb45aaca3403a7a5b6b3ac18126574cdbc49787784f2832fb6081f8d807262"
     },
     "./core/watcher.py": {
-        "hash": "3fb4c8478aef8f80fab632a7df8263115002dd5b2c37a402204b9c6d1b89e4e9"
+        "hash": "bf8a105a5b2e6db87bffe96490405f7acb4c4e84ce61e8b96fd75b424419f96c"
     },
     "./core/wms_config.py": {
-        "hash": "231fb9dc85cf7d045b0998b717fd854cf6c948ace59e16e5d5552f19dd4da114"
+        "hash": "a6f96efe53778cd0f35d3c764b4edc1b4f39a6fcdb928e9a4cf4c9d3abdc1bd1"
     },
     "./core/wms_utils.py": {
-        "hash": "354fb651022c3984ac7721928a0714e21a875f67c06c39afd4504e27764f4528"
+        "hash": "6a37dc037e55d2249a673199081896924ce5287d2529e93c5c6f19218f5dffe5"
     },
     "./core/macros.py": {
-        "hash": "e082a457a0c1ba0157a00a48dfd81c084275d595e4cb30974bdc98324e14d618"
+        "hash": "068f4d4e9211f9929f6aecaf736ba727fd8035e366a03db61d0a71faa42bdcac"
     },
     "./core/models_transaccional.py": {
-        "hash": "34d81853ae978604a3471dbfb6d8be3924e5cb8bbceac42c6e5186363da9316d"
+        "hash": "8c4b2a7f2bf9b0a5e9ca40159117f1d3d26d39d4d9d1023b5a2540edc81ef934"
     },
     "./core/query_utils.py": {
         "hash": "9379643647583e073135431b31dd1333b2428105b40644172677580c3da56694"
     },
     "./core/state.py": {
-        "hash": "9136a4d3c6cae972b667a1602bbdab3b0644aa6cf57815c9caa9a986481ff8f1"
+        "hash": "2e4b24e7b8f43728df70a211978c815fdb3d2be68ed9c2dc7aa5aed2d461c469"
     },
     "./core/query_validators.py": {
-        "hash": "2490d80481022ea116b0e6b22ee88112ebcb8d5c87f0ec5724ac13660018c881"
+        "hash": "6cf28fbb0b2d4bfaa4dbac627a0db1c822972779499b948be2265b24cec0c36a"
     },
     "./core/seed_data/widgets.json": {
         "hash": "ed563c0f2d28a754e43b1b6676f634dd92f02ae339f0da3871f18338562205d2"
     },
     "./core/helpers/dynamic_executor.py": {
-        "hash": "1b450c2b7f2fb1b00c933f4195cd6aff857cc25a0346b6723ec1f3564467de01"
+        "hash": "356ccbf6998b1b290026a9017f17ef74ff911b6bba4925bc6275bd8c5dfee5f4"
     },
     "./tests/test_maintenance.py": {
-        "hash": "28d078dde87a7f067346ce8a17eca63e30792811ebb1297c2eba50d289ee7b96"
+        "hash": "8e8c52db518007e19d5d90aafeede913735c811f56dbf6e51d0c661d2b24f824"
     },
     "./tests/test_utils.py": {
-        "hash": "6b9854cd5a9adeae0a408147dd10393a2a55e0b6bb8a08ab0733c736cd93e69e"
+        "hash": "a3e72282365a26e2cbf32d3537a0d089c78f18c6a3d0196240474584b3b3cef8"
     },
     "./tests/conftest.py": {
-        "hash": "17937e1a2354d66c261f48eae933f2cf58d3977e3d1744f9de69b84895fe4835"
+        "hash": "d3ede893de04b42017eea8db9d6f51c9466f6ffe8d2c2b01903503990ce73537"
     },
     "./tests/test_pdf.py": {
-        "hash": "9d7d2f743f85cc78b740fc2ea8ed7e47ebd0bfa4d2c025c49c523edda66351aa"
+        "hash": "a41c6862e222f8e726da49979f2b7702bcc9451501664e516376b68e6fec6ac9"
     },
     "./tests/test_auth.py": {
         "hash": "86d345deecdf6ec42c022f56fb79676baa5a0c028e5975439ec230d3c516681a"
     },
     "./tests/test_ui_smoke.py": {
-        "hash": "5a1091b37a896b9292021422e3017d0ada336ded3ce825880d54056e70b9d2d9"
+        "hash": "09651b208044f415927485c503a2f99eda1badc0a3067755ce19e0d4b428d1af"
     },
     "./tests/test_services.py": {
-        "hash": "c4a60055cfae657254be3f73d88fb98622cc8f0db1f915727661ee653cc5cd83"
-    },
-    "./tests/test_queries.py": {
-        "hash": "1784fe4b7d945aacbf14cd5a9501b2a1bf7f51c47ceb09efba04ad757de923a6"
+        "hash": "8d10b70baea77458845294217ff771c1989285452ad540215e4f75dd8ae5fc1d"
     },
     "./tests/test_api.py": {
-        "hash": "3168e9019721583d09f76730c590562eefaed5fd60f0845e7d0b44ebde081b7d"
+        "hash": "ce2a8cba76e2b155ea0cea8cd45f67161d845a374ec6c2d33cc8552375d294ed"
     },
     "./tests/test_enrichment.py": {
-        "hash": "29677cf9553abef3e082c264ab26cc951bd53f993e0878556a925676765ee53b"
+        "hash": "c81349e32318e4b66292de0d68db697d5e131ef140d2a5a57ed9ea94deaee38e"
     },
     "./tests/test_pipeline.py": {
-        "hash": "f8ca294bf97a8333754b5b607efdb49c556910806385ed49600207222b2e927c"
+        "hash": "6f76a084d365886cc39f663d436f4397bb10908c54be9aed9380a7ac33fb80ed"
     },
     "./repositories/tasks.py": {
-        "hash": "58fb7d3a6b57f8ec38909c8c048d8e34fc1593de5020631252aa149f3461ae61"
+        "hash": "7bee6340c4fb3526ed59ec0acc260b76f19e8b6a68c5715ed6c823f08841c2aa"
     },
     "./repositories/__init__.py": {
-        "hash": "9c22ecab9f2c177559aaccb195d7a4ba84e29b7a6539ffa4432be413a6941974"
+        "hash": "e586fec5b71a00b3c1517175ebd1525fec1ff8f46f4b08aa5ac8377152fd6753"
     },
     "./repositories/widgets.py": {
-        "hash": "d7692ce4c84154d3a342a507f97086bc73ac95b6dbd82781c9c29d0153789521"
+        "hash": "e0a52f28a1dd1a5afb138b242cd2a8d22675ecd3ff227ab4dbb22ca8c4c31a2e"
     },
     "./repositories/deliveries.py": {
-        "hash": "db1aadedaeb07a03cb624e68c677c6e56f92e7075b856df333bf2886ad0030c1"
+        "hash": "0179a6eb7fcd9d01cd095b23e6b23bd3d51cc25ca2a0b67679e51d62986dbd3a"
     },
     "./repositories/base.py": {
-        "hash": "67cd5697544628806b215aecfc8996a517d4813fedab358489502e2f237db9d7"
+        "hash": "c095eefc8377ffd6d4862807c630ecb7cea1ea6950f19a0293cf26a1d90343e8"
     },
     "./repositories/inventory.py": {
-        "hash": "4f34b28559f5501174098c84e571d0e977eee4db02f6d1be42fe9b18b8ea1a18"
+        "hash": "177b7c788b093c5ca70c61ffc8c0eb232c56ff1d8d76b57749684c413c2ccdbb"
     },
     "./static/css/sla_table.css": {
         "hash": "53e599242b03edb2b6ada152a717757fd06ed09bc5936617acc8402d17742ffa"
@@ -156,7 +153,7 @@
         "hash": "14d2d2156f57e1f46f7b95106925e5e45f106c6b19b29b4d3c7e58fc114f6708"
     },
     "./static/js/saas_engine_core.js": {
-        "hash": "2dad3ebe4e316186c02f21fb4ae666fc9c9e3275c87ea3feb10126bc0c6123ee"
+        "hash": "115b0d251293e3a321efad0cb04f17fd8ee966112fcc6d23958c6267d8de1ae5"
     },
     "./static/js/docs_explorer.js": {
         "hash": "46ccc6810de38dbfa1aa8323a254449baa4b5be9acaf8c163bf781711faad2d4"
@@ -168,7 +165,7 @@
         "hash": "e036e4a4107350464f0ad3cfaa87b3f7036b419e8c3d5bc7d71d206e210de71e"
     },
     "./static/js/saas_engine_drilldown.js": {
-        "hash": "e3cf08d08e4a83f3f57c035713616fe4754f7a734a19dacec754632dc12403b8"
+        "hash": "f06077f4a5a379b4fa34aa0c8730cc86c9de8af51a959e2857916084d572b0e5"
     },
     "./static/js/tasks.js": {
         "hash": "d818eb56cfc9a5dee299dda050cad2e084e0337db91d4206ba888d33cab86164"
@@ -213,25 +210,25 @@
         "hash": "ba4c8064a8ca540596d36db866415b658fe5df54116eca77a710121bd126582d"
     },
     "./scripts/main_processor.py": {
-        "hash": "20e042beecc224c6df065cc7abec871dde4ed49e52ad6f54e7d9317dc8eb960b"
+        "hash": "5f55fc99de7fed54f3276b6ab7599ba189720842c155f02e0cad1df788e14829"
     },
     "./scripts/__init__.py": {
         "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "./db/consolidator.py": {
-        "hash": "831cf00b297927287cfb08aee8819149ebeae77a7694dc6fcb5e1d7648436204"
+        "hash": "9e9797aedbe7d7ee7aa2790b6d9dff0ff23f32da34aaf65d46443ca868284458"
     },
     "./db/predictive_engine.py": {
-        "hash": "551b217369ec85f5d22050491a1ed326e9496bed8b5d74597eb7cd581e4d018a"
+        "hash": "a3a1c2941d8fccd1a8d5c534582ac317c4f490ecddfbcf30c8d5c250b5a58f52"
     },
     "./db/db_enrichment.py": {
-        "hash": "278645e0cd05da55a8902e022dfb9c129800624547e3894b8650964b2589bece"
+        "hash": "4c5dc54454679d5e6c560e38338753e1bb996bec64190df8740b3a82ea7fab03"
     },
     "./db/__init__.py": {
         "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "./templates/inventory.html": {
-        "hash": "9f190ebf36dd1eed8fdea4ba48e243f2eaf5a1df02bea64f4f2e82b8b1d7d4ea"
+        "hash": "bbbf55d843bcb9db7e90b19469c79a6f7214d4b6c174900044e7182f52a46e67"
     },
     "./templates/login.html": {
         "hash": "4c088f56b08414c62497e6b5ac155686fecedc2f576754e3d8311705393eac04"
@@ -240,7 +237,7 @@
         "hash": "7693d6478a5c531f5149af7c83914bf721a9585bf5b5a735c0750020387ea1d7"
     },
     "./templates/dashboard.html": {
-        "hash": "2b1d46d79ea61768694af648f024aff1d3ade781bb1b2c9ca08810b89a7dc053"
+        "hash": "dc3df5d806a0f2f02a0f1fc44d298a32ec14e4ee7d176fb6d4566951baf6118c"
     },
     "./templates/settings.html": {
         "hash": "1ceb85cd6db9a2a55fb3047a1708721bdf832905117bcb035523d55db9f8f482"
@@ -249,7 +246,7 @@
         "hash": "6cfacea9d9e7ad712612f9df7cd711d96b0f4584a7063fdaec7e3ad65613da44"
     },
     "./templates/deliveries.html": {
-        "hash": "d8a346d60dd7cd351f51e4037ce9ccf6538ca25c882ee7a20233ee792d3da329"
+        "hash": "43c5871f7aa26b9e1bfade58299f7a80dfd51171f5cabb39a40dd4e10389e702"
     },
     "./templates/partials/_tab_consumos.html": {
         "hash": "13077687a6c0325970f579b47fea6570a93c91e6e6d4ce7ded772c7ef63dd62c"
@@ -264,7 +261,7 @@
         "hash": "9910337c497cf422b94d7da37674b14ab15ded60682af6e21cd782c453a8438e"
     },
     "./templates/partials/_inventory_modals.html": {
-        "hash": "530eefdd0e885a661a6dc1925bcd0417b01c9292499d2ad32b4723a4a8941844"
+        "hash": "ba9e050d13b7e26817c7943927c5408f77b4eeb327f0425473c3d96c5e45458f"
     },
     "./templates/partials/_tab_deliveries.html": {
         "hash": "f31b3637a2996cac0ebbefe97a43784f8504fc35a3b08aeb08c8eb9dc04842d6"
@@ -306,105 +303,129 @@
         "hash": "68d79263d8fee05d2ca2c1ab73d043828b00cf28fd5f822a7f9d82d40e9b45c1"
     },
     "./templates/partials/_tab_inventory.html": {
-        "hash": "b29e8a1766793f91e0a78be86af32d75ebf4a7fbcf7b2df1820f7abea4c58aa1"
+        "hash": "5d6e7eea22f3022b1881be40803411d1a47d0936493d4e3aea9ca261190e413c"
     },
     "./routes/sync.py": {
-        "hash": "00844f683be4975353c0e6ade55514afb8eadd48cabc58241172c13703b89388"
+        "hash": "acd6447703b9f8ea527edc83a0c844c82b8212b37854dcc5232b8c5a08a75ae3"
     },
     "./routes/auth.py": {
-        "hash": "9cffe627df53d88f87ed5aa050d3befe79f926ae3670957f9464fde3561f2c92"
+        "hash": "919f2d74a040423bbdc32d64b61cd60eb42aad78c4e0113b3092b63f6fe18584"
     },
     "./routes/productivity.py": {
-        "hash": "a09ce2c1d60f6b30a26a2243b9d029d1f4e9f14aa0933ea4ef92c0459e13443a"
+        "hash": "c2ced4bbb869a400e13bc1194ee8fe0e310f0935ef1a39e4141c3637f2706034"
     },
     "./routes/tasks.py": {
-        "hash": "c6501e2b5623a9a8d139be723f2a54beae18951f6d87441d3220d47169e23341"
+        "hash": "5cbff4d7734029b83098547b9e7fa369e78226c19f7b99c32e9eef7626464330"
     },
     "./routes/config.py": {
-        "hash": "09a17afd9c823927adeb33a3cc197de5006e3d8604440af5d164ca321de250d2"
+        "hash": "95751b1cbebe84589216f3e42cb82bb192e8af641f44d363fde2c2244e507c62"
     },
     "./routes/__init__.py": {
-        "hash": "6af9328f0d8f6408e06b03fa4726288bcc9a743a65c47fae5746ddaa127516a5"
+        "hash": "44a95a699d9a784e28a909991eaf19a44f3a6a0622b337a4cf35a1086368943d"
     },
     "./routes/docs.py": {
-        "hash": "e0f19c92fc43bdde99357a0c4190b0bb9475780ccbf17cda920d70fe3246d21b"
+        "hash": "3cf83ca1944586797bb189b5b3365967ac071be1f6e4f554a80b980bfe173a78"
     },
     "./routes/analytics_proyecciones.py": {
-        "hash": "ce20cd8e1e03178c2ccb286b56cc598e82e4567ed9e1f1ac6230fb62fae96bf5"
+        "hash": "0548b709756392f7101f438d3983a88fa3cb488091435c880f44a33bd8030bdb"
     },
     "./routes/pdf.py": {
-        "hash": "357a748a6f599a2c5f722806fd2f5e0e30a44bdcf9ad9eb34cefb8de4aaa4a9a"
+        "hash": "6aa96374e7f88311548ce893449317398f8c3e9ade39daea486636635b9fc37a"
     },
     "./routes/consumos.py": {
-        "hash": "6efe41f5d3f5288be6ebe7d6920957fa086181b5fe48d38651f7bc794dd64fcd"
+        "hash": "491fe8fdc580e714d7d5305d151439eb3c32c8c183df4830b7db7c822397c62b"
     },
     "./routes/widgets.py": {
-        "hash": "5d5155c844487ef2ee809b4a28168d12d15498ecfb29c25540e73bd894ee813c"
+        "hash": "546fb699dc777c35284b4ed31a78bb91a3832c597c51ae11d62f221a83cfc5b4"
     },
     "./routes/dashboard.py": {
-        "hash": "44e1b02ec40097f1f11fb1eef25c28f5bd3b0c842d79efb59960fe0bc78ad0b2"
+        "hash": "13a5f1ece6d0696c867214e8ace66f4a547f3e4634b7365a4f31d8234b654e88"
     },
     "./routes/transporte.py": {
-        "hash": "bfb75a943dbdb7ec361646a27cb692159658e1049fed3f464076015e7a4d3b79"
+        "hash": "c9dd3f517b39255a57a5b3d10589c35cd282fde595f88ee787472d2567fb617b"
     },
     "./routes/settings.py": {
-        "hash": "7ea1f00307a935a2a065253bd4cee64b228d0ff39153f4ff9b298548f94832fa"
+        "hash": "a7b99e75c7b68ce064d3f55a5778ee7954004af68d7ed6f27c9b097b02b81ff6"
     },
     "./routes/deliveries.py": {
-        "hash": "ffae167062a0ef989d74c52f68c85f23f4a6c6341dab90d8f60c72da03c46d73"
+        "hash": "2a7dd395f85992e31570f0d416462258197bd1ffe70cac99a638f2c732c68d83"
     },
     "./routes/filters.py": {
-        "hash": "ff0f4efc778165a27b63e9146419f142c5eb18cd5cc26355ababa91ade0381c9"
+        "hash": "05b58a6afeaf9f9d06f1a49183b9e429996d93de998c0055e96d9c348c1ca531"
     },
     "./routes/inventory.py": {
-        "hash": "e617e086c28c4c09e5237aba9da51c6ead007a80f9d2dd4d1de128b6aad33148"
+        "hash": "690a5b8b7d41eafe71091093d0c88a5206d61e2eda6c87c72950240963133a6c"
     },
     "./services/inventory_service.py": {
-        "hash": "863e903faf4688c6717d5d3e4f4c30b946b4df0c2b4f21044e186f7946d45980"
+        "hash": "425d88ab78ae7137d43264ba65d52d3af774665a0a644ed38f6baec24746791e"
     },
     "./services/__init__.py": {
         "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "./services/productivity_monthly.py": {
-        "hash": "51128b3cc3a64253b0b828b6b9cd1118ce4fa016b130c794e32b08aee6106036"
+        "hash": "632ac6404efe5d1a565b636664c1f4a4d13db985f2d0aca0ce8527f6eb60ca80"
     },
     "./services/tunnel.py": {
-        "hash": "c71b04edd486e9210ac7094529cfadf34afe90ff0d0a05238ae363e7e63e2f07"
+        "hash": "1bf35a8bca2c8d8601fcfc765290a25c3577810adb51e36ad52336bb13a281b9"
     },
     "./services/dashboard_service.py": {
-        "hash": "00ed59ba0fc25460c587615a4089efd3865466f11f915ba253c81672d62f6e06"
+        "hash": "daebdfc6661d8254943f71173d10bfb67c4d6aa5737a375de207c581c1f50235"
     },
     "./services/deliveries_service.py": {
-        "hash": "d803bda36dc7bfa7c2fb114ac0b3c26375ca0ce9bd4620b89090d4838e2160b1"
+        "hash": "2a7b59e12f3f64e21c68399c0e7bcf7c7df036c290b770393536d55b9df661fe"
     },
     "./services/tasks_service.py": {
-        "hash": "e576cc84829098ccc5ef07c7659f6016ebb5895cd64d3f2e3c496fd970612f53"
+        "hash": "a713ada17259f8118594e232843dc27e9b5307066e38cdab01552472a9b7bb81"
     },
     "./services/productivity_daily.py": {
-        "hash": "c6f2b0be13253afedc9bc0e5821deda4318657543a8f76c8b79d3785b395917c"
+        "hash": "e2ebe735075632789b9c9c15ad0e7864114e4e121c8b4ddc50a85c6c86d44d83"
     },
     "./services/etl/movements.py": {
-        "hash": "f6e1065b0c443019284419e8b201d0e6f7a68e92bbb6c612ad0a180d729b32b5"
+        "hash": "f200b1de9bf65f68962086a991a76d9b8de8ac309b6da6b21d61b8b5a86191ae"
     },
     "./services/etl/tasks.py": {
-        "hash": "0e82d5b0f43ebc9df513bc91bcdb3d4ff84d68501f00bccb6ac752cdca6b8c9c"
+        "hash": "bd6fa5e60e7d2a49a286b620f5d1ccb204004025408b25e2e7550959cd64c13c"
     },
     "./services/etl/__init__.py": {
-        "hash": "6a6fb4b8d99e85f279611913862107595b6ff3ecaf08a1f8dada77e0aa78fb2c"
+        "hash": "3724dfff2a7f7ebee575c13bd9f49295ea450260648f59367aedb11f76e885ef"
     },
     "./services/etl/stock.py": {
-        "hash": "38c50e98964946cda718e6046c9f424974fedbe62da72dc9519e215f7414fbc1"
+        "hash": "5ee0226265fcd051fd8298a255352e79655ab232d076869f3f5dfbf1f05bc9e6"
     },
     "./services/etl/deliveries.py": {
-        "hash": "00edcf5bbe65884201cd8a993ae0e8205026fd0782935206235605695fc8324d"
+        "hash": "d7dc76d58d22faa5eea1e7e7458683366cad7e9dcd7719019358e6fa77f64dd2"
     },
     "./services/etl/iw39.py": {
-        "hash": "148b5dc60add827f2d0e35fca1886d3c972d47904ec6c8ee6b679fc060cb01d8"
+        "hash": "bb49232967f968c41c4b11f341bca68ded7171feceefd27161a1237c99883e4c"
     },
     "./services/etl/base.py": {
-        "hash": "02c4062e316822d496728963f3ba388b7de950aaf6c13144bb6c388ed2c4cb92"
+        "hash": "ab40f41fb775ea77e38e22fe307dcd8790c9bd2e2ce12e7abfc4c12aec6665b7"
     },
     "./scripts/generate_graphify.py": {
-        "hash": "d00c6b3a1495fceaa61114ff57a91c332376ece6365d20f3c6cc07a43b838ee4"
+        "hash": "60757b8423c25758ad0728ee2336c52e9acd450b3d7a903b657bbe4852950a47"
+    },
+    "./templates/partials/_tab_replenishment.html": {
+        "hash": "d0d43af53b93983b9ea6d56c987c05effb9baeef9c3cdc12562d8ffbe42f5365"
+    },
+    "./services/etl/mb5b.py": {
+        "hash": "5337bb7e7de9d94d7c3810ae373d032f0ab4dd903236b7b596d94ed232b2d2e3"
+    },
+    "./repositories/dashboard.py": {
+        "hash": "e98fdae5dea06fbc24050a76af651ddaebd71b841c2aaa7b48a449d7e6fd92c0"
+    },
+    "./repositories/productivity.py": {
+        "hash": "4789ed07d3d6369a4d35082363a9a444f60c35bab51a3d1ef569abd275e5c496"
+    },
+    "./static/js/bundle.js": {
+        "hash": "9b29a1a5395ca4f17f4e71ace68e4e99836f199a422b3cad3961449ce30f7b62"
+    },
+    "./scripts/bundler.py": {
+        "hash": "c94eed08a9d759e2c2ccd48a7dc00899d4f2b7fd7b2b079cad2928862ecb0bae"
+    },
+    "./scripts/run_consolidator.py": {
+        "hash": "ec47e7246036a5223bddf244a30cbf3acd425106967a46cd92b693688fd9c0f0"
+    },
+    "./services/background_tasks.py": {
+        "hash": "7951b6544cb4b02f7f7feb5c00ec7f189bbc1cbb3924d0d59fe66bd722851414"
     }
 }

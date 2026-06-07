@@ -5,14 +5,14 @@ import io
 import logging
 import sqlite3
 from datetime import datetime
-from typing import Final, List, Optional
 from pathlib import Path
+from typing import Final, List, Optional
 
 import numpy as np
 import pandas as pd
-from fpdf import FPDF
 from barcode import Code128
 from barcode.writer import ImageWriter
+from fpdf import FPDF
 
 from config import TEMP_DIR
 
@@ -83,14 +83,14 @@ def draw_delivery_page(
     ots_list: Optional[List[str]] = None
 ) -> None:
     """Dibuja una página de entrega completa utilizando sub-métodos modulares."""
-    
+
     _draw_page_header(pdf, header, include_logo)
     _draw_info_block(pdf, header)
     _draw_table(pdf, items)
-    
+
     if ots_list:
         _draw_ot_barcodes(pdf, ots_list)
-    
+
     _draw_signature_block(pdf)
 
 def _draw_page_header(pdf: WMS_Landscape_PDF, h: pd.Series, include_logo: bool):
@@ -171,10 +171,11 @@ def _draw_table(pdf: WMS_Landscape_PDF, items_df: pd.DataFrame):
 
     y = TABLE_Y_START + 10
     pdf.set_font("Helvetica", '', 8)
-    
+
     for i, row in df.iterrows():
-        if i >= MAX_ROWS: break
-        
+        if i >= MAX_ROWS:
+            break
+
         pdf.set_xy(pdf.get_column_x(2), y)
         pdf.cell(pdf.cols.get(2), ROW_HEIGHT, str(row.get('pos_', i + 1)), align='C')
         pdf.cell(pdf.cols.get(3), ROW_HEIGHT, str(row.get('ubicacion_bin', '')), align='C')
@@ -182,7 +183,7 @@ def _draw_table(pdf: WMS_Landscape_PDF, items_df: pd.DataFrame):
         pdf.cell(pdf.cols.get(5) * 4, ROW_HEIGHT, str(row.get('denominacion', ''))[:75], align='L')
         pdf.set_xy(pdf.get_column_x(9), y)
         pdf.cell(pdf.cols.get(9), ROW_HEIGHT, f"{row.get('cantidad', '')} {row.get('umb', '')}".strip(), align='R')
-        
+
         y += ROW_HEIGHT
         pdf.draw_dotted_line(15, y, 260)
 
@@ -190,8 +191,8 @@ def _draw_ot_barcodes(pdf: WMS_Landscape_PDF, ots: List[str]):
     """Dibuja los códigos de barras de las OTs en el lateral derecho."""
     ot_x, ot_y = 230, 65
     opts = {"write_text": True, "module_width": 0.4, "module_height": 5, "font_size": 7}
-    
-    for i, ot in enumerate(ots[:8]): # Límite de 8 barcodes por página
+
+    for _i, ot in enumerate(ots[:8]): # Límite de 8 barcodes por página
         try:
             bc_stream = _generate_barcode_stream(ot, options=opts)
             pdf.image(bc_stream, x=ot_x, y=ot_y, w=BARCODE_W, h=0)

@@ -30,10 +30,10 @@ Ninguna.
 ### Dependencias y Flujo
 - Librerías externas: `pytest`, `unittest.mock`.
 - Archivos del proyecto que este archivo importa:
-  - `core.state.AppState`
+  - `core.state.SyncStateManager`
   - `routes.sync.TUNNEL_URL_FILE`
   - `routes.sync._run_sync_pipeline`
   - `routes.sync.task_manager`
 - Archivos del proyecto que importan a este archivo: Ninguno.
-- Flujo de datos: El archivo consume pruebas unitarias y dependencias para verificar la funcionalidad de los endpoints de la API.
+- Flujo de datos: El archivo realiza pruebas unitarias, no interactúa directamente con el flujo de datos del sistema.
 

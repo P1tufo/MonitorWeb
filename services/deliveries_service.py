@@ -1,6 +1,7 @@
-from sqlalchemy.orm import Session
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
+
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger("services-deliveries")
 
@@ -16,7 +17,7 @@ class DeliveriesService:
         """
         logger.debug("Iniciando generación de contexto Entregas (SaaS Asíncrono)...")
         from core.models import ConfigQuery
-        
+
         widgets = self.session.query(ConfigQuery).filter(
             ConfigQuery.query_id.like("vl_%")
         ).all()
@@ -25,7 +26,7 @@ class DeliveriesService:
         try:
             areas_res = self.conn.execute("SELECT DISTINCT area_negocio FROM outbound_deliveries WHERE area_negocio IS NOT NULL").fetchall()
             areas_vl = [a[0] for a in areas_res if str(a[0]).strip()]
-        except Exception as e:
+        except Exception:
             areas_vl = ["ASERRADERO", "REMANUFACTURA", "LINEA 1", "LINEA 2", "VIGAS", "MOLDURAS", "RANURADO"]
 
         context = {
@@ -78,15 +79,15 @@ class DeliveriesService:
             "sla_area_trend_raw_json": [],
             "correlation_data": []
         }
-        
+
         try:
+            from routes.analytics_proyecciones import get_proyecciones_context
             from routes.inventory import get_inventory_context
             from routes.tasks import get_tasks_context
-            from routes.analytics_proyecciones import get_proyecciones_context
             context.update(get_inventory_context(self.session))
             context.update(get_tasks_context(self.session))
             context.update(get_proyecciones_context())
         except Exception as e:
             logger.error(f"Error cargando contextos secundarios: {e}")
-            
+
         return context

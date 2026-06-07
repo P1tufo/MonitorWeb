@@ -32,7 +32,7 @@ Contenido del fragmento:
 """
 
 PROMPT_IMPROVEMENT_TEMPLATE_SYSTEM = """
-Actúa como un Desarrollador Senior y Auditor de Código extremadamente riguroso. 
+Actúa como un Desarrollador Senior y Auditor de Código extremadamente riguroso.
 Tu tarea es evaluar la calidad de este código buscando ÚNICAMENTE fallos críticos reales, vulnerabilidades comprobables (ej. inyecciones SQL reales) o cuellos de botella graves de rendimiento.
 
 ### Veredicto de Calidad

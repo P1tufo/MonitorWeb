@@ -1,25 +1,8 @@
+import importlib
 import logging
-from fastapi import FastAPI, APIRouter
 from typing import List
 
-# Importación de módulos de ruta
-from . import (
-    dashboard,
-    deliveries,
-    inventory,
-    analytics_proyecciones,
-    filters,
-    pdf,
-    sync,
-    docs,
-    settings,
-    auth,
-    tasks,
-    widgets,
-    consumos,
-    transporte,
-    productivity
-)
+from fastapi import APIRouter, FastAPI
 
 logger = logging.getLogger(__name__)
 
@@ -29,25 +12,35 @@ def register_routes(app: FastAPI) -> None:
     Incluye manejo de errores básico para evitar que un router mal configurado
     detenga el arranque completo del servidor.
     """
-    
+
     # Lista declarativa de routers con tipado estático
-    ROUTERS: List[APIRouter] = [
-        auth.router,        # Auth primero para que /api/auth/login esté disponible
-        dashboard.router,
-        deliveries.router,
-        inventory.router,
-        analytics_proyecciones.router,
-        filters.router,
-        pdf.router,
-        sync.router,
-        docs.router,
-        settings.router,
-        tasks.router,
-        widgets.router,
-        consumos.router,
-        transporte.router,
-        productivity.router
+    # Lista de nombres de módulos de routers a importar dinámicamente
+    ROUTER_MODULES: List[str] = [
+        "routes.auth",        # Auth primero para que /api/auth/login esté disponible
+        "routes.dashboard",
+        "routes.deliveries",
+        "routes.inventory",
+        "routes.analytics_proyecciones",
+        "routes.filters",
+        "routes.pdf",
+        "routes.sync",
+        "routes.docs",
+        "routes.settings",
+        "routes.tasks",
+        "routes.widgets",
+        "routes.consumos",
+        "routes.transporte",
+        "routes.productivity"
     ]
+
+    ROUTERS: List[APIRouter] = []
+    for module_name in ROUTER_MODULES:
+        try:
+            module = importlib.import_module(module_name)
+            ROUTERS.append(module.router)
+        except Exception as e:
+            logger.error(f"Error importando módulo {module_name}: {e}")
+            continue
 
     for router in ROUTERS:
         try:

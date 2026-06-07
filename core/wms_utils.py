@@ -1,18 +1,19 @@
 """
 core/wms_utils.py — Funciones utilitarias vectorizadas para transformación de datos WMS.
 """
-import re
 import logging
-import numpy as np
-import pandas as pd
+import re
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Final
+from typing import Final, Optional
 
-from core.wms_config import STATUS_MAPPING, COST_CENTER_MAPPING
-from core.db_config_manager import get_holidays
-from sqlalchemy.orm import Session
+import numpy as np
+import pandas as pd
 from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from core.db_config_manager import get_holidays
+from core.wms_config import COST_CENTER_MAPPING, STATUS_MAPPING
 
 # Configuración de Logging
 logger = logging.getLogger("wms-utils")
@@ -34,12 +35,12 @@ def sanitize_string(text: str) -> str:
         if pd.isna(text):
             return "unnamed_column"
         text = str(text)
-    
+
     text = text.strip()
     text = RE_CLEAN.sub('_', text)
     text = RE_UNSAFE.sub('', text)
     name = text.lower()
-    
+
     # Mapeo de alias técnicos a nombres de dominio (Agnóstico)
     aliases = {
         # Fechas
@@ -49,19 +50,19 @@ def sanitize_string(text: str) -> str:
         'fe_carga': 'fecha_carga',
         'fecha_carga': 'fecha_carga',
         'creado_el': 'creado_el',
-        
+
         # Cantidades
         'ctdentrega': 'cantidad',
         'cantidad_entrega': 'cantidad',
         'ctd_entrega': 'cantidad',
-        
+
         # Ubicaciones
         'ubicacion': 'ubicacion_bin',
         'ubicacin': 'ubicacion_bin',
         'ubicacin_1': 'ubicacion_area',
         'ubicacion_1': 'ubicacion_area',
         'ubicacion_fisica_stock': 'ubicacion_bin',
-        
+
         # Otros
         'estado_sap': 'estado_wms',
         'centro_costo': 'centro_costo',
@@ -101,23 +102,23 @@ def apply_cost_center_mapping(df: pd.DataFrame) -> pd.DataFrame:
             return df
     elif 'ubicacion_area' in df.columns:
         df['centro_costo'] = df['centro_costo'].combine_first(df['ubicacion_area'])
-        
+
     # Eliminar la columna duplicada para ahorrar memoria y espacio en DB
     if 'ubicacion_area' in df.columns:
         df.drop(columns=['ubicacion_area'], inplace=True)
 
     # Inicializar con el valor por defecto
     df['area_negocio'] = 'OTRO'
-    
+
     # Aplicar mapeos en orden (vectorizado)
     # Convertimos la columna a UPPER una sola vez
     ubi_upper = df['centro_costo'].fillna('').astype(str).str.upper()
-    
+
     for prefix, area in COST_CENTER_MAPPING.items():
         # Buscamos el prefijo en la ubicación
         mask = ubi_upper.str.contains(prefix, regex=False)
         df.loc[mask, 'area_negocio'] = area
-        
+
     logger.debug("Mapeo de áreas de negocio (Centros de Costo) completado.")
     return df
 
@@ -130,16 +131,16 @@ def normalize_date_columns(df: pd.DataFrame) -> pd.DataFrame:
         non_null = df[col].dropna()
         if non_null.empty:
             continue
-            
+
         sample = non_null.iloc[0]
-        
+
         # Caso 1: String con puntos (dd.mm.yyyy)
         if isinstance(sample, str) and RE_DATE_DOT.match(sample):
             df[col] = df[col].str.replace('.', '-', regex=False)
         # Caso 2: Objeto datetime/timestamp
         elif isinstance(sample, (pd.Timestamp, datetime)):
             df[col] = pd.to_datetime(df[col]).dt.strftime('%d-%m-%Y')
-            
+
     return df
 
 def calculate_sla_delays(df: pd.DataFrame) -> pd.DataFrame:
@@ -151,22 +152,22 @@ def calculate_sla_delays(df: pd.DataFrame) -> pd.DataFrame:
     # Conversión eficiente a datetime
     s_date = pd.to_datetime(df['creado_el'], format='%d-%m-%Y', errors='coerce')
     e_date = pd.to_datetime(df['fecha_sm_real'], format='%d-%m-%Y', errors='coerce')
-    
+
     valid = s_date.notna() & e_date.notna()
     df['dias_retraso'] = np.nan
-    
+
     if valid.any():
         # Cálculo de días hábiles (Business Days) con NumPy
         s_values = s_date[valid].values.astype('datetime64[D]')
         e_values = e_date[valid].values.astype('datetime64[D]')
-        
+
         # Normalizar fechas al siguiente día hábil si caen en fin de semana o festivo
         holidays_list = get_holidays()
         s_bus = np.busday_offset(s_values, 0, roll='forward', holidays=holidays_list)
         e_bus = np.busday_offset(e_values, 0, roll='forward', holidays=holidays_list)
-        
+
         df.loc[valid, 'dias_retraso'] = np.maximum(0, np.busday_count(s_bus, e_bus, holidays=holidays_list))
-    
+
     return df
 
 def generate_time_labels(df: pd.DataFrame) -> pd.DataFrame:
@@ -174,29 +175,29 @@ def generate_time_labels(df: pd.DataFrame) -> pd.DataFrame:
     # Prioridad de columnas para determinar la fecha de referencia
     date_cols = ['fecha_carga', 'fecha_sm_real', 'creado_el']
     ref_date = pd.Series(index=df.index, dtype='object')
-    
+
     for col in date_cols:
         if col in df.columns:
             # Reemplazar vacíos por NA y combinar
             ref_date = ref_date.combine_first(df[col].replace('', pd.NA))
-    
+
     temp_date = pd.to_datetime(ref_date, format='%d-%m-%Y', errors='coerce')
     valid = temp_date.notna()
-    
+
     df['week_sort'] = None
     df['week_label'] = None
-    
+
     if valid.any():
         v_dates = temp_date[valid]
         df.loc[valid, 'week_sort'] = v_dates.dt.strftime('%Y-%V')
-        
+
         meses = {1:'Ene', 2:'Feb', 3:'Mar', 4:'Abr', 5:'May', 6:'Jun',
                  7:'Jul', 8:'Ago', 9:'Sep', 10:'Oct', 11:'Nov', 12:'Dic'}
-        
+
         month_name = v_dates.dt.month.map(meses)
         week_num = v_dates.dt.isocalendar().week.astype(str).str.zfill(2)
         df.loc[valid, 'week_label'] = month_name + "-S" + week_num
-        
+
     return df
 
 

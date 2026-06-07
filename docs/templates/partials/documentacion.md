@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: templates/partials
-Compilado el: 2026-06-05 14:46:00
+Compilado el: 2026-06-07 12:50:47
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -70,19 +70,22 @@ Ninguna
 ## Archivo: ./templates/partials/_inventory_modals.html
 
 ### Resumen Funcional
-Este archivo contiene fragmentos HTML para varios modales en una interfaz de usuario, cada uno relacionado con diferentes aspectos del sistema de monitoreo de almacén (WMS). Los modales muestran información detallada sobre el consumo específico, actividad del asistente, materiales más movimientos, desglose de ubicación, curva ABC, frecuencia semanal y top materiales.
+Este archivo contiene fragmentos HTML para varios modales en una interfaz de usuario de sistema de monitoreo de almacén (WMS). Cada modal muestra diferentes tipos de información, como consumo específico, actividad del asistente, materiales más movimientos, desglose de ubicación, curva ABC, materiales frecuentes y detalles de producción vs mantenimiento.
 
 ### Catálogo de Funciones y Clases
-Ninguna función o clase detectada en este fragmento HTML.
+Ninguna función o clase detectada directamente en este fragmento HTML. Todas las interacciones son realizadas a través del DOM y JavaScript.
 
 ### Interacción con Base de Datos
-Ninguna. Este archivo solo contiene código HTML y no realiza ninguna interacción con una base de datos.
+Ninguna interacción con la base de datos detectada en este archivo. Todas las listas y detalles se muestran dinámicamente mediante JavaScript.
 
 ### Estado y Variables Globales
-Ninguna variable global, de sesión o diccionario quemado en el código que almacene estado crítico.
+Ninguna variable global, de sesión o de entorno detectada directamente en este fragmento HTML. Todas las variables y estados son gestionados por el JavaScript que interactúa con el DOM.
 
 ### Dependencias y Flujo
-Ninguna dependencia externa. Este archivo solo importa HTML y no consume ningún otro archivo del proyecto ni es consumido por otros archivos.
+- **Librerías externas**: Ninguna librería externa importada.
+- **Archivos del proyecto que IMPORTA a este archivo**: Ninguno.
+- **Archivos del proyecto que este archivo IMPORTA (lo consume)**: Ninguno.
+- **Flujo de datos**: El flujo de datos se gestiona completamente por JavaScript, que interactúa con el DOM para mostrar y ocultar modales y cargar contenido dinámicamente.
 
 
 ---
@@ -365,30 +368,28 @@ Ninguna
 ## Archivo: ./templates/partials/_tab_inventory.html
 
 ### Resumen Funcional
-Este fragmento HTML es una pestaña que muestra el análisis de movimientos en un sistema de monitoreo de almacén (WMS). Incluye un selector para cambiar entre vistas anuales y semanales, KPIs (indicadores clave de rendimiento) como ingresos, consumo de producción, mantenimiento, tasa de reabastecimiento, traspasos, tasas desplanificadas y devoluciones, así como tablas dinámicas que muestran la capacidad operativa y eficiencia.
+Este fragmento HTML es una pestaña de análisis de movimientos en el sistema de monitoreo de almacén (WMS). Muestra estadísticas clave como ingresos, consumos y traspasos, junto con gráficos que representan la eficiencia operativa y tendencias de consumo.
 
 ### Catálogo de Funciones y Clases
-- Ninguna función o clase detectada directamente en el fragmento HTML proporcionado.
+- Ninguna
 
 ### Interacción con Base de Datos
-- **Motor:** SQLite (implícito, ya que se menciona "SQLite" en el contexto del proyecto).
+- **Motor:** SQLite
 - **Tablas y Columnas:**
-  - No hay consultas SQL crudas o llamadas a ORM explícitas en este fragmento HTML. Las tablas y columnas específicas se obtienen a través de variables pasadas al template (como `ingresos_eff_stats`, `consumos_eff_stats`, etc.).
+  - No se especifican consultas SQL o llamadas a ORM en este fragmento HTML. Todas las estadísticas y datos son presentados directamente desde el contexto del backend.
 
 ### Estado y Variables Globales
-- **Variables Globales:** Ninguna variable global detectada directamente en el fragmento HTML proporcionado.
-- **Estado Crítico:** Las variables que contienen datos dinámicos como `kpi_devoluciones` son pasadas al template desde el backend.
+- `user.role`: Rol del usuario actual.
+- `ingresos_eff_stats`, `ingresos_eff_stats_weekly`: Datos de eficiencia operativa para ingresos (mensuales y semanales).
+- `consumos_eff_stats`, `consumos_eff_stats_weekly`: Datos de eficiencia operativa para consumos (mensuales y semanales).
+- `kpi_devoluciones`: Tasa de devoluciones.
 
 ### Dependencias y Flujo
-- **Librerías Externas:**
-  - Font Awesome (`fas fa-layer-group`, `fas fa-cog`, etc.)
-- **Archivos del Proyecto que Importan a este Archivo:** Ninguno.
-- **Archivos del Proyecto que Este Archivo Importa:** Ninguno.
+- **Dependencias Externas:** Font Awesome (`fas fa-layer-group`, `fas fa-cog`, etc.)
+- **Archivos del Proyecto que Importan a este Archivo:** Ninguno
+- **Archivos del Proyecto que Este Archivo Importa:** Ninguno
 
-**Flujo de Datos:**
-El fragmento HTML consume datos desde el backend (probablemente a través de una vista o endpoint FastAPI) y los muestra en la interfaz. Los datos incluyen KPIs, estadísticas de eficiencia y gráficos que se actualizan según la selección del usuario.
-
-**Nota:** El contenido HTML es principalmente estético y interactivo, sin funciones o consultas directas a la base de datos.
+El flujo de datos es unidireccional, con el backend proporcionando los datos necesarios para renderizar la vista en el frontend.
 
 
 ---
@@ -443,6 +444,33 @@ Ninguna
 
 ### Dependencias y Flujo
 Ninguna
+
+
+---
+
+## Archivo: ./templates/partials/_tab_replenishment.html
+
+### Resumen Funcional
+Este fragmento HTML es una interfaz de usuario para mostrar sugerencias de pedido en un sistema de monitoreo de almacén (WMS). Muestra una tabla con detalles sobre el material, su descripción, UMB, stock inicial y actual, consumo mensual, frecuencia de retiros, autonomía en meses y clasificación ABC. Incluye filtros para la frecuencia de pedido y un botón para exportar los datos a Excel.
+
+### Catálogo de Funciones y Clases
+Ninguna
+
+### Interacción con Base de Datos
+- **Motor:** SQLite
+- **Tablas:** Ninguna (El fragmento HTML no interactúa directamente con una base de datos. Los datos se cargan desde un endpoint API).
+- **Columnas:** Ninguna (No hay consultas SQL o ORM explícitas en el fragmento HTML).
+
+### Estado y Variables Globales
+Ninguna
+
+### Dependencias y Flujo
+- **Librerías Externas:** `fas fa-exclamation-triangle`, `fas fa-file-excel`
+- **Archivos del Proyecto que Importan a este Archivo:** Ninguno (Este archivo no importa otros archivos).
+- **Archivos del Proyecto que Este Archivo Importa:** Ninguno (No hay imports en el fragmento HTML).
+
+**Flujo de Datos:**
+El fragmento HTML se carga en la interfaz del usuario. Los datos para llenar la tabla se obtienen a través de una solicitud GET al endpoint `/api/inventory/replenishment-suggestions/export`.
 
 
 ---

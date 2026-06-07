@@ -17,8 +17,8 @@ Ninguna.
 Ninguna.
 
 ### Dependencias y Flujo
-- **Dependencias Externas**: `pandas`, `pathlib`
+- **Dependencias Externas**: `pandas`
 - **Archivos del Proyecto que Importan a este Archivo**: Ninguno.
 - **Archivos del Proyecto que Este Archivo Importa**: `./services/etl/base.py` (clase `BaseWMSProcessor`)
-- **Flujo de Datos**: El archivo importa la clase base y utiliza pandas para procesar archivos CSV, lo cual implica un flujo de datos desde el archivo hasta la limpieza y normalización del DataFrame.
+- **Flujo de Datos**: El archivo importa la clase base y utiliza pandas para procesar archivos CSV, lo cual implica un flujo de datos desde el archivo hasta la limpieza y preparación del DataFrame.
 

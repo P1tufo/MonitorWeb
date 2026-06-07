@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: core/helpers
-Compilado el: 2026-06-05 14:46:00
+Compilado el: 2026-06-07 12:50:47
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -14,8 +14,8 @@ El archivo `dynamic_executor.py` contiene una función que toma un payload JSON 
 
 ### Interacción con Base de Datos
 - Motor: SQLite
-- Tablas y Columnas: Ninguna (la consulta SQL se genera dinámicamente)
-- Consultas SQL Crudas o Llamadas a ORM: Sí, utiliza `pd.read_sql` para ejecutar la consulta generada por `build_sql_from_payload`.
+- Tablas y Columnas: Ninguna (se espera que la consulta SQL genere los resultados necesarios).
+- Consultas SQL Crudas o Llamadas a ORM: Sí, utiliza `pd.read_sql` para ejecutar la consulta SQL generada.
 
 ### Estado y Variables Globales
 - Ninguna
@@ -23,23 +23,16 @@ El archivo `dynamic_executor.py` contiene una función que toma un payload JSON 
 ### Dependencias y Flujo
 - Librerías Externas:
   - `pandas`
-  - `logging`
-  - `typing`
   - `sqlalchemy.orm.Session`
-- Archivos del Proyecto que Importan a este archivo (lo consumen):
-  - No aplica
-- Archivos del Proyecto que Este Archivo Importa (consume):
+- Archivos del Proyecto que Importan a este Archivo: Ninguno
+- Archivos del Proyecto que Este Archivo Importa:
   - `core.query_engine.build_sql_from_payload`
   - `core.schemas.VisualQueryBuilderPayload`
 
 **Flujo de Datos:**
-1. El frontend envía un payload JSON crudo.
-2. `execute_visual_query` recibe el payload y lo valida contra el esquema `VisualQueryBuilderPayload`.
-3. Utiliza `build_sql_from_payload` para generar una consulta SQL dinámica.
-4. Ejecuta la consulta en la base de datos SQLite utilizando `pd.read_sql`.
-5. Devuelve los resultados como un DataFrame de Pandas.
-
-Este flujo permite que el sistema genere consultas SQL flexibles basadas en los criterios proporcionados por el usuario, lo que es crucial para un sistema de monitoreo de almacén dinámico y adaptable.
+1. El archivo se importa en algún lugar dentro del proyecto.
+2. Se llama a la función `execute_visual_query` con un payload JSON y una sesión de base de datos.
+3. La función valida el payload, compila una consulta SQL usando `build_sql_from_payload`, ejecuta la consulta en la base de datos y devuelve los resultados como un DataFrame de Pandas.
 
 
 ---

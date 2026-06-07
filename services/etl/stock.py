@@ -1,10 +1,11 @@
-import pandas as pd
+import logging
+import os
+import sqlite3
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
-import sqlite3
-import os
-from datetime import datetime
-import logging
+
+import pandas as pd
 
 from .base import BaseWMSProcessor
 
@@ -14,7 +15,8 @@ class StockLevelAdapter(BaseWMSProcessor):
     """Adaptador para procesar Inventario/Stock LX02. Realiza REPLACE completo."""
 
     def validate_file(self, file_path: Path) -> bool:
-        if not file_path.exists(): return False
+        if not file_path.exists():
+            return False
         skip, _ = self._detect_file_params(file_path, self._get_required_columns())
         return skip >= 0
 
@@ -41,16 +43,17 @@ class StockLevelAdapter(BaseWMSProcessor):
             return pd.DataFrame()
 
     def _clean_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
-        if df.empty: return df
-        
+        if df.empty:
+            return df
+
         # Eliminamos filas y columnas totalmente vacías
         df = df.dropna(how='all', axis=0).dropna(how='all', axis=1)
-        
+
         # Limpieza de strings
         str_cols = df.select_dtypes(include=['object']).columns
         for c in str_cols:
             df[c] = df[c].astype(str).str.strip()
-            
+
         return df
 
     def process_directory(self, folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int:
@@ -61,7 +64,8 @@ class StockLevelAdapter(BaseWMSProcessor):
             return 0
 
         files = [f for f in folder.iterdir() if f.suffix.lower() in {'.txt', '.csv', '.xlsx', '.xls'} and not f.name.startswith('~')]
-        if not files: return 0
+        if not files:
+            return 0
 
         all_dfs = []
         for file_path in files:
@@ -75,11 +79,12 @@ class StockLevelAdapter(BaseWMSProcessor):
             except Exception as e:
                 logger.error(f"Fallo al procesar {file_path.name}: {e}")
 
-        if not all_dfs: return 0
+        if not all_dfs:
+            return 0
 
         combined_df = pd.concat(all_dfs, ignore_index=True)
         rows = len(combined_df)
-        
+
         ctx_conn = conn if conn else sqlite3.connect(db_path)
         try:
             combined_df.to_sql(table_name, ctx_conn, if_exists="replace", index=False)
@@ -90,5 +95,5 @@ class StockLevelAdapter(BaseWMSProcessor):
         finally:
             if conn is None:
                 ctx_conn.close()
-                
+
         return rows

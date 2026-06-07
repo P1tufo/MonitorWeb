@@ -1,15 +1,18 @@
-import pandas as pd
-import numpy as np
 from pathlib import Path
 from typing import List
 
+import numpy as np
+import pandas as pd
+
 from .base import BaseWMSProcessor
+
 
 class InventoryMovementAdapter(BaseWMSProcessor):
     """Adaptador específico para procesar el formato WMS Movimientos."""
 
     def validate_file(self, file_path: Path) -> bool:
-        if not file_path.exists(): return False
+        if not file_path.exists():
+            return False
         skip, _ = self._detect_file_params(file_path, self._get_required_columns())
         return skip >= 0
 
@@ -22,7 +25,7 @@ class InventoryMovementAdapter(BaseWMSProcessor):
     def _clean_dataframe(self, chunk: pd.DataFrame) -> pd.DataFrame:
         chunk = chunk.dropna(axis=1, how='all')
         chunk.columns = [str(c).strip() for c in chunk.columns]
-        
+
         mapping = {
             "Fe.contab.": "fe_contab", "Alm.": "alm", "Ce.": "ce",
             "CMv": "cmv", "Referencia": "referencia", "Texto cab.documento": "texto_cab_documento",
@@ -33,48 +36,53 @@ class InventoryMovementAdapter(BaseWMSProcessor):
             "Importe ML": "importe_ml", "Mon.": "mon", "Proveedor": "proveedor",
             "Orden": "orden"
         }
-        
+
         new_cols = []
         for col in chunk.columns:
             clean_col = col.strip()
-            if clean_col == "Pos": new_cols.append("pos")
-            elif clean_col == "Pos.": new_cols.append("pos_extra")
-            elif clean_col in mapping: new_cols.append(mapping[clean_col])
-            else: new_cols.append(clean_col.lower().replace('.', '').replace(' ', '_'))
+            if clean_col == "Pos":
+                new_cols.append("pos")
+            elif clean_col == "Pos.":
+                new_cols.append("pos_extra")
+            elif clean_col in mapping:
+                new_cols.append(mapping[clean_col])
+            else:
+                new_cols.append(clean_col.lower().replace('.', '').replace(' ', '_'))
         chunk.columns = new_cols
-        
+
         db_columns = list(mapping.values()) + ['pos', 'pos_extra', 'tipo_operacion']
         valid_cols = [c for c in chunk.columns if c in db_columns]
         chunk = chunk[valid_cols]
         chunk = chunk.loc[:, ~chunk.columns.duplicated()]
-        
+
         if 'doc_mat' in chunk.columns:
             chunk = chunk.dropna(subset=['doc_mat'])
             chunk = chunk[chunk['doc_mat'].str.strip() != '']
             chunk = chunk[~chunk['doc_mat'].str.contains(r'^-+$', na=False)]
-            
+
         if 'fe_contab' in chunk.columns:
             chunk['fe_contab'] = chunk['fe_contab'].astype(str).str.replace('.', '-', regex=False)
-            
+
         # Normalizar ej_mat y pos para que la PRIMARY KEY (doc_mat, ej_mat, pos)
         # funcione correctamente sin importar el padding del archivo WMS.
         if 'ej_mat' in chunk.columns:
             chunk['ej_mat'] = chunk['ej_mat'].astype(str).str.strip()
         if 'pos' in chunk.columns:
             chunk['pos'] = chunk['pos'].astype(str).str.strip()
-            
+
         if 'cantidad' in chunk.columns:
             clean_qty = chunk['cantidad'].astype(str).str.replace('.', '', regex=False).str.replace(',', '.', regex=False).str.rstrip('-')
             chunk['cantidad'] = pd.to_numeric(clean_qty, errors='coerce').fillna(0)
-            
+
         if 'importe_ml' in chunk.columns:
             clean_imp = chunk['importe_ml'].astype(str).str.replace('.', '', regex=False).str.replace(',', '.', regex=False).str.rstrip('-')
             chunk['importe_ml'] = pd.to_numeric(clean_imp, errors='coerce').fillna(0)
-            
+
         return self._vectorized_classify(chunk)
 
     def _vectorized_classify(self, df: pd.DataFrame) -> pd.DataFrame:
-        if 'cmv' not in df.columns: return df
+        if 'cmv' not in df.columns:
+            return df
         cmv = df['cmv'].astype(str)
         cant = pd.to_numeric(df['cantidad'], errors='coerce').fillna(0)
         conditions = [

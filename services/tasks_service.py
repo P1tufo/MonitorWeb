@@ -1,9 +1,11 @@
-from sqlalchemy.orm import Session
-import pandas as pd
-from sqlalchemy import text
 import logging
 from datetime import datetime
-from core.state import get_app_state
+
+import pandas as pd
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from core.state import get_cache_manager
 from core.utils import sanitize_for_json
 from repositories import TasksRepository
 
@@ -16,9 +18,9 @@ class TasksService:
     def get_full_context(self) -> dict:
         """Genera y cachea el contexto analítico para la gestión de OTs."""
         try:
-            state = get_app_state()
+            cache = get_cache_manager()
             logger.debug("Generando contexto de Gestión de OTs...")
-            
+
             repo = TasksRepository(self.session)
             df_summary = repo.get_tasks_summary()
             df_trend = repo.get_tasks_trend()
@@ -32,21 +34,21 @@ class TasksService:
             # Preparar datos para gráficos
             # 1. Resumen por Tipo Movimiento
             ots_summary = df_summary.to_dict(orient='records')
-            
+
             # 2. Tendencia Diaria (Dual: Creadas vs Confirmadas)
             ots_trend_labels = df_trend['label'].tolist()
             ots_trend_created = df_trend['created'].tolist()
             ots_trend_confirmed = df_trend['confirmed'].tolist()
-            
+
             # 3. Usuarios (Dual: Creadas vs Confirmadas)
             ots_user_labels = df_users['user'].tolist()
             ots_user_created = df_users['created'].tolist()
             ots_user_confirmed = df_users['confirmed'].tolist()
-            
+
             # 4. Tipos Almacén
             ots_type_labels = df_types['type'].tolist()
             ots_type_data = df_types['count'].tolist()
-            
+
             # Sobrescribir con listado dinámico de config_queries si existe
             try:
                 res_list = self.session.execute(text("SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_list_pending'")).fetchone()
@@ -74,7 +76,7 @@ class TasksService:
                     creac_date_str = str(created_at_val).split(' ')[0]
                     creac_date = datetime.strptime(creac_date_str, "%d-%m-%Y")
                     diff_days = (now - creac_date).days
-                    
+
                     if diff_days > 4:
                         row['sla_status'] = 'Crítico'
                         row['sla_color'] = '#ef4444' # Rojo
@@ -96,7 +98,7 @@ class TasksService:
             # Sobrescribir con KPIs dinámicos de config_queries si existen
             try:
                 from core.utils import _extract_metric_value, _get_bound_params_from_visual_state
-                
+
                 # KPI: Tareas Pendientes
                 res_p = self.session.execute(text("SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_kpi_pending'")).fetchone()
                 if res_p:
@@ -110,7 +112,7 @@ class TasksService:
                             val = _extract_metric_value(df_p)
                             if val is not None and not pd.isna(val):
                                 ots_pending_count = int(val)
-                                
+
                 # KPI: Usuarios Activos
                 res_u = self.session.execute(text("SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_kpi_users'")).fetchone()
                 if res_u:
@@ -124,7 +126,7 @@ class TasksService:
                             val = _extract_metric_value(df_u)
                             if val is not None and not pd.isna(val):
                                 ots_user_count = int(val)
-                                
+
                 # KPI: OTs Críticas
                 res_c = self.session.execute(text("SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_kpi_critical'")).fetchone()
                 if res_c:
@@ -163,13 +165,13 @@ class TasksService:
 
             # Sanitizar para JSON
             context = sanitize_for_json(context)
-            
+
             # Cachear en memoria
-            state.set_cache("/analytics/ots", context)
-            
+            cache.set_cache("/analytics/ots", context)
+
             # Opcional: Persistir en la base de datos de snapshots
             # (Por ahora solo memoria para velocidad)
-            
+
             return context
         except Exception as e:
             logger.error(f"Error generando contexto de OTs: {e}", exc_info=True)

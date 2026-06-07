@@ -14,14 +14,14 @@ Migración futura a Celery:
   - Reemplazar submit_task() por .delay() de Celery.
   - Los endpoints API no cambian.
 """
-import uuid
 import logging
-from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor, Future
+import uuid
+from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
-from typing import Callable, Dict, List, Any, Optional
 from threading import Lock
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger("task-manager")
 

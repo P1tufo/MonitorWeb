@@ -1,25 +1,25 @@
 ## Archivo: ./core/wms_config.py
 
 ### Resumen Funcional
-Este archivo contiene la configuración y lógica de negocio para el mapeo WMS (SaaS Dinámico). Define funciones para validar los mapeos de estado, centro de costo y feriados. También proporciona soporte para cargar dinámicamente atributos como `STATUS_MAPPING` y `COST_CENTER_MAPPING`.
+Este archivo contiene la configuración y validación de los mapeos utilizados en el sistema de monitoreo de almacén (WMS). Define funciones para obtener mapeos como STATUS_MAPPING y COST_CENTER_MAPPING, y valida su integridad.
 
 ### Catálogo de Funciones y Clases
 - `validate_wms_maps()` - Valida la integridad de los mapeos definidos.
 - `__getattr__(name: str) -> Any` - Soporte para carga dinámica de atributos.
 
 ### Interacción con Base de Datos
-Ninguna. No se realiza ninguna interacción directa con una base de datos en este archivo.
+Ninguna. No hay consultas SQL ni interacciones directas con una base de datos.
 
 ### Estado y Variables Globales
-No hay variables globales, de sesión o de entorno definidas en este archivo.
+No se utilizan variables globales, de sesión o diccionarios quemados en el código que almacenen estado crítico.
 
 ### Dependencias y Flujo
 - **Dependencias**: 
-  - `get_setting`, `get_status_mapping`, `get_cost_center_mapping`, `get_holidays` (de `db_config_manager.py`)
+  - `get_cost_center_mapping()`, `get_holidays()`, `get_setting()`, `get_status_mapping()` (de `db_config_manager.py`).
   
 - **Flujo de Datos**:
-  - Este archivo es consumido por otros archivos que necesiten acceso a los mapeos WMS y la configuración dinámica.
-  - Los atributos como `STATUS_MAPPING` y `COST_CENTER_MAPPING` se cargan dinámicamente cuando son accedidos.
+  - El archivo importa funciones desde `db_config_manager.py`.
+  - No hay archivos que importen a este archivo.
 
-Este archivo es crucial para mantener la integridad de los mapeos WMS y proporcionar acceso a estos mapeos de manera dinámica en el sistema.
+Este archivo se encarga de la configuración y validación de mapeos utilizados en el sistema WMS, asegurando que los datos necesarios estén correctamente definidos y no vacíos.
 

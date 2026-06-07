@@ -1,7 +1,7 @@
-import os
 import logging
-from typing import Final
+import os
 from pathlib import Path
+from typing import Final
 
 # Configuración de Logging para el módulo de configuración
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(name)s:%(message)s')
@@ -47,7 +47,7 @@ def validate_config():
     """Realiza comprobaciones de salud en la configuración."""
     if not NGROK_BIN.exists():
         logger.warning(f"Binario de ngrok no encontrado en: {NGROK_BIN}. El túnel público no funcionará.")
-    
+
     if not ONEDRIVE_PATH.exists():
         logger.warning(f"Ruta de OneDrive no accesible: {ONEDRIVE_PATH}. La sincronización de datos podría fallar.")
 

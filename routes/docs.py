@@ -1,19 +1,20 @@
 import os
-from fastapi import APIRouter, HTTPException, Depends
+
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
+
 from config import BASE_DIR, CACHE_DIR
-from core.state import AppState, get_app_state
 
 router = APIRouter(prefix="/api/docs", tags=["Documentation"])
 
 @router.get("/tree")
-async def get_docs_tree(state: AppState = Depends(get_app_state)):
+async def get_docs_tree():
     """Genera un árbol de archivos del proyecto indicando cuáles tienen documentación."""
     ignore_dirs = {".git", "__pycache__", "venv", "node_modules", "PDFs_Generados", "Temp_Assets", "scratch", ".doc_cache"}
     allowed_exts = {".py", ".js", ".html", ".css", ".md", ".json", ".sql", ".txt"}
-    
+
     tree = []
-    
+
     def build_tree(path, parent_list):
         try:
             items = sorted(os.listdir(path))
@@ -23,10 +24,10 @@ async def get_docs_tree(state: AppState = Depends(get_app_state)):
         for item in items:
             if item in ignore_dirs or item.startswith("."):
                 continue
-                
+
             full_path = os.path.join(path, item)
             rel_path = os.path.relpath(full_path, BASE_DIR)
-            
+
             node = {
                 "name": item,
                 "path": rel_path,
@@ -34,7 +35,7 @@ async def get_docs_tree(state: AppState = Depends(get_app_state)):
                 "has_doc": False,
                 "children": []
             }
-            
+
             if node["is_dir"]:
                 build_tree(full_path, node["children"])
                 if node["children"]: # Solo añadir carpetas que tengan archivos válidos
@@ -46,23 +47,23 @@ async def get_docs_tree(state: AppState = Depends(get_app_state)):
                     cache_name = rel_path + ".md"
                     cache_path = os.path.join(BASE_DIR, CACHE_DIR, cache_name)
                     node["has_doc"] = os.path.exists(cache_path)
-                    
+
                     # Solo añadir si tiene documentación o si es un markdown real en docs/
                     if node["has_doc"] or (rel_path.startswith("docs") and ext == ".md"):
                         node["has_doc"] = True
                         parent_list.append(node)
 
     build_tree(BASE_DIR, tree)
-    
+
     # Función para ordenar recursivamente el árbol (Carpetas primero, luego Archivos, orden alfabético)
     def sort_tree_nodes(nodes):
         nodes.sort(key=lambda x: (not x["is_dir"], x["name"].lower()))
         for node in nodes:
             if node["children"]:
                 sort_tree_nodes(node["children"])
-                
+
     sort_tree_nodes(tree)
-    
+
     # Añadir Documentación Global como opción seleccionable destacada al principio de todo el árbol
     global_doc_rel = "docs/documentacion_global.md"
     if os.path.exists(os.path.join(BASE_DIR, global_doc_rel)):
@@ -74,11 +75,11 @@ async def get_docs_tree(state: AppState = Depends(get_app_state)):
             "children": []
         }
         tree.insert(0, global_node)
-        
+
     return tree
 
 @router.get("/content/{path:path}")
-async def get_doc_content(path: str, state: AppState = Depends(get_app_state)):
+async def get_doc_content(path: str):
     """Obtiene el contenido de la documentación (.md) para un archivo específico."""
     # 1. Intentar leerlo directamente si es un archivo real en la carpeta `docs` (como docs/documentacion_global.md)
     real_path = os.path.join(BASE_DIR, path)
@@ -86,7 +87,7 @@ async def get_doc_content(path: str, state: AppState = Depends(get_app_state)):
         try:
             with open(real_path, "r", encoding="utf-8") as f:
                 content = f.read()
-            
+
             # Si es la documentación global, ocultar la estructura del proyecto redundante en el visor
             if path == "docs/documentacion_global.md":
                 import re
@@ -99,9 +100,9 @@ async def get_doc_content(path: str, state: AppState = Depends(get_app_state)):
                     "---\n\n"
                 )
                 content = re.sub(pattern, replacement, content, flags=re.DOTALL)
-                
+
             return {"doc": content}
-        except Exception as e:
+        except Exception:
             pass
 
     # 2. De lo contrario, ir al fallback de cache
@@ -109,6 +110,6 @@ async def get_doc_content(path: str, state: AppState = Depends(get_app_state)):
     if os.path.exists(cache_path):
         with open(cache_path, "r", encoding="utf-8") as f:
             return {"doc": f.read()}
-            
+
     raise HTTPException(status_code=404, detail="Documentación no encontrada")
 

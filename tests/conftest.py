@@ -1,6 +1,9 @@
 import os
 import secrets
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 # TEST_SESSION_ID: Identificador criptográficamente seguro para evitar colisiones.
 TEST_SESSION_ID = secrets.token_hex(16)
@@ -27,7 +30,7 @@ from app import app
 @pytest.fixture(autouse=True)
 def skip_warmup():
     """
-    Nota: El warm_up ahora ocurre dentro del lifespan. 
+    Nota: El warm_up ahora ocurre dentro del lifespan.
     Si se desea desactivar, se podría usar una variable de entorno.
     Por ahora, simplemente eliminamos el patch que fallaba.
     """
@@ -38,19 +41,19 @@ def skip_warmup():
 def session_db():
     """
     Crea e inicializa la base de datos maestra compartida para toda la sesión de pruebas.
-    
+
     Funcionalidad:
     - Crea una base de datos SQLite en memoria con 'cache=shared'.
     - Inicializa el esquema completo (tablas de transacciones, maestros y snapshots).
     - Mantiene una conexión persistente para evitar que SQLite libere la memoria.
-    
+
     Retorna:
     - sqlite3.Connection: Conexión maestra a la base de datos inicializada.
     """
     # Conexión maestra: actua como guardián de la base de datos en memoria compartida
     # Se utiliza uri=True para permitir el uso de parámetros como 'cache=shared'
     conn = sqlite3.connect(MEMORY_DB_URI, uri=True, check_same_thread=False)
-    
+
     # Aplicar el esquema base de forma atómica
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS outbound_deliveries (
@@ -63,15 +66,15 @@ def session_db():
             ingested_at TEXT, fecha_sm_real_1 TEXT, ubicacion_bin_1 TEXT
         );
         CREATE TABLE IF NOT EXISTS inventory_movements (
-            fe_contab TEXT, alm TEXT, ce TEXT, cmv TEXT, referencia TEXT, 
-            texto_cab_documento TEXT, texto_breve_material TEXT, material TEXT, 
-            cantidad REAL, umb TEXT, doc_mat TEXT, ej_mat TEXT, pos TEXT, 
-            registrado TEXT, hora TEXT, usuario TEXT, pedido TEXT, pos_extra TEXT, 
-            ce_coste TEXT, importe_ml REAL, mon TEXT, proveedor TEXT, 
+            fe_contab TEXT, alm TEXT, ce TEXT, cmv TEXT, referencia TEXT,
+            texto_cab_documento TEXT, texto_breve_material TEXT, material TEXT,
+            cantidad REAL, umb TEXT, doc_mat TEXT, ej_mat TEXT, pos TEXT,
+            registrado TEXT, hora TEXT, usuario TEXT, pedido TEXT, pos_extra TEXT,
+            ce_coste TEXT, importe_ml REAL, mon TEXT, proveedor TEXT,
             tipo_operacion TEXT, PRIMARY KEY (doc_mat, ej_mat, pos)
         );
         CREATE TABLE IF NOT EXISTS stock_levels (
-            material TEXT, denominacion TEXT, ubicacion_bin TEXT, 
+            material TEXT, denominacion TEXT, ubicacion_bin TEXT,
             stock_disp TEXT, umb TEXT, week_sort TEXT, week_label TEXT,
             source_file TEXT, ingested_at TEXT
         );
@@ -99,13 +102,13 @@ def session_db():
         );
     """)
     conn.commit()
-    
-    from core.db_config_manager import init_config_db, seed_initial_config
+
     from core.auth import init_auth_db
+    from core.db_config_manager import init_config_db, seed_initial_config
     init_auth_db()
     init_config_db()
     seed_initial_config()
-    
+
     yield conn
     conn.close()
 
@@ -113,14 +116,14 @@ def session_db():
 def test_db(session_db):
     """
     Proporciona aislamiento de datos entre pruebas individuales.
-    
+
     Lógica:
     - Antes de cada test, vacía (DELETE) todas las tablas de la base de datos de sesión.
     - Esto garantiza que cada prueba comience con una BD vacía pero con el esquema ya cargado.
     """
     # Lista de tablas a limpiar para evitar contaminación cruzada (Cross-test contamination)
     tables = [
-        "outbound_deliveries", "inventory_movements", "stock_levels", 
+        "outbound_deliveries", "inventory_movements", "stock_levels",
         "warehouse_tasks", "autor_area_mapping", "analytics_snapshots",
         "auth_users"
     ]
@@ -130,20 +133,20 @@ def test_db(session_db):
         else:
             session_db.execute(f"DELETE FROM {table}")
     session_db.commit()
-    
+
     return session_db
 
 @pytest.fixture
 def client(test_db):
     """
     Cliente de pruebas de FastAPI configurado para interactuar con la BD de sesión.
-    
+
     Implementación:
     - Parchea dinámicamente 'sqlite3.connect' en toda la aplicación.
     - Redirige cualquier intento de conexión a la URI de la base de datos de pruebas.
     """
     original_connect = sqlite3.connect
-    
+
     def mocked_connect(path, *args, **kwargs):
         # Interceptamos conexiones a la BD configurada en config.py o a BDs temporales
         if path == config.DB_PATH or path == ":memory:":
@@ -161,14 +164,14 @@ def auth_client(client):
     # Aseguramos que el admin existe (por si acaso la limpieza falló o el lifespan no corrió)
     from core.auth import ensure_admin_exists
     ensure_admin_exists()
-    
+
     response = client.post(
         "/api/auth/login",
         data={"username": "admin", "password": "admin"},
     )
     if response.status_code != 200:
         pytest.fail(f"Fallo login admin en test: {response.text}")
-        
+
     token = response.json()["access_token"]
     client.headers.update({"Authorization": f"Bearer {token}"})
     return client

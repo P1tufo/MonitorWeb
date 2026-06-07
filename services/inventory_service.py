@@ -1,13 +1,15 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-import pandas as pd
 import logging
 from datetime import datetime
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+import pandas as pd
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from core.state import get_cache_manager
 from core.utils import sanitize_for_json
-from core.state import get_app_state
-from repositories import InventoryRepository
 from core.wms_config import COST_CENTER_MAPPING
+from repositories import InventoryRepository
 
 logger = logging.getLogger("services-inventory")
 
@@ -36,7 +38,7 @@ class InventoryService:
             if res and str(res[0]).isdigit() and str(res[1]).isdigit():
                 return (str(res[0]), str(res[1]))
             return fallback
-        except:
+        except Exception:
             return fallback
 
 
@@ -55,16 +57,17 @@ class InventoryService:
 
     def get_full_context(self) -> Dict[str, Any]:
         """Genera el contexto base para el dashboard de Movimientos (Fase 3: SaaS)."""
-        state = get_app_state()
-        cached = state.get_cache("/analytics/inventory")
-        if cached: return cached
+        cache = get_cache_manager()
+        cached = cache.get_cache("/analytics/inventory")
+        if cached:
+            return cached
 
         if not InventoryRepository(self.session).check_table_exists():
             return self._get_empty_context()
 
         try:
             cm_anio, cm_mes = self._get_latest_data_period()
-            
+
             context = self._get_empty_context()
             context["cm_label"] = f"{cm_mes}/{cm_anio}"
             context["cm_anio"] = cm_anio
@@ -73,9 +76,9 @@ class InventoryService:
             try:
                 # Calcular las estadisticas de eficiencia
                 query_stats = """
-                SELECT 
+                SELECT
                     substr(fe_contab, 7, 4) || '-' || substr(fe_contab, 4, 2) as mes,
-                    CASE 
+                    CASE
                         WHEN tipo_operacion LIKE '%Ingreso%' THEN 'Ingresos'
                         ELSE 'Consumos'
                     END as tipo,
@@ -88,10 +91,10 @@ class InventoryService:
                 ORDER BY mes, tipo
                 """
                 df_stats = pd.read_sql_query(query_stats, self.session.connection().connection)
-                
+
                 ingresos_stats = {"ideal": 0, "estabilidad": 0, "sobrecarga": 0}
                 consumos_stats = {"ideal": 0, "estabilidad": 0, "sobrecarga": 0}
-                
+
                 import numpy as np
                 for tipo_name, stats_dict in [('Ingresos', ingresos_stats), ('Consumos', consumos_stats)]:
                     df_tipo = df_stats[df_stats['tipo'] == tipo_name]
@@ -110,9 +113,9 @@ class InventoryService:
 
                 # Calcular estadisticas SEMANALES
                 query_weekly_stats = """
-                SELECT 
+                SELECT
                     strftime('%Y-%W', substr(fe_contab, 7, 4) || '-' || substr(fe_contab, 4, 2) || '-' || substr(fe_contab, 1, 2)) as semana,
-                    CASE 
+                    CASE
                         WHEN tipo_operacion LIKE '%Ingreso%' THEN 'Ingresos'
                         ELSE 'Consumos'
                     END as tipo,
@@ -127,7 +130,7 @@ class InventoryService:
                 df_weekly = pd.read_sql_query(query_weekly_stats, self.session.connection().connection)
                 ingresos_weekly = {"ideal": 0, "estabilidad": 0, "sobrecarga": 0}
                 consumos_weekly = {"ideal": 0, "estabilidad": 0, "sobrecarga": 0}
-                
+
                 for tipo_name, stats_dict in [('Ingresos', ingresos_weekly), ('Consumos', consumos_weekly)]:
                     df_tipo = df_weekly[df_weekly['tipo'] == tipo_name]
                     if not df_tipo.empty:
@@ -151,8 +154,8 @@ class InventoryService:
                 context["consumos_eff_stats_weekly"] = {"ideal": 0, "estabilidad": 0, "sobrecarga": 0}
 
             # Guardar en caché
-            state.set_cache("/analytics/inventory", context)
-            
+            cache.set_cache("/analytics/inventory", context)
+
             return context
         except Exception as e:
             logger.error(f"Error generando contexto Movimientos: {e}", exc_info=True)

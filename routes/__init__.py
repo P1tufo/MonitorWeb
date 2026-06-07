@@ -1,9 +1,4 @@
-from . import dashboard
-from . import deliveries
-from . import inventory
-from . import analytics_proyecciones
-from . import filters
-from . import pdf
-from . import sync
-from . import docs
-from . import settings
+"""
+Inicializador del paquete routes.
+La carga de rutas se realiza dinámicamente en config.py
+"""

@@ -11,21 +11,26 @@ Endpoints:
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Depends, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
+from core.app_instance import templates
+from core.auth import (
+    ChangePasswordRequest,
+    TokenResponse,
+    UserCreate,
+    UserPublic,
+    create_access_token,
+    get_current_user,
+    hash_password,
+    require_admin,
+    require_auth,
+    verify_password,
+)
 from core.database import get_session_dep
 from core.models_auth import User
-from core.auth import (
-    hash_password, verify_password,
-    create_access_token, require_auth, require_admin,
-    get_current_user,
-    TokenResponse, UserCreate, UserPublic, ChangePasswordRequest
-)
-from core.app_instance import templates
-from core.state import AppState, get_app_state
 
 logger = logging.getLogger("routes-auth")
 router = APIRouter()
@@ -37,7 +42,7 @@ DBSession = Annotated[Session, Depends(get_session_dep)]
 @router.post("/api/auth/login", response_model=TokenResponse)
 def login(
     response: Response,
-    form: OAuth2PasswordRequestForm = Depends(), 
+    form: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_session_dep)
 ):
     """
@@ -82,7 +87,7 @@ def login(
 
 
 @router.post("/api/auth/logout")
-def logout(response: Response, state: AppState = Depends(get_app_state)):
+def logout(response: Response):
     """Limpia la cookie de autenticación."""
     response.delete_cookie("access_token", path="/")
     return {"status": "success", "message": "Sesión cerrada"}
@@ -91,7 +96,7 @@ def logout(response: Response, state: AppState = Depends(get_app_state)):
 
 # ─── Perfil del usuario autenticado ───────────────────────────────────────────
 @router.get("/api/auth/me")
-def get_me(user: User = Depends(require_auth), state: AppState = Depends(get_app_state)):
+def get_me(user: User = Depends(require_auth)):
     """Retorna la información del usuario autenticado."""
     return {
         "id": user.id,
@@ -106,10 +111,10 @@ def change_password(data: ChangePasswordRequest, db: DBSession, user: User = Dep
     """Cambia la contraseña del usuario autenticado."""
     if not verify_password(data.current_password, user.password_hash):
         raise HTTPException(status_code=400, detail="La contraseña actual es incorrecta")
-        
+
     if len(data.new_password) < 6:
         raise HTTPException(status_code=400, detail="La nueva contraseña debe tener al menos 6 caracteres")
-        
+
     user.password_hash = hash_password(data.new_password)
     db.commit()
     logger.info(f"El usuario {user.username} cambió su contraseña.")
@@ -118,7 +123,7 @@ def change_password(data: ChangePasswordRequest, db: DBSession, user: User = Dep
 
 # ─── Registro de usuarios (solo admin) ────────────────────────────────────────
 @router.post("/api/auth/register", status_code=status.HTTP_201_CREATED)
-def register_user(data: UserCreate, db: DBSession, admin: User = Depends(require_admin), state: AppState = Depends(get_app_state)):
+def register_user(data: UserCreate, db: DBSession, admin: User = Depends(require_admin)):
     """Crea un nuevo usuario. Solo accesible por administradores."""
     existing = db.query(User).filter(User.username == data.username).first()
     if existing:
@@ -141,7 +146,7 @@ def register_user(data: UserCreate, db: DBSession, admin: User = Depends(require
 
 # ─── Listar usuarios (solo admin) ─────────────────────────────────────────────
 @router.get("/api/auth/users")
-def list_users(db: DBSession, admin: User = Depends(require_admin), state: AppState = Depends(get_app_state)):
+def list_users(db: DBSession, admin: User = Depends(require_admin)):
     """Lista todos los usuarios del sistema."""
     users = db.query(User).all()
     return [
@@ -158,6 +163,6 @@ def list_users(db: DBSession, admin: User = Depends(require_admin), state: AppSt
 
 # ─── Vista HTML: Login ─────────────────────────────────────────────────────────
 @router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request, state: AppState = Depends(get_app_state)):
+async def login_page(request: Request):
     """Renderiza la página de login."""
     return templates.TemplateResponse(request=request, name="login.html", context={"request": request})

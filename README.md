@@ -1,5 +1,5 @@
 # Documentación Técnica Global - MonitorWeb
-Compilado el: 2026-06-05 14:46:00
+Compilado el: 2026-06-07 12:50:47
 Modelo: qwen2.5-coder:7b | Hardware: M1 Pro Optimized
 
 ---
@@ -8,38 +8,43 @@ Modelo: qwen2.5-coder:7b | Hardware: M1 Pro Optimized
 
 ### Arquitectura General Detectada
 
-La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que separan diferentes aspectos del sistema, como el código principal (`app.py`), las configuraciones (`config.py`), las rutas (`routes/`), los modelos (`core/models.py`), las bases de datos (`db/`), los servicios (`services/`), y las pruebas (`tests/`). Además, la presencia de carpetas como `core`, `repositories`, `scripts`, `templates`, `docs`, y `deploy` indica una organización modular.
+La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que separan diferentes aspectos del sistema, como el núcleo (`core`), las rutas (`routes`), los repositorios (`repositories`), los servicios (`services`) y las pruebas (`tests`). Además, la presencia de una carpeta `docs` para documentación y una carpeta `scripts` para scripts adicionales también apoya esta arquitectura modular.
 
 ### Propósito Probable de las Carpetas Principales
 
-- **app.py**: Punto de entrada principal del aplicativo.
-- **config.py**: Archivo de configuración global para el proyecto.
-- **core/**: Contiene componentes fundamentales del sistema, como modelos, seguridad, base de datos, y utilidades generales.
-- **bin/**: Almacena herramientas binarias necesarias para el desarrollo o despliegue.
-- **deploy/**: Archivos relacionados con la configuración y despliegue del proyecto, incluyendo Dockerfiles y archivos de configuración de Docker.
-- **setup/**: Contiene scripts y archivos necesarios para la instalación y gestión del proyecto, como `requirements.txt` y `package.json`.
-- **tests/**: Directorio que almacena todos los tests unitarios y de integración del proyecto.
-- **repositories/**: Define las interfaces de acceso a datos (DAOs) para diferentes entidades del sistema.
-- **docs/**: Documentación del proyecto, incluyendo documentación técnica y mejoras propuestas.
-- **DELIVERIES_cleansed/**: Archivos limpios generados por el proceso de limpieza de datos.
-- **static/**: Recursos estáticos como CSS y JavaScript para la interfaz web.
-- **scripts/**: Scripts Python que realizan tareas específicas, como generación de documentación o procesamiento de datos.
-- **db/**: Archivos relacionados con la base de datos, incluyendo archivos de configuración y scripts de consolidación.
-- **templates/**: Plantillas HTML para las vistas del sistema web.
-- **routes/**: Definición de rutas y controladores para el manejo de solicitudes HTTP.
-- **services/**: Servicios que encapsulan la lógica de negocio, como servicios de inventario, entregas, etc.
+- **core/**: Contiene el código central del sistema, incluyendo configuraciones, utilidades generales, modelos de datos, y lógica de negocio.
+- **routes/**: Define las rutas de la aplicación web, mapeando URLs a funciones de controlador.
+- **repositories/**: Almacena los repositorios que manejan la interacción con la base de datos y el almacenamiento persistente.
+- **services/**: Contiene los servicios que encapsulan la lógica de negocio compleja.
+- **tests/**: Incluye las pruebas unitarias y de integración para asegurar que el sistema funcione correctamente.
 
 ### Organización Lógica de las Dependencias
 
-La organización del proyecto muestra una clara separación de responsabilidades y dependencias:
+La organización de dependencias es coherente con una arquitectura modular:
 
-1. **Core**: Contiene componentes fundamentales que son utilizados por todo el sistema.
-2. **Repositories**: Define interfaces para acceder a los datos, lo que facilita la inyección de dependencias y la prueba unitaria.
-3. **Services**: Encapsula la lógica de negocio, lo que permite una separación clara entre la capa de presentación y la capa de negocio.
-4. **Routes**: Define las rutas HTTP y los controladores correspondientes, utilizando los servicios definidos en `services/`.
-5. **Tests**: Contiene pruebas unitarias y de integración para asegurar que cada componente funcione correctamente.
+1. **Dependencias Internas**:
+   - `core/` depende de `config.py`, `utils.py`, y otros módulos dentro del mismo directorio.
+   - `routes/` depende de los servicios definidos en `services/`.
+   - `repositories/` dependen de modelos definidos en `core/models.py`.
 
-Esta organización modular facilita el mantenimiento, la escalabilidad y la colaboración entre equipos de desarrollo.
+2. **Dependencias Externas**:
+   - El proyecto utiliza bibliotecas externas como Flask para el framework web, SQLAlchemy para ORM, y otras herramientas de análisis y procesamiento de datos.
+
+3. **Pruebas**:
+   - Las pruebas (`tests/`) dependen de los módulos principales del sistema, asegurando que todos los componentes funcionen juntos correctamente.
+
+4. **Documentación**:
+   - La carpeta `docs` contiene documentación para diferentes partes del proyecto, lo que facilita el mantenimiento y la comprensión del código.
+
+5. **Recursos Estáticos**:
+   - La carpeta `static/` almacena archivos CSS y JavaScript necesarios para la interfaz de usuario.
+   - La carpeta `templates/` contiene los archivos HTML de las vistas.
+
+6. **Datos y Archivos Adicionales**:
+   - La carpeta `data/` contiene archivos de base de datos y otros recursos adicionales.
+   - La carpeta `DELIVERIES_cleansed/` almacena datos limpios para análisis.
+
+Esta estructura modular facilita el mantenimiento, la escalabilidad y la colaboración entre equipos en un proyecto de software.
 
 
 ---
@@ -47,43 +52,43 @@ Esta organización modular facilita el mantenimiento, la escalabilidad y la cola
 ## Archivo: ./app.py
 
 ### Resumen Funcional
-El archivo `app.py` es el punto de entrada para la configuración y ejecución del servidor FastAPI. Define el ciclo de vida de la aplicación, registra las rutas y monta los recursos estáticos.
+El archivo `app.py` es el punto de entrada para la configuración y ejecución del servidor FastAPI. Se encarga de montar las rutas, recursos estáticos y gestionar el ciclo de vida de la aplicación, incluyendo la inicialización de tablas de autenticación, carga de snapshots desde la base de datos y la ejecución de tareas en segundo plano.
 
 ### Catálogo de Funciones y Clases
-- `lifespan(fastapi_app: FastAPI)` -> `None`: Maneja el ciclo de vida de la aplicación, inicializando tablas, cargando snapshots, refrescando analíticas y gestionando tareas en segundo plano.
-- `initialize_app(fastapi_app: FastAPI) -> None`: Configura y prepara la aplicación FastAPI, registrando rutas y recursos estáticos.
-
-### Contratos de API / Endpoints
-No aplica.
+- `lifespan(fastapi_app: FastAPI)` - Manejador del ciclo de vida de la aplicación, gestionando el arranque y cierre.
+- `initialize_app(fastapi_app: FastAPI) -> None` - Configura y prepara la aplicación FastAPI.
 
 ### Interacción con Base de Datos
-- **Motor**: SQLite
-- **Operaciones**:
-  - `SELECT` en tablas `analytics_snapshots`
-  - `INSERT/UPDATE` en tablas no especificadas explícitamente
+- Motor de BD: SQLite
+- Tablas:
+  - `analytics_snapshots`
+- Columnas:
+  - `data`
+  - `key`
 
-### Flujo de Datos y Pipeline
-No aplica.
-
-### Caché y Estado
-- **Caché en memoria**: Utiliza variables globales (`fastapi_app.state.global_state`) para almacenar el estado global de la aplicación.
-- **Mecanismos de invalidación de caché**: No especificado.
-- **Variables de entorno o sesión utilizadas**: No se usan variables de entorno explícitas.
-
-### Lógica de Negocio y Reglas
-No aplica.
+### Estado y Variables Globales
+- No se detectan variables globales explícitas en el código proporcionado.
 
 ### Dependencias y Flujo
-- **Librerías externas**:
-  - `fastapi`
-  - `sqlalchemy`
-  - `pandas`
-- **Archivos del proyecto que IMPORTA a este archivo**: 
-  - `config`, `core.app_instance`, `routes.config`, `core.auth`, `core.db_config_manager`, `core.database`, `core.state`, `core.task_manager`, `routes.tasks`, `services.deliveries_service`, `services.inventory_service`
-- **Archivos del proyecto que este archivo IMPORTA**: 
-  - No aplica.
-
-**Flujo de datos**: El archivo importa y utiliza varios módulos para configurar la aplicación, gestionar el ciclo de vida, registrar rutas y montar recursos estáticos.
+- **Dependencias Externas**: FastAPI, SQLAlchemy, pandas.
+- **Archivos del Proyecto Importados**:
+  - `config.py`
+  - `core.app_instance`
+  - `routes.config`
+  - `core.auth`
+  - `core.db_config_manager`
+  - `scripts.bundler`
+  - `core.database`
+  - `core.state`
+  - `core.task_manager`
+  - `services.background_tasks`
+  - `core.watcher`
+- **Archivos del Proyecto que Importan a Este Archivo**: Ninguna.
+- **Flujo de Datos**:
+  - La aplicación se inicia y configura en el archivo `main.py`.
+  - El ciclo de vida de la aplicación se gestiona mediante el contexto asincrónico `lifespan`.
+  - Se registran rutas y recursos estáticos.
+  - Se manejan excepciones globales, incluyendo redirecciones para autenticación.
 
 
 ---
@@ -91,36 +96,38 @@ No aplica.
 ## Archivo: ./config.py
 
 ### Resumen Funcional
-Este archivo `config.py` contiene configuraciones globales y variables de entorno necesarias para el sistema de monitoreo de almacén (WMS). Define rutas, parámetros del servidor, directorios de almacenamiento y realiza validaciones iniciales.
+Este archivo `config.py` configura y valida los parámetros de configuración del sistema de monitoreo de almacén (WMS). Define rutas y variables globales para el almacenamiento de datos, la base de datos, el servidor web y las fuentes externas. También incluye funciones para validar la configuración y asegurar la estructura del proyecto.
 
 ### Catálogo de Funciones y Clases
-- `validate_config() -> None` - Realiza comprobaciones de salud en la configuración.
-- `ensure_project_structure() -> None` - Crea los directorios necesarios para el funcionamiento de la app si no existen.
-
-### Contratos de API / Endpoints
-No aplica.
+- `validate_config()` - Realiza comprobaciones de salud en la configuración.
+- `ensure_project_structure()` - Crea los directorios necesarios para el funcionamiento de la app si no existen.
 
 ### Interacción con Base de Datos
-No aplica.
+Ninguna
 
-### Flujo de Datos y Pipeline
-No aplica.
-
-### Caché y Estado
-- Variables globales y de módulo: `BASE_DIR`, `DB_PATH`, `PDF_STORAGE`, `CLEANSED_DIR`, `TEMP_DIR`, `CACHE_DIR_NAME`, `CACHE_DIR`, `TUNNEL_URL_FILE`, `NGROK_BIN`, `LOG_FILE`, `APP_HOST`, `APP_PORT`, `APP_RELOAD`, `_home`, `DEFAULT_ONEDRIVE`, `ONEDRIVE_PATH`, `DELIVERIES_DIR`, `STOCK_DIR`, `TASKS_DIR`, `INVENTORY_DIR`.
-- Caché en memoria: No aplica.
-- Caché persistente: No aplica.
-- Mecanismos de invalidación de caché: No aplica.
-- Variables de entorno o sesión utilizadas: `DB_PATH`, `PDF_STORAGE`, `CLEANSED_DIR`, `TEMP_DIR`, `CACHE_DIR_NAME`, `APP_HOST`, `APP_PORT`, `APP_RELOAD`, `ONE_DRIVE_PATH`.
-
-### Lógica de Negocio y Reglas
-No aplica.
+### Estado y Variables Globales
+- `BASE_DIR` - Directorio raíz del proyecto.
+- `DB_PATH` - Ruta a la base de datos SQLite.
+- `PDF_STORAGE` - Ruta para almacenar PDFs generados.
+- `CLEANSED_DIR` - Ruta para archivos limpios.
+- `TEMP_DIR` - Ruta para directorios temporales.
+- `CACHE_DIR_NAME` - Nombre del directorio de caché.
+- `CACHE_DIR` - Ruta al directorio de caché.
+- `TUNNEL_URL_FILE` - Ruta al archivo que contiene la URL del túnel.
+- `NGROK_BIN` - Ruta al binario de ngrok.
+- `LOG_FILE` - Ruta al archivo de registro del servidor.
+- `APP_HOST` - Host del servidor web.
+- `APP_PORT` - Puerto del servidor web.
+- `APP_RELOAD` - Indica si el servidor debe reiniciarse automáticamente.
+- `DEFAULT_ONEDRIVE` - Ruta predeterminada para OneDrive.
+- `ONEDRIVE_PATH` - Ruta a la carpeta de transacciones WMS en OneDrive.
+- `DELIVERIES_DIR`, `STOCK_DIR`, `TASKS_DIR`, `INVENTORY_DIR`, `MB5B_DIR` - Subdirectorios dentro de OneDrive.
 
 ### Dependencias y Flujo
-- Librerías externas: `os`, `logging`, `typing`, `pathlib`.
-- Archivos del proyecto que ESTE archivo IMPORTA (consume): No aplica.
-- Archivos del proyecto que IMPORTAN a este archivo (lo consumen): FastAPI, SQLAlchemy, SQLite.
-- Dirección del flujo de datos: El archivo se ejecuta al importarse para configurar y validar el entorno del sistema.
+- **Dependencias**: `logging`, `os`, `pathlib`, `typing`.
+- **Flujo de Datos**:
+  - El archivo se importa por otros archivos del proyecto para obtener las configuraciones necesarias.
+  - Otros archivos pueden importar este archivo para utilizar las variables globales y funciones definidas aquí.
 
 
 ---
@@ -135,32 +142,23 @@ Este archivo está vacío o solo contiene espacios en blanco. No se requiere an�
 ## Archivo: ./core/app_instance.py
 
 ### Resumen Funcional
-Este archivo configura la instancia principal de la aplicación FastAPI, incluyendo su título, descripción y versión. También establece las rutas para la documentación interactiva.
+Inicializa la instancia de la aplicación FastAPI con configuraciones específicas y establece el directorio para las plantillas Jinja2.
 
 ### Catálogo de Funciones y Clases
-- `app: FastAPI` -> Instancia principal de la aplicación FastAPI.
-- `templates_path: Path` -> Ruta al directorio de plantillas.
-- `templates: Jinja2Templates` -> Motor de plantillas configurado con seguridad reforzada.
-
-### Contratos de API / Endpoints
-No aplica.
+- `FastAPI()` - Crea una instancia de la aplicación FastAPI.
+- `Jinja2Templates(directory=str(templates_path))` - Configura el motor de plantillas Jinja2 con el directorio especificado.
 
 ### Interacción con Base de Datos
-No aplica.
+Ninguna
 
-### Flujo de Datos y Pipeline
-No aplica.
-
-### Caché y Estado
-No aplica.
-
-### Lógica de Negocio y Reglas
-No aplica.
+### Estado y Variables Globales
+- `app: FastAPI` - Instancia principal de la aplicación FastAPI.
+- `templates_path: Path` - Ruta al directorio de las plantillas.
+- `templates: Jinja2Templates` - Motor de plantillas configurado.
 
 ### Dependencias y Flujo
-- **Importa**: `pathlib`, `fastapi`, `fastapi.templating`, `config`.
-- **Es importado por**: No hay archivos que importen este archivo directamente.
-- **Flujo de datos**: Este archivo no consume ni produce datos, solo configura la instancia de FastAPI y el motor de plantillas.
+- **Dependencias**: No hay dependencias externas directamente importadas en este archivo.
+- **Flujo de Datos**: Este archivo no consume ni produce datos. Es una configuración inicial para la aplicación FastAPI y el motor de plantillas Jinja2.
 
 
 ---
@@ -168,71 +166,39 @@ No aplica.
 ## Archivo: ./core/auth.py
 
 ### Resumen Funcional
-Este archivo `auth.py` contiene las funcionalidades de autenticación y seguridad JWT/OAuth2 para el sistema de monitoreo de almacén (WMS). Define modelos, esquemas, funciones de hashing de contraseñas, gestión de tokens JWT, dependencias FastAPI para proteger endpoints y lógica para crear y gestionar usuarios administradores.
+Este archivo `auth.py` contiene las funcionalidades de autenticación y seguridad para el sistema de monitoreo de almacén (WMS). Implementa la gestión de usuarios, tokens JWT, roles de usuario y dependencias FastAPI para proteger endpoints.
 
 ### Catálogo de Funciones y Clases
-- `hash_password(plain: str) -> str`: Genera un hash bcrypt del password.
-- `verify_password(plain: str, hashed: str) -> bool`: Verifica un password contra su hash bcrypt.
-- `create_access_token(username: str, role: str) -> tuple[str, int]`: Crea un JWT firmado con HS256 y retorna el token y la duración de expiración.
-- `decode_token(token: str) -> Optional[dict]`: Decodifica y valida un JWT. Retorna None si es inválido o expirado.
-- `get_current_user(token: Optional[str] = Depends(oauth2_scheme), request: Request = None, db: Session = Depends(get_session_dep)) -> User`: Dependencia que extrae el usuario del token JWT.
-- `require_auth(user: User = Depends(get_current_user)) -> User`: Dependencia que EXIGE un usuario autenticado (no invitado).
-- `require_admin(user: User = Depends(require_auth)) -> User`: Dependencia que EXIGE rol de administrador. Lanza 403 si no tiene permisos.
-- `init_auth_db()`: Crea las tablas de autenticación si no existen.
-- `ensure_admin_exists()`: Crea el usuario admin por defecto si no existe ningún usuario.
-
-### Contratos de API / Endpoints
-No aplica. Este archivo no define rutas HTTP.
+- `hash_password(plain: str) -> str` - Genera un hash bcrypt del password.
+- `verify_password(plain: str, hashed: str) -> bool` - Verifica un password contra su hash bcrypt.
+- `create_access_token(username: str, role: str) -> tuple[str, int]` - Crea un JWT firmado con HS256.
+- `decode_token(token: str) -> Optional[dict]` - Decodifica y valida un JWT. Retorna None si es inválido o expirado.
+- `get_current_user(token: Optional[str] = Depends(oauth2_scheme), request: Request = None, db: Session = Depends(get_session_dep)) -> User` - Dependencia que extrae el usuario del token JWT.
+- `require_auth(user: User = Depends(get_current_user)) -> User` - Dependencia que EXIGE un usuario autenticado (no invitado).
+- `require_admin(user: User = Depends(require_auth)) -> User` - Dependencia que EXIGE rol de administrador. Lanza 403 si no tiene permisos.
+- `init_auth_db()` - Crea las tablas de autenticación si no existen.
+- `ensure_admin_exists()` - Crea el usuario admin por defecto si no existe ningún usuario.
 
 ### Interacción con Base de Datos
-- **Motor**: SQLite
-- **Operaciones**:
-  - **Tabla afectada**: `User`
-  - **Tipo de operación**: SELECT/INSERT
-  - **Columnas leídas o escritas**: `username`, `password_hash`, `role`, `is_active`, `created_at`
+- Motor: SQLite
+- Tablas:
+  - `User` (columnas: id, username, password_hash, role, is_active, created_at)
+- Consultas SQL crudas o llamadas a ORM: Sí, se usan consultas ORM para leer y escribir en la tabla `User`.
 
-### Flujo de Datos y Pipeline
-No aplica. Este archivo no procesa, transforma o mueve datos.
-
-### Caché y Estado
-- **Variables globales y de módulo**:
+### Estado y Variables Globales
+- Variables globales:
   - `SECRET_KEY`: Clave secreta para JWT.
   - `ALGORITHM`: Algoritmo de codificación JWT.
-  - `ACCESS_TOKEN_EXPIRE_MINUTES`: Duración de expiración del token JWT.
-- **Caché en memoria**: No aplica.
-- **Caché persistente**: No aplica.
-- **Mecanismos de invalidación de caché**: No aplica.
-- **Variables de entorno o sesión utilizadas**:
-  - `JWT_SECRET_KEY`: Clave secreta para JWT.
-  - `JWT_EXPIRE_MINUTES`: Duración de expiración del token JWT.
-  - `ADMIN_USERNAME`: Nombre de usuario administrador por defecto.
-  - `ADMIN_PASSWORD`: Contraseña administrador por defecto.
-
-### Lógica de Negocio y Reglas
-- **Diccionarios o mapeos hardcoded**:
-  - `roles`: Mapeo de roles disponibles (`admin`, `viewer`).
-- **Constantes de negocio o umbrales**:
-  - `ACCESS_TOKEN_EXPIRE_MINUTES`: Duración de expiración del token JWT.
-- **Fórmulas de cálculo o reglas de validación**: No aplica.
-- **Expresiones CASE/condicionales que implementan reglas de dominio**:
-  - Verificación de rol en `require_admin`.
-  - Creación de usuario invitado en `get_current_user`.
+  - `ACCESS_TOKEN_EXPIRE_MINUTES`: Tiempo de expiración del token JWT.
 
 ### Dependencias y Flujo
-- **Librerías externas**:
-  - `bcrypt`: Para hashing de contraseñas.
-  - `jwt`: Para gestión de tokens JWT.
-  - `fastapi.security.OAuth2PasswordBearer`: Para manejo de tokens OAuth2.
-  - `sqlalchemy.orm.Session`: Para operaciones con la base de datos.
-- **Archivos del proyecto que ESTE archivo IMPORTA (consume)**:
-  - `core.database.get_session_dep`
-  - `core.database.engine`
-  - `core.database.Base`
-  - `core.models_auth.User`
-- **Archivos del proyecto que IMPORTAN a este archivo (lo consumen)**:
-  - No aplica.
-
-Este archivo es fundamental para la seguridad y autenticación en el sistema de monitoreo de almacén, proporcionando mecanismos robustos para gestionar usuarios y proteger endpoints sensibles.
+- Librerías externas: `bcrypt`, `jwt`, `fastapi`, `pydantic`.
+- Archivos del proyecto que este archivo importa:
+  - `core.database`
+  - `core.models_auth`
+- Archivos del proyecto que importan a este archivo:
+  - Ninguno.
+- Flujo de datos: El flujo de datos pasa por las funciones y dependencias definidas aquí, desde la autenticación hasta la creación de tokens JWT y la gestión de usuarios.
 
 
 ---
@@ -240,45 +206,30 @@ Este archivo es fundamental para la seguridad y autenticación en el sistema de 
 ## Archivo: ./core/database.py
 
 ### Resumen Funcional
-Este archivo es el punto de entrada para acceder a la capa ORM del sistema, utilizando SQLAlchemy. Soporta SQLite (desarrollo local) y PostgreSQL (producción SaaS) mediante la variable de entorno `DATABASE_URL`. Proporciona funciones para obtener sesiones de base de datos y realizar un chequeo de salud.
+Este archivo define la fábrica de sesiones SQLAlchemy para el sistema de monitoreo de almacén (WMS). Proporciona funciones para obtener una sesión de base de datos y realizar un chequeo de salud de la base de datos.
 
 ### Catálogo de Funciones y Clases
-- `get_session() -> Generator[Session, None, None]`: Context manager que entrega una sesión SQLAlchemy. Garantiza commit en éxito y rollback automático en excepción.
-- `get_session_dep() -> Generator[Session, None, None]`: Dependencia de FastAPI para inyección de sesiones en endpoints.
-- `health_check() -> bool`: Verifica la conectividad con la base de datos. Retorna True si OK.
-
-### Contratos de API / Endpoints
-No aplica.
+- `get_session()` - Context manager que entrega una sesión SQLAlchemy, garantizando commit en éxito y rollback automático en excepción.
+- `get_session_dep()` - Dependencia de FastAPI para inyección de sesiones en endpoints.
+- `health_check()` - Verifica la conectividad con la base de datos. Retorna True si OK.
 
 ### Interacción con Base de Datos
-- **Motor**: SQLite/Postgres (dependiendo de `DATABASE_URL`)
-- **Operaciones**:
-  - `SELECT` para verificar la salud de la base de datos (`health_check()`)
+- Motor de BD: SQLite (desarrollo local) y PostgreSQL (producción SaaS).
+- Tablas: Ninguna (no se especifican tablas directamente en este archivo).
+- Columnas: Ninguna (no se especifican columnas directamente en este archivo).
 
-### Flujo de Datos y Pipeline
-No aplica.
-
-### Caché y Estado
-- **Variables globales y de módulo**: `engine`, `SessionLocal`
-- **Caché en memoria**: No aplicable
-- **Caché persistente**: No aplicable
-- **Mecanismos de invalidación de caché**: No aplicable
-- **Variables de entorno o sesión utilizadas**: `DATABASE_URL`
-
-### Lógica de Negocio y Reglas
-No aplica.
+### Estado y Variables Globales
+- `DATABASE_URL` - Variable de entorno que define la URL de la base de datos. Valor por defecto es SQLite local.
+- `_connect_args` - Argumentos de conexión para SQLAlchemy, incluyendo `check_same_thread=False` para SQLite.
 
 ### Dependencias y Flujo
-- **Librerías externas**:
-  - `sqlalchemy`
-  - `logging`
-  - `contextlib`
-  - `typing`
-  - `os`
-- **Archivos del proyecto que ESTE archivo IMPORTA (consume)**: No aplicable
-- **Archivos del proyecto que IMPORTAN a este archivo (lo consumen)**:
+- Librerías externas: `sqlalchemy`, `logging`.
+- Archivos del proyecto que importan a este archivo:
   - `config.py` (para `DB_PATH`)
-  - Endpoints FastAPI que utilizan `get_session_dep()`
+- Archivos del proyecto que este archivo importa:
+  - Ninguno
+
+El flujo de datos es desde el archivo `database.py` hacia los endpoints de FastAPI que utilizan las dependencias `get_session_dep()` para obtener sesiones de base de datos.
 
 
 ---
@@ -302,25 +253,28 @@ Este archivo gestiona la configuración dinámica del Sistema de Monitoreo de Al
 ### Interacción con Base de Datos
 - Motor: SQLite
 - Tablas:
-  - `StatusMapping`
-  - `CostCenterMapping`
-  - `AppSetting`
-  - `Holiday`
-  - `ConfigQuery`
+  - `app_setting`
+  - `config_query`
+  - `cost_center_mapping`
+  - `holiday`
+  - `status_mapping`
 - Columnas:
-  - `StatusMapping`: `code`, `label`
-  - `CostCenterMapping`: `center_code`, `business_area`
-  - `AppSetting`: `key`, `value`, `type`
-  - `Holiday`: `date_str`
-  - `ConfigQuery`: `query_id`, `visual_state`
+  - `app_setting`: `key`, `value`, `type`
+  - `config_query`: `query_id`, `visual_state`
+  - `cost_center_mapping`: `center_code`, `business_area`
+  - `holiday`: `date_str`
+  - `status_mapping`: `code`, `label`
 
 ### Estado y Variables Globales
 - No hay variables globales, de sesión o de entorno explícitas.
 
 ### Dependencias y Flujo
-- Importa: `logging`, `typing`, `sqlalchemy`, `os`.
-- Exporta: Funciones públicas para acceder a la configuración.
-- No depende de otros archivos del proyecto.
+- Importa: `logging`, `typing`, `sqlalchemy`, `sqlalchemy.orm`, `os`
+- Exporta: Todas las funciones descritas anteriormente.
+- Flujo de datos:
+  - `init_config_db()` crea tablas y añade columnas si no existen.
+  - `seed_initial_config()` inserta valores por defecto en las tablas.
+  - Las funciones públicas (`get_setting`, `get_status_mapping`, etc.) consultan la base de datos para recuperar los valores de configuración.
 
 
 ---
@@ -335,8 +289,8 @@ El archivo `dynamic_executor.py` contiene una función que toma un payload JSON 
 
 ### Interacción con Base de Datos
 - Motor: SQLite
-- Tablas y Columnas: Ninguna (la consulta SQL se genera dinámicamente)
-- Consultas SQL Crudas o Llamadas a ORM: Sí, utiliza `pd.read_sql` para ejecutar la consulta generada por `build_sql_from_payload`.
+- Tablas y Columnas: Ninguna (se espera que la consulta SQL genere los resultados necesarios).
+- Consultas SQL Crudas o Llamadas a ORM: Sí, utiliza `pd.read_sql` para ejecutar la consulta SQL generada.
 
 ### Estado y Variables Globales
 - Ninguna
@@ -344,23 +298,16 @@ El archivo `dynamic_executor.py` contiene una función que toma un payload JSON 
 ### Dependencias y Flujo
 - Librerías Externas:
   - `pandas`
-  - `logging`
-  - `typing`
   - `sqlalchemy.orm.Session`
-- Archivos del Proyecto que Importan a este archivo (lo consumen):
-  - No aplica
-- Archivos del Proyecto que Este Archivo Importa (consume):
+- Archivos del Proyecto que Importan a este Archivo: Ninguno
+- Archivos del Proyecto que Este Archivo Importa:
   - `core.query_engine.build_sql_from_payload`
   - `core.schemas.VisualQueryBuilderPayload`
 
 **Flujo de Datos:**
-1. El frontend envía un payload JSON crudo.
-2. `execute_visual_query` recibe el payload y lo valida contra el esquema `VisualQueryBuilderPayload`.
-3. Utiliza `build_sql_from_payload` para generar una consulta SQL dinámica.
-4. Ejecuta la consulta en la base de datos SQLite utilizando `pd.read_sql`.
-5. Devuelve los resultados como un DataFrame de Pandas.
-
-Este flujo permite que el sistema genere consultas SQL flexibles basadas en los criterios proporcionados por el usuario, lo que es crucial para un sistema de monitoreo de almacén dinámico y adaptable.
+1. El archivo se importa en algún lugar dentro del proyecto.
+2. Se llama a la función `execute_visual_query` con un payload JSON y una sesión de base de datos.
+3. La función valida el payload, compila una consulta SQL usando `build_sql_from_payload`, ejecuta la consulta en la base de datos y devuelve los resultados como un DataFrame de Pandas.
 
 
 ---
@@ -368,20 +315,23 @@ Este flujo permite que el sistema genere consultas SQL flexibles basadas en los 
 ## Archivo: ./core/macros.py
 
 ### Resumen Funcional
-El archivo `macros.py` centraliza reglas de negocio y macros SQL para ser utilizadas en múltiples capas de la aplicación, facilitando la expresión de lógicas complejas que deben inyectarse en el código SQL.
+El archivo `macros.py` centraliza reglas de negocio y macros SQL para ser utilizadas en múltiples capas de la aplicación, facilitando la expresión de lógicas complejas y reutilizables.
 
 ### Catálogo de Funciones y Clases
 - `inject_macros(sql: str) -> str` - Inyecta todas las macros globales registradas en el string SQL proporcionado.
 
 ### Interacción con Base de Datos
-Ninguna. El archivo no realiza ninguna operación directa sobre la base de datos.
+Ninguna.
 
 ### Estado y Variables Globales
-Ninguna. No se utilizan variables globales, de sesión o diccionarios quemados en código que almacenen estado crítico.
+- `AREA_EXPR` (Variable Global) - Expresión SQL que determina el área empresarial basada en los centros de costo o ubicaciones binarias.
+- `EXCLUDED_USERS_INACTIVITY` (Variable Global) - Tupla con usuarios excluidos explícitamente de las métricas de inactividad.
 
 ### Dependencias y Flujo
-- **Dependencias**: Ninguna.
-- **Flujo de Datos**: El archivo no importa ni es importado por otros archivos dentro del proyecto. No hay interacción con otras partes del sistema a través de funciones o clases.
+- **Dependencias**: No hay dependencias externas directas.
+- **Flujo de Datos**: El archivo no importa ni es importado por otros archivos dentro del proyecto. Es una capa central que puede ser utilizada por cualquier otro módulo que necesite inyectar macros SQL en sus consultas.
+
+Este archivo actúa como un punto central para la gestión y reutilización de expresiones SQL complejas y lógicas de negocio, asegurando que estas puedan ser fácilmente aplicadas en diferentes partes de la aplicación sin duplicación de código.
 
 
 ---
@@ -421,51 +371,29 @@ Ninguna
 ## Archivo: ./core/models_auth.py
 
 ### Resumen Funcional
-Este archivo define el modelo ORM para los usuarios del sistema de autenticación, incluyendo sus atributos y relaciones con la base de datos.
+Este archivo define el modelo ORM para los usuarios del sistema de autenticación, incluyendo campos como nombre de usuario, contraseña hash, rol y estado de actividad.
 
 ### Catálogo de Funciones y Clases
-- `User` (id: int, username: str, password_hash: str, role: str, is_active: bool, created_at: datetime) -> Mapped[User]
-  - **Propósito**: Representa una tabla en la base de datos que almacena información sobre los usuarios del sistema.
-  - **Métodos Principales**:
-    - `__repr__`: Devuelve una representación legible del objeto.
-
-### Contratos de API / Endpoints
-No aplica.
+- `User` - Define la tabla de usuarios con sus atributos y métodos.
 
 ### Interacción con Base de Datos
-- **Motor**: SQLite
-- **Operaciones SQL/ORM Detectadas**:
-  - **Tabla Afectada**: `auth_users`
-  - **Tipo de Operación**: SELECT, INSERT, UPDATE
-  - **Columnas Leídas o Escritas**:
-    - id (Integer)
-    - username (String(50))
-    - password_hash (String(255))
-    - role (String(20))
-    - is_active (Boolean)
-    - created_at (DateTime)
+- Motor: SQLite
+- Tablas: `auth_users`
+  - Columnas:
+    - `id`: Entero, clave primaria, autoincremental.
+    - `username`: Cadena (50 caracteres), único, no nulo, índice.
+    - `password_hash`: Cadena (255 caracteres), no nula.
+    - `role`: Cadena (20 caracteres), no nula, valor por defecto "viewer".
+    - `is_active`: Booleano, valor por defecto True.
+    - `created_at`: Fecha y hora UTC, valor por defecto la fecha actual.
 
-### Flujo de Datos y Pipeline
-No aplica.
-
-### Caché y Estado
-- **Variables Globales y de Módulo**: No aplica.
-- **Caché en Memoria**: No aplica.
-- **Caché Persistente**: No aplica.
-- **Mecanismos de Invalidación de Caché**: No aplica.
-- **Variables de Entorno o Sesión Utilizadas**: No aplica.
-
-### Lógica de Negocio y Reglas
-No aplica.
+### Estado y Variables Globales
+Ninguna.
 
 ### Dependencias y Flujo
-- **Librerías Externas**:
-  - `sqlalchemy`
-  - `datetime`
-- **Archivos del Proyecto que IMPORTA a este archivo (lo consumen)**: No aplica.
-- **Archivos del Proyecto que ESTE archivo IMPORTA**: 
-  - `database.py` (importado como `from .database import Base`)
-- **Dirección del Flujo de Datos**: Este archivo es un modelo ORM y no realiza operaciones directamente sobre la base de datos o el flujo de datos.
+- Importa: `Base` desde `core.database`.
+- No importa a otros archivos del proyecto.
+- Es consumido por los servicios de autenticación.
 
 
 ---
@@ -473,39 +401,41 @@ No aplica.
 ## Archivo: ./core/models_transaccional.py
 
 ### Resumen Funcional
-Este archivo define modelos de datos para una base de datos SQLite utilizada en un sistema de monitoreo de almacén (WMS). Los modelos representan diferentes entidades como tareas de almacenamiento, movimientos de inventario, entregas salientes y niveles de stock.
+Este archivo define modelos SQLAlchemy para representar tablas en una base de datos SQLite utilizada por el sistema de monitoreo de almacén (WMS). Cada clase corresponde a una tabla y contiene atributos que corresponden a las columnas de la tabla.
 
 ### Catálogo de Funciones y Clases
-- `WarehouseTask` - Representa una tarea de almacenamiento con varios campos.
-- `InventoryMovement` - Representa un movimiento de inventario con detalles del material, cantidad y ubicación.
-- `OutboundDelivery` - Representa una entrega saliente con información sobre el material, la ubicación y los tiempos de carga.
-- `StockLevel` - Representa el nivel de stock para diferentes materiales y lotes.
-- `Lx02Pendiente` - Representa pendientes en un sistema específico (LX02) con detalles del material y la ubicación.
-- `SyncManifest` - Representa un manifiesto de sincronización con información sobre archivos procesados.
-- `AnalyticsSnapshot` - Representa una instantánea de análisis con datos y tiempos de actualización.
-- `AutorAreaMapping` - Representa el mapeo entre autores y áreas de negocio.
+- `WarehouseTask` - Representa tareas en el almacén.
+- `InventoryMovement` - Representa movimientos de inventario.
+- `OutboundDelivery` - Representa entregas salientes.
+- `StockLevel` - Representa niveles de stock.
+- `Lx02Pendiente` - Representa pendientes de LX02.
+- `SyncManifest` - Representa manifiestos de sincronización.
 
 ### Interacción con Base de Datos
-El archivo interactúa con una base de datos SQLite. Las tablas definidas son:
-- `warehouse_tasks`
-- `inventory_movements`
-- `outbound_deliveries`
-- `stock_levels`
-- `lx02_pendientes`
-- `sync_manifest`
-- `analytics_snapshots`
-- `autor_area_mapping`
+- Motor: SQLite
+- Tablas:
+  - `warehouse_tasks`
+  - `inventory_movements`
+  - `outbound_deliveries`
+  - `stock_levels`
+  - `lx02_pendientes`
+  - `sync_manifest`
+- Columnas:
+  - `warehouse_tasks`: `numero_ot`, `pos`, `material`, etc.
+  - `inventory_movements`: `doc_mat`, `ej_mat`, `pos`, etc.
+  - `outbound_deliveries`: `entrega`, `pos_`, `material`, etc.
+  - `stock_levels`: `material`, `lote`, `alm_`, etc.
+  - `lx02_pendientes`: `material`, `lote`, `alm_`, etc., `otcuanto`.
+  - `sync_manifest`: `file_path`, `last_modified`, `file_size`, etc.
 
 ### Estado y Variables Globales
-No hay variables globales, de sesión o diccionarios quemados en el código.
+Ninguna
 
 ### Dependencias y Flujo
-Dependencias:
-- `sqlalchemy` - Para ORM y definición de modelos.
-- `core.database.Base` - Clase base para todos los modelos.
-
-Flujo:
-- Este archivo es importado por otros archivos que necesitan interactuar con la base de datos, como servicios o repositorios.
+- **Dependencias**: SQLAlchemy, FastAPI.
+- **Flujo de Datos**:
+  - Archivos del proyecto que importan a este archivo: Ninguno.
+  - Archivos del proyecto que este archivo importa: Ninguno.
 
 
 ---
@@ -513,64 +443,81 @@ Flujo:
 ## Archivo: ./core/pdf_engine.py
 
 ### Resumen Funcional
-El archivo `pdf_engine.py` es un motor optimizado para la generación de documentos PDF en el sistema de monitoreo de almacén (WMS). Se encarga de crear reportes WMS en formato horizontal utilizando la biblioteca FPDF y otros componentes como pandas y barcode.
+El archivo `pdf_engine.py` es un motor optimizado para la generación de documentos PDF en formato horizontal (landscape) para el sistema de monitoreo de almacén (WMS). Permite crear reportes detallados de entregas, incluyendo códigos de barras y tablas de materiales.
 
 ### Catálogo de Funciones y Clases
-- `get_ots_for_delivery(entrega_id: str, conn: sqlite3.Connection) -> List[str]`
-  - Consulta las OTs asociadas a una entrega y las devuelve como lista de strings.
-  
-- `_generate_barcode_stream(data: str, options: Optional[dict] = None) -> io.BytesIO`
-  - Genera un código de barras en memoria (BytesIO).
+- `WMS_Landscape_PDF(FPDF)` - Clase base para reportes WMS en formato horizontal.
+  - `__init__()`: Inicializa la clase con configuraciones específicas para PDFs horizontales.
+  - `get_column_x(col: int) -> float`: Calcula la posición X de una columna específica.
+  - `draw_dotted_line(x1: float, y: float, x2: float) -> None`: Dibuja una línea punteada sutil.
 
-- `draw_delivery_page(pdf: WMS_Landscape_PDF, header: pd.Series, items: pd.DataFrame, include_logo: bool = True, ots_list: Optional[List[str]] = None) -> None`
-  - Dibuja una página de entrega completa utilizando sub-métodos modulares.
+- `get_ots_for_delivery(entrega_id: str, conn: sqlite3.Connection) -> List[str]` - Consulta las OTs asociadas a una entrega.
+  - Parámetros:
+    - `entrega_id`: Identificador de la entrega.
+    - `conn`: Conexión a la base de datos SQLite.
+  - Retorna: Lista de números de OT.
 
-- `_draw_page_header(pdf: WMS_Landscape_PDF, h: pd.Series, include_logo: bool)`
-  - Dibuja el encabezado superior, logo y código de barras de la entrega.
-  
-- `_draw_info_block(pdf: WMS_Landscape_PDF, h: pd.Series)`
-  - Dibuja el bloque de información principal de la entrega.
+- `_generate_barcode_stream(data: str, options: Optional[dict] = None) -> io.BytesIO` - Genera un código de barras en memoria (BytesIO).
+  - Parámetros:
+    - `data`: Datos a codificar en el código de barras.
+    - `options`: Opciones adicionales para la generación del código de barras.
+  - Retorna: Flujo de bytes con el código de barras.
 
-- `_draw_table(pdf: WMS_Landscape_PDF, items_df: pd.DataFrame)`
-  - Dibuja la tabla de materiales con ordenamiento por ubicación.
-  
-- `_draw_ot_barcodes(pdf: WMS_Landscape_PDF, ots: List[str])`
-  - Dibuja los códigos de barras de las OTs en el lateral derecho.
+- `draw_delivery_page(pdf: WMS_Landscape_PDF, header: pd.Series, items: pd.DataFrame, include_logo: bool = True, ots_list: Optional[List[str]] = None) -> None` - Dibuja una página de entrega completa.
+  - Parámetros:
+    - `pdf`: Instancia de la clase `WMS_Landscape_PDF`.
+    - `header`: Encabezado de la entrega en formato pandas Series.
+    - `items`: Tabla de materiales en formato pandas DataFrame.
+    - `include_logo`: Indica si incluir el logo en el encabezado (opcional).
+    - `ots_list`: Lista de números de OT (opcional).
 
-- `_draw_signature_block(pdf: WMS_Landscape_PDF)`
-  - Dibuja los cuadros de firma al final de la página.
+- `_draw_page_header(pdf: WMS_Landscape_PDF, h: pd.Series, include_logo: bool)` - Dibuja el encabezado superior, logo y código de barras de la entrega.
+  - Parámetros:
+    - `pdf`: Instancia de la clase `WMS_Landscape_PDF`.
+    - `h`: Encabezado de la entrega en formato pandas Series.
+    - `include_logo`: Indica si incluir el logo en el encabezado.
 
-### Contratos de API / Endpoints
-No aplica.
+- `_draw_info_block(pdf: WMS_Landscape_PDF, h: pd.Series)` - Dibuja el bloque de información principal de la entrega.
+  - Parámetros:
+    - `pdf`: Instancia de la clase `WMS_Landscape_PDF`.
+    - `h`: Encabezado de la entrega en formato pandas Series.
+
+- `_draw_table(pdf: WMS_Landscape_PDF, items_df: pd.DataFrame)` - Dibuja la tabla de materiales con ordenamiento por ubicación.
+  - Parámetros:
+    - `pdf`: Instancia de la clase `WMS_Landscape_PDF`.
+    - `items_df`: Tabla de materiales en formato pandas DataFrame.
+
+- `_draw_ot_barcodes(pdf: WMS_Landscape_PDF, ots: List[str])` - Dibuja los códigos de barras de las OTs en el lateral derecho.
+  - Parámetros:
+    - `pdf`: Instancia de la clase `WMS_Landscape_PDF`.
+    - `ots`: Lista de números de OT.
+
+- `_draw_signature_block(pdf: WMS_Landscape_PDF)` - Dibuja los cuadros de firma al final de la página.
+  - Parámetros:
+    - `pdf`: Instancia de la clase `WMS_Landscape_PDF`.
 
 ### Interacción con Base de Datos
-- **Motor:** SQLite
-- **Operaciones SQL:**
-  - `SELECT DISTINCT numero_ot FROM warehouse_tasks WHERE ltrim(CAST(entrega AS TEXT), '0') = ?`
+- Motor de BD: SQLite
+- Tablas y Columnas:
+  - Tabla: `warehouse_tasks`
+  - Columnas: `numero_ot`, `entrega`
 
-### Flujo de Datos y Pipeline
-1. **Entrada:** Recibe un ID de entrega (`entrega_id`) y una conexión a la base de datos SQLite (`conn`).
-2. **Transformaciones:**
-   - Consulta las OTs asociadas a la entrega desde la tabla `warehouse_tasks`.
-   - Genera códigos de barras para la entrega y las OTs.
-3. **Salida:** Produce un documento PDF con la información de la entrega, los códigos de barras y una firma.
-
-### Caché y Estado
-No aplica.
-
-### Lógica de Negocio y Reglas
-- **Constantes de Diseño:**
-  - Margen X e Y.
-  - Posición inicial de la tabla.
-  - Altura de las filas.
-  - Número máximo de filas.
-  - Dimensiones del código de barras.
+### Estado y Variables Globales
+- No hay variables globales declaradas en este archivo.
 
 ### Dependencias y Flujo
-- **Librerías Externas:** `numpy`, `pandas`, `fpdf`, `barcode`
-- **Archivos Importados:**
-  - `config.py` (para la configuración temporal)
-- **Flujo de Datos:** El archivo se importa en otros archivos para generar PDFs, lo que indica que es un componente consumido por otros servicios o rutas del sistema.
+- Librerías externas:
+  - `io`, `logging`, `sqlite3`, `datetime`, `pathlib`, `typing`
+  - `numpy`, `pandas`
+  - `barcode`, `fpdf`
+
+- Archivos del proyecto que importan a este archivo (`pdf_engine.py`):
+  - Ninguno
+
+- Archivos del proyecto que este archivo importa:
+  - `config`
+
+Flujo de datos: El archivo se utiliza para generar PDFs, por lo tanto, los datos necesarios (encabezado y detalles de entrega) provienen de otros componentes del sistema (probablemente desde el servicio o repositorio correspondientes).
 
 
 ---
@@ -578,40 +525,29 @@ No aplica.
 ## Archivo: ./core/pdf_reports.py
 
 ### Resumen Funcional
-Este archivo contiene la lógica para construir secciones complejas de PDFs en un sistema de monitoreo de almacén (WMS). Específicamente, define funciones para dibujar tablas de anexos y listas de picking en documentos PDF.
+Este archivo contiene la lógica para construir secciones complejas de PDFs en un sistema de monitoreo de almacén (WMS). Incluye funciones para formatear cantidades y dibujar tablas de anexos y listas de picking.
 
 ### Catálogo de Funciones y Clases
-- `_parse_qty(val) -> float` - Sanitiza y convierte a float valores de cantidad de WMS.
-- `_fmt_qty(val) -> str` - Formatea cantidades para mostrar en el PDF de forma legible.
+- `_parse_qty(val)` - Sanitiza y convierte a float valores de cantidad de WMS.
+- `_fmt_qty(val)` - Formatea cantidades para mostrar en el PDF de forma legible.
 - `draw_annex_table(pdf, grouped_data)` - Dibuja la tabla de índice (anexo) de entregas agrupadas.
 - `draw_picking_list(pdf, picking_df)` - Dibuja la lista de picking desglosada por entrega pero con total consolidado.
 
-### Contratos de API / Endpoints
-No aplica.
-
 ### Interacción con Base de Datos
-No aplica.
+Ninguna.
 
-### Flujo de Datos y Pipeline
-1. **Entrada**: Recibe un objeto `pdf` (probablemente una instancia de una biblioteca como ReportLab) y datos agrupados (`grouped_data`) para la tabla de anexos, o un DataFrame (`picking_df`) para la lista de picking.
-2. **Transformaciones**:
-   - Para `_parse_qty`, limpia y convierte valores de cantidad a float.
-   - Para `_fmt_qty`, formatea cantidades para mostrar en el PDF.
-   - Para `draw_annex_table`, dibuja una tabla con los datos agrupados, incluyendo encabezado y filas.
-   - Para `draw_picking_list`, calcula totales consolidados por área/material, limpia y formatea datos de picking, y dibuja la lista en el PDF.
-3. **Salida**: Produce documentos PDF con las tablas de anexos y listas de picking.
-
-### Caché y Estado
-No aplica.
-
-### Lógica de Negocio y Reglas
-- No hay diccionarios o mapeos hardcoded, constantes de negocio o fórmulas de cálculo específicas en este archivo.
+### Estado y Variables Globales
+Ninguna.
 
 ### Dependencias y Flujo
-- **Dependencias**: Importa `datetime` desde el módulo estándar de Python.
-- **Flujo**: Este archivo no importa a otros archivos del proyecto ni es importado por otros. Es una utilidad compartida dentro del sistema para construir PDFs.
+- **Dependencias**: `datetime` (módulo estándar de Python).
+- **Flujo**: Este archivo no importa ni es importado por otros archivos. Es una parte independiente del sistema que se ejecuta directamente en el contexto de la aplicación FastAPI.
 
-Este archivo es un componente crucial para la generación de documentos PDF en el sistema WMS, proporcionando funciones específicas para crear tablas de anexos y listas de picking de manera eficiente y legible.
+El flujo de datos dentro del archivo implica:
+1. La entrada de `grouped_data` para la función `draw_annex_table`.
+2. La entrada de `picking_df` para la función `draw_picking_list`.
+
+La salida es un PDF generado con las tablas y listas correspondientes.
 
 
 ---
@@ -619,33 +555,26 @@ Este archivo es un componente crucial para la generación de documentos PDF en e
 ## Archivo: ./core/query_engine.py
 
 ### Resumen Funcional
-Este archivo actúa como una fachada para el motor de SQL, proporcionando una interfaz para construir y ejecutar consultas SQL seguras y validadas en un sistema de monitoreo de almacén (WMS) utilizando FastAPI, SQLAlchemy y SQLite.
+Este archivo actúa como una fachada para el motor de SQL en un sistema de monitoreo de almacén (WMS). Proporciona funciones para construir consultas SQL a partir de payloads y validar identificadores.
 
 ### Catálogo de Funciones y Clases
-- `validate_identifier(identifier)` - Valida si el identificador proporcionado es válido.
-- `validate_column(column_name, table_name)` - Valida si la columna pertenece a la tabla especificada.
-- `get_table_columns(table_name)` - Obtiene las columnas de una tabla específica.
-- `ALLOWED_TABLES` - Lista de tablas permitidas para consultas.
-- `ALLOWED_AGGREGATIONS` - Lista de agregaciones permitidas en consultas.
-- `ALLOWED_GRANULARITIES` - Lista de granularidades permitidas en consultas.
-- `get_bound_params_from_visual_state(visual_state)` - Extrae los parámetros limitados desde el estado visual.
-- `extract_metric_value(metric_data)` - Extrae el valor de una métrica de los datos proporcionados.
-- `build_sql_from_payload(payload, area_expr_macro=AREA_EXPR_MACRO)` - Construye una consulta SQL a partir del payload proporcionado.
+- `build_sql_from_payload(payload)` - Construye una consulta SQL a partir del payload proporcionado.
+- `extract_metric_value(metric_name, visual_state)` - Extrae el valor de una métrica específica del estado visual.
+- `get_bound_params_from_visual_state(visual_state)` - Obtiene los parámetros limitados desde el estado visual.
+- `validate_identifier(identifier)` - Valida un identificador según las reglas permitidas.
 
 ### Interacción con Base de Datos
 Ninguna. El archivo no interactúa directamente con la base de datos.
 
 ### Estado y Variables Globales
-Ninguna. No se utilizan variables globales, de sesión o diccionarios quemados en el código que almacenen estado crítico.
+Ninguna. No se utilizan variables globales, de sesión o diccionarios quemados en el código.
 
 ### Dependencias y Flujo
-- **Dependencias Externas**: `core.query_validators`, `core.query_utils`, `core.query_builder`.
-- **Archivos del Proyecto Importados por Este Archivo**:
-  - No aplica.
-- **Archivos del Proyecto que Importan a Este Archivo**:
-  - No aplica.
+- **Dependencias Externas**: `core.query_builder`, `core.query_utils`, `core.query_validators`.
+- **Archivos del Proyecto que Importan a este Archivo**: Ninguno.
+- **Archivos del Proyecto que Este Archivo Importa**: Ninguno.
 
-El flujo de datos es unidireccional, con este archivo proporcionando funciones y utilidades para construir consultas SQL seguras en el sistema WMS.
+El flujo de datos es simple: el archivo recibe payloads y estados visuales, los procesa y devuelve consultas SQL o valores de métricas según sea necesario.
 
 
 ---
@@ -677,43 +606,28 @@ Ninguna
 ## Archivo: ./core/query_validators.py
 
 ### Resumen Funcional
-Este archivo contiene funciones para validar identificadores de tablas y columnas en un sistema de monitoreo de almacén (WMS) utilizando FastAPI, SQLAlchemy y SQLite. Las funciones garantizan que solo se acceda a tablas y columnas permitidas, evitando así inyecciones SQL.
+El archivo `query_validators.py` contiene funciones para validar identificadores (tablas y columnas) en el contexto de un sistema de monitoreo de almacén (WMS). Las funciones verifican si los nombres proporcionados están dentro de listas blancas predefinidas y, en caso de ser columnas, consultan la base de datos para asegurarse de su existencia.
 
 ### Catálogo de Funciones y Clases
-- `validate_identifier(name: str, db: Session) -> bool` - Valida si un identificador (tabla o tabla.columna) pertenece a la lista blanca.
-- `validate_column(table: str, column: str, db: Session) -> bool` - Valida si una columna pertenece a una tabla permitida.
-- `get_table_columns(table: str, db: Session) -> List[str]` - Retorna la lista de columnas de una tabla permitida.
+- `validate_identifier(name: str, db: Session) -> bool` - Valida que un identificador (tabla o tabla.columna) pertenezca a la lista blanca. Si es una columna, consulta la base de datos para verificar su existencia.
 
 ### Interacción con Base de Datos
 - Motor: SQLite
-- Tablas:
-  - `outbound_deliveries`
-  - `stock_levels`
-  - `warehouse_tasks`
-  - `inventory_movements`
-- Columnas:
-  - Consulta dinámica a través de `PRAGMA table_info(table_name)` para verificar la existencia de columnas.
+- Tablas: Ninguna
+- Columnas: Ninguna
 
 ### Estado y Variables Globales
-- `ALLOWED_TABLES` (frozenset): Lista blanca de tablas permitidas.
-- `ALLOWED_AGGREGATIONS` (frozenset): Conjunto de agregaciones permitidas.
-- `ALLOWED_GRANULARITIES` (frozenset): Granularidades permitidas.
+- `ALLOWED_TABLES` - Conjunto inmutable de tablas permitidas.
+- `ALLOWED_AGGREGATIONS` - Conjunto inmutable de agregaciones permitidas.
+- `ALLOWED_GRANULARITIES` - Conjunto inmutable de granularidades permitidas.
 
 ### Dependencias y Flujo
-- **Dependencias Externas**: 
-  - `sqlalchemy.orm.Session`
-  - `sqlalchemy.text`
-  - `typing.List`
-  - `logging`
+- Librerías externas: `logging`, `typing`
+- Archivos del proyecto que IMPORTA a este archivo:
+  - `routes/settings.py`
+  - `core/security.py`
 
-- **Archivos del Proyecto que Importan a este Archivo**:
-  - No se mencionan archivos específicos.
-
-- **Archivos del Proyecto que Este Archivo Importa**:
-  - No se mencionan archivos específicos.
-
-- **Flujo de Datos**: 
-  - El archivo interactúa con la base de datos para validar identificadores y columnas, utilizando consultas SQL dinámicas.
+Este archivo no importa archivos del proyecto, pero es consumido por otros archivos dentro del proyecto.
 
 
 ---
@@ -721,40 +635,32 @@ Este archivo contiene funciones para validar identificadores de tablas y columna
 ## Archivo: ./core/schemas.py
 
 ### Resumen Funcional
-Este archivo define esquemas de datos utilizando Pydantic para representar diferentes tipos de respuestas y payloads en un sistema de monitoreo de almacén (WMS). Los esquemas incluyen estructuras para respuestas del dashboard, análisis de entregas, inventario y tareas, así como definiciones para consultas visuales avanzadas.
+Este archivo define esquemas de datos (schemas) utilizando Pydantic para la validación y serialización de objetos en un sistema de monitoreo de almacén (WMS). Los esquemas incluyen respuestas para diferentes tipos de análisis y definiciones para consultas visuales.
 
 ### Catálogo de Funciones y Clases
-- `DashboardResponse(data: Dict[str, Any], is_syncing: bool) -> None`: Representa la respuesta del dashboard.
-- `AnalyticsDeliveriesResponse(data: Dict[str, Any], is_syncing: bool) -> None`: Representa la respuesta del análisis de entregas.
-- `AnalyticsInventoryResponse(data: Dict[str, Any], is_syncing: bool) -> None`: Representa la respuesta del análisis de inventario.
-- `AnalyticsTasksResponse(data: Dict[str, Any], is_syncing: bool) -> None`: Representa la respuesta del análisis de tareas.
-- `JoinDef(table: str, onLeft: str, onRight: str) -> None`: Define una relación JOIN para consultas visuales avanzadas.
-- `FilterDef(column: str, operator: str, value: Optional[Any] = "", valueType: Optional[str] = "value", compareColumn: Optional[str] = None, offsetValue: Optional[str] = None, diffOp: Optional[str] = None) -> None`: Define un filtro para consultas visuales avanzadas.
-- `MetricCondition(column: str, operator: str, value: Any) -> None`: Define una condición de métrica para consultas visuales avanzadas.
-- `MetricDef(column: str, aggregation: str, format: Optional[str] = "number", label: Optional[str] = "", condition: Optional[MetricCondition] = None, customExpr: Optional[str] = None) -> None`: Define una métrica para consultas visuales avanzadas.
-- `TimeAxisDef(column: Optional[str] = None, granularity: Optional[str] = "NONE") -> None`: Define el eje de tiempo para consultas visuales avanzadas.
-- `SecondMetricDef(column: str = "", aggregation: str = "", label: str = "") -> None`: Define una segunda métrica para consultas visuales avanzadas.
-- `VisualQueryBuilderPayload(baseTable: Optional[str] = None, datasetId: Optional[str] = None, joins: list[JoinDef] = [], filters: list[FilterDef] = [], metric: Optional[MetricDef] = None, timeAxis: Optional[TimeAxisDef] = None, breakdown: Optional[str] = None, secondMetric: Optional[SecondMetricDef] = None, metrics: list[MetricDef] = [], chartType: Optional[str] = "bar") -> None`: Define el payload para consultas visuales avanzadas.
-
-### Contratos de API / Endpoints
-No aplica.
+- `DashboardResponse(data: Dict[str, Any], is_syncing: bool)` - Define la estructura de respuesta para el panel de control.
+- `AnalyticsDeliveriesResponse(data: Dict[str, Any], is_syncing: bool)` - Define la estructura de respuesta para análisis de entregas.
+- `AnalyticsInventoryResponse(data: Dict[str, Any], is_syncing: bool)` - Define la estructura de respuesta para análisis de inventario.
+- `AnalyticsTasksResponse(data: Dict[str, Any], is_syncing: bool)` - Define la estructura de respuesta para análisis de tareas.
+- `JoinDef(table: str, onLeft: str, onRight: str)` - Define una definición de unión (join) para consultas SQL.
+- `FilterDef(column: str, operator: str, value: Optional[Any] = "", valueType: Optional[str] = "value", compareColumn: Optional[str] = None, offsetValue: Optional[str] = None, diffOp: Optional[str] = None)` - Define una definición de filtro para consultas SQL.
+- `MetricCondition(column: str, operator: str, value: Any)` - Define una condición para métricas en consultas visuales.
+- `MetricDef(column: str, aggregation: str, format: Optional[str] = "number", label: Optional[str] = "", condition: Optional[MetricCondition] = None, customExpr: Optional[str] = None)` - Define una definición de métrica para consultas visuales.
+- `TimeAxisDef(column: Optional[str] = None, granularity: Optional[str] = "NONE")` - Define la configuración del eje temporal en consultas visuales.
+- `SecondMetricDef(column: str = "", aggregation: str = "", label: str = "")` - Define una segunda métrica para consultas visuales.
+- `VisualQueryBuilderPayload(baseTable: Optional[str] = None, datasetId: Optional[str] = None, joins: list[JoinDef] = [], filters: list[FilterDef] = [], metric: Optional[MetricDef] = None, timeAxis: Optional[TimeAxisDef] = None, breakdown: Optional[str] = None, secondMetric: Optional[SecondMetricDef] = None, metrics: list[MetricDef] = [], chartType: Optional[str] = "bar")` - Define el payload para consultas visuales.
 
 ### Interacción con Base de Datos
-No aplica.
+Ninguna. Este archivo no interactúa directamente con la base de datos.
 
-### Flujo de Datos y Pipeline
-No aplica.
-
-### Caché y Estado
-No aplica.
-
-### Lógica de Negocio y Reglas
-No aplica.
+### Estado y Variables Globales
+Ninguna. No se definen variables globales, de sesión o de entorno en este archivo.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `pydantic`, `typing`
-- **Archivos del Proyecto que Importan a este Archivo**: No aplica.
-- **Archivos del Proyecto que Este Archivo Importa**: No aplica.
+- **Dependencias**: `pydantic`
+- **Archivos que importan a este archivo**: Ninguno.
+- **Archivos que este archivo importa**: Ninguno.
+- **Flujo de datos**: Este archivo define esquemas de datos que pueden ser utilizados por otros componentes del sistema, como los servicios o las rutas.
 
 
 ---
@@ -762,35 +668,25 @@ No aplica.
 ## Archivo: ./core/security.py
 
 ### Resumen Funcional
-Utilidades centralizadas de seguridad y validación, específicamente para validar el nombre de tablas contra una lista blanca para prevenir SQL Injection.
+Este archivo contiene utilidades centralizadas de seguridad y validación, específicamente para validar el nombre de tablas en operaciones relacionales con la base de datos.
 
 ### Catálogo de Funciones y Clases
-- `validate_table(table_name: str) -> None` - Valida el nombre de la tabla contra la lista blanca para prevenir SQL Injection. Lanza `ValueError` si la tabla no está permitida.
-
-### Contratos de API / Endpoints
-No aplica.
+- `validate_table(table_name: str) -> None` - Valida el nombre de la tabla contra una lista blanca predefinida para evitar SQL Injection.
 
 ### Interacción con Base de Datos
-- Motor: SQLite
-- Operación: SELECT (implicada en la validación)
-- Tabla afectada: Todas las tablas mencionadas en `WHITELIST_TABLES`
-- Columnas leídas: Nombre de la tabla
+- **Motor**: SQLite
+- **Tablas**: Ninguna (La validación se realiza en memoria, no hay consultas a la base de datos).
+- **Columnas**: Ninguna
 
-### Flujo de Datos y Pipeline
-No aplica.
-
-### Caché y Estado
-- Variables globales y de módulo:
-  - `WHITELIST_TABLES`: Conjunto inmutable de nombres de tablas permitidas.
-
-### Lógica de Negocio y Reglas
-- Constantes de negocio o umbrales:
-  - `WHITELIST_TABLES`: Lista blanca de tablas permitidas para evitar SQL Injection.
+### Estado y Variables Globales
+- `WHITELIST_TABLES: Final[Set[str]]` - Variable global que almacena una lista blanca de tablas permitidas.
 
 ### Dependencias y Flujo
-- Librerías externas: `typing`
-- Archivos del proyecto que IMPORTA a este archivo (lo consumen): No aplica.
-- Archivos del proyecto que este archivo IMPORTA (consume): No aplica.
+- **Dependencias Externas**: No hay dependencias externas.
+- **Archivos Importados por Este Archivo**: Ninguno.
+- **Archivos que Importan a Este Archivo**: Repositories, Services o cualquier otro componente que necesite validar el nombre de las tablas.
+
+**Flujo de Datos**: El archivo `security.py` se importa en otros componentes del sistema para validar el nombre de las tablas antes de realizar operaciones relacionales con la base de datos.
 
 
 ---
@@ -833,35 +729,35 @@ Ninguna
 ## Archivo: ./core/semantic_layer.py
 
 ### Resumen Funcional
-La capa `semantic_layer.py` proporciona una abstracción semántica sobre el esquema físico de la base de datos, manteniendo un catálogo de conjuntos de datos (datasets), dimensiones y métricas. Ofrece funciones para resolver mapeos entre IDs semánticos y físicos, generar esquemas frontend, y recuperar fórmulas complejas de métricas.
+La capa semántica `semantic_layer.py` mantiene el catálogo de conjuntos de datos (datasets), dimensiones y métricas, junto con sus fórmulas de negocio. Proporciona funciones para obtener esquemas front-end, resolver mapeos físicos y recuperar fórmulas complejas.
 
 ### Catálogo de Funciones y Clases
-- `Dimension(id: str, label: str, physical_column: str, type: str = "string", description: str = "")` - Define una dimensión con su ID, etiqueta, columna física y tipo.
-- `Metric(id: str, label: str, physical_column: str, aggregation: str = "SUM", format: str = "number", is_complex_formula: bool = False, formula_template: Optional[str] = None, description: str = "")` - Define una métrica con su ID, etiqueta, columna física, agregación y fórmula compleja si es necesario.
-- `Dataset(id: str, label: str, physical_table: str, dimensions: List[Dimension] = field(default_factory=list), metrics: List[Metric] = field(default_factory=list))` - Define un conjunto de datos con su ID, etiqueta, tabla física y listas de dimensiones y métricas.
+- `Dimension(id: str, label: str, physical_column: str, type: str = "string", description: str = "")` - Define una dimensión con sus atributos.
+- `Metric(id: str, label: str, physical_column: str, aggregation: str = "SUM", format: str = "number", is_complex_formula: bool = False, formula_template: Optional[str] = None, description: str = "")` - Define una métrica con sus atributos.
+- `Dataset(id: str, label: str, physical_table: str, dimensions: List[Dimension] = field(default_factory=list), metrics: List[Metric] = field(default_factory=list))` - Define un conjunto de datos con sus dimensiones y métricas.
 - `DATASETS: Dict[str, Dataset]` - Catálogo global de conjuntos de datos.
-- `_PHYSICAL_TABLE_TO_DATASET: Dict[str, str]` - Mapa inverso para mapear tablas físicas a IDs de conjuntos de datos.
+- `_PHYSICAL_TABLE_TO_DATASET: Dict[str, str]` - Mapa inverso para mapear tablas físicas a IDs de conjunto de datos.
 - `get_frontend_schema() -> Dict[str, Any]` - Genera un diccionario semántico para exponer a la UI (Studio).
 - `resolve_dataset_physical_table(dataset_id: str) -> str` - Devuelve la tabla física dado el ID del dataset.
 - `resolve_physical_mapping(dataset_id: str, field_id: str) -> str` - Traduce un ID semántico a su columna física cualificada.
 - `get_metric_formula(dataset_id: str, metric_id: str, table_alias: str = "", legacy_agg: str = "") -> Optional[str]` - Devuelve la fórmula compleja de una métrica si la tiene.
-- `get_formula_by_physical_table(physical_table: str, aggregation: str, metric_col: str = "") -> Optional[str]` - Reverse-lookup para obtener la expresión SQL real basada en la tabla física y la agregación.
+- `get_formula_by_physical_table(physical_table: str, aggregation: str, metric_col: str = "") -> Optional[str]` - Reverse-lookup para obtener la expresión SQL real dada una tabla física y una agregación compleja.
 
 ### Interacción con Base de Datos
-No se utiliza ninguna base de datos explícita. Todas las operaciones relacionadas con la BD son indirectas a través de los mapeos y consultas que utilizan los IDs semánticos.
+Ninguna. El archivo no interactúa directamente con una base de datos.
 
 ### Estado y Variables Globales
 - `DATASETS: Dict[str, Dataset]` - Almacena el catálogo global de conjuntos de datos.
-- `_PHYSICAL_TABLE_TO_DATASET: Dict[str, str]` - Mapa inverso para mapear tablas físicas a IDs de conjuntos de datos.
+- `_PHYSICAL_TABLE_TO_DATASET: Dict[str, str]` - Mapa inverso para mapear tablas físicas a IDs de conjunto de datos.
 
 ### Dependencias y Flujo
-- **Dependencias**: No se importan librerías externas adicionales.
+- **Dependencias**: No importa ninguna librería externa.
 - **Flujo de Datos**:
-  - `get_frontend_schema()` genera un esquema semántico para la UI.
-  - `resolve_dataset_physical_table(dataset_id: str)` resuelve el mapeo entre IDs de conjuntos de datos y tablas físicas.
-  - `resolve_physical_mapping(dataset_id: str, field_id: str)` traduce IDs semánticos a columnas físicas.
-  - `get_metric_formula(dataset_id: str, metric_id: str, table_alias: str = "", legacy_agg: str = "")` recupera fórmulas complejas de métricas.
-  - `get_formula_by_physical_table(physical_table: str, aggregation: str, metric_col: str = "")` realiza un reverse-lookup para obtener expresiones SQL basadas en tablas físicas y agregaciones.
+  - `get_frontend_schema()` consume `DATASETS` y genera un esquema semántico para la UI.
+  - `resolve_dataset_physical_table(dataset_id: str)` consume `DATASETS`.
+  - `resolve_physical_mapping(dataset_id: str, field_id: str)` consume `DATASETS`.
+  - `get_metric_formula(dataset_id: str, metric_id: str, table_alias: str = "", legacy_agg: str = "")` consume `DATASETS`.
+  - `get_formula_by_physical_table(physical_table: str, aggregation: str, metric_col: str = "")` consume `_PHYSICAL_TABLE_TO_DATASET` y `DATASETS`.
 
 
 ---
@@ -869,29 +765,22 @@ No se utiliza ninguna base de datos explícita. Todas las operaciones relacionad
 ## Archivo: ./core/state.py
 
 ### Resumen Funcional
-Gestión centralizada del estado mutable y la caché de la aplicación, implementando límites de seguridad para evitar fugas de memoria.
+Gestión de estado global y caché de la aplicación, incluyendo límites de seguridad para evitar fugas de memoria.
 
 ### Catálogo de Funciones y Clases
-- `AppState()` - Gestiona el estado mutable y la caché de forma centralizada.
-  - `__init__()`
-  - `max_cache_size` (getter/setter) - Devuelve/Configura el límite máximo de entradas en caché.
-  - `sync_lock` (getter) - Devuelve el lock de sincronización para operaciones atómicas.
-  - `is_syncing` (getter/setter) - Verifica y actualiza el estado de sincronización (atómico).
-  - `cache_size` (getter) - Devuelve el número actual de entradas en la caché.
-  - `get_cache(key: str)` - Recupera un valor del caché.
-  - `set_cache(key: str, value: Any)` - Guarda un valor en el caché, respetando los límites de tamaño.
-  - `clear_cache(key: Optional[str] = None)` - Limpia una entrada específica o todo el caché.
-  - `clear_cache_prefix(prefix: str)` - Limpia todas las entradas de caché que comiencen con el prefijo dado.
+- `CacheManager()` - Gestor especializado en caché con métodos para obtener, establecer y limpiar el caché.
+- `SyncStateManager()` - Gestor especializado en estados de sincronización con métodos para controlar el estado de sincronización.
 
 ### Interacción con Base de Datos
 Ninguna
 
 ### Estado y Variables Globales
-- `global_state` - Instancia única de la clase `AppState`, almacenada globalmente para su acceso desde cualquier parte del proyecto.
+- `cache_manager` - Instancia global de `CacheManager`.
+- `sync_manager` - Instancia global de `SyncStateManager`.
 
 ### Dependencias y Flujo
 - **Dependencias**: No importa ninguna librería externa.
-- **Flujo de Datos**: El archivo no consume ni es consumido por otros archivos. Es un componente central que proporciona acceso a la instancia global de `AppState` para gestionar el estado y la caché de la aplicación.
+- **Flujo de Datos**: El archivo no consume ni produce datos desde otros archivos del proyecto.
 
 
 ---
@@ -899,42 +788,49 @@ Ninguna
 ## Archivo: ./core/task_manager.py
 
 ### Resumen Funcional
-Este archivo define el `TaskManager`, un gestor de tareas en segundo plano para un sistema de monitoreo de almacén (WMS). Permite encolar, rastrear y gestionar el estado de las tareas ejecutadas en segundo plano.
+El archivo `task_manager.py` implementa un gestor de tareas en segundo plano para un sistema de monitoreo de almacén (WMS). Permite encolar, rastrear y gestionar el estado de las tareas ejecutadas o en ejecución. Utiliza un pool de hilos (`ThreadPoolExecutor`) para evitar bloquear el event loop de FastAPI.
 
 ### Catálogo de Funciones y Clases
-- **submit_task(name: str, fn: Callable, *args, **kwargs) -> str**: Encola una tarea para ejecución en segundo plano.
-- **get_task_status(task_id: str) -> Optional[Dict[str, Any]]**: Retorna el estado de una tarea por su ID.
-- **list_tasks(limit: int = 20) -> List[Dict[str, Any]]**: Lista las tareas más recientes (más nueva primero).
-- **has_running_task(name: str) -> bool**: Verifica si hay una tarea con el nombre dado en estado RUNNING.
-- **_trim_history()**: Elimina las tareas completadas más antiguas si se supera el límite.
-- **shutdown(wait: bool = True)**: Cierre graceful del pool de threads.
-
-### Contratos de API / Endpoints
-No aplica.
+- `TaskStatus(str, Enum)` - Define los estados posibles de una tarea (PENDING, RUNNING, DONE, FAILED).
+- `TaskRecord` - Registro inmutable de una tarea ejecutada o en ejecución.
+  - `task_id`: ID único de la tarea.
+  - `name`: Nombre descriptivo de la tarea.
+  - `status`: Estado actual de la tarea.
+  - `created_at`: Fecha y hora de creación de la tarea.
+  - `started_at`: Fecha y hora de inicio de la tarea.
+  - `finished_at`: Fecha y hora de finalización de la tarea.
+  - `result`: Resultado de la tarea si se completó exitosamente.
+  - `error`: Mensaje de error si la tarea falló.
+- `TaskManager` - Gestor del pool de hilos para ejecutar tareas en segundo plano.
+  - `MAX_HISTORY`: Máximo número de tareas completadas en memoria.
+  - `__init__(max_workers: int = 3)`: Inicializa el gestor con un número configurable de trabajadores.
+  - `submit_task(name: str, fn: Callable, *args, **kwargs) -> str`: Encola una tarea para ejecución en segundo plano y devuelve su ID.
+  - `get_task_status(task_id: str) -> Optional[Dict[str, Any]]`: Retorna el estado de una tarea por su ID.
+  - `list_tasks(limit: int = 20) -> List[Dict[str, Any]]`: Lista las tareas más recientes (más nueva primero).
+  - `has_running_task(name: str) -> bool`: Verifica si hay una tarea con el nombre dado en estado RUNNING.
+  - `_trim_history()`: Elimina las tareas completadas más antiguas si se supera el límite de historial.
+  - `shutdown(wait: bool = True)`: Cierra graceful del pool de threads.
 
 ### Interacción con Base de Datos
-No aplica.
+Ninguna. El archivo no interactúa directamente con una base de datos.
 
-### Flujo de Datos y Pipeline
-1. **Entrada**: Recibe una función `fn` y sus argumentos.
-2. **Transformación**: Crea un `TaskRecord` para la tarea, lo encola en el `ThreadPoolExecutor`, y actualiza su estado según el resultado de la ejecución.
-3. **Salida**: No produce datos de salida directamente.
-
-### Caché y Estado
-- **Variables globales y de módulo**: `task_manager`
-- **Caché en memoria**: Diccionarios `_tasks` y `_futures`
-- **Mecanismos de invalidación de caché**: `_trim_history()`
-- **Variables de entorno o sesión utilizadas**: No aplica.
-
-### Lógica de Negocio y Reglas
-- **Constantes de negocio**: `MAX_HISTORY = 50`
-- **Reglas de validación**: Verifica si hay una tarea con el nombre dado en estado RUNNING (`has_running_task`).
+### Estado y Variables Globales
+- `task_manager`: Instancia global de `TaskManager` con 3 trabajadores por defecto.
 
 ### Dependencias y Flujo
-- **Librerías externas**: `concurrent.futures`, `dataclasses`, `enum`, `typing`, `threading`, `logging`
-- **Archivos del proyecto que este archivo importa (consume)**: No aplica.
-- **Archivos del proyecto que importan a este archivo (lo consumen)**: `routes` (por ejemplo, `/api/tasks`)
-- **Dirección del flujo de datos**: Desde las rutas hasta el `TaskManager`, y desde el `TaskManager` hasta la ejecución de tareas en segundo plano.
+- **Dependencias**: 
+  - `logging`
+  - `uuid`
+  - `concurrent.futures.ThreadPoolExecutor`
+  - `dataclasses`
+  - `datetime`
+  - `enum.Enum`
+  - `threading.Lock`
+  - `typing.Any, Callable, Dict, List, Optional`
+
+- **Flujo de Datos**:
+  - El archivo no importa ni es importado por otros archivos dentro del proyecto.
+  - Las funciones y métodos se utilizan internamente para gestionar el estado de las tareas y ejecutarlas en segundo plano.
 
 
 ---
@@ -942,47 +838,30 @@ No aplica.
 ## Archivo: ./core/utils.py
 
 ### Resumen Funcional
-Este archivo contiene utilidades transversales y gestión de señales del sistema. Se encarga de configurar manejadores de señales para un cierre limpio, registrar mensajes de inicio y sanitizar datos para su serialización JSON segura.
+Este archivo contiene utilidades transversales y gestión de señales del sistema. Incluye funciones para configurar manejadores de señales, registrar un banner de inicio y limpiar datos para su serialización JSON segura.
 
 ### Catálogo de Funciones y Clases
-- `setup_signal_handlers() -> None` - Configura los manejadores de señales (SIGINT, SIGTERM) para un cierre limpio.
-- `log_startup_banner() -> None` - Registra un mensaje de inicio del módulo de utilidades.
-- `sanitize_for_json(data: Any) -> Any` - Limpia datos para serialización JSON segura de forma recursiva y exhaustiva.
-
-### Contratos de API / Endpoints
-No aplica.
+- `setup_signal_handlers()` - Configura los manejadores de señales (SIGINT, SIGTERM) para un cierre limpio.
+- `log_startup_banner()` - Registra un banner de inicio del módulo de utilidades.
+- `sanitize_for_json(data: Any) -> Any` - Limpia datos para su serialización JSON segura de forma recursiva y exhaustiva.
+- `_get_bound_params_from_visual_state(visual_state_str: str) -> list` - Alias de compatibilidad para obtener parámetros enlazados desde un estado visual.
+- `_extract_metric_value(df, active_year: str = None) -> Any` - Alias de compatibilidad para extraer un valor métrico de un DataFrame.
 
 ### Interacción con Base de Datos
-No aplica.
+Ninguna.
 
-### Flujo de Datos y Pipeline
-No aplica.
-
-### Caché y Estado
-- Variables globales: `_handlers_registered` - Flag interno para evitar registros múltiples.
-- Variables de entorno o sesión utilizadas: No aplica.
-
-### Lógica de Negocio y Reglas
-No aplica.
+### Estado y Variables Globales
+- `_handlers_registered` (booleano): Flag interno para evitar registros múltiples de manejadores de señales.
 
 ### Dependencias y Flujo
-- Librerías externas:
-  - `signal`
-  - `sys`
-  - `logging`
-  - `pandas`
-  - `math`
-  - `typing`
-
-- Archivos del proyecto que IMPORTA a este archivo (lo consumen):
+- **Dependencias Externas**: `logging`, `math`, `signal`, `sys`, `pandas`.
+- **Archivos del Proyecto que Importan a este Archivo**:
   - `services.tunnel.stop_tunnel()`
-  - `core.query_engine.get_bound_params_from_visual_state(visual_state_str)`
-  - `core.query_engine.extract_metric_value(df, active_year)`
+  - `core.query_engine.get_bound_params_from_visual_state`
+  - `core.query_engine.extract_metric_value`
+- **Archivos del Proyecto que Este Archivo Importa**: Ninguno.
 
-- Archivos del proyecto que este archivo IMPORTA:
-  - No aplica
-
-El flujo de datos es desde las funciones hacia los archivos dependientes.
+El flujo de datos es unidireccional, con este archivo consumiendo funciones y servicios externos para su funcionalidad.
 
 
 ---
@@ -990,41 +869,42 @@ El flujo de datos es desde las funciones hacia los archivos dependientes.
 ## Archivo: ./core/watcher.py
 
 ### Resumen Funcional
-El archivo `watcher.py` implementa un observador de archivos que monitorea cambios en directorios especificados, como OneDrive y otro directorio local. Cuando detecta archivos estables (sin cambios durante 3 segundos), dispara una sincronización del almacén.
+El archivo `watcher.py` es un componente del sistema de monitoreo de almacén (WMS) que utiliza la biblioteca `watchdog` para observar cambios en archivos dentro de directorios específicos. El objetivo principal es detectar cuando los archivos se han estabilizado y, en ese caso, disparar una sincronización de datos.
 
 ### Catálogo de Funciones y Clases
-- `AwaitWriteFinishHandler(stability_seconds=3.0, poll_interval=1.0)` - Maneja eventos de sistema de archivos y monitorea estabilidad de los archivos.
-  - `_should_track(path: str) -> bool` - Determina si un archivo debe ser rastreado.
-  - `on_created(event)` - Llama a `_add_file` cuando se crea un nuevo archivo.
-  - `on_modified(event)` - Llama a `_add_file` cuando se modifica un archivo existente.
-  - `_add_file(path: str)` - Añade o actualiza la información del archivo en el diccionario `tracked_files`.
-  - `_poll_files()` - Monitorea los archivos rastreados y dispara una sincronización si es necesario.
-  - `stop()` - Detiene el observador y las operaciones de monitoreo.
+- **AwaitWriteFinishHandler(stability_seconds=3.0, poll_interval=1.0)** - Maneja eventos de sistema de archivos para detectar cuando los archivos se han estabilizado.
+  - `on_created(event)` - Llama a `_add_file` cuando un archivo es creado.
+  - `on_modified(event)` - Llama a `_add_file` cuando un archivo es modificado.
+  - `_should_track(path: str) -> bool` - Determina si un archivo debe ser rastreado basándose en su nombre y extensión.
+  - `_add_file(path: str)` - Agrega o actualiza la información del archivo en `tracked_files`.
+  - `_poll_files()` - Monitorea los archivos para detectar cambios estables y disparar la sincronización si es necesario.
+  - `stop()` - Detiene el rastreo de archivos.
 
-- `start_watcher()` - Inicia el observador en los directorios especificados.
-- `stop_watcher()` - Detiene el observador.
+- **start_watcher()** - Inicia el observador de archivos y configura el manejador para comenzar a monitorear los directorios especificados.
+
+- **stop_watcher()** - Detiene el observador de archivos y limpia las variables globales relacionadas.
 
 ### Interacción con Base de Datos
-Ninguna.
+Ninguna. El archivo no interactúa directamente con una base de datos.
 
 ### Estado y Variables Globales
-- `_observer` - Instancia del observador de archivos.
-- `_handler` - Instancia del manejador de eventos de archivos.
+- `_observer` - Instancia del `Observer` de `watchdog`.
+- `_handler` - Instancia de `AwaitWriteFinishHandler`.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `watchdog`, `logging`, `threading`.
-- **Archivos Importados**:
-  - `config.py`: Para obtener el camino de OneDrive.
-  - `core.task_manager`: Para gestionar tareas asincrónicas.
-  - `routes.sync`: Para ejecutar la sincronización del almacén.
+- **Dependencias**: 
+  - `logging`
+  - `os`
+  - `threading`
+  - `time`
+  - `watchdog.events`
+  - `watchdog.observers`
 
-El flujo de datos es el siguiente:
-1. `start_watcher()` se llama para iniciar el observador en los directorios especificados.
-2. El observador (`_observer`) monitorea los eventos de archivos en los directorios rastreados.
-3. Cuando un archivo es modificado y alcanza la estabilidad requerida, `_poll_files()` detecta esto y dispara `task_manager.submit_task("sync_data", _run_sync_pipeline)`.
-4. `stop_watcher()` se llama para detener el observador y las operaciones de monitoreo.
+- **Flujo**:
+  - `start_watcher()` importa a `AwaitWriteFinishHandler` y `Observer`, luego configura y inicia el observador.
+  - `stop_watcher()` detiene el observador y limpia las variables globales.
 
-Este flujo asegura que los cambios en los archivos sean sincronizados con el almacén solo cuando estos son estables, evitando la sobrecarga del sistema con sincronizaciones innecesarias.
+El archivo `watcher.py` se encarga de monitorear cambios en archivos dentro de los directorios especificados, detectar cuando estos archivos se han estabilizado y disparar una sincronización de datos utilizando la biblioteca `watchdog`.
 
 
 ---
@@ -1032,27 +912,27 @@ Este flujo asegura que los cambios en los archivos sean sincronizados con el alm
 ## Archivo: ./core/wms_config.py
 
 ### Resumen Funcional
-Este archivo contiene la configuración y lógica de negocio para el mapeo WMS (SaaS Dinámico). Define funciones para validar los mapeos de estado, centro de costo y feriados. También proporciona soporte para cargar dinámicamente atributos como `STATUS_MAPPING` y `COST_CENTER_MAPPING`.
+Este archivo contiene la configuración y validación de los mapeos utilizados en el sistema de monitoreo de almacén (WMS). Define funciones para obtener mapeos como STATUS_MAPPING y COST_CENTER_MAPPING, y valida su integridad.
 
 ### Catálogo de Funciones y Clases
 - `validate_wms_maps()` - Valida la integridad de los mapeos definidos.
 - `__getattr__(name: str) -> Any` - Soporte para carga dinámica de atributos.
 
 ### Interacción con Base de Datos
-Ninguna. No se realiza ninguna interacción directa con una base de datos en este archivo.
+Ninguna. No hay consultas SQL ni interacciones directas con una base de datos.
 
 ### Estado y Variables Globales
-No hay variables globales, de sesión o de entorno definidas en este archivo.
+No se utilizan variables globales, de sesión o diccionarios quemados en el código que almacenen estado crítico.
 
 ### Dependencias y Flujo
 - **Dependencias**: 
-  - `get_setting`, `get_status_mapping`, `get_cost_center_mapping`, `get_holidays` (de `db_config_manager.py`)
+  - `get_cost_center_mapping()`, `get_holidays()`, `get_setting()`, `get_status_mapping()` (de `db_config_manager.py`).
   
 - **Flujo de Datos**:
-  - Este archivo es consumido por otros archivos que necesiten acceso a los mapeos WMS y la configuración dinámica.
-  - Los atributos como `STATUS_MAPPING` y `COST_CENTER_MAPPING` se cargan dinámicamente cuando son accedidos.
+  - El archivo importa funciones desde `db_config_manager.py`.
+  - No hay archivos que importen a este archivo.
 
-Este archivo es crucial para mantener la integridad de los mapeos WMS y proporcionar acceso a estos mapeos de manera dinámica en el sistema.
+Este archivo se encarga de la configuración y validación de mapeos utilizados en el sistema WMS, asegurando que los datos necesarios estén correctamente definidos y no vacíos.
 
 
 ---
@@ -1063,7 +943,7 @@ Este archivo es crucial para mantener la integridad de los mapeos WMS y proporci
 Este archivo contiene funciones utilitarias vectorizadas para transformación de datos en un sistema de monitoreo de almacén (WMS). Las funciones se centran en la limpieza, mapeo y normalización de datos, así como en el cálculo de métricas y la gestión del estado de archivos.
 
 ### Catálogo de Funciones y Clases
-- `sanitize_string(text: str) -> str` - Normaliza un string para usarlo como encabezado de columna.
+- `sanitize_string(text: str) -> str` - Normaliza un string para usarlo como encabezado de columna (snake_case).
 - `map_wms_status(df: pd.DataFrame) -> pd.DataFrame` - Concatena columnas de estado y mapea al valor legible de negocio.
 - `apply_cost_center_mapping(df: pd.DataFrame) -> pd.DataFrame` - Clasifica ubicaciones WMS en áreas de negocio de forma vectorizada.
 - `normalize_date_columns(df: pd.DataFrame) -> pd.DataFrame` - Estandariza formatos de fecha WMS a dd-mm-yyyy de forma eficiente.
@@ -1081,16 +961,22 @@ Este archivo contiene funciones utilitarias vectorizadas para transformación de
   - `file_path`, `last_modified`, `file_size`, `processed_at`, `row_count`
 
 ### Estado y Variables Globales
-- `logger` - Objeto de logging para el módulo.
+- Variables globales:
+  - `logger` (Logger para el módulo)
+- Diccionarios quemados en código:
+  - `COST_CENTER_MAPPING`
+  - `STATUS_MAPPING`
 
 ### Dependencias y Flujo
-- Librerías externas: `re`, `logging`, `numpy`, `pandas`, `datetime`, `pathlib`, `typing`.
-- Archivos del proyecto que importa:
-  - `core.wms_config`
+- Librerías externas:
+  - `numpy`, `pandas`, `sqlalchemy`, `logging`, `re`, `datetime`, `pathlib`
+- Archivos del proyecto que IMPORTA a este archivo (lo consumen):
   - `core.db_config_manager`
-- Archivos del proyecto que son importados por este archivo:
+  - `core.wms_config`
+- Archivos del proyecto que ESTE archivo IMPORTA (consume):
   - Ninguno
-- Flujo de datos: El flujo principal es el procesamiento y transformación de DataFrames, con interacciones ocasionales con la base de datos para gestionar el estado de archivos.
+- Flujo de datos:
+  - El flujo de datos pasa por las funciones para limpiar, mapear y normalizar los datos, y luego se almacenan en la base de datos o se utilizan para cálculos adicionales.
 
 
 ---
@@ -1105,12 +991,12 @@ Este archivo está vacío o solo contiene espacios en blanco. No se requiere an�
 ## Archivo: ./db/consolidator.py
 
 ### Resumen Funcional
-El archivo `consolidator.py` es un orquestador de consolidación de datos para un sistema de monitoreo de almacén (WMS) utilizando FastAPI, SQLAlchemy y SQLite. Gestiona la importación y procesamiento de archivos WMS en una base de datos SQLite, aplicando diversas operaciones como UPSERT, actualización de tablas, enriquecimiento de datos y sincronización.
+El archivo `consolidator.py` es un orquestador que gestiona la consolidación de datos en una base de datos SQLite para un sistema de monitoreo de almacén (WMS). Realiza tareas como la lectura, procesamiento y almacenamiento de archivos WMS, así como el enriquecimiento de los datos con información adicional.
 
 ### Catálogo de Funciones y Clases
 - `DataConsolidator(db_path: str)` - Gestiona la consolidación de archivos WMS en SQLite.
   - `__init__(self, db_path: str)` - Inicializa el objeto con la ruta a la base de datos.
-  - `__enter__(self)` - Establece la conexión a la base de datos.
+  - `__enter__(self)` - Establece la conexión a la base de datos y devuelve el objeto.
   - `__exit__(self, exc_type, exc_val, exc_tb)` - Cierra la conexión a la base de datos.
   - `connect(self)` - Establece la conexión y configura optimizaciones de SQLite.
   - `_parse_file_date(self, file_path: Path) -> datetime` - Extrae la fecha del nombre del archivo (dd-mm-yyyy).
@@ -1129,21 +1015,21 @@ El archivo `consolidator.py` es un orquestador de consolidación de datos para u
   - `stock_levels`
 - Columnas (no detalladas por brevedad):
   - Todas las columnas relevantes para cada tabla mencionada.
-- Consultas SQL crudas o llamadas a ORM: Sí, se utilizan métodos de ORM y consultas SQL dentro de los métodos.
+- Consultas SQL crudas o llamadas a ORM: Sí, se utilizan funciones que interactúan con la base de datos.
 
 ### Estado y Variables Globales
-- `logger` - Variable global que almacena el objeto de registro.
-- `TABLE_DELIVERIES` - Constante con el nombre de la tabla `outbound_deliveries`.
-- `TABLE_STOCK` - Constante con el nombre de la tabla `stock_levels`.
+- `logger` - Variable global para el registro de eventos.
+- `TABLE_DELIVERIES` - Constante con el nombre de la tabla de entregas.
+- `TABLE_STOCK` - Constante con el nombre de la tabla de niveles de stock.
 
 ### Dependencias y Flujo
-- Librerías externas: `sqlite3`, `logging`, `re`, `pathlib`, `datetime`, `typing`.
+- Librerías externas: `sqlite3`, `datetime`, `re`, `os`, `pathlib`, `typing`.
 - Archivos del proyecto que este archivo importa:
-  - `services.etl.OutboundDeliveryAdapter`
-  - `services.etl.StockLevelAdapter`
+  - `services.etl`
   - `db_enrichment` (varias funciones)
-- Archivos del proyecto que importan a este archivo: Ninguno.
-- Flujo de datos: El archivo se ejecuta como un script principal (`main`) que toma una carpeta como argumento y procesa los archivos dentro de ella utilizando la clase `DataConsolidator`.
+- Archivos del proyecto que importan a este archivo:
+  - Ninguno
+- Flujo de datos: El archivo se utiliza para procesar y consolidar archivos WMS, interactuar con la base de datos SQLite y llamar a funciones de enriquecimiento y actualización.
 
 
 ---
@@ -1185,16 +1071,13 @@ El archivo `db_enrichment.py` contiene funciones para enriquecer los datos de la
 
 ### Dependencias y Flujo
 - **Librerías Externas**:
-  - `logging`
-  - `pandas` (pd)
   - `sqlite3`
+  - `pandas`
+  - `logging`
   - `numpy`
-- **Archivos del Proyecto que IMPORTA**:
-  - `core.security.validate_table`
-  - `core.db_config_manager.get_holidays`
-- **Archivos del Proyecto que IMPORTAN a Este Archivo**:
-  - Ninguno
-- **Dirección del Flujo de Datos**: El flujo de datos pasa por las funciones, realizando consultas SQL para leer y actualizar la base de datos SQLite.
+- **Archivos del Proyecto que IMPORTA (consume)**: Ninguno
+- **Archivos del Proyecto que IMPORTAN a este archivo (lo consumen)**: Ninguno
+- **Dirección del Flujo de Datos**: El flujo de datos pasa por la lectura y escritura directa en la base de datos SQLite, con el procesamiento intermedio realizado mediante Pandas.
 
 
 ---
@@ -1223,32 +1106,30 @@ El archivo `predictive_engine.py` procesa los movimientos de inventario para gen
 
 ### Dependencias y Flujo
 - **Librerías Externas:**
-  - `sqlite3`
-  - `pandas`
-  - `numpy`
-  - `datetime`
   - `logging`
-  - `itertools`
-  - `collections`
-  - `sys`
   - `os`
+  - `sqlite3`
+  - `sys`
+  - `collections.Counter`
+  - `datetime`
+  - `itertools.combinations`
+  - `numpy`
+  - `pandas`
 
-- **Archivos del Proyecto que Importan a este Archivo:** Ninguno
+- **Archivos del Proyecto que Importan a este Archivo:**
+  - Ninguno
+
 - **Archivos del Proyecto que Este Archivo Importa:**
   - `core.wms_config.COST_CENTER_MAPPING`
 
-**Flujo de Datos:**
-1. El archivo se ejecuta directamente (`if __name__ == "__main__"`).
-2. Se importan las dependencias necesarias.
-3. La función `generate_predictions` se invoca con la ruta a la base de datos SQLite.
-4. Los movimientos de inventario son leídos desde la tabla `inventory_movements`.
-5. El procesamiento y análisis de los datos ocurren dentro de la función.
-6. Los resultados (combos, scatter data y alertas) se devuelven como un diccionario.
+- **Flujo de Datos:**
+  - El archivo importa configuraciones y dependencias necesarias.
+  - Llama a la función `generate_predictions` con el camino a la base de datos.
+  - La función procesa los datos, realiza análisis predictivos y devuelve resultados.
 
-**Dirección del Flujo:**
-- **Entrada:** Ruta a la base de datos SQLite.
-- **Procesamiento:** Análisis de movimientos de inventario.
-- **Salida:** Resultados en formato JSON.
+### Notas Adicionales
+- La función `generate_predictions` maneja excepciones y registra errores utilizando `logging`.
+- El archivo incluye un bloque de prueba al final para ejecutar la función y mostrar el número de combos, puntos de dispersión y alertas generados.
 
 
 ---
@@ -1256,35 +1137,26 @@ El archivo `predictive_engine.py` procesa los movimientos de inventario para gen
 ## Archivo: ./main.py
 
 ### Resumen Funcional
-El archivo `main.py` es el punto de entrada oficial del sistema de monitoreo de almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite. Su rol es configurar e iniciar los servicios de la plataforma, incluyendo la activación de un túnel remoto para acceso remoto y el lanzamiento del servidor web utilizando Uvicorn.
+El archivo `main.py` es el punto de entrada oficial del sistema de monitoreo de almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite. Inicializa y gestiona la ejecución del servidor web utilizando Uvicorn, configurando servicios adicionales como un túnel Ngrok para acceso remoto.
 
 ### Catálogo de Funciones y Clases
-- `start_application() -> None` - Configura e inicia los servicios de la plataforma. Lanza excepciones específicas como `KeyboardInterrupt` y cualquier otra excepción crítica.
-
-### Contratos de API / Endpoints
-No aplica.
+- `start_application()` - Configura e inicia los servicios de la plataforma, incluyendo el inicio del túnel Ngrok y el lanzamiento del servidor web con Uvicorn.
 
 ### Interacción con Base de Datos
-No aplica.
+Ninguna. El archivo no interactúa directamente con una base de datos.
 
-### Flujo de Datos y Pipeline
-No aplica.
-
-### Caché y Estado
-- Variables globales y de módulo: `APP_HOST`, `APP_PORT`, `APP_RELOAD`.
-- Mecanismos de invalidación de caché: No aplica.
-- Variables de entorno o sesión utilizadas: No aplica.
-
-### Lógica de Negocio y Reglas
-No aplica.
+### Estado y Variables Globales
+- `APP_HOST` - Dirección IP o nombre de host donde se ejecutará el servidor.
+- `APP_PORT` - Puerto en el que se escuchará el servidor.
+- `APP_RELOAD` - Indica si el servidor debe reiniciarse automáticamente al detectar cambios.
 
 ### Dependencias y Flujo
-- Librerías externas:
-  - `uvicorn`
-  - `logging`
-- Archivos del proyecto que este archivo importa (`app`, `config`, `services.tunnel`).
-- Archivos del proyecto que importan a este archivo: No aplica.
-- Dirección del flujo de datos: El archivo es el punto de entrada principal, no consume ni produce datos directamente.
+- **Dependencias Externas**: `uvicorn`, `logging`
+- **Archivos Importados**:
+  - `app` desde `app`
+  - `start_tunnel` y `stop_tunnel` desde `services.tunnel`
+- **Archivos que Importan a este Archivo**: Ninguno.
+- **Flujo de Datos**: El archivo inicia el servidor web utilizando Uvicorn, configurando previamente un túnel Ngrok para acceso remoto.
 
 
 ---
@@ -1292,27 +1164,28 @@ No aplica.
 ## Archivo: ./repositories/__init__.py
 
 ### Resumen Funcional
-Este archivo es el punto de entrada para la configuración y gestión de las dependencias relacionadas con la base de datos en un sistema de monitoreo de almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite. Define funciones para obtener conexiones a la base de datos y repositorios específicos para diferentes entidades del sistema.
+Este archivo es el punto de entrada para la configuración y la inyección de dependencias relacionadas con las operaciones de base de datos en un sistema de monitoreo de almacén (WMS). Define funciones para obtener conexiones a la base de datos SQLite y repositorios específicos para diferentes entidades del sistema.
 
 ### Catálogo de Funciones y Clases
-- `get_db()` - Establece una conexión a la base de datos SQLite utilizando el motor `sqlite3` y devuelve un contexto manejador que cierra la conexión cuando se sale del bloque.
-- `get_deliveries_repo(conn: sqlite3.Connection = Depends(get_db)) -> DeliveriesRepository` - Crea e inicializa una instancia del repositorio `DeliveriesRepository` con la conexión a la base de datos proporcionada.
-- `get_inventory_repo(conn: sqlite3.Connection = Depends(get_db)) -> InventoryRepository` - Crea e inicializa una instancia del repositorio `InventoryRepository` con la conexión a la base de datos proporcionada.
-- `get_tasks_repo(conn: sqlite3.Connection = Depends(get_db)) -> TasksRepository` - Crea e inicializa una instancia del repositorio `TasksRepository` con la conexión a la base de datos proporcionada.
+- `get_db()` - Establece una conexión a la base de datos SQLite y la devuelve. La conexión se cierra automáticamente al finalizar el contexto.
+- `get_deliveries_repo(conn: sqlite3.Connection = Depends(get_db))` - Devuelve una instancia del repositorio de entregas utilizando la conexión proporcionada.
+- `get_inventory_repo(conn: sqlite3.Connection = Depends(get_db))` - Devuelve una instancia del repositorio de inventario utilizando la conexión proporcionada.
+- `get_tasks_repo(conn: sqlite3.Connection = Depends(get_db))` - Devuelve una instancia del repositorio de tareas utilizando la conexión proporcionada.
+- `get_productivity_repo(conn: sqlite3.Connection = Depends(get_db))` - Devuelve una instancia del repositorio de productividad utilizando la conexión proporcionada.
 
 ### Interacción con Base de Datos
 - **Motor:** SQLite
-- **Tablas y Columnas:** No se especifican explícitamente en este archivo. Se asume que las tablas y columnas están definidas en los repositorios `DeliveriesRepository`, `InventoryRepository` y `TasksRepository`.
-- **Consultas SQL Crudas o ORM:** Utiliza el motor `sqlite3` directamente para establecer la conexión.
+- **Tablas y Columnas:** No se especifican explícitamente en este archivo. Se asume que los repositorios (`DeliveriesRepository`, `InventoryRepository`, `TasksRepository`, `ProductivityRepository`) interactúan con tablas correspondientes, pero no se detalla qué columnas son utilizadas.
+- **Consultas SQL Crudas o ORM:** No hay consultas SQL crudas ni llamadas a ORM directamente en este archivo. Las operaciones de base de datos se realizan a través de los métodos de los repositorios.
 
 ### Estado y Variables Globales
 No se detectan variables globales, de sesión, de entorno o diccionarios quemados en código que almacenen estado crítico.
 
 ### Dependencias y Flujo
 - **Librerías Externas:** `sqlite3`, `fastapi`
-- **Archivos del Proyecto que IMPORTA (consume):** No se detectan archivos externos que importen este archivo.
-- **Archivos del Proyecto que IMPORTAN a Este Archivo (lo consumen):** Los repositorios `DeliveriesRepository`, `InventoryRepository` y `TasksRepository`.
-- **Dirección del Flujo de Datos:** El flujo de datos comienza en las rutas FastAPI, pasa por los servicios, luego a través de estas funciones para obtener la conexión a la base de datos y los repositorios correspondientes.
+- **Archivos del Proyecto que IMPORTA (consume):** No se especifican archivos externos que importen este archivo.
+- **Archivos del Proyecto que IMPORTAN a Este Archivo (lo consumen):** Los repositorios (`DeliveriesRepository`, `InventoryRepository`, `TasksRepository`, `ProductivityRepository`) y la configuración de base de datos (`config.py`).
+- **Dirección del Flujo de Datos:** El flujo de datos comienza en las rutas (Routes), pasa por los servicios (Services) hasta llegar a este archivo para obtener una conexión a la base de datos y luego a los repositorios específicos.
 
 
 ---
@@ -1320,11 +1193,11 @@ No se detectan variables globales, de sesión, de entorno o diccionarios quemado
 ## Archivo: ./repositories/base.py
 
 ### Resumen Funcional
-Clase base para todos los repositorios de datos en el sistema WMS. Proporciona métodos para manejar consultas SQL y verificar el estado visual de las mismas.
+Clase base para todos los repositorios de datos en el sistema WMS. Proporciona métodos para interactuar con la sesión de SQLAlchemy y verificar el estado visual de consultas.
 
 ### Catálogo de Funciones y Clases
-- `BaseRepository(session: Session)` - Inicializa la instancia con una sesión de SQLAlchemy.
-- `_sql(query_id: str, fallback: str) -> str` - Devuelve un texto SQL basado en un ID de consulta o un valor de reemplazo (fallback).
+- `BaseRepository(session: Session)` - Inicializa una instancia del repositorio con una sesión de SQLAlchemy.
+- `_sql(query_id: str, fallback: str) -> str` - Devuelve un texto SQL basado en el ID de la consulta o un valor de reemplazo (fallback).
 - `_has_visual_state(query_id: str) -> bool` - Verifica si una consulta tiene un estado visual JSON almacenado.
 
 ### Interacción con Base de Datos
@@ -1335,7 +1208,48 @@ Ninguna. No se utilizan variables globales, de sesión o diccionarios quemados e
 
 ### Dependencias y Flujo
 - **Dependencias**: `sqlalchemy.orm.Session`, `core.db_config_manager.get_query_visual_state`.
-- **Flujo de Datos**: El archivo no consume ni produce datos externos. Es una clase base para otros repositorios que pueden interactuar con la base de datos a través de las sesiones proporcionadas.
+- **Flujo de Datos**: El archivo no consume ni produce datos externos. Se utiliza para proporcionar métodos comunes a los repositorios de datos en el sistema WMS.
+
+
+---
+
+## Archivo: ./repositories/dashboard.py
+
+### Resumen Funcional
+El archivo `dashboard.py` contiene métodos para obtener datos filtrados y estadísticas necesarios para el dashboard principal del sistema de monitoreo de almacén (WMS). Estos métodos interactúan con la base de datos SQLite para recuperar información sobre entregas, KPIs, gráficos de intensidad y selectores.
+
+### Catálogo de Funciones y Clases
+- `build_unified_where(date: str, area: str, centro: str, has_ots_filter: str, min_week: str)` - Construye una cláusula WHERE unificada para las consultas SQL.
+- `get_filtered_transactions(date: str, entrega: str, area: str, centro: str, has_ots_filter: str, min_week: str) -> list` - Obtiene transacciones filtradas según los criterios proporcionados y devuelve un DataFrame de pandas.
+- `get_filtered_kpis(date: str, area: str, centro: str, min_week: str, iso_year: int) -> dict` - Calcula KPIs basados en las entregas filtradas y devuelve un diccionario con los resultados formateados.
+- `get_weekly_intensity_chart(year: int) -> dict` - Prepara los datos para el gráfico de intensidad semanal.
+- `get_dashboard_selectors(min_week: str) -> dict` - Obtiene listas únicas de fechas y áreas, además de mapeos de autores y centros.
+
+### Interacción con Base de Datos
+- **Motor:** SQLite
+- **Tablas:** `outbound_deliveries`, `config_cost_center_mapping`, `warehouse_tasks`, `autor_area_mapping`
+- **Columnas:**
+  - `outbound_deliveries`: `fecha_carga`, `fecha_sm_real`, `creado_el`, `entrega`, `material`, `estado_wms`, `dias_retraso`, `week_sort`, `area_negocio`, `centro_costo`, `ubicacion_bin_1`, `ubicacion_bin`
+  - `config_cost_center_mapping`: `center_code`, `business_area`
+  - `warehouse_tasks`: `entrega`
+  - `autor_area_mapping`: `autor`, `area_negocio`
+
+### Estado y Variables Globales
+- Ninguna
+
+### Dependencias y Flujo
+- **Dependencias Externas:** pandas, sqlalchemy
+- **Archivos Importados por Este Archivo:**
+  - `./base.py`
+  - `core.macros`
+- **Archivos que Importan a Este Archivo:**
+  - Ninguno
+
+**Flujo de Datos:**
+1. `dashboard.py` importa y utiliza métodos desde `base.py` y `core.macros`.
+2. Los métodos en `dashboard.py` realizan consultas SQL utilizando SQLAlchemy para interactuar con la base de datos SQLite.
+3. Los resultados de las consultas se procesan y formatean en pandas DataFrames o diccionarios según sea necesario.
+4. Los métodos devuelven los resultados al servicio que los consume, generalmente a través de endpoints FastAPI definidos en otro archivo del proyecto.
 
 
 ---
@@ -1343,22 +1257,17 @@ Ninguna. No se utilizan variables globales, de sesión o diccionarios quemados e
 ## Archivo: ./repositories/deliveries.py
 
 ### Resumen Funcional
-Este archivo contiene métodos para interactuar con la base de datos SQLite y obtener información sobre entregas en un sistema de almacén (WMS). Los métodos incluyen consultas para auditoría SLA, entregas por lotes, áreas de negocio, elementos de picking, transacciones filtradas, indicadores clave de rendimiento (KPIs), detalles de entrega individual y gráficos de intensidad semanal.
+El archivo `deliveries.py` contiene métodos para interactuar con la base de datos SQLite y obtener registros relacionados con entregas en un sistema de almacén (WMS). Los métodos permiten consultar registros de entrega, realizar auditorías SLA, obtener detalles de entregas por lotes y recuperar información sobre áreas de negocio.
 
 ### Catálogo de Funciones y Clases
-- `DeliveriesRepository(BaseRepository)` - Repositorio para el dominio de Entregas.
+- `DeliveriesRepository(BaseRepository)` - Repositorio para el dominio de Entregas (outbound_deliveries).
   - `_sql(query_id: str, fallback: str) -> str` - Obtiene SQL desde config_queries con fallback explícito.
-  - `_get_sla_threshold() -> int` - Obtiene el umbral SLA desde la configuración.
-  - `get_sla_audit_records(year: str, late: bool = True, limit: int = 500, where_clause: str = None, where_params: dict = None) -> pd.DataFrame` - Obtiene registros de auditoría SLA.
-  - `get_deliveries_for_bulk(date: str = None, area: str = None, centro: str = None, has_ots_filter: str = None, entrega_query: str = None) -> pd.DataFrame` - Obtiene entregas para lotes.
-  - `get_area_lookup() -> pd.DataFrame` - Obtiene áreas de negocio asociadas a las entregas.
-  - `get_picking_items(entrega_ids: list) -> pd.DataFrame` - Obtiene elementos de picking por entrega.
-  - `build_unified_where(date: str, area: str, centro: str, has_ots_filter: str, min_week: str) -> tuple` - Construye una cláusula WHERE unificada.
-  - `get_filtered_transactions(date: str, entrega: str, area: str, centro: str, has_ots_filter: str, min_week: str) -> list` - Obtiene transacciones filtradas.
-  - `get_filtered_kpis(date: str, area: str, centro: str, min_week: str, iso_year: int) -> dict` - Obtiene indicadores clave de rendimiento (KPIs).
-  - `get_delivery_by_id(entrega: str) -> pd.DataFrame` - Obtiene detalles de entrega individual.
-  - `get_weekly_intensity_chart(year: int) -> dict` - Prepara los datos para el gráfico de intensidad semanal.
-  - `get_dashboard_selectors(min_week: str) -> dict` - Obtiene listas únicas de fechas y áreas, además de mapeos de autores y centros.
+  - `_get_sla_threshold() -> int` - Retorna el umbral SLA configurado en la base de datos.
+  - `get_sla_audit_records(year: str, late: bool = True, limit: int = 500, where_clause: str = None, where_params: dict = None) -> pd.DataFrame` - Obtiene registros de auditoría SLA para entregas.
+  - `get_deliveries_for_bulk(date: str = None, area: str = None, centro: str = None, has_ots_filter: str = None, entrega_query: str = None) -> pd.DataFrame` - Obtiene detalles de entregas por lotes.
+  - `get_area_lookup() -> pd.DataFrame` - Obtiene una lista de áreas de negocio asociadas a las entregas.
+  - `get_picking_items(entrega_ids: list) -> pd.DataFrame` - Obtiene los elementos de picking para un conjunto de entregas.
+  - `get_delivery_by_id(entrega: str) -> pd.DataFrame` - Obtiene detalles de una entrega específica por su ID.
 
 ### Interacción con Base de Datos
 - Motor de BD: SQLite
@@ -1366,124 +1275,137 @@ Este archivo contiene métodos para interactuar con la base de datos SQLite y ob
   - `outbound_deliveries`
   - `warehouse_tasks`
   - `DeliverySummary`
-  - `config_cost_center_mapping`
-  - `autor_area_mapping`
 - Columnas:
-  - `entrega`, `autor`, `area_negocio`, `creado_el`, `fecha_sm_real`, `material`, `denominacion`, `dias_retraso`, `estado_wms`, `week_sort`, `centro_costo`, `ubicacion_bin_1`, `ubicacion_bin`
-  - `entrega_id`, `area_val`
+  - `entrega`, `autor`, `area_negocio`, `creado_el`, `fecha_sm_real`, `material`, `denominacion`, `dias_retraso`, `sla_limit`, `has_ots` en `outbound_deliveries`
+  - `entrega_id`, `entrega`, `autor`, `ubicacion_bin`, `material`, `descripcion`, `cantidad`, `umb`, `area`, `entrega` en `warehouse_tasks`
+  - `entrega_id`, `entrega`, `area_negocio` en `DeliverySummary`
 
 ### Estado y Variables Globales
-- No hay variables globales, de sesión o de entorno quemadas en el código.
+- Ninguna
 
 ### Dependencias y Flujo
 - Librerías externas:
   - `pandas`
   - `sqlalchemy`
-- Archivos del proyecto que este archivo importa:
+- Archivos del proyecto que IMPORTA a este archivo (`deliveries.py`):
   - `core.db_config_manager`
   - `core.macros`
   - `repositories.base`
-- Archivos del proyecto que importan a este archivo:
+- Archivos del proyecto que este archivo IMPORTA (`deliveries.py`):
   - Ninguno
-- Flujo de datos: Este archivo es consumido por otros archivos en la capa de Repositories, que a su vez son llamados por los servicios y rutas definidos en el proyecto.
+- Flujo de datos:
+  - El archivo importa y utiliza métodos de otras clases para interactuar con la base de datos y procesar los resultados en formato DataFrame.
 
 
 ---
 
-## Archivo: ./repositories/inventory.py
+## Archivo: ./repositories/inventory.py (Procesado en 1 partes)
+
+#### --- PARTE 1 de 1 ---
 
 ### Resumen Funcional
-El archivo `inventory.py` contiene métodos para obtener datos de inventario, específicamente consumos y tendencias de materiales. Utiliza SQLAlchemy para interactuar con una base de datos SQLite.
+Este archivo contiene métodos para interactuar con la base de datos SQLite y obtener información sobre movimientos de inventario y consumos. Los métodos incluyen consultas históricas, del mes actual, por materiales específicos y sugerencias de reabastecimiento.
 
 ### Catálogo de Funciones y Clases
-- `get_consumos_ceco(ceco: str) -> dict`: Obtiene los consumos históricos y del mes actual por centro de costo (CeCo).
+- `get_consumos_ceco(ceco: str) -> dict`: Obtiene los consumos históricos y del mes actual para un centro de costo específico.
 - `get_consumos_materiales(materiales: list) -> dict`: Obtiene los consumos históricos y del mes actual para una lista de materiales.
-- `get_material_trend(material: str, area_negocio: str, ceco: str) -> dict`: Obtiene la tendencia de un material específico por área de negocio y centro de costo (CeCo).
-- `check_table_exists() -> bool`: Verifica si la tabla `inventory_movements` existe en la base de datos.
+- `get_material_trend(material: str, area_negocio: str, ceco: str) -> dict`: Obtiene el trend de un material específico por área y centro de costo.
+- `check_table_exists() -> bool`: Verifica si la tabla 'inventory_movements' existe en la base de datos.
+- `get_cmv_summary(cmv_type: str, plan_type: str, year: Optional[str] = None) -> list`: Obtiene un resumen de movimientos según el tipo CMV y el tipo de planificación.
+- `get_cmv_area_details(cmv_type: str, plan_type: str, area: str, mes: Optional[str] = None, year: Optional[str] = None) -> list`: Obtiene detalles de los movimientos por área y centro de costo.
+- `get_replenishment_suggestions(freq: str) -> dict`: Genera sugerencias de reabastecimiento basadas en la frecuencia de consumo.
+- `get_replenishment_export_data() -> tuple[pd.DataFrame, pd.DataFrame]`: Exporta datos para el reabastecimiento.
 
 ### Interacción con Base de Datos
 - **Motor**: SQLite
 - **Tablas**: 
   - `inventory_movements`
   - `outbound_deliveries`
+  - `config_cost_center_mapping`
+  - `mb5b_initial_stock`
 - **Columnas**:
-  - `inventory_movements`: `material`, `texto_breve_material`, `umb`, `cantidad`, `importe_ml`, `cmv`, `fe_contab`, `hora`, `ce_coste`
-  - `outbound_deliveries`: `centro_costo`, `area_negocio`
+  - `inventory_movements`: material, texto_breve_material, umb, cantidad, importe_ml, cmv, fe_contab, ce_coste
+  - `outbound_deliveries`: centro_costo, area_negocio
+  - `config_cost_center_mapping`: center_code, business_area
+  - `mb5b_initial_stock`: material, stock_inicial
 
 ### Estado y Variables Globales
-- **Variables Globales**: Ninguna
+- Ninguna
 
 ### Dependencias y Flujo
-- **Librerías Externas**:
-  - `logging`
-  - `pandas`
-  - `sqlalchemy`
-  - `datetime`
-- **Archivos del Proyecto que Importan a este Archivo**: Ninguno
-- **Archivos del Proyecto que Este Archivo Importa**: Ninguno
-- **Flujo de Datos**:
-  - El archivo importa `BaseRepository` desde el módulo `.base`.
-  - Utiliza `pandas` para procesar los resultados de las consultas SQL.
-  - Realiza consultas SQL directamente en la base de datos SQLite utilizando SQLAlchemy.
+- **Librerías Externas**: pandas
+- **Archivos del Proyecto que Importan a este Archivo**:
+  - Repositorio de servicios (Services)
+  - Rutas (Routes)
+- **Archivos del Proyecto que Este Archivo Importa**:
+  - `core.utils.sanitize_for_json`
+  - `base.BaseRepository`
+
+El flujo de datos es desde el repositorio hacia los servicios y rutas, pasando por la base de datos SQLite para obtener y procesar los datos.
 
 
 ---
 
-## Archivo: ./repositories/tasks.py (Procesado en 2 partes)
-
-#### --- PARTE 1 de 2 ---
+## Archivo: ./repositories/productivity.py
 
 ### Resumen Funcional
-Este archivo contiene métodos para obtener resúmenes diarios, horarios, inactividades y calorímetros de movimientos en el sistema de almacén. También incluye funciones para obtener detalles diarios y mensuales de los movimientos realizados por usuarios específicos.
+El archivo `productivity.py` contiene métodos para obtener resúmenes diarios, mensuales y detalles de movimientos de usuarios en un sistema de almacén (WMS). Utiliza SQLAlchemy para interactuar con una base de datos SQLite y pandas para procesar los resultados.
 
 ### Catálogo de Funciones y Clases
-- `get_available_dates()` - Devuelve una lista ordenada de fechas únicas con movimientos generados o confirmados.
-- `_get_daily_summary(date_sap)` - Calcula el resumen diario de movimientos para un usuario específico.
-- `_get_hourly_trend(date_sap)` - Genera un trend horario de los movimientos.
-- `_get_inactivity_gaps(date_sap)` - Identifica los huecos de inactividad en los movimientos.
-- `_get_activity_heatmap(date_sap)` - Crea un mapa de calor basado en la actividad diaria.
-- `get_user_movements_daily_summary(target_date, usuario)` - Obtiene el resumen diario de movimientos para un usuario específico.
-- `get_user_movements_daily_details(target_date, usuario, operacion)` - Detalla los movimientos diarios para un usuario y una operación específica.
-- `_get_monthly_summary(month_sap)` - Calcula el resumen mensual de movimientos.
-- `_get_monthly_shifts(month_sap)` - Genera un trend por turnos mensuales.
-- `_get_monthly_heatmap(month_sap)` - Crea un mapa de calor basado en la actividad mensual.
-- `get_user_movements_monthly_summary(target_month, usuario)` - Obtiene el resumen mensual de movimientos para un usuario específico.
-- `get_user_movements_monthly_details(target_month, usuario, operacion)` - Detalla los movimientos mensuales para un usuario y una operación específica.
-- `get_tasks_summary()` - Devuelve un resumen de tareas por clase de movimiento.
-- `get_tasks_trend()` - Genera un trend de las tareas.
+- `_get_raw_activities_cte(is_monthly=False)`: Genera una Common Table Expression (CTE) que une todos los eventos de actividad desde diferentes tablas.
+- `get_available_dates()`: Devuelve una lista ordenada de fechas únicas en formato YYYY-MM-DD con movimientos generados o confirmados.
+- `_get_daily_summary(date_sap: str)`: Obtiene un resumen diario de movimientos y actividades por usuario.
+- `_get_hourly_trend(date_sap: str)`: Genera una tendencia horaria de las actividades por usuario.
+- `_get_inactivity_gaps(date_sap: str)`: Identifica los huecos de inactividad en el movimiento de usuarios.
+- `_get_activity_heatmap(date_sap: str)`: Crea un mapa de calor de las actividades diarias por usuario y franja horaria.
+- `get_user_movements_daily_summary(target_date: str, usuario: str)`: Obtiene un resumen diario de movimientos por operación para un usuario específico.
+- `get_user_movements_daily_details(target_date: str, usuario: str, operacion: str)`: Detalla los movimientos diarios de un usuario para una operación específica.
+- `_get_monthly_summary(month_sap: str)`: Obtiene un resumen mensual de movimientos y actividades por usuario.
+- `_get_monthly_shifts(month_sap: str)`: Genera un resumen mensual de las actividades por usuario y turno.
+- `_get_monthly_heatmap(month_sap: str)`: Crea un mapa de calor de las actividades mensuales por usuario y día de la semana.
+- `get_user_movements_monthly_summary(target_month: str, usuario: str)`: Obtiene un resumen mensual de movimientos por operación para un usuario específico.
+- `get_user_movements_monthly_details(target_month: str, usuario: str, operacion: str)`: Detalla los movimientos mensuales de un usuario para una operación específica.
+- `_format_date_sap(target_date: str)`: Formatea una fecha en formato SAP (DD.MM.YYYY).
+- `_format_month_sap(target_month: str)`: Formatea un mes en formato SAP (MM.YYYY).
 
 ### Interacción con Base de Datos
-- Motor: SQLite
+- Motor de BD: SQLite.
 - Tablas:
   - `inventory_movements`
-    - Columnas: `registrado`, `hora`, `usuario`, `tipo_operacion`, `texto_cab_documento`, `doc_mat`, `cmv`, `material`, `texto_breve_material`, `cantidad`
   - `warehouse_tasks`
-    - Columnas: `fecha_conf`, `hor_conf`, `usuario_conf`, `numero_ot`, `ctd_teor_dsd`, `cl_mov`, `clase_mov`, `fe_creac`, `hora`
+- Columnas:
+  - `inventory_movements`: `usuario`, `registrado`, `hora`, `doc_mat`, `tipo_operacion`, `texto_cab_documento`, `cmv`, `material`, `texto_breve_material`, `cantidad`.
+  - `warehouse_tasks`: `usuario_conf`, `fecha_conf`, `hor_conf`, `numero_ot`, `ctd_teor_dsd`.
 
 ### Estado y Variables Globales
-- No hay variables globales declaradas.
+- No hay variables globales, de sesión o de entorno definidas en este archivo.
 
 ### Dependencias y Flujo
-- Librerías externas: `pandas`
+- Librerías externas: `logging`, `re`, `pandas`.
 - Archivos del proyecto que importan a este archivo:
-  - `./services/tasks_service.py` (consume)
+  - `core.macros`
+  - `repositories.base.BaseRepository`
 - Archivos del proyecto que este archivo importa:
-  - `./base.py` (consumido por `TasksRepository`)
-  - `./models.py` (no se muestra en el fragmento, pero probablemente contiene modelos SQLAlchemy)
+  - Ninguno.
+- Flujo de datos: El archivo consume datos desde la base de datos SQLite y los procesa con pandas, luego devuelve resultados en formato JSON.
 
-#### --- PARTE 2 de 2 ---
+
+---
+
+## Archivo: ./repositories/tasks.py
 
 ### Resumen Funcional
-Este archivo contiene funciones que interactúan con una base de datos SQLite para recuperar y procesar datos relacionados con tareas en un sistema de almacén (WMS). Las funciones devuelven datos en formato DataFrame de pandas.
+El archivo `tasks.py` contiene métodos para obtener resúmenes y detalles de tareas en un sistema de almacén (WMS). Estos métodos interactúan con una base de datos SQLite para recuperar información sobre las tareas, incluyendo estadísticas de resumen, tendencias diarias, usuarios que realizan más tareas, tipos de movimiento, tareas recientes y movimientos no palletizados.
 
 ### Catálogo de Funciones y Clases
-- `get_tasks_trend()` - Recupera el trend de tareas por mes.
-- `get_tasks_by_user()` - Recupera las tareas agrupadas por usuario.
-- `get_tasks_by_type_dest()` - Recupera las tareas agrupadas por tipo de movimiento y destino.
-- `get_recent_tasks()` - Recupera las tareas recientes que no han sido confirmadas.
-- `get_non_palletized_movements()` - Recupera los movimientos no palletizados.
-- `get_non_palletized_count()` - Cuenta el número de movimientos no palletizados.
-- `get_non_palletized_summary()` - Resumen de movimientos no palletizados.
+- `get_tasks_summary()` - Devuelve un DataFrame con el resumen de las tareas agrupadas por tipo.
+- `get_tasks_trend()` - Devuelve un DataFrame con la tendencia diaria de creación y confirmación de tareas.
+- `get_tasks_by_user()` - Devuelve un DataFrame con las tareas realizadas por cada usuario en el último mes.
+- `get_tasks_by_type_dest()` - Devuelve un DataFrame con el resumen de las tareas agrupadas por tipo de movimiento.
+- `get_recent_tasks()` - Devuelve un DataFrame con las tareas recientes que no han sido confirmadas.
+- `get_non_palletized_movements()` - Devuelve un DataFrame con los movimientos no palletizados más recientes.
+- `get_non_palletized_count()` - Devuelve el número de movimientos no palletizados.
+- `get_non_palletized_summary()` - Devuelve un DataFrame con el resumen de los movimientos no palletizados, incluyendo la fecha más antigua y más reciente.
 
 ### Interacción con Base de Datos
 - Motor: SQLite
@@ -1492,19 +1414,18 @@ Este archivo contiene funciones que interactúan con una base de datos SQLite pa
   - `lx02_pendientes`
   - `inventory_movements`
 - Columnas:
-  - `warehouse_tasks`: `fe_creac`, `fecha_conf`, `usuario`, `usuario_conf`, `clase_mov`, `ctd_teor_dsd`, `ubic_proc`, `ubic_dest`, `hora`, `numero_ot`, `material`, `texto_breve_material`
-  - `lx02_pendientes`: `otcuanto`, `stock_disp`
-  - `inventory_movements`: `doc_mat`, `usuario`, `cmv`, `fe_contab`, `hora`
+  - `cl_mov`, `clase_mov`, `COUNT(*)`, `SUM(ctd_teor_dsd)`, `fe_creac`, `fecha_conf`, `usuario`, `usuario_conf`, `numero_ot`, `material`, `texto_breve_material`, `ubic_proc`, `ubic_dest`, `hora`, `otcuanto`, `pos`, `stock_disp`, `alm`, `ce`, `cmv`
 
 ### Estado y Variables Globales
-Ninguna.
+- Ninguna
 
 ### Dependencias y Flujo
-- Librerías externas: pandas, sqlalchemy.
+- Librerías externas: `pandas`
 - Archivos del proyecto que importan a este archivo:
-  - Ninguno.
+  - Ninguno
 - Archivos del proyecto que este archivo importa:
-  - Ninguno.
+  - `base.py` (clase base `BaseRepository`)
+- Flujo de datos: El archivo consume métodos y funciones de la clase base para interactuar con la base de datos y procesar los resultados en DataFrames de pandas.
 
 
 ---
@@ -1512,43 +1433,35 @@ Ninguna.
 ## Archivo: ./repositories/widgets.py
 
 ### Resumen Funcional
-El archivo `widgets.py` contiene métodos para ejecutar consultas dinámicas y generar visualizaciones de datos en un sistema de monitoreo de almacén (WMS). Los métodos permiten filtrar y procesar datos según parámetros como año, área y granularidad.
+El archivo `widgets.py` contiene métodos para ejecutar consultas dinámicas y generar visualizaciones de datos en un sistema de monitoreo de almacén (WMS). Utiliza FastAPI, SQLAlchemy y SQLite para interactuar con la base de datos.
 
 ### Catálogo de Funciones y Clases
-- `execute_widget(query_id: str, visual_state: str, year: Optional[str], area: Optional[str], granularity: Optional[str]) -> Dict[str, Any]` - Ejecuta una consulta dinámica para generar una visualización.
-- `execute_drilldown(query_id: str, visual_state: str, segment: str, material: Optional[str], year: Optional[str]) -> list` - Realiza un drilldown en los datos según el segmento y material proporcionados.
+- `execute_widget(query_id: str, visual_state: str, year: Optional[str], area: Optional[str], granularity: Optional[str]) -> Dict[str, Any]` - Ejecuta una consulta dinámica para generar una visualización de datos.
+- `execute_drilldown(query_id: str, visual_state: str, segment: str, material: Optional[str], year: Optional[str]) -> list` - Realiza un drilldown en los datos para obtener detalles adicionales.
 
 ### Interacción con Base de Datos
 - **Motor:** SQLite
-- **Tablas:** `outbound_deliveries`
-- **Columnas:** 
-  - `fecha_carga`, `entrega`, `pos_`, `cantidad`, `dias_retraso`, `material`, `denominacion`
+- **Tablas y Columnas:**
+  - Tabla: `outbound_deliveries`
+    - Columnas: `fecha_carga`, `entrega`, `pos_`, `cantidad`, `dias_retraso`, `material`, `denominacion`
 
 ### Estado y Variables Globales
-- Ninguna
+- No hay variables globales, de sesión o diccionarios quemados en el código.
 
 ### Dependencias y Flujo
 - **Librerías Externas:**
-  - `logging`
-  - `json`
   - `pandas`
   - `sqlalchemy`
+  - `json`
+  - `logging`
   - `typing`
-- **Archivos del Proyecto que Importan a este Archivo:** 
-  - `core.helpers.dynamic_executor.execute_visual_query`
-  - `core.schemas.VisualQueryBuilderPayload`
-  - `core.query_engine.build_sql_from_payload`
-  - `core.utils.sanitize_for_json`
-- **Archivos del Proyecto que Este Archivo Importa:**
-  - `base.BaseRepository`
 
-**Flujo de Datos:**
-1. `widgets.py` importa funciones y clases necesarias.
-2. Los métodos `execute_widget` y `execute_drilldown` son llamados desde otros archivos del proyecto.
-3. Estos métodos interactúan con la base de datos para ejecutar consultas SQL dinámicas y procesar los resultados.
-4. Los resultados se formatean y devuelven como un diccionario o lista según el método utilizado.
+- **Archivos del Proyecto que Importan a este Archivo (lo consumen):**
+  - No se mencionan archivos específicos.
 
-Este archivo es crucial para la generación de visualizaciones en el sistema WMS, permitiendo una interacción dinámica con los datos del almacén.
+- **Flujo de Datos:**
+  - El archivo importa funciones y clases desde otros módulos (`core.helpers.dynamic_executor`, `core.query_engine`, `core.schemas`, `core.utils`) para ejecutar consultas dinámicas y generar visualizaciones.
+  - Los métodos `execute_widget` y `execute_drilldown` interactúan con la base de datos mediante SQLAlchemy y pandas, procesando los resultados para generar visualizaciones.
 
 
 ---
@@ -1556,31 +1469,20 @@ Este archivo es crucial para la generación de visualizaciones en el sistema WMS
 ## Archivo: ./routes/__init__.py
 
 ### Resumen Funcional
-Este archivo es el punto de entrada para las rutas del sistema de monitoreo de almacén (WMS). Importa y registra todas las subrutas relacionadas con diferentes funcionalidades como el panel de control, entregas, inventario, análisis proyecciones, filtros, PDFs, sincronización y configuraciones.
+El archivo `__init__.py` es el inicializador del paquete `routes`, encargado de cargar las rutas dinámicamente a través del archivo `config.py`.
 
 ### Catálogo de Funciones y Clases
-Ninguna
+Ninguna.
 
 ### Interacción con Base de Datos
-Ninguna
+Ninguna.
 
 ### Estado y Variables Globales
-Ninguna
+Ninguna.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: FastAPI.
-- **Archivos del Proyecto que IMPORTAN a este archivo**:
-  - `dashboard`
-  - `deliveries`
-  - `inventory`
-  - `analytics_proyecciones`
-  - `filters`
-  - `pdf`
-  - `sync`
-  - `docs`
-  - `settings`
-
-Este archivo no importa ninguna clase o función específica, solo registra las subrutas. El flujo de datos se maneja a través de FastAPI para la definición y gestión de rutas.
+- **Dependencias**: No hay dependencias directas en este archivo.
+- **Flujo**: Este archivo no importa ni es importado por otros archivos dentro del proyecto. Es un inicializador de paquete que carga rutas dinámicamente a través de `config.py`.
 
 
 ---
@@ -1592,33 +1494,26 @@ Este archivo define las rutas para obtener analíticas de proyecciones en un sis
 
 ### Catálogo de Funciones y Clases
 - `get_proyecciones_context()` - Obtiene el contexto de proyecciones, priorizando la caché.
-- `get_analytics_proyecciones(request: Request, force_refresh: bool = False, state: AppState = Depends(get_app_state))` - Retorna los datos de proyecciones en formato JSON.
+- `get_analytics_proyecciones(request: Request, force_refresh: bool = False, cache: CacheManager = Depends(get_cache_manager))` - Retorna los datos de proyecciones en formato JSON.
 
 ### Interacción con Base de Datos
 - Motor: SQLite
-- Tablas y Columnas: Ninguna (se utiliza `generate_predictions(_DB)` que es una función externa)
+- Tablas y Columnas: Ninguna (el archivo no interactúa directamente con la base de datos).
 
 ### Estado y Variables Globales
-- `AppState` - Almacena el estado del sistema, incluyendo la caché.
-- `get_app_state()` - Función para obtener el estado actual del sistema.
+- `DB_PATH` - Ruta a la base de datos SQLite.
+- `CacheManager` - Gestor de caché utilizado para almacenar los resultados de las proyecciones.
 
 ### Dependencias y Flujo
-- Librerías Externas: FastAPI, SQLAlchemy (a través de `generate_predictions(_DB)`).
-- Archivos Importados:
-  - `./core/auth.py` - Para la autenticación.
-  - `./core/state.py` - Para el manejo del estado del sistema.
-  - `./db/predictive_engine.py` - Para generar predicciones.
-  - `./config.py` - Para obtener la ruta de la base de datos.
+- Librerías externas: FastAPI, SQLAlchemy, config.py, core.auth, core.state, db.predictive_engine.
+- Archivos del proyecto que importan a este archivo: Ninguno.
+- Archivos del proyecto que este archivo importa:
+  - `config.py` - Para obtener la ruta de la base de datos.
+  - `core/auth.py` - Para autenticar el usuario actual.
+  - `core/state.py` - Para gestionar la caché.
+  - `db/predictive_engine.py` - Para generar las predicciones.
 
-- Flujo de Datos:
-  1. El usuario hace una solicitud a `/analytics/proyecciones`.
-  2. La función `get_analytics_proyecciones` verifica si se debe forzar el refresco de los datos.
-  3. Si no se fuerza el refresco, intenta obtener los datos desde la caché.
-  4. Si la caché está vacía o se requiere un refresco, llama a `get_proyecciones_context()`.
-  5. `get_proyecciones_context()` genera las predicciones utilizando `generate_predictions(_DB)`.
-  6. Las predicciones se almacenan en la caché y se devuelven como respuesta JSON.
-
-Este archivo es crucial para el monitoreo de proyecciones en el sistema WMS, asegurando que los datos sean actualizados regularmente y accesibles rápidamente a través de una interfaz RESTful.
+El flujo de datos es: el cliente hace una solicitud a `/analytics/proyecciones`, que luego llama a `get_proyecciones_context()` para obtener los datos. Si `force_refresh` es True, se limpia la caché antes de obtener los nuevos datos. Los datos son generados por `generate_predictions(_DB)` y almacenados en caché si no hay errores. Finalmente, los datos se devuelven al cliente en formato JSON.
 
 
 ---
@@ -1626,16 +1521,16 @@ Este archivo es crucial para el monitoreo de proyecciones en el sistema WMS, ase
 ## Archivo: ./routes/auth.py
 
 ### Resumen Funcional
-Este archivo contiene endpoints para autenticación y gestión de usuarios en un sistema de monitoreo de almacén (WMS). Ofrece funcionalidades como login, registro de nuevos usuarios, cambio de contraseña y listado de usuarios.
+El archivo `auth.py` contiene endpoints para autenticación y gestión de usuarios en un sistema de monitoreo de almacén (WMS) utilizando FastAPI, SQLAlchemy y SQLite. Los endpoints permiten login con username/password, registro de nuevos usuarios (solo por administradores), obtención de información del usuario autenticado, cambio de contraseña y listado de todos los usuarios (también solo para administradores). Además, proporciona una vista HTML para el formulario de login.
 
 ### Catálogo de Funciones y Clases
 - `login(response: Response, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_session_dep))` - Autentica un usuario con username/password y retorna un JWT.
-- `logout(response: Response, state: AppState = Depends(get_app_state))` - Limpia la cookie de autenticación.
-- `get_me(user: User = Depends(require_auth), state: AppState = Depends(get_app_state))` - Retorna la información del usuario autenticado.
+- `logout(response: Response)` - Limpia la cookie de autenticación.
+- `get_me(user: User = Depends(require_auth))` - Retorna la información del usuario autenticado.
 - `change_password(data: ChangePasswordRequest, db: DBSession, user: User = Depends(require_auth))` - Cambia la contraseña del usuario autenticado.
-- `register_user(data: UserCreate, db: DBSession, admin: User = Depends(require_admin), state: AppState = Depends(get_app_state))` - Crea un nuevo usuario. Solo accesible por administradores.
-- `list_users(db: DBSession, admin: User = Depends(require_admin), state: AppState = Depends(get_app_state))` - Lista todos los usuarios del sistema.
-- `login_page(request: Request, state: AppState = Depends(get_app_state))` - Renderiza la página de login.
+- `register_user(data: UserCreate, db: DBSession, admin: User = Depends(require_admin))` - Crea un nuevo usuario. Solo accesible por administradores.
+- `list_users(db: DBSession, admin: User = Depends(require_admin))` - Lista todos los usuarios del sistema.
+- `login_page(request: Request)` - Renderiza la página de login.
 
 ### Interacción con Base de Datos
 - **Motor:** SQLite
@@ -1656,19 +1551,21 @@ Este archivo contiene endpoints para autenticación y gestión de usuarios en un
   - FastAPI
   - SQLAlchemy
   - Python Standard Library (logging, typing)
-  
-- **Archivos del Proyecto que IMPORTA a este archivo (`auth.py`):** 
+
+- **Archivos del Proyecto que Importan a este Archivo (`auth.py`):** Ninguno
+
+- **Archivos del Proyecto que Este Archivo Importa (`auth.py`):**
+  - `core.app_instance`
+  - `core.auth`
   - `core.database`
   - `core.models_auth`
-  - `core.auth`
-  - `core.app_instance`
-  - `core.state`
 
-- **Archivos del Proyecto que ESTE archivo IMPORTA:**
-  - Ninguno
+- **Flujo de Datos:**
+  - El archivo importa dependencias necesarias y define endpoints para autenticación y gestión de usuarios.
+  - Los endpoints interactúan con la base de datos a través de funciones definidas en otros módulos (`core.auth`, `core.database`, etc.).
+  - La interacción con la base de datos se realiza mediante consultas SQL generadas por SQLAlchemy.
 
-- **Dirección del Flujo de Datos:** 
-  - Desde el endpoint hasta la base de datos para autenticar y gestionar usuarios.
+Este archivo es crucial para el manejo de autenticación y gestión de usuarios en el sistema WMS, asegurando que solo los usuarios autorizados puedan realizar ciertas acciones y proporcionando mecanismos seguros para el login y cambio de contraseña.
 
 
 ---
@@ -1676,20 +1573,21 @@ Este archivo contiene endpoints para autenticación y gestión de usuarios en un
 ## Archivo: ./routes/config.py
 
 ### Resumen Funcional
-El archivo `config.py` es un módulo que se encarga de registrar todos los routers de la aplicación FastAPI en una instancia de `FastAPI`. Incluye manejo básico de errores para evitar que un router mal configurado detenga el arranque completo del servidor.
+El archivo `config.py` es un módulo que se encarga de registrar todos los routers de la aplicación FastAPI de forma centralizada. Incluye manejo de errores básico para evitar que un router mal configurado detenga el arranque completo del servidor.
 
 ### Catálogo de Funciones y Clases
-- `register_routes(app: FastAPI) -> None` - Registra todos los routers de la aplicación en una instancia de `FastAPI`.
+- `register_routes(app: FastAPI) -> None` - Registra todos los routers de la aplicación de forma centralizada, incluyendo manejo de errores.
 
 ### Interacción con Base de Datos
 Ninguna.
 
 ### Estado y Variables Globales
-- `ROUTERS: List[APIRouter]` - Una lista declarativa de routers con tipado estático que se registran en la aplicación.
+- `ROUTER_MODULES: List[str]` - Lista declarativa de nombres de módulos de routers a importar dinámicamente.
+- `ROUTERS: List[APIRouter]` - Lista que almacena los objetos `APIRouter` registrados.
 
 ### Dependencias y Flujo
-- **Dependencias**: No hay dependencias externas directamente mencionadas.
-- **Flujo**: El archivo importa varios módulos de ruta (`dashboard`, `deliveries`, etc.) y registra sus routers en una instancia de `FastAPI`.
+- **Dependencias**: Importa `importlib`, `logging`, `typing.List` desde el módulo estándar de Python. Importa `FastAPI` y `APIRouter` desde `fastapi`.
+- **Flujo**: El archivo importa dinámicamente los módulos de routers especificados en `ROUTER_MODULES`, intenta registrar cada router con la aplicación FastAPI, y registra errores si ocurren durante el proceso.
 
 
 ---
@@ -1697,7 +1595,7 @@ Ninguna.
 ## Archivo: ./routes/consumos.py
 
 ### Resumen Funcional
-Este archivo contiene rutas para obtener datos de consumos en un sistema de almacén (WMS) utilizando FastAPI. Permite consultar los consumos agrupados por material y ceco, así como el consumo histórico de materiales específicos.
+Este archivo contiene endpoints para obtener datos de consumos en un sistema de almacén (WMS) utilizando FastAPI. Permite consultar los consumos agrupados por material y ceco, así como el consumo mensual de materiales específicos.
 
 ### Catálogo de Funciones y Clases
 - `get_consumos_ceco(ceco: str, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Obtiene los consumos agrupados por material para un CeCo específico.
@@ -1712,24 +1610,22 @@ Este archivo contiene rutas para obtener datos de consumos en un sistema de alma
   - `doc_mat`, `ej_mat`, `pos`
 
 ### Estado y Variables Globales
-- Ninguna
+Ninguna
 
 ### Dependencias y Flujo
 - Librerías externas:
-  - `fastapi`
-  - `sqlalchemy`
-  - `pydantic`
   - `pandas`
-  - `logging`
-  - `datetime`
+  - `fastapi`
+  - `pydantic`
+  - `sqlalchemy`
 - Archivos del proyecto que este archivo importa:
-  - `core.database.get_session_dep`
   - `core.auth.get_current_user`
+  - `core.database.get_session_dep`
   - `repositories.inventory.InventoryRepository`
 - Archivos del proyecto que importan a este archivo:
   - Ninguno
 
-El flujo de datos es desde las rutas hasta el repositorio, donde se realizan las consultas a la base de datos.
+El flujo de datos es desde los endpoints hasta el repositorio, donde se realizan las consultas a la base de datos.
 
 
 ---
@@ -1740,48 +1636,43 @@ El flujo de datos es desde las rutas hasta el repositorio, donde se realizan las
 El archivo `dashboard.py` contiene rutas para el dashboard de un sistema de monitoreo de almacén (WMS). Ofrece endpoints para obtener ubicaciones de materiales y cargar la vista principal del dashboard con KPIs.
 
 ### Catálogo de Funciones y Clases
-- `get_ubicaciones(material: str, user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - Obtiene las ubicaciones de un material específico.
-- `dashboard(request: Request, user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - Vista principal del Dashboard con KPIs y búsqueda rápida.
-- `dashboard_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - API JSON para el Dashboard con KPIs y búsqueda rápida.
+- `get_ubicaciones(material: str, user = Depends(get_current_user), session: Session = Depends(get_session_dep))` - Obtiene las ubicaciones de un material específico.
+- `dashboard(request: Request, user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager), sync: SyncStateManager = Depends(get_sync_manager))` - Vista principal del Dashboard con KPIs y búsqueda rápida.
+- `dashboard_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager), sync: SyncStateManager = Depends(get_sync_manager))` - API JSON para el Dashboard con KPIs y búsqueda rápida.
 
 ### Interacción con Base de Datos
 - **Motor:** SQLite
 - **Tablas:** `stock_levels`, `warehouse_tasks`
 - **Columnas:**
-  - `stock_levels`: `ubicacion_bin`, `Ubicación`, `ubicacin`, `denominacion`, `Texto breve de material`, `material`, `UMB`, `Stock disp`, `ubic_actual`
-  - `warehouse_tasks`: `ubic_dest`, `fecha_conf`, `fe_creac`, `texto_breve_material`, `material`, `tp_dest`, `ubic_dest`
+  - `stock_levels`: `ubicacion_bin`, `Ubicación`, `ubicacin`, `denominacion`, `Texto breve de material`, `stock_disp`, `umb`, `ubic_actual`
+  - `warehouse_tasks`: `ubic_dest`, `fecha_conf`, `fe_creac`, `material`, `tp_dest`, `ubic_dest`
 
 ### Estado y Variables Globales
 - **Variables Globales:** Ninguna
 
 ### Dependencias y Flujo
 - **Librerías Externas:**
-  - `logging`
-  - `sqlite3`
-  - `itertools`
   - `pandas`
-  - `datetime`
-  - `timedelta`
-  - `typing`
-  
+  - `fastapi`
+  - `sqlalchemy`
+  - `logging`
 - **Archivos del Proyecto que Importan a este Archivo (`dashboard.py`):** Ninguno
-
-- **Archivos del Proyecto que Este Archivo Importa:**
-  - `core.database.get_session_dep`
-  - `fastapi.APIRouter`
-  - `fastapi.Request`
-  - `fastapi.Depends`
-  - `fastapi.HTTPException`
-  - `fastapi.responses.HTMLResponse`
-  - `core.state.get_app_state`
-  - `core.auth.get_current_user`
+- **Archivos del Proyecto que Este Archivo Importa (`dashboard.py`):**
   - `core.app_instance.templates`
-  - `services.dashboard_service.DashboardService`
+  - `core.auth.get_current_user`
+  - `core.database.get_session_dep`
   - `core.schemas.DashboardResponse`
+  - `core.state.CacheManager`, `core.state.SyncStateManager`, `get_cache_manager`, `get_sync_manager`
+  - `services.dashboard_service.DashboardService`
 
-- **Dirección del Flujo de Datos:**
-  - Desde el endpoint hasta la base de datos para obtener los datos.
-  - Desde el servicio hacia el endpoint para proporcionar el contexto del negocio.
+**Flujo de Datos:**
+1. **Entrada:** Requiere un usuario autenticado y una sesión de base de datos.
+2. **Procesamiento:**
+   - Para `get_ubicaciones`: Consulta la tabla `stock_levels` para obtener las ubicaciones del material especificado.
+   - Para `dashboard` y `dashboard_api`: Utiliza el servicio `DashboardService` para obtener el contexto completo del negocio, que luego se almacena en caché.
+3. **Salida:** Devuelve los datos en formato JSON o HTML según la solicitud.
+
+**Nota:** El archivo no utiliza consultas SQL crudas directamente; en su lugar, usa SQLAlchemy ORM y pandas para manipular los datos.
 
 
 ---
@@ -1789,15 +1680,15 @@ El archivo `dashboard.py` contiene rutas para el dashboard de un sistema de moni
 ## Archivo: ./routes/deliveries.py
 
 ### Resumen Funcional
-Este archivo contiene rutas y funciones para el módulo de análisis de entregas en un sistema de gestión de almacén (WMS). Ofrece endpoints para renderizar páginas web con datos de análisis y una API JSON que devuelve los mismos datos.
+Este archivo contiene rutas y funciones para el módulo de análisis de entregas en un sistema de gestión de almacén (WMS). Ofrece endpoints para renderizar páginas web con datos de análisis, así como una API JSON que devuelve los mismos datos.
 
 ### Catálogo de Funciones y Clases
 - `save_analytics_snapshot(session: Session, key: str, data: Dict[str, Any])` - Guarda una captura de las analíticas en la base de datos para carga instantánea.
 - `load_analytics_snapshot(session: Session, key: str) -> Optional[Dict[str, Any]]` - Recupera la última captura de analíticas desde la base de datos.
-- `analytics(request: Request, user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - Renderiza la página principal de analíticas con caché multinivel (Memoria -> DB -> Cálculo).
+- `analytics(request: Request, user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager))` - Renderiza la página principal de analíticas con caché multinivel (Memoria -> DB -> Cálculo).
 - `sla_details(request: Request, type: str = "late", date: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, session: Session = Depends(get_session_dep))` - Vista detallada de auditoría SLA.
 - `get_non_palletized_details(user: str, clase_mov: str, db: Session = Depends(get_session_dep), current_user: Dict[str, Any] = Depends(get_current_user))` - Obtiene el listado detallado (hasta 200) de movimientos no paletizados para un usuario y tipo de movimiento específicos.
-- `analytics_deliveries_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - API JSON para analíticas de Entregas (Outbound Deliveries).
+- `analytics_deliveries_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager), sync: SyncStateManager = Depends(get_sync_manager))` - API JSON para analíticas de Entregas (Outbound Deliveries).
 
 ### Interacción con Base de Datos
 - **Motor:** SQLite
@@ -1806,56 +1697,53 @@ Este archivo contiene rutas y funciones para el módulo de análisis de entregas
     - `key` (TEXT, PRIMARY KEY)
     - `data` (TEXT)
     - `updated_at` (TIMESTAMP)
-  - `lx02_pendientes`
-    - `otcuanto` (OTCQUANTO)
-    - `material` (MATERIAL)
-    - `stock_disp` (STOCK_DISP)
-  - `inventory_movements`
-    - `doc_mat` (DOC_MAT)
-    - `usuario` (USUARIO)
-    - `cmv` (CMV)
-    - `alm` (ALM)
-    - `ce` (CE)
-    - `fe_contab` (FE_CONTAB)
-    - `hora` (HORA)
+  - `inventory_movements`: 
+    - `doc_mat`
+    - `usuario`
+    - `cmv`
+    - `alm`
+    - `ce`
+    - `fe_contab`
+    - `hora`
 
 ### Estado y Variables Globales
 - **Variables Globales:** Ninguna.
-- **Estado de Sesión:** Utiliza el estado de la aplicación (`AppState`) para almacenar y recuperar datos en caché.
+- **Estado de Sesión:** Ninguna.
+- **Estado de Entorno:** Ninguna.
+- **Diccionarios Quemados en Código:** Ninguno.
 
 ### Dependencias y Flujo
 - **Librerías Externas:**
-  - `logging`
-  - `sqlite3`
   - `pandas`
+  - `fastapi`
+  - `sqlalchemy`
+  - `logging`
   - `json`
   - `datetime`
   - `typing`
-  - `sqlalchemy`
-  - `fastapi`
-  - `core.database`
-  - `sqlalchemy.orm`
-  - `core.state`
+
+- **Archivos del Proyecto que Este Archivo IMPORTA (consume):**
   - `core.app_instance`
+  - `core.auth`
+  - `core.database`
   - `core.schemas`
-  - `repositories`
+  - `core.state`
+  - `core.utils`
+  - `repositories.DeliveriesRepository`
+  - `routes.analytics_proyecciones`
   - `routes.inventory`
   - `routes.tasks`
-  - `routes.analytics_proyecciones`
-  - `core.auth`
-  - `core.utils`
   - `services.deliveries_service`
 
-- **Archivos del Proyecto que Importan a Este Archivo:**
-  - `routes/inventory.py`
-  - `routes/tasks.py`
-  - `routes/analytics_proyecciones.py`
-  - `services/deliveries_service.py`
-
-- **Archivos del Proyecto que Este Archivo Importa:**
+- **Archivos del Proyecto que IMPORTAN a Este Archivo (lo consumen):**
   - Ninguno.
 
-**Flujo de Datos:** El archivo importa y utiliza funciones y clases de otros archivos para procesar datos, interactuar con la base de datos y renderizar vistas.
+**Flujo de Datos:**
+1. **Entrada:** Solicitudes HTTP a las rutas definidas.
+2. **Procesamiento:** Llamadas a funciones y servicios para obtener datos, aplicar caché y guardar capturas en la base de datos.
+3. **Salida:** Renderizado de plantillas HTML o respuesta JSON con los datos procesados.
+
+Este archivo es crucial para el rendimiento y la eficiencia del sistema de análisis de entregas, ya que implementa un mecanismo de caché multinivel y persistente en la base de datos.
 
 
 ---
@@ -1863,26 +1751,28 @@ Este archivo contiene rutas y funciones para el módulo de análisis de entregas
 ## Archivo: ./routes/docs.py
 
 ### Resumen Funcional
-El archivo `docs.py` proporciona endpoints para generar y obtener la documentación del sistema de monitoreo de almacén (WMS). Ofrece una vista jerárquica de los archivos del proyecto con indicadores de si tienen documentación, así como la capacidad de leer el contenido de las documentaciones en formato Markdown.
+El archivo `docs.py` proporciona endpoints para generar y obtener la documentación del sistema de monitoreo de almacén (WMS). Ofrece una vista jerárquica de los archivos del proyecto con indicadores de si tienen documentación, así como un endpoint para leer el contenido específico de las documentaciones.
 
 ### Catálogo de Funciones y Clases
-- `get_docs_tree(state: AppState = Depends(get_app_state))` - Genera un árbol de archivos del proyecto indicando cuáles tienen documentación.
-- `get_doc_content(path: str, state: AppState = Depends(get_app_state))` - Obtiene el contenido de la documentación (.md) para un archivo específico.
+- `get_docs_tree()` - Genera un árbol de archivos del proyecto indicando cuáles tienen documentación.
+- `get_doc_content(path: str)` - Obtiene el contenido de la documentación (.md) para un archivo específico.
 
 ### Interacción con Base de Datos
-Ninguna. El archivo no interactúa con ninguna base de datos.
+Ninguna.
 
 ### Estado y Variables Globales
 - `BASE_DIR` - Directorio base del proyecto.
-- `CACHE_DIR` - Directorio donde se almacenan las copias en caché de la documentación.
+- `CACHE_DIR` - Directorio donde se almacenan las copias en caché de las documentaciones.
 
 ### Dependencias y Flujo
-- **Dependencias**: Importa `os`, `fastapi`, `config`, `core.state`.
-- **Flujo**:
-  - `docs.py` importa a otros archivos del proyecto (`config.py`, `core/state.py`) para obtener dependencias globales y configuraciones.
-  - Los endpoints son invocados por el framework FastAPI, que maneja las solicitudes HTTP.
+- **Dependencias Externas**: No hay dependencias externas directamente importadas.
+- **Archivos Importados**:
+  - `config.py`: Para obtener los directorios base (`BASE_DIR`, `CACHE_DIR`).
+- **Archivos que Importan a este Archivo**: Ninguno.
 
-El flujo de datos es unidireccional: los endpoints procesan las solicitudes HTTP y devuelven respuestas JSON.
+El flujo de datos es el siguiente:
+1. El usuario accede al endpoint `/api/docs/tree` para obtener la estructura del proyecto con indicadores de documentación.
+2. El usuario accede al endpoint `/api/docs/content/{path:path}` para leer el contenido específico de una documentación (.md).
 
 
 ---
@@ -1890,43 +1780,54 @@ El flujo de datos es unidireccional: los endpoints procesan las solicitudes HTTP
 ## Archivo: ./routes/filters.py
 
 ### Resumen Funcional
-El archivo `filters.py` contiene endpoints para filtrar entregas y calcular KPIs dinámicos en un sistema de monitoreo de almacén (WMS). Utiliza FastAPI para definir las rutas, SQLAlchemy para interactuar con la base de datos SQLite, y pandas para procesar los resultados.
+El archivo `filters.py` contiene endpoints para filtrar entregas y calcular KPIs dinámicos en un sistema de monitoreo de almacén (WMS). Utiliza FastAPI, SQLAlchemy y SQLite para interactuar con la base de datos.
 
 ### Catálogo de Funciones y Clases
 - `_build_unified_where(date: str = None, area: str = None, centro: str = None, has_ots: str = None, min_week: str = None) -> tuple[str, dict]` - Construye una cláusula WHERE unificada basada en los criterios de filtro proporcionados.
 - `filter_transactions(request: Request, date: Optional[str] = None, entrega: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, session: Session = Depends(get_session_dep))` - Filtra entregas basándose en múltiples criterios.
 - `get_kpis(date: Optional[str] = None, entrega: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, session: Session = Depends(get_session_dep))` - Calcula KPIs dinámicos filtrados por área para el dashboard.
-- `api_widget_data(query_id: str, request: Request, session: Session = Depends(get_session_dep))` - Endpoint de carga asíncrona para los componentes del Dashboard, lee visual_state, compila SQL y retorna los datos JSON directamente.
+- `api_widget_data(query_id: str, request: Request, session: Session = Depends(get_session_dep))` - Endpoint de carga asíncrona para los componentes del Dashboard.
 
 ### Interacción con Base de Datos
-- Motor de BD: SQLite.
-- Tablas utilizadas:
-  - `deliveries`
+- Motor de BD: SQLite
+- Tablas:
   - `warehouse_tasks`
-- Columnas utilizadas:
-  - `fecha_carga`, `fecha_sm_real`, `creado_el` (de la tabla `deliveries`)
-  - `entrega` (de la tabla `warehouse_tasks`)
-  - `estado_wms` (de la tabla `deliveries`)
-  - `area` (de la tabla `deliveries`)
+  - `deliveries`
+  - `dashboard`
+  - `config_query`
+- Columnas:
+  - `v.fecha_carga`, `v.fecha_sm_real`, `v.creado_el` (de la tabla `deliveries`)
+  - `l.entrega` (de la tabla `warehouse_tasks`)
+  - `v.week_sort` (de la tabla `dashboard`)
+  - `v.visual_state`, `v.sql_text` (de la tabla `config_query`)
 - Consultas SQL crudas: Sí, se utilizan consultas SQL generadas dinámicamente.
 
 ### Estado y Variables Globales
-- Variables globales:
-  - `DATE_EXPR`: Expresión unificada para la fecha de carga.
-  - `ALLOWED_OTS_STATES`: Conjunto de estados OT permitidos como filtro.
+- `DATE_EXPR`: Expresión para obtener la fecha de carga.
+- `ALLOWED_OTS_STATES`: Conjunto de estados OT permitidos como filtro.
 
 ### Dependencias y Flujo
-- Librerías externas: pandas, fastapi, sqlalchemy.
-- Archivos del proyecto que importa:
+- Librerías externas: `pandas`, `fastapi`, `sqlalchemy`
+- Archivos del proyecto que importan a este archivo:
   - `core.database`
   - `core.models`
   - `core.query_engine`
   - `core.schemas`
   - `core.utils`
   - `repositories.deliveries`
-- Archivos del proyecto que son importados por este archivo:
-  - Ninguno.
-- Flujo de datos: El archivo recibe solicitudes HTTP, procesa los parámetros, interactúa con la base de datos para obtener o calcular datos, y devuelve respuestas JSON.
+  - `repositories.dashboard`
+- Archivos del proyecto que este archivo importa:
+  - `config`
+  - `core.macros`
+
+**Flujo de datos:**
+1. **Entrada**: Parámetros de filtro desde el cliente.
+2. **Procesamiento**:
+   - Construcción dinámica de consultas SQL basadas en los criterios de filtro.
+   - Ejecución de consultas SQL contra la base de datos SQLite.
+3. **Salida**: Datos filtrados o KPIs calculados en formato JSON.
+
+Este archivo es crucial para el funcionamiento del sistema de monitoreo de almacén, proporcionando endpoints para obtener datos filtrados y calcular indicadores clave de rendimiento (KPIs) dinámicamente.
 
 
 ---
@@ -1934,31 +1835,34 @@ El archivo `filters.py` contiene endpoints para filtrar entregas y calcular KPIs
 ## Archivo: ./routes/inventory.py
 
 ### Resumen Funcional
-El archivo `inventory.py` contiene rutas y lógica para el análisis de inventario en un sistema de gestión de almacén (WMS). Ofrece una redirección a la página de analíticas de inventario y una API que devuelve datos de inventario en formato JSON.
+Este archivo contiene rutas y lógica para el análisis de inventario en un sistema de gestión de almacén (WMS). Ofrece una redirección a la página de analíticas de inventario y una API que devuelve datos de inventario optimizados.
 
 ### Catálogo de Funciones y Clases
-- `analytics_inventory_redirect(request: Request, state: AppState = Depends(get_app_state))` - Redirige a la página de analíticas de inventario.
+- `analytics_inventory_redirect(request: Request)` - Redirige a la página de analíticas de inventario.
 - `get_inventory_context(session: Session) -> Dict[str, Any]` - Obtiene el contexto completo del inventario.
-- `analytics_inventory_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - API que devuelve datos de inventario en formato JSON.
+- `analytics_inventory_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager), sync: SyncStateManager = Depends(get_sync_manager))` - API que devuelve datos de inventario optimizados.
 
 ### Interacción con Base de Datos
-Ninguna. El archivo no realiza consultas directas a la base de datos.
+Ninguna. El archivo no realiza consultas a la base de datos directamente.
 
 ### Estado y Variables Globales
-- `AppState` - Almacena el estado del sistema, incluyendo caché y indicadores de sincronización.
-- `COST_CENTER_MAPPING` - Mapeo de centros de costo.
+- `logger` - Manejador de registros.
+- `router` - Ruta FastAPI para el módulo de analíticas de inventario.
 
 ### Dependencias y Flujo
 - **Dependencias Importadas**: 
-  - `fastapi`, `sqlalchemy`, `pandas`, `datetime`, `typing`.
-  - `core.auth`, `core.database`, `core.schemas`, `core.state`, `core.wms_config`, `repositories`, `routes.analytics_proyecciones`, `core.utils`, `services.inventory_service`.
+  - `get_current_user`, `get_session_dep`, `get_cache_manager`, `get_sync_manager` (desde `core.auth`, `core.database`, `core.state`).
+  - `InventoryService` (desde `services.inventory_service`).
+  - `AnalyticsInventoryResponse` (desde `core.schemas`).
 
 - **Dependencias Exportadas**: 
-  - No exporta ninguna dependencia.
+  - No se exportan dependencias.
 
 - **Flujo de Datos**:
-  - El archivo recibe una solicitud HTTP y utiliza servicios para obtener datos de inventario.
-  - Los datos son procesados y devueltos en formato JSON a través de la API.
+  - El archivo recibe una solicitud HTTP y utiliza dependencias para obtener el contexto del inventario.
+  - Luego, intenta recuperar los datos desde la caché. Si no están en caché, obtiene los datos del servicio de inventario, limpia el contexto y lo almacena en caché antes de devolverlo.
+
+Este archivo es parte del módulo de analíticas de inventario y se encarga de manejar las solicitudes para obtener datos optimizados del inventario.
 
 
 ---
@@ -1982,19 +1886,29 @@ Este archivo contiene rutas FastAPI para generar PDFs relacionados con el sistem
 
 ### Estado y Variables Globales
 - **Variables Globales:** Ninguna.
-- **Sesiones de Usuario:** Ninguna.
-- **Entorno:** Ninguna.
+- **Variables de Sesión:** Ninguna.
 - **Diccionarios Quemados:** Ninguno.
 
 ### Dependencias y Flujo
 - **Librerías Externas:**
-  - `io`, `logging`, `pandas`, `datetime`, `typing`, `fastapi`, `sqlalchemy`, `text`.
-- **Archivos del Proyecto que Importa a este Archivo (Consumo):** Ninguno.
-- **Archivos del Proyecto que Este Archivo Importa (Lo Consumen):**
+  - `pandas`
+  - `fastapi`
+  - `sqlalchemy`
+  - `logging`
+  - `io`
+  - `datetime`
+  - `typing`
+- **Archivos del Proyecto que Importa a este Archivo:** Ninguno.
+- **Archivos del Proyecto que Este Archivo Importa:**
+  - `config.DB_PATH`
+  - `config.PDF_STORAGE`
   - `core.database.get_session_dep`
+  - `core.pdf_engine.WMS_Landscape_PDF`
+  - `core.pdf_engine.draw_delivery_page`
+  - `core.pdf_engine.get_ots_for_delivery`
+  - `core.pdf_reports.draw_annex_table`
+  - `core.pdf_reports.draw_picking_list`
   - `repositories.deliveries.DeliveriesRepository`
-  - `core.pdf_engine.WMS_Landscape_PDF`, `draw_delivery_page`, `get_ots_for_delivery`
-  - `core.pdf_reports.draw_annex_table`, `draw_picking_list`
 
 **Flujo de Datos:**
 1. **Entrada:** Parámetros del formulario.
@@ -2003,10 +1917,7 @@ Este archivo contiene rutas FastAPI para generar PDFs relacionados con el sistem
    - Generación del PDF utilizando las funciones definidas en `core.pdf_engine` y `core.pdf_reports`.
 3. **Salida:** Respuesta HTTP con el contenido del PDF.
 
-**Flujo Inverso:**
-1. **Entrada:** Archivos del proyecto que consumen este archivo.
-2. **Procesamiento:** No aplica.
-3. **Salida:** No aplica.
+Este flujo asegura que los datos se procesen correctamente y se generen los PDFs según los parámetros proporcionados.
 
 
 ---
@@ -2014,37 +1925,28 @@ Este archivo contiene rutas FastAPI para generar PDFs relacionados con el sistem
 ## Archivo: ./routes/productivity.py
 
 ### Resumen Funcional
-Este archivo contiene endpoints para obtener datos de productividad en un sistema de almacén (WMS) utilizando FastAPI. Ofrece información diaria y mensual de productividad, así como detalles sobre movimientos de usuarios.
+El archivo `productivity.py` contiene endpoints para obtener datos de productividad diaria y mensual en un sistema de almacén (WMS) utilizando FastAPI. Los endpoints permiten consultar fechas disponibles, resúmenes diarios y mensuales de movimientos de usuarios, así como detalles específicos de estos movimientos.
 
 ### Catálogo de Funciones y Clases
 - `get_available_dates(user: User, session: Session)` - Retorna las fechas disponibles para el análisis de productividad.
-- `get_productivity_dashboard(date: str = Query(None), user: User, session: Session, state: AppState)` - Retorna los datos del dashboard de productividad para una fecha específica o la fecha anterior si no se especifica.
-- `get_monthly_productivity(month: str = Query(None), user: User, session: Session, state: AppState)` - Retorna los KPIs mensuales de productividad para un mes específico o el mes actual si no se especifica.
-- `get_user_movements_summary(date: str, usuario: str, user: User, session: Session)` - Retorna el resumen diario de movimientos de un usuario.
-- `get_user_movements_details(date: str, usuario: str, operacion: str, user: User, session: Session)` - Retorna los detalles diarios de movimientos de un usuario para una operación específica.
-- `get_user_movements_monthly_summary(month: str, usuario: str, user: User, session: Session)` - Retorna el resumen mensual de movimientos de un usuario.
-- `get_user_movements_monthly_details(month: str, usuario: str, operacion: str, user: User, session: Session)` - Retorna los detalles mensuales de movimientos de un usuario para una operación específica.
+- `get_productivity_dashboard(date: str = Query(None), user: User, session: Session, cache: CacheManager, sync: SyncStateManager)` - Retorna los datos del dashboard de productividad para una fecha específica o por defecto "Ayer".
+- `get_monthly_productivity(month: str = Query(None), user: User, session: Session, cache: CacheManager, sync: SyncStateManager)` - Retorna los KPIs mensuales de productividad.
+- `get_user_movements_summary(date: str, usuario: str, user: User, session: Session)` - Retorna el resumen diario de movimientos de un usuario para una fecha específica.
+- `get_user_movements_details(date: str, usuario: str, operacion: str, user: User, session: Session)` - Retorna los detalles diarios de movimientos de un usuario para una fecha específica y tipo de operación.
+- `get_user_movements_monthly_summary(month: str, usuario: str, user: User, session: Session)` - Retorna el resumen mensual de movimientos de un usuario para un mes específico.
+- `get_user_movements_monthly_details(month: str, usuario: str, operacion: str, user: User, session: Session)` - Retorna los detalles mensuales de movimientos de un usuario para un mes específico y tipo de operación.
 
 ### Interacción con Base de Datos
-- Motor de BD: SQLite
-- Tablas y Columnas:
-  - `ProductivityDailyService` interactúa con tablas relacionadas con la productividad diaria.
-  - `ProductivityMonthlyService` interactúa con tablas relacionadas con la productividad mensual.
+El archivo interactúa con una base de datos SQLite a través de SQLAlchemy. Las consultas específicas no están detalladas en el código proporcionado, pero se infiere que las funciones `get_available_dates`, `get_productivity_data`, `get_monthly_productivity_data`, `get_user_movements_daily_summary`, `get_user_movements_daily_details`, `get_user_movements_monthly_summary`, y `get_user_movements_monthly_details` realizan consultas a la base de datos para obtener los datos necesarios.
 
 ### Estado y Variables Globales
-- No hay variables globales explícitas en este archivo. Se utilizan dependencias para obtener el estado de la aplicación (`AppState`) y la sesión de base de datos (`Session`).
+No se detectaron variables globales, de sesión o de entorno en el código proporcionado.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: FastAPI, SQLAlchemy.
-- **Archivos del Proyecto que Importa**:
-  - `core.database.get_session_dep`
-  - `core.auth.get_current_user`
-  - `services.productivity_daily.ProductivityDailyService`
-  - `services.productivity_monthly.ProductivityMonthlyService`
-  - `core.state.get_app_state`
-- **Archivos del Proyecto que Son Importados por Este**:
-  - Ninguno
-- **Dirección del Flujo de Datos**: Los endpoints reciben datos de entrada (fechas, usuarios), los procesan a través de servicios y repositorios, y devuelven resultados al cliente.
+- **Dependencias**: El archivo importa dependencias desde `core.auth`, `core.database`, `services.productivity_daily`, y `services.productivity_monthly`.
+- **Flujo de Datos**: Los datos fluyen a través del endpoint, se procesan en los servicios correspondientes (`ProductivityDailyService` y `ProductivityMonthlyService`), y luego se devuelven al cliente. El flujo incluye la obtención de datos desde la base de datos, su procesamiento y almacenamiento en caché si es necesario.
+
+Este archivo es una parte integral del sistema de monitoreo de almacén, proporcionando endpoints para obtener diversos tipos de datos de productividad, con un enfoque en la eficiencia y el seguimiento de los movimientos de usuarios.
 
 
 ---
@@ -2052,61 +1954,56 @@ Este archivo contiene endpoints para obtener datos de productividad en un sistem
 ## Archivo: ./routes/settings.py
 
 ### Resumen Funcional
-El archivo `settings.py` proporciona una API para la gestión dinámica de configuraciones SaaS en un sistema de monitoreo de almacén (WMS). Permite actualizar y consultar configuraciones, estados de mapeo, centros de costo, feriados y consultas SQL.
+El archivo `settings.py` contiene endpoints para la gestión dinámica de configuraciones SaaS en un sistema de monitoreo de almacén (WMS). Utiliza SQLAlchemy ORM para todas las operaciones de escritura y FastAPI para crear una API RESTful.
 
 ### Catálogo de Funciones y Clases
 - `invalidate_caches(db: Session)` - Limpia el caché global en memoria y elimina todos los snapshots de base de datos.
-- `settings_view(request: Request, db: DBSession, state: AppState = Depends(get_app_state))` - Renderiza el panel de control de configuraciones SaaS.
-- `api_get_settings(state: AppState = Depends(get_app_state))` - Retorna las configuraciones generales.
-- `api_update_setting(update: SettingUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Actualiza una configuración específica.
-- `api_upsert_status(update: StatusMappingUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Inserta o actualiza un estado de mapeo.
-- `api_delete_status(code: str, db: DBSession, state: AppState = Depends(get_app_state))` - Elimina un estado de mapeo.
-- `api_upsert_cost_center(update: CostCenterMappingUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Inserta o actualiza un centro de costo.
-- `api_delete_cost_center(code: str, db: DBSession, state: AppState = Depends(get_app_state))` - Elimina un centro de costo.
-- `api_add_holiday(h: HolidayAdd, db: DBSession, state: AppState = Depends(get_app_state))` - Añade un feriado.
-- `api_sync_holidays(db: DBSession, state: AppState = Depends(get_app_state))` - Sincroniza automáticamente los feriados nacionales (Chile).
-- `api_delete_holiday(date_str: str, db: DBSession, state: AppState = Depends(get_app_state))` - Elimina un feriado.
-- `api_get_query(query_id: str, db: DBSession, state: AppState = Depends(get_app_state))` - Retorna el estado visual de una consulta del Analytics Studio.
-- `api_update_query(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Persiste el estado visual de una consulta.
-- `api_get_schema(db: DBSession, state: AppState = Depends(get_app_state))` - Retorna el catálogo semántico de datos para el editor.
-- `api_preview_table(dataset_id: str, db: DBSession, state: AppState = Depends(get_app_state))` - Previsualiza una tabla.
-- `api_query_preview(update: QueryUpdate, db: DBSession, state: AppState = Depends(get_app_state))` - Ejecuta una consulta temporal y retorna datos para previsualización.
-- `api_build_sql(payload: VisualQueryBuilderPayload, db: DBSession, state: AppState = Depends(get_app_state))` - Compila el estado visual del constructor en SQL parametrizado seguro.
-- `api_export_missing_orders(db: DBSession, state: AppState = Depends(get_app_state))` - Exporta órdenes sin ceco a un archivo Excel.
+- `settings_view(request: Request, db: DBSession)` - Renderiza el panel de control de configuraciones SaaS.
+- `api_get_settings()` - Retorna las configuraciones generales.
+- `api_update_setting(update: SettingUpdate, db: DBSession)` - Actualiza una configuración específica.
+- `api_upsert_status(update: StatusMappingUpdate, db: DBSession)` - Inserta o actualiza un mapeo de estado.
+- `api_delete_status(code: str, db: DBSession)` - Elimina un mapeo de estado.
+- `api_upsert_cost_center(update: CostCenterMappingUpdate, db: DBSession)` - Inserta o actualiza un centro de costo.
+- `api_delete_cost_center(code: str, db: DBSession)` - Elimina un centro de costo.
+- `api_add_holiday(h: HolidayAdd, db: DBSession)` - Añade un feriado.
+- `api_sync_holidays(db: DBSession)` - Sincroniza automáticamente los feriados nacionales (Chile).
+- `api_delete_holiday(date_str: str, db: DBSession)` - Elimina un feriado.
+- `api_get_query(query_id: str, db: DBSession)` - Retorna el estado visual de una consulta del Analytics Studio.
+- `api_update_query(update: QueryUpdate, db: DBSession, cache: CacheManager = Depends(get_cache_manager))` - Persiste el estado visual de una consulta.
+- `api_get_schema(db: DBSession)` - Retorna el catálogo semántico de datos para el editor.
+- `api_preview_table(dataset_id: str, db: DBSession)` - Previsualiza una tabla.
+- `api_query_preview(update: QueryUpdate, db: DBSession)` - Ejecuta una consulta temporal y retorna datos para previsualización.
+- `api_build_sql(payload: VisualQueryBuilderPayload, db: DBSession)` - Compila el estado visual del constructor en SQL parametrizado seguro.
+- `api_export_missing_orders(db: DBSession)` - Exporta órdenes sin ceco a un archivo Excel.
 
 ### Interacción con Base de Datos
 - Motor: SQLite
 - Tablas:
   - `analytics_snapshots`
-  - `status_mapping`
-  - `cost_center_mapping`
-  - `holiday`
-  - `app_setting`
-  - `config_query`
 - Columnas:
-  - `analytics_snapshots`: Todas las columnas de la tabla.
-  - `status_mapping`: `code`, `label`.
-  - `cost_center_mapping`: `center_code`, `business_area`.
-  - `holiday`: `date_str`.
-  - `app_setting`: `key`, `value`.
-  - `config_query`: `query_id`, `visual_state`.
+  - `id` (de `analytics_snapshots`)
+- Consultas SQL crudas o llamadas a ORM:
+  - `DELETE FROM analytics_snapshots`
 
 ### Estado y Variables Globales
-- No se detectan variables globales, de sesión o de entorno.
+- No hay variables globales, de sesión, de entorno o diccionarios quemados en código que almacenen estado crítico.
 
 ### Dependencias y Flujo
-- **Dependencias Externas**: FastAPI, SQLAlchemy, Pandas.
-- **Archivos del Proyecto que Importa**:
-  - `core.auth.require_admin`
-  - `core.database.get_session_dep`
-  - `core.models.StatusMapping`, `CostCenterMapping`, `AppSetting`, `Holiday`, `ConfigQuery`
-  - `core.db_config_manager.load_config_to_memory`, `get_setting`, `get_status_mapping`, `get_cost_center_mapping`, `get_holidays`
-  - `core.app_instance.templates`
-  - `core.utils.sanitize_for_json`
-  - `core.state.AppState`, `get_app_state`
-- **Archivos del Proyecto que Son Importados por Este**:
-  - No se detectan archivos que importen a este archivo.
-- **Flujo de Datos**: El flujo de datos pasa a través de la API, interactúa con la base de datos para leer y escribir datos, y devuelve respuestas al cliente.
+- Librerías externas: `fastapi`, `sqlalchemy`, `pydantic`, `pandas`, `holidays`, `openpyxl`
+- Archivos del proyecto que este archivo importa:
+  - `core.app_instance`
+  - `core.auth`
+  - `core.database`
+  - `core.db_config_manager`
+  - `core.models`
+  - `core.state`
+  - `core.utils`
+  - `core.schemas`
+  - `core.semantic_layer`
+  - `core.query_engine`
+- Archivos del proyecto que importan a este archivo:
+  - Ninguno
+- Flujo de datos: El archivo es un endpoint de FastAPI que consume y produce datos para la gestión de configuraciones SaaS.
 
 
 ---
@@ -2114,55 +2011,45 @@ El archivo `settings.py` proporciona una API para la gestión dinámica de confi
 ## Archivo: ./routes/sync.py
 
 ### Resumen Funcional
-Este archivo contiene rutas para la sincronización de datos en un sistema de monitoreo de almacén (WMS). Permite iniciar y gestionar procesos de sincronización en segundo plano utilizando `TaskManager`, y proporciona endpoints para consultar el estado de las tareas.
+Este archivo contiene rutas para la sincronización de datos en un sistema de monitoreo de almacén (WMS). Permite obtener la URL del túnel, el estado de la sincronización y iniciar procesos de sincronización. También proporciona endpoints para listar y consultar el estado de tareas.
 
 ### Catálogo de Funciones y Clases
-- `get_tunnel_url(state: AppState = Depends(get_app_state))` - Retorna la URL pública del túnel (Ngrok).
-- `get_sync_status(state: AppState = Depends(get_app_state))` - Retorna el estado actual de la sincronización.
-- `sync_data(state: AppState = Depends(get_app_state), admin=Depends(require_auth))` - Inicia el proceso de sincronización de datos y lo encola en `TaskManager`.
-- `list_tasks(limit: int = 20, state: AppState = Depends(get_app_state), admin=Depends(require_auth))` - Lista las tareas recientes del sistema.
-- `get_task(task_id: str, state: AppState = Depends(get_app_state), admin=Depends(require_auth))` - Consulta el estado de una tarea específica por su ID.
+- `get_tunnel_url()` - Retorna la URL pública del túnel (Ngrok).
+- `get_sync_status(sync: SyncStateManager = Depends(get_sync_manager))` - Retorna el estado actual de la sincronización.
+- `sync_data(sync: SyncStateManager = Depends(get_sync_manager), admin = Depends(require_auth))` - Inicia el proceso de sincronización de datos y lo encola en el TaskManager para ejecución trazable en segundo plano.
+- `list_tasks(limit: int = 20, admin = Depends(require_auth))` - Lista las tareas recientes del sistema.
+- `get_task(task_id: str, admin = Depends(require_auth))` - Consulta el estado de una tarea específica por su ID.
 - `_run_sync_pipeline()` - Ejecuta el pipeline completo de limpieza y consolidación.
 
 ### Interacción con Base de Datos
-- **Motor:** SQLite
-- **Tablas y Columnas:**
-  - `analytics_snapshots`
-  - Tablas específicas dependen del contenido de los directorios (`deliveries_path`, `stock_path`, `tasks_path`, `inventory_path`, `lx02_pendientes_path`) que se procesan en `_run_sync_pipeline`.
-- **Consultas SQL Crudas:** No hay consultas SQL crudas directamente en este archivo. Se utilizan métodos de ORM.
+- Motor: SQLite (indicado por `DB_PATH`)
+- Tablas modificadas:
+  - `analytics_snapshots` (se borra en caso de cambios)
+- Columnas modificadas:
+  - Todas las tablas que se procesan a través del `DataConsolidator`
 
 ### Estado y Variables Globales
-- **Variables Globales:**
-  - `DB_PATH`
-  - `CLEANSED_DIR`
-  - `PDF_STORAGE`
-  - `DELIVERIES_DIR`
-  - `STOCK_DIR`
-  - `TASKS_DIR`
-  - `INVENTORY_DIR`
-  - `TUNNEL_URL_FILE`
+- No hay variables globales explícitas mencionadas.
 
 ### Dependencias y Flujo
-- **Librerías Externas:**
+- **Dependencias Externas**: 
   - `logging`
   - `shutil`
   - `pathlib`
   - `typing`
   - `fastapi`
-  - `core.auth`
-  - `config`
-  - `core.state`
-  - `core.task_manager`
-  - `db.consolidator`
+  
+- **Archivos del Proyecto Importados**:
+  - `config.py` (para constantes de rutas y archivos)
+  - `core.auth` (para autenticación)
+  - `core.state` (para gestionar estado de sincronización y caché)
+  - `core.task_manager` (para manejo de tareas)
+  - `db.consolidator` (para consolidación de datos)
 
-- **Archivos del Proyecto que Importan a este Archivo:**
-  - `routes/transporte.py` (importado dentro de `_run_sync_pipeline`)
+- **Archivos del Proyecto que Importan a Este Archivo**:
+  - `routes/transporte.py` (importado dentro de `_run_sync_pipeline` para sincronizar transporte)
 
-- **Archivos del Proyecto que Este Archivo Importa:**
-  - No hay imports directos desde otros archivos en este fragmento.
-
-- **Dirección del Flujo de Datos:**
-  - Los datos fluyen a través de los endpoints para iniciar y gestionar la sincronización, luego se procesan en `_run_sync_pipeline` que interactúa con las tablas de la base de datos y realiza operaciones de ETL.
+El flujo de datos es desde el endpoint `/sync`, que inicia la tarea de sincronización, hasta la ejecución de `_run_sync_pipeline` en segundo plano mediante `TaskManager`. Este proceso incluye la lectura y procesamiento de archivos en varios directorios, la consolidación de datos en la base de datos SQLite, y la actualización del estado de las tareas.
 
 
 ---
@@ -2170,35 +2057,40 @@ Este archivo contiene rutas para la sincronización de datos en un sistema de mo
 ## Archivo: ./routes/tasks.py
 
 ### Resumen Funcional
-El archivo `tasks.py` contiene la definición de una ruta FastAPI para obtener analíticas de tareas en un sistema de almacén (WMS). La ruta permite recuperar datos de tareas, aplicar un contexto limpio y almacenar los resultados en caché.
+El archivo `tasks.py` proporciona una interfaz RESTful para obtener analíticas de tareas en un sistema de almacén (WMS) utilizando FastAPI. La API permite recuperar datos de tareas, almacenándolos en caché para mejorar el rendimiento y gestionando el estado de sincronización.
 
 ### Catálogo de Funciones y Clases
-- `get_tasks_context(session: Session) -> dict` - Obtiene el contexto completo de las tareas utilizando el servicio `TasksService`.
-- `analytics_tasks_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), state: AppState = Depends(get_app_state))` - Ruta FastAPI que devuelve analíticas de tareas en formato JSON.
+- `get_tasks_context(session: Session) -> dict` - Obtiene el contexto completo de las tareas utilizando un servicio.
+- `analytics_tasks_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager), sync: SyncStateManager = Depends(get_sync_manager))` - Endpoint FastAPI para obtener analíticas de tareas, recuperando datos del caché si es posible.
 
 ### Interacción con Base de Datos
-Ninguna. El archivo no realiza consultas directas a la base de datos. Utiliza el servicio `TasksService` para obtener los datos necesarios.
+Ninguna. El archivo no realiza consultas directas a la base de datos. Utiliza un servicio (`TasksService`) que probablemente interactúa con el repositorio de tareas para obtener los datos necesarios.
 
 ### Estado y Variables Globales
-- `state.get_cache("/api/v1/analytics/tasks")` - Recupera el contexto de las tareas desde el caché.
-- `state.set_cache("/api/v1/analytics/tasks", clean_context.copy())` - Almacena el contexto limpio en el caché.
+- `logger` - Objeto de registro utilizado para registrar errores.
+- `router` - Instancia de `APIRouter` de FastAPI para definir las rutas del API.
 
 ### Dependencias y Flujo
 - **Dependencias Importadas**: 
-  - `get_current_user`, `get_session_dep`, `get_app_state` desde `core.auth`, `core.database`, `core.state`.
-  - `TasksService` desde `services.tasks_service`.
-  - `AnalyticsTasksResponse` desde `core.schemas`.
-
-- **Archivos que Importan a este Archivo**: Ninguno.
+  - `get_current_user`, `get_session_dep`, `get_cache_manager`, `get_sync_manager` - Funciones que proporcionan dependencias como la sesión de base de datos, el manejador de caché y el estado de sincronización.
+  
+- **Archivos Importados**:
+  - `core.auth`: Para autenticación del usuario.
+  - `core.database`: Para obtener la sesión de base de datos.
+  - `core.schemas`: Para definir los modelos de respuesta.
+  - `core.state`: Para gestionar el estado de caché y sincronización.
+  - `core.utils`: Para utilidades como la limpieza de datos para JSON.
+  - `repositories`: Para interactuar con las tablas de la base de datos.
+  - `services.tasks_service`: Para obtener el contexto completo de las tareas.
 
 - **Flujo de Datos**:
-  1. La función `analytics_tasks_api` se invoca cuando un usuario accede a la ruta `/api/v1/analytics/tasks`.
-  2. Se intenta recuperar el contexto de las tareas desde el caché.
-  3. Si no está en caché, se obtiene el contexto completo utilizando `TasksService`.
-  4. El contexto se limpia eliminando ciertas claves (`'request', 'user', 'is_syncing'`).
-  5. El contexto limpio se almacena en caché y se devuelve como respuesta JSON.
+  1. El endpoint `analytics_tasks_api` se invoca a través de una solicitud HTTP GET a `/api/v1/analytics/tasks`.
+  2. Se intenta recuperar los datos del caché.
+  3. Si el dato no está en caché, se obtiene utilizando el servicio `TasksService`.
+  4. El contexto obtenido se limpia para eliminar información sensible y se almacena en caché.
+  5. Finalmente, se devuelve la respuesta con los datos limpios y el estado de sincronización.
 
-Este flujo asegura que los datos de tareas sean recuperados eficientemente, utilizando el caché cuando sea posible para mejorar el rendimiento.
+Este archivo es crucial para proporcionar una interfaz eficiente y segura para obtener analíticas de tareas en un sistema de almacén, utilizando técnicas de caché y gestión de estado para mejorar el rendimiento.
 
 
 ---
@@ -2206,37 +2098,28 @@ Este flujo asegura que los datos de tareas sean recuperados eficientemente, util
 ## Archivo: ./routes/transporte.py
 
 ### Resumen Funcional
-Este archivo contiene rutas para la sección de Transporte en un sistema de monitoreo de almacén (WMS). Permite sincronizar datos desde una base de datos externa, obtener datos consolidados diarios, buscar registros y servir archivos PDF.
+Este archivo contiene rutas para la sección de Transporte en un sistema de monitoreo de almacén (WMS). Permite la sincronización de datos desde una base de datos externa, consulta de datos consolidados, búsqueda y descarga de PDFs.
 
 ### Catálogo de Funciones y Clases
-- `sync_transporte_logic(session: Session)` - Lógica core para sincronizar la base de datos externa de OneDrive a local.
+- `sync_transporte_logic(session: Session)` - Lógica core para sincronizar la base de datos externa a local.
 - `sync_transporte(session: Session = Depends(get_session_dep), user=Depends(get_current_user))` - Ruta para sincronizar datos de transporte manualmente.
-- `get_transporte_data(session: Session = Depends(get_session_dep), user=Depends(get_current_user))` - Ruta que retorna los datos consolidados diarios ordenados cronológicamente.
-- `search_transporte(q: str, session: Session = Depends(get_session_dep), user=Depends(get_current_user))` - Ruta para buscar en la tabla cruda de transporte_entregas por OT, GD o OC.
-- `serve_pdf(filename: str, user=Depends(get_current_user))` - Ruta que sirve el archivo PDF desde el disco.
-- `get_pending_transporte(session: Session = Depends(get_session_dep), user=Depends(get_current_user))` - Ruta para buscar en transporte_entregas los documentos del año actual que NO han sido ingresados al inventario SAP (inventory_movements).
+- `get_transporte_data(session: Session = Depends(get_session_dep), user=Depends(get_current_user))` - Retorna los datos consolidados diarios ordenados cronológicamente.
+- `search_transporte(q: str, session: Session = Depends(get_session_dep), user=Depends(get_current_user))` - Busca en la tabla cruda de transporte_entregas por OT, GD o OC.
+- `serve_pdf(filename: str, user=Depends(get_current_user))` - Sirve el archivo PDF desde el disco.
+- `get_pending_transporte(session: Session = Depends(get_session_dep), user=Depends(get_current_user))` - Busca en transporte_entregas los documentos del año actual que NO han sido ingresados al inventario SAP.
 
 ### Interacción con Base de Datos
-- **Motor:** SQLite
-- **Tablas:**
+- Motor: SQLite
+- Tablas:
   - `transporte_entregas`
-    - `ot`
-    - `proveedor`
-    - `gd`
-    - `oc`
-    - `bulto`
-    - `servicio`
-    - `archivo`
-    - `fecha`
+    - Columnas: ot, proveedor, gd, oc, bulto, servicio, archivo, fecha
   - `transporte_diario`
-    - `fecha` (PRIMARY KEY)
-    - `total_entregas`
-    - `pdf_path`
-- **Consultas SQL Crudas:**
+    - Columnas: fecha, total_entregas, pdf_path
+- Consultas SQL crudas y llamadas a ORM:
   - Creación de tablas si no existen.
   - Lectura de datos desde la base de datos externa.
-  - Inserción de datos crudos en la tabla local.
-  - Consolidación de datos diarios.
+  - Inserción de datos en `transporte_entregas`.
+  - Consolidación de datos en `transporte_diario`.
   - Mapeo de PDFs.
 
 ### Estado y Variables Globales
@@ -2244,14 +2127,13 @@ Este archivo contiene rutas para la sección de Transporte en un sistema de moni
 - `PDF_DIR_PATH` - Directorio donde se almacenan los archivos PDF.
 
 ### Dependencias y Flujo
-- **Dependencias Externas:** `sqlite3`, `logging`
-- **Archivos del Proyecto que Importan a este Archivo:**
-  - `core.app_instance`
-  - `core.database`
+- Librerías externas: `logging`, `os`, `sqlite3`, `typing`.
+- Archivos del proyecto que importan este archivo:
   - `core.auth`
-- **Archivos del Proyecto que Este Archivo Importa:**
-  - Ninguno
-- **Dirección del Flujo de Datos:** El archivo consume datos desde la base de datos externa y los almacena localmente, luego sirve datos a través de las rutas definidas.
+  - `core.database`
+- Archivos del proyecto que son importados por este archivo:
+  - No aplica.
+- Flujo de datos: El archivo consume y produce datos para las rutas definidas, interactuando con la base de datos SQLite y proporcionando respuestas en formato JSON.
 
 
 ---
@@ -2259,43 +2141,40 @@ Este archivo contiene rutas para la sección de Transporte en un sistema de moni
 ## Archivo: ./routes/widgets.py
 
 ### Resumen Funcional
-El archivo `widgets.py` contiene endpoints FastAPI que manejan la lógica de negocio para obtener datos de widgets en un sistema de monitoreo de almacén (WMS). Los endpoints permiten recuperar datos estructurados y detalles subyacentes de los widgets, aplicando filtros dinámicos basados en parámetros como año, área y segmentos.
+Este archivo contiene endpoints para obtener datos de widgets y sugerencias de reabastecimiento en un sistema de monitoreo de almacén (WMS). Los endpoints permiten consultar datos estructurados, ejecutar consultas personalizadas, y exportar sugerencias de pedido a formato Excel.
 
 ### Catálogo de Funciones y Clases
-- `get_widget_data(query_id: str, year: Optional[str] = None, area: Optional[str] = None, granularity: Optional[str] = None, db: Session = Depends(get_session_dep), user = Depends(get_current_user), state: AppState = Depends(get_app_state))` - Ejecuta el VisualQueryBuilderPayload y retorna la data estructurada.
+- `get_widget_data(query_id: str, year: Optional[str] = None, area: Optional[str] = None, granularity: Optional[str] = None, db: Session = Depends(get_session_dep), user = Depends(get_current_user), cache: CacheManager = Depends(get_cache_manager))` - Ejecuta una consulta visual y devuelve los datos estructurados.
 - `get_widget_drilldown(query_id: str, segment: str, material: Optional[str] = None, year: Optional[str] = None, area: Optional[str] = None, db: Session = Depends(get_session_dep), user = Depends(get_current_user))` - Obtiene el detalle subyacente de un segmento de un widget.
+- `get_cmv201_summary(plan_type: str = Query(..., description="Planificado o Desplanificado"), year: Optional[str] = None, db: Session = Depends(get_session_dep), user = Depends(get_current_user))` - Muestra la cantidad de materiales solicitados por área de negocio y mes para el CMV 201.
+- `get_cmv201_area_details(plan_type: str = Query("planificado", description="'planificado' o 'desplanificado'"), area: str = Query(..., description="Area de negocio filtrada"), mes: str = Query(None, description="Mes en formato YYYY-MM. Si no se provee, no se filtra por mes."), year: str = Query(None, description="Año"), db: Session = Depends(get_session_dep))` - Muestra los detalles del CMV 201 para una área de negocio específica.
+- `get_cmv261_summary(plan_type: str = Query("planificado", description="'planificado' o 'desplanificado'"), year: Optional[str] = None, db: Session = Depends(get_session_dep))` - Muestra la cantidad de materiales solicitados por área de negocio y mes para el CMV 261.
+- `get_cmv261_area_details(plan_type: str = Query("planificado", description="'planificado' o 'desplanificado'"), area: str = Query(..., description="Area de negocio filtrada"), mes: str = Query(None, description="Mes en formato YYYY-MM. Si no se provee, no se filtra por mes."), year: str = Query(None, description="Año"), db: Session = Depends(get_session_dep))` - Muestra los detalles del CMV 261 para una área de negocio específica.
+- `get_replenishment_suggestions(freq: str = Query("all", description="Filtro de frecuencia: all, 1, 3, 6, 12"), db: Session = Depends(get_session_dep))` - Calcula sugerencias de pedido basándose en el stock inicial MB5B y el ritmo de consumo.
+- `export_replenishment_suggestions(db: Session = Depends(get_session_dep))` - Exporta todas las sugerencias de pedido (Autonomía < 1) a un archivo Excel.
 
 ### Interacción con Base de Datos
-- **Motor:** SQLite
-- **TABLAS:** `ConfigQuery`, `outbound_deliveries`
-- **COLUMNAS:**
-  - `ConfigQuery`: `query_id`, `visual_state`
-  - `outbound_deliveries`: `fecha_carga`, `entrega`, `pos_`, `cantidad`, `dias_retraso`, `material`
+- Motor: SQLite
+- Tablas:
+  - `ConfigQuery`
+- Columnas:
+  - `query_id`, `visual_state`
 
 ### Estado y Variables Globales
-- No se detectan variables globales, de sesión o de entorno.
+- No hay variables globales, de sesión o diccionarios quemados en código que almacenen estado crítico.
 
 ### Dependencias y Flujo
-- **Librerías Externas:** `fastapi`, `sqlalchemy`, `pandas`
-- **Archivos del Proyecto que IMPORTA:**
-  - `core.database`: `get_session_dep`
-  - `core.models`: `ConfigQuery`
-  - `core.auth`: `get_current_user`
-  - `core.helpers.dynamic_executor`: `execute_visual_query`
-  - `core.utils`: `sanitize_for_json`
-  - `core.state`: `get_app_state`, `AppState`
-- **Archivos del Proyecto que IMPORTAN a este archivo:**
-  - No se detectan archivos que importen directamente a este archivo.
-
-**Flujo de Datos:**
-1. Los endpoints son invocados por clientes externos.
-2. Se realizan consultas a la base de datos para obtener los estados visuales de los widgets y los datos necesarios.
-3. Se aplican filtros dinámicos basados en los parámetros proporcionados.
-4. Se ejecuta una consulta SQL dinámica o se utiliza un generador de consultas (`build_sql_from_payload`).
-5. Los resultados son procesados y formateados para su presentación en el frontend.
-6. Los datos procesados y formateados se devuelven al cliente.
-
-**Nota:** Existe una duplicidad en la definición del endpoint `get_widget_drilldown`, lo cual debe ser corregido para evitar conflictos de rutas.
+- Librerías externas: `pandas`
+- Archivos del proyecto que IMPORTA:
+  - `core.auth.get_current_user`
+  - `core.database.get_session_dep`
+  - `core.helpers.dynamic_executor.execute_visual_query`
+  - `core.models.ConfigQuery`
+  - `core.state.CacheManager.get_cache_manager`
+  - `core.utils.sanitize_for_json`
+- Archivos del proyecto que IMPORTAN a este archivo:
+  - Ninguno
+- Flujo de datos: Los endpoints consumen y producen datos estructurados, interactuando con la base de datos para obtener los datos necesarios.
 
 
 ---
@@ -2307,31 +2186,56 @@ Este archivo está vacío o solo contiene espacios en blanco. No se requiere an�
 
 ---
 
+## Archivo: ./scripts/bundler.py
+
+### Resumen Funcional
+El archivo `bundler.py` es un script que concatena múltiples archivos JavaScript en un solo archivo llamado `bundle.js`, lo cual se utiliza para la producción del frontend de un sistema de monitoreo de almacén (WMS).
+
+### Catálogo de Funciones y Clases
+- `bundle_js()` - Concatena múltiples archivos JS en un solo bundle.js para producción.
+
+### Interacción con Base de Datos
+Ninguna.
+
+### Estado y Variables Globales
+- `JS_FILES_ORDER` - Una lista ordenada de nombres de archivos JavaScript que se concatenarán.
+- `logger` - Un objeto de registro utilizado para registrar mensajes de información, advertencia y error.
+
+### Dependencias y Flujo
+- **Dependencias Externas**: `logging`, `os`, `pathlib`.
+- **Archivos del Proyecto Importados por Este Archivo**: Ninguno.
+- **Archivos del Proyecto que Importan a Este Archivo**: Ninguno.
+- **Flujo de Datos**: El script lee archivos JavaScript desde un directorio específico, los concatena en un solo archivo `bundle.js`, y registra el proceso.
+
+
+---
+
 ## Archivo: ./scripts/generate_graphify.py
 
 ### Resumen Funcional
-El archivo `generate_graphify.py` es un script que ejecuta el proceso de generación y procesamiento de un mapa interactivo utilizando la herramienta Graphify. El script limpia cualquier salida anterior, configura las variables de entorno necesarias, ejecuta Graphify para generar el mapa, y luego realiza una serie de reemplazos en el HTML generado para adaptarlo al español e incluir traducciones específicas.
+El archivo `generate_graphify.py` es un script que prepara y ejecuta el proceso de generación de un mapa interactivo utilizando la herramienta `graphify`. El script limpia el directorio de salida, ejecuta el CLI de `graphify`, procesa el HTML generado para aplicar traducciones y finalmente mueve el archivo HTML resultante a una ubicación específica dentro del proyecto.
 
 ### Catálogo de Funciones y Clases
-- `run_graphify()` - Inicia el escaneo con Graphify, limpia la salida anterior, ejecuta Graphify, y procesa el archivo HTML generado.
+- `prepare_environment()` - Limpia el directorio anterior y prepara la configuración.
+- `execute_graphify()` - Ejecuta el CLI de graphify.
+- `process_and_move_html()` - Lee el HTML generado, lo traduce y lo guarda en su destino.
+- `run_graphify()` - Inicia el escaneo con Graphify.
 
 ### Interacción con Base de Datos
 Ninguna.
 
 ### Estado y Variables Globales
 - `ROOT_DIR` - Directorio raíz del proyecto.
+- `OUT_DIR` - Directorio donde se genera el HTML por `graphify`.
+- `DEST_DIR` - Directorio de destino para el archivo HTML final.
+- `TRANSLATIONS` - Diccionario con traducciones para elementos HTML.
 
 ### Dependencias y Flujo
-- **Dependencias**: 
-  - `os`
-  - `subprocess`
-  - `shutil`
-
+- **Dependencias**: `shutil`, `subprocess`, `pathlib`.
 - **Flujo**:
-  - El archivo se ejecuta directamente (`if __name__ == "__main__":`).
-  - Llama a la función `run_graphify()`.
-
-El flujo de datos es simple: el script ejecuta Graphify, procesa su salida y guarda el resultado en un directorio específico dentro del proyecto.
+  - `generate_graphify.py` importa `shutil`, `subprocess` y `pathlib`.
+  - No hay archivos del proyecto que importen a este archivo.
+  - El flujo de datos es desde el script hasta la ejecución del CLI de `graphify`, procesamiento del HTML y finalmente su movimiento al directorio de destino.
 
 
 ---
@@ -2339,7 +2243,7 @@ El flujo de datos es simple: el script ejecuta Graphify, procesa su salida y gua
 ## Archivo: ./scripts/main_processor.py
 
 ### Resumen Funcional
-El archivo `main_processor.py` es el punto de entrada del sistema de monitoreo de almacén (WMS). Ejecuta un pipeline completo que incluye la validación de directorios, análisis de carpetas, consolidación de datos, enriquecimiento y procesamiento de movimientos y órdenes PM.
+El archivo `main_processor.py` es el punto de entrada del sistema de monitoreo de almacén (WMS). Ejecuta un pipeline completo que incluye la validación de directorios, análisis de carpetas, consolidación de datos, enriquecimiento y procesamiento de diferentes tipos de archivos (Entregas, Stock, Movimientos, IW39, MB5B) para actualizar una base de datos SQLite.
 
 ### Catálogo de Funciones y Clases
 - `run_pipeline()` - Ejecuta el pipeline completo del WMS Analysis and Consolidation.
@@ -2350,24 +2254,54 @@ El archivo `main_processor.py` es el punto de entrada del sistema de monitoreo d
   - `stock_levels`
   - `inventory_movements`
   - `iw39_orders`
-- **Columnas Modificadas:** Dependientes de las tablas mencionadas.
-- **Consultas SQL Crudas:** No se detectan consultas SQL crudas directamente en este archivo. Se usan ORM (Object Relational Mapping) para interactuar con la base de datos.
+  - `mb5b_initial_stock`
+- **Columnas Modificadas:** Dependiendo del procesamiento, se insertan o actualizan filas en las tablas mencionadas.
 
 ### Estado y Variables Globales
-- `PROJECT_ROOT` - Ruta del proyecto.
-- `DELIVERIES_DIR`, `STOCK_DIR`, `INVENTORY_DIR`, `IW39_DIR`, `CLEANSED_DIR`, `DATABASE_PATH`, `ONEDRIVE_PATH` - Directorios y rutas de archivos.
+- `PROJECT_ROOT` - Ruta al directorio raíz del proyecto.
+- `DELIVERIES_DIR`, `STOCK_DIR`, `INVENTORY_DIR`, `IW39_DIR`, `MB5B_DIR`, `CLEANSED_DIR`, `DATABASE_PATH` - Rutas a los directorios y la base de datos.
 
 ### Dependencias y Flujo
-- **Librerías Externas:** `subprocess`, `sys`, `pathlib`, `logging`
+- **Librerías Externas:** `logging`, `subprocess`, `sys`, `pathlib`
 - **Archivos Importados:**
   - `config.py` (para configuraciones globales)
   - `scripts/analyze_folder.py` (para análisis de carpetas)
   - `db.consolidator.DataConsolidator` (para consolidación de datos)
-  - `services.etl.movements.InventoryMovementAdapter` (para procesamiento de movimientos)
-  - `services.etl.iw39.IW39Processor` (para procesamiento de órdenes PM)
-- **Archivos que Importan a este Archivo:** Ninguno
+  - `services.etl.movements.InventoryMovementAdapter` (para procesamiento de Movimientos)
+  - `services.etl.iw39.IW39Processor` (para procesamiento de IW39)
+  - `services.etl.mb5b.MB5BProcessor` (para procesamiento de MB5B)
+- **Archivos Importados por Otros:**
+  - No se indica explícitamente quiénes importan a este archivo.
 
-El flujo de datos es unidireccional, con el archivo principal (`main_processor.py`) invocando funciones y servicios para realizar las tareas necesarias.
+El flujo de datos fluye desde el punto de entrada hasta la ejecución de cada fase del pipeline, donde se realizan operaciones en archivos y actualizaciones en la base de datos.
+
+
+---
+
+## Archivo: ./scripts/run_consolidator.py
+
+### Resumen Funcional
+El archivo `run_consolidator.py` es un script que ejecuta la consolidación de datos en una carpeta especificada utilizando el motor de base de datos SQLite. El script recibe como argumento la ruta de la carpeta a procesar y utiliza una instancia de `DataConsolidator` para realizar la consolidación.
+
+### Catálogo de Funciones y Clases
+- `main()` - Función principal que verifica si se proporciona un argumento (ruta de la carpeta) y luego ejecuta el método `consolidate_folder` de la clase `DataConsolidator`.
+
+### Interacción con Base de Datos
+- Motor: SQLite
+- Tablas y Columnas: Ninguna. El script no realiza consultas directas a la base de datos.
+
+### Estado y Variables Globales
+- Ninguna. No se utilizan variables globales, de sesión o diccionarios quemados en el código.
+
+### Dependencias y Flujo
+- Librerías externas: `os`, `sys`
+- Archivos del proyecto que importa:
+  - `config.py` (para obtener la ruta de la base de datos)
+  - `db.consolidator.DataConsolidator` (clase para la consolidación de datos)
+
+- Archivos del proyecto que son importados por este archivo: Ninguno.
+
+**Flujo de Datos:** El script recibe una ruta de carpeta como argumento, crea una instancia de `DataConsolidator`, y llama al método `consolidate_folder` con la ruta proporcionada.
 
 
 ---
@@ -2379,51 +2313,95 @@ Este archivo está vacío o solo contiene espacios en blanco. No se requiere an�
 
 ---
 
+## Archivo: ./services/background_tasks.py
+
+### Resumen Funcional
+El archivo `background_tasks.py` contiene una tarea de fondo que se encarga de refrescar las analíticas del sistema. Esta tarea ejecuta métodos de los servicios de entregas y inventario para recalcular su contexto completo.
+
+### Catálogo de Funciones y Clases
+- `refresh_analytics()` - Refresca las analíticas (ejecutado como tarea de fondo trazable).
+
+### Interacción con Base de Datos
+- Motor: SQLite
+- Tablas modificadas:
+  - Ninguna (se supone que los métodos llamados internamente interactúan directamente con la base de datos).
+- Consultas SQL crudas o llamadas a ORM: Sí, se usan métodos de `DeliveriesService` y `InventoryService`, que probablemente contienen consultas SQL o llamadas a ORM.
+
+### Estado y Variables Globales
+- Ninguna
+
+### Dependencias y Flujo
+- Librerías externas:
+  - `logging`
+- Archivos del proyecto que importan a este archivo (`background_tasks.py`):
+  - Ninguno
+- Archivos del proyecto que este archivo importa (`background_tasks.py`):
+  - `core.database.get_session`
+  - `routes.tasks.get_tasks_context`
+  - `services.deliveries_service.DeliveriesService`
+  - `services.inventory_service.InventoryService`
+
+**Flujo de datos:**
+1. `refresh_analytics()` se ejecuta.
+2. Se obtiene una sesión de base de datos usando `get_session()`.
+3. Se crea una instancia de `DeliveriesService` y se llama a su método `get_full_context()`, que probablemente realiza consultas a la base de datos para recalcular el contexto de las entregas.
+4. Se crea una instancia de `InventoryService` y se llama a su método `get_full_context()`, que probablemente realiza consultas a la base de datos para recalcular el contexto del inventario.
+5. Se llama a `get_tasks_context(session)`, que también probablemente realiza consultas a la base de datos.
+6. Si ocurre un error, se registra con nivel de error en el logger.
+
+Este flujo asegura que todas las operaciones relacionadas con el refresco de analíticas interactúen directamente con la base de datos a través de los servicios correspondientes.
+
+
+---
+
 ## Archivo: ./services/dashboard_service.py
 
 ### Resumen Funcional
-El archivo `dashboard_service.py` contiene la lógica del servicio para el dashboard principal de entregas en un sistema de monitoreo de almacén (WMS). El servicio delega todas las operaciones de base de datos a la clase `DeliveriesRepository`, y proporciona métodos para obtener datos necesarios para renderizar el dashboard, incluyendo gráficos de intensidad semanal, indicadores clave de rendimiento (KPIs), selectores del dashboard y transacciones recientes.
+El archivo `dashboard_service.py` contiene la lógica del servicio para el dashboard principal de entregas en un sistema de monitoreo de almacén (WMS). El servicio se encarga de obtener y formatear datos necesarios para mostrar en el dashboard, incluyendo gráficos de intensidad semanal, indicadores clave de rendimiento (KPIs), selectores y transacciones recientes.
 
 ### Catálogo de Funciones y Clases
 - `DashboardService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
-  - **Parámetros**: 
-    - `session`: Sesión de SQLAlchemy para interactuar con la base de datos.
-  
-- `get_full_context()` - Obtiene el contexto completo necesario para renderizar el dashboard.
-  - **Retorno**:
-    - Un diccionario que contiene gráficos de intensidad semanal, KPIs, selectores del dashboard y transacciones recientes.
+  - **Propósito**: Configura la instancia del servicio para interactuar con la base de datos a través del repositorio `DashboardRepository`.
+
+- `get_full_context()` - Obtiene y formatea los datos necesarios para el contexto del dashboard.
+  - **Propósito**: Recupera gráficos de intensidad semanal, KPIs filtrados, selectores y transacciones recientes, y los devuelve en un formato adecuado para la vista.
 
 ### Interacción con Base de Datos
-- **Motor**: SQLite (implícito a través de SQLAlchemy).
+- **Motor de BD**: SQLite
 - **Tablas y Columnas**:
-  - `DeliveriesRepository` interactúa con las siguientes tablas y columnas:
-    - Tabla: `deliveries`
-      - Columnas: Dependientes de la implementación de `get_weekly_intensity_chart`, `get_filtered_kpis`, `get_dashboard_selectors`, y `get_filtered_transactions`.
-    - Tabla: `kpis`
-      - Columnas: Dependientes de la implementación de `get_filtered_kpis`.
-    - Tabla: `transactions`
-      - Columnas: Dependientes de la implementación de `get_filtered_transactions`.
+  - `get_weekly_intensity_chart(iso_year)` - Recupera datos para el gráfico de intensidad semanal.
+    - Tabla: No especificada (implícita en la consulta SQL).
+    - Columnas: No especificadas (implícitas en la consulta SQL).
+
+  - `get_filtered_kpis(None, None, None, min_week, iso_year)` - Recupera KPIs filtrados por semana y año.
+    - Tabla: No especificada (implícita en la consulta SQL).
+    - Columnas: No especificadas (implícitas en la consulta SQL).
+
+  - `get_dashboard_selectors(min_week)` - Recupera selectores para el dashboard.
+    - Tabla: No especificada (implícita en la consulta SQL).
+    - Columnas: No especificadas (implícitas en la consulta SQL).
+
+  - `get_filtered_transactions(None, None, None, None, None, min_week)` - Recupera transacciones recientes filtradas por semana.
+    - Tabla: No especificada (implícita en la consulta SQL).
+    - Columnas: No especificadas (implícitas en la consulta SQL).
 
 ### Estado y Variables Globales
-- **Ninguna**: No se utilizan variables globales, de sesión o diccionarios quemados en el código.
+- **Variables Globales**: Ninguna
 
 ### Dependencias y Flujo
 - **Librerías Externas**:
   - `logging`
-  - `sqlalchemy.orm.Session`
-  - `typing.Dict`, `typing.Any`, `typing.List`
-  - `datetime.datetime`
+  - `datetime`
+  - `typing`
 
-- **Archivos del Proyecto que Importan a este Archivo (lo consumen)**:
-  - Ninguna.
+- **Archivos del Proyecto que Importan a este Archivo (lo consumen)**: Ninguno
 
-- **Archivos del Proyecto que Este Archivo IMPORTA (consume)**:
-  - `repositories.deliveries.DeliveriesRepository`
+- **Archivos del Proyecto que Este Archivo Importa (consume)**:
+  - `repositories.dashboard.DashboardRepository`
 
 - **Dirección del Flujo de Datos**:
-  - El servicio recibe una sesión de base de datos y delega las operaciones de base de datos a `DeliveriesRepository`.
-  - Los métodos de `DeliveriesRepository` interactúan con la base de datos para obtener los datos necesarios.
-  - El servicio procesa estos datos y los devuelve en un formato que puede ser utilizado por la vista del dashboard.
+  - El servicio recibe una sesión de base de datos y utiliza el repositorio para obtener los datos necesarios.
+  - Los datos obtenidos se formatean y devuelven en un diccionario que representa el contexto completo del dashboard.
 
 
 ---
@@ -2438,7 +2416,7 @@ El archivo `deliveries_service.py` contiene la lógica del servicio de entregas 
   - **Propósito**: Prepara el servicio para interactuar con la base de datos proporcionada.
   
 - `get_full_context() -> Dict[str, Any]` - Genera y devuelve un contexto completo para las entregas.
-  - **Propósito**: Recopila y organiza información relevante desde la base de datos y otros servicios para proporcionar un contexto detallado.
+  - **Propósito**: Recopila y organiza información relevante sobre áreas de negocio y widgets configurados.
 
 ### Interacción con Base de Datos
 - **Motor**: SQLite
@@ -2448,25 +2426,29 @@ El archivo `deliveries_service.py` contiene la lógica del servicio de entregas 
   - `area_negocio`
 
 ### Estado y Variables Globales
-- Ninguna
+Ninguna
 
 ### Dependencias y Flujo
 - **Librerías Externas**: 
-  - `sqlalchemy.orm.Session`
-  - `logging`
-  - `typing.Dict`, `typing.Any`
+  - `logging`, `typing`
   
-- **Archivos del Proyecto que Importan a este Archivo**:
+- **Archivos del Proyecto que Importan a este Archivo (lo consumen)**:
+  - Ninguno
+  
+- **Archivos del Proyecto que Este Archivo IMPORTA (consume)**:
+  - `core.models.ConfigQuery`
+  - `routes.analytics_proyecciones.get_proyecciones_context`
   - `routes.inventory.get_inventory_context`
   - `routes.tasks.get_tasks_context`
-  - `routes.analytics_proyecciones.get_proyecciones_context`
 
-- **Archivos del Proyecto que Este Archivo Importa**:
-  - Ninguno
+**Flujo de Datos**: 
+1. El servicio se inicializa con una sesión de base de datos.
+2. Llama a `get_full_context()` para generar el contexto completo.
+3. Consulta la tabla `outbound_deliveries` para obtener áreas de negocio distintas.
+4. Recupera widgets configurados desde la base de datos.
+5. Intenta cargar contextos adicionales desde otros módulos (`routes.analytics_proyecciones`, `routes.inventory`, `routes.tasks`) y los combina en el contexto final.
 
-- **Flujo de Datos**: 
-  - El servicio recibe una sesión de base de datos y utiliza esta para consultar la tabla `outbound_deliveries`.
-  - Luego, intenta cargar contextos adicionales desde otros servicios (`inventory`, `tasks`, `analytics_proyecciones`) y los combina en el contexto final.
+**Nota**: El archivo importa funciones desde otros archivos, lo que indica un flujo bidireccional de dependencias dentro del proyecto.
 
 
 ---
@@ -2495,7 +2477,7 @@ Este archivo contiene funciones para procesar diferentes tipos de archivos y dir
 Ninguna
 
 ### Dependencias y Flujo
-- **Dependencias Externas**: Ninguna
+- **Dependencias Externas**: No hay dependencias externas.
 - **Archivos del Proyecto que Importan a este Archivo**:
   - `./services/etl/deliveries.py`
   - `./services/etl/movements.py`
@@ -2533,15 +2515,16 @@ El archivo `base.py` define una clase abstracta `BaseWMSProcessor` que proporcio
 - Columnas: Ninguna (operaciones directas en la base de datos).
 
 ### Estado y Variables Globales
-- `logger` - Variable global que almacena el objeto de registro.
+- `logger` - Variable global para el registro de eventos.
 
 ### Dependencias y Flujo
 - Librerías externas:
-  - `pandas`
-  - `pathlib`
-  - `sqlite3`
-  - `typing`
   - `logging`
+  - `sqlite3`
+  - `abc`
+  - `pathlib`
+  - `typing`
+  - `pandas`
 - Archivos del proyecto que este archivo importa: Ninguno.
 - Archivos del proyecto que importan a este archivo: Ninguno.
 - Flujo de datos: El archivo procesa archivos WMS y carga los datos en una base de datos SQLite.
@@ -2575,21 +2558,29 @@ El archivo `deliveries.py` contiene una clase `OutboundDeliveryAdapter` que exti
   - `PRAGMA table_info({table_name})`
 
 ### Estado y Variables Globales
-Ninguna.
+No se detectaron variables globales, de sesión o de entorno en este archivo.
 
 ### Dependencias y Flujo
 - Librerías externas:
+  - `sqlite3`
   - `pandas`
   - `pathlib`
   - `typing`
-  - `sqlite3`
 - Archivos del proyecto que importan a este archivo (`deliveries.py`):
-  - No se mencionan dependencias específicas en el fragmento proporcionado.
+  - No se detectaron archivos que importen directamente a `deliveries.py`.
 - Archivos del proyecto que este archivo importa:
-  - `base.py`
-  - `wms_utils.py`
+  - `core.wms_utils`: Contiene funciones utilitarias para el procesamiento de datos.
+  - `.base.BaseWMSProcessor`: Clase base para procesadores de WMS.
 
-El flujo de datos es desde los archivos de entrada (Excel, TXT) hasta la base de datos SQLite, pasando por la limpieza y transformación de los datos en el adaptador.
+**Flujo de Datos:**
+1. **Entrada**: Archivo CSV, Excel o TXT con datos de entregas de salida.
+2. **Procesamiento**:
+   - Validación del archivo.
+   - Extracción y limpieza de columnas requeridas.
+   - Transformación de los datos utilizando funciones utilitarias (`map_wms_status`, `apply_cost_center_mapping`, etc.).
+3. **Salida**: Inserción o actualización de los datos en la tabla `outbound_deliveries` de la base de datos SQLite.
+
+Este flujo asegura que los datos de entregas de salida sean procesados y almacenados correctamente en el sistema de gestión de almacén.
 
 
 ---
@@ -2613,8 +2604,35 @@ Ninguna.
 Ninguna.
 
 ### Dependencias y Flujo
-- **Dependencias**: pandas, pathlib.
+- **Dependencias**: pandas.
 - **Flujo**: El archivo no importa ni es importado por otros archivos dentro del proyecto.
+
+
+---
+
+## Archivo: ./services/etl/mb5b.py
+
+### Resumen Funcional
+El archivo `mb5b.py` contiene una clase `MB5BProcessor` que extiende de `BaseWMSProcessor`. Esta clase se encarga de procesar archivos en formato MB5B, que representan el stock inicial en un sistema de monitoreo de almacén (WMS). El proceso incluye la validación del archivo, la detección de columnas requeridas y la limpieza y transformación del DataFrame.
+
+### Catálogo de Funciones y Clases
+- `MB5BProcessor(BaseWMSProcessor)` - Adaptador específico para procesar el formato MB5B (Stock Inicial).
+  - `validate_file(file_path: Path) -> bool` - Valida si el archivo existe y contiene las columnas requeridas.
+  - `_get_required_columns() -> List[str]` - Devuelve una lista de columnas requeridas para el formato MB5B.
+  - `_get_primary_keys() -> List[str]` - Devuelve una lista de claves primarias para el formato MB5B.
+  - `_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame` - Limpia y transforma el DataFrame del archivo.
+
+### Interacción con Base de Datos
+Ninguna.
+
+### Estado y Variables Globales
+Ninguna.
+
+### Dependencias y Flujo
+- **Dependencias Externas**: `pandas`
+- **Archivos Importados por Este Archivo**: Ninguno.
+- **Archivos que Importan a Este Archivo**: Ninguno.
+- **Flujo de Datos**: El archivo importa `BaseWMSProcessor` desde el módulo local y utiliza `pandas` para procesar los datos.
 
 
 ---
@@ -2628,37 +2646,36 @@ El archivo `movements.py` contiene una clase `InventoryMovementAdapter` que se e
 - **Clase:** `InventoryMovementAdapter`
   - Propósito: Adaptador específico para procesar el formato WMS Movimientos.
   
-- **Función:** `validate_file(file_path: Path) -> bool`
-  - Propósito: Valida si el archivo CSV existe y contiene las columnas requeridas.
-
-- **Función:** `_get_required_columns() -> List[str]`
-  - Propósito: Devuelve una lista de columnas requeridas para el procesamiento del archivo.
-
-- **Función:** `_get_primary_keys() -> List[str]`
-  - Propósito: Devuelve una lista de claves primarias utilizadas en la base de datos.
-
-- **Función:** `_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame`
-  - Propósito: Limpia y transforma el DataFrame, eliminando columnas vacías, renombrando columnas, normalizando valores y aplicando validaciones específicas.
-
-- **Función:** `_vectorized_classify(df: pd.DataFrame) -> pd.DataFrame`
-  - Propósito: Clasifica las operaciones según los valores en la columna 'cmv' y agrega una nueva columna 'tipo_operacion'.
-
-- **Función:** `_post_process(conn, table_name: str)`
-  - Propósito: Crea índices estructurales para mejorar el rendimiento de búsquedas en la tabla `inventory_movements`.
+- **Métodos:**
+  - `validate_file(file_path: Path) -> bool`: Valida si el archivo existe y contiene las columnas requeridas.
+  - `_get_required_columns() -> List[str]`: Devuelve una lista de columnas requeridas para el procesamiento.
+  - `_get_primary_keys() -> List[str]`: Devuelve una lista de claves primarias utilizadas en la base de datos.
+  - `_clean_dataframe(chunk: pd.DataFrame) -> pd.DataFrame`: Limpia y transforma el DataFrame, eliminando columnas innecesarias y normalizando los valores.
+  - `_vectorized_classify(df: pd.DataFrame) -> pd.DataFrame`: Clasifica las operaciones según el valor de la columna `cmv`.
+  - `_post_process(conn, table_name: str)`: Crea índices en la base de datos para mejorar el rendimiento de las consultas.
 
 ### Interacción con Base de Datos
-- Motor: SQLite
-- Tablas: Ninguna (el archivo no realiza operaciones directas sobre tablas)
-- Columnas: Ninguna (el archivo no realiza operaciones directas sobre columnas)
+- **Motor:** SQLite
+- **Tablas y Columnas:**
+  - Tabla: `inventory_movements`
+    - Columnas: `fe_contab`, `alm`, `ce`, `cmv`, `referencia`, `texto_cab_documento`, `texto_breve_material`, `material`, `cantidad`, `umb`, `doc_mat`, `ej_mat`, `registrado`, `hora`, `usuario`, `pedido`, `ce_coste`, `importe_ml`, `mon`, `proveedor`, `orden`, `pos`, `pos_extra`, `tipo_operacion`
 
 ### Estado y Variables Globales
-- Ninguna
+- **Ninguna**
 
 ### Dependencias y Flujo
-- **Librerías Externas:** `pandas`, `numpy`
-- **Archivos del Proyecto que Importa:** Ninguno
-- **Archivos del Proyecto que Son Importados por Este Archivo:** `base.py` (dentro de la misma carpeta)
-- **Dirección del Flujo de Datos:** El archivo recibe un DataFrame, lo limpia y transforma, y luego lo devuelve para su almacenamiento en la base de datos.
+- **Librerías Externas:**
+  - `numpy`
+  - `pandas`
+  
+- **Archivos del Proyecto que Importan a este Archivo (lo consumen):**
+  - Ninguno
+
+- **Archivos del Proyecto que Este Archivo Importa (consume):**
+  - `./services/etl/base.py`
+
+- **Dirección del Flujo de Datos:**
+  - El archivo recibe un archivo CSV, lo valida, limpia y transforma, luego lo almacena en la base de datos SQLite.
 
 
 ---
@@ -2669,39 +2686,33 @@ El archivo `movements.py` contiene una clase `InventoryMovementAdapter` que se e
 El archivo `stock.py` contiene una clase `StockLevelAdapter` que procesa archivos de inventario/stock en formato LX02, los limpia y carga en una base de datos SQLite. Realiza un REPLACE completo en la tabla especificada.
 
 ### Catálogo de Funciones y Clases
-- **validate_file(file_path: Path) -> bool** - Valida si el archivo existe y contiene las columnas requeridas.
-- **_get_required_columns() -> List[str]** - Devuelve las columnas clave del header SAP LX02.
-- **read_and_clean_data(file_path: Path) -> pd.DataFrame** - Lee y limpia los datos del archivo, detectando automáticamente la fila de encabezado.
-- **_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame** - Limpia el DataFrame eliminando filas y columnas vacías y normalizando los strings.
-- **process_directory(folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int** - Combina todos los archivos en un directorio, limpia los datos y realiza un REPLACE completo en la tabla especificada.
+- `validate_file(file_path: Path) -> bool`: Valida si el archivo existe y contiene las columnas requeridas.
+- `_get_required_columns() -> List[str]`: Devuelve las columnas clave del header SAP LX02.
+- `read_and_clean_data(file_path: Path) -> pd.DataFrame`: Lee y limpia los datos del archivo de inventario.
+- `_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame`: Limpia el DataFrame eliminando filas y columnas vacías y normalizando los strings.
+- `process_directory(folder_path: str, db_path: str, table_name: str, conn: Optional[sqlite3.Connection] = None) -> int`: Procesa todos los archivos en un directorio, combina sus datos y carga el resultado en la base de datos.
 
 ### Interacción con Base de Datos
-- **Motor**: SQLite
-- **Tablas**: Ninguna (se opera sobre una tabla específica proporcionada como parámetro)
-- **Columnas**: `Material`, `UMB`, `otcuanto`, `source_file`, `ingested_at`
+- Motor: SQLite
+- Tablas: Ninguna (se espera una tabla especificada por `table_name`).
+- Columnas: Ninguna (se espera que la tabla tenga las columnas necesarias).
 
 ### Estado y Variables Globales
-- **logger**: Objeto de registro para el módulo.
+- No hay variables globales, de sesión o de entorno definidas en este archivo.
 
 ### Dependencias y Flujo
-- **Dependencias Externas**:
-  - `pandas`
+- Librerías externas:
+  - `logging`
+  - `os`
+  - `sqlite3`
+  - `datetime`
   - `pathlib`
   - `typing`
-  - `sqlite3`
-  - `os`
-  - `datetime`
-  - `logging`
-
-- **Archivos del Proyecto que Importan a este Archivo**: Ninguno
-- **Archivos del Proyecto que Este Archivo Importa**:
-  - `./services/etl/base.py` (clase base `BaseWMSProcessor`)
-  
-- **Flujo de Datos**: 
-  1. El archivo se procesa y limpia.
-  2. Los datos son combinados en un DataFrame.
-  3. El DataFrame se carga en la base de datos SQLite utilizando `to_sql` con `if_exists="replace"`.
-  4. Se crea un índice en la columna `otcuanto`.
+  - `pandas`
+- Archivos del proyecto que importan a este archivo: Ninguno.
+- Archivos del proyecto que este archivo importa: `./services/etl/base.py` (clase base `BaseWMSProcessor`).
+- Flujo de datos:
+  - El archivo lee archivos de inventario, los limpia y carga en una tabla de la base de datos SQLite.
 
 
 ---
@@ -2725,10 +2736,10 @@ Ninguna.
 Ninguna.
 
 ### Dependencias y Flujo
-- **Dependencias Externas**: `pandas`, `pathlib`
+- **Dependencias Externas**: `pandas`
 - **Archivos del Proyecto que Importan a este Archivo**: Ninguno.
 - **Archivos del Proyecto que Este Archivo Importa**: `./services/etl/base.py` (clase `BaseWMSProcessor`)
-- **Flujo de Datos**: El archivo importa la clase base y utiliza pandas para procesar archivos CSV, lo cual implica un flujo de datos desde el archivo hasta la limpieza y normalización del DataFrame.
+- **Flujo de Datos**: El archivo importa la clase base y utiliza pandas para procesar archivos CSV, lo cual implica un flujo de datos desde el archivo hasta la limpieza y preparación del DataFrame.
 
 
 ---
@@ -2736,14 +2747,14 @@ Ninguna.
 ## Archivo: ./services/inventory_service.py
 
 ### Resumen Funcional
-El archivo `inventory_service.py` contiene la lógica de negocio para el servicio de inventario en un sistema de gestión de almacén (WMS). Genera un contexto completo que incluye estadísticas de eficiencia, datos históricos y otros detalles relevantes para el dashboard de movimientos.
+El archivo `inventory_service.py` contiene la lógica de negocio para el servicio de inventario en un sistema de gestión de almacén (WMS). Genera un contexto completo que incluye estadísticas de eficiencia, datos históricos y otros detalles relevantes para el dashboard de Movimientos.
 
 ### Catálogo de Funciones y Clases
 - `InventoryService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
 - `fmt_num(val)` - Formatea un número como una cadena con separadores de miles.
 - `_get_latest_data_period()` - Obtiene el período más reciente de datos disponibles en la tabla `inventory_movements`.
 - `_get_empty_context()` - Devuelve un contexto vacío con valores por defecto.
-- `get_full_context()` - Genera y devuelve el contexto completo para el dashboard de movimientos.
+- `get_full_context()` - Genera y devuelve el contexto completo para el dashboard de Movimientos.
 
 ### Interacción con Base de Datos
 - **Motor:** SQLite
@@ -2759,21 +2770,14 @@ El archivo `inventory_service.py` contiene la lógica de negocio para el servici
 ### Dependencias y Flujo
 - **Librerías Externas:** `pandas`, `numpy`
 - **Archivos del Proyecto que Importan a este Archivo:**
-  - `repositories.InventoryRepository`
-  - `core.utils.sanitize_for_json`
-  - `core.state.get_app_state`
+  - `core.state.get_cache_manager()`
+  - `core.utils.sanitize_for_json()`
   - `core.wms_config.COST_CENTER_MAPPING`
-- **Archivos del Proyecto que Este Archivo Importa:**
-  - Ninguno
-
-**Flujo de Datos:**
-1. El archivo se importa y se utiliza en el servicio principal.
-2. Se inicia una sesión de base de datos (`InventoryService`).
-3. Se ejecutan consultas SQL para obtener los datos necesarios.
-4. Los resultados son procesados y formateados usando `pandas`.
-5. El contexto completo es generado y almacenado en caché.
-
-Este archivo es crucial para el funcionamiento del sistema de monitoreo de almacén, proporcionando las estadísticas y datos necesarios para el análisis y visualización de los movimientos de inventario.
+  - `repositories.InventoryRepository(self.session)`
+- **Archivos del Proyecto que Este Archivo Importa:** Ninguno
+- **Dirección del Flujo de Datos:**
+  - El archivo importa datos desde la base de datos y los procesa para generar un contexto completo.
+  - El contexto generado se almacena en caché para futuras solicitudes.
 
 
 ---
@@ -2781,33 +2785,67 @@ Este archivo es crucial para el funcionamiento del sistema de monitoreo de almac
 ## Archivo: ./services/productivity_daily.py
 
 ### Resumen Funcional
-El archivo `productivity_daily.py` contiene el servicio para calcular y devolver los KPIs de productividad diarios basados en las tareas asignadas. El servicio utiliza una sesión de SQLAlchemy para interactuar con la base de datos y un repositorio de tareas para obtener los datos necesarios.
+El archivo `productivity_daily.py` contiene el servicio para gestionar los datos de productividad diaria en un sistema de almacén (WMS). Ofrece métodos para obtener fechas disponibles, datos de productividad por fecha específica y detalles de movimientos diarios de usuarios.
 
 ### Catálogo de Funciones y Clases
-- `ProductivityDailyService(session: Session)` - Inicializa el servicio con una sesión de SQLAlchemy.
-  - Parámetros:
-    - `session`: Sesión de SQLAlchemy para interactuar con la base de datos.
-- `get_available_dates()` - Devuelve las fechas disponibles en los registros de tareas.
-- `get_productivity_data(target_date: str)` - Retorna todos los KPIs de productividad para una fecha específica (YYYY-MM-DD).
-  - Parámetros:
-    - `target_date`: Fecha objetivo en formato YYYY-MM-DD.
-  - Propósito: Calcula y devuelve los KPIs de productividad para la fecha especificada, incluyendo resúmen diario, tendencia horaria, brechas de inactividad y mapa de actividad.
-- `get_user_movements_daily_summary(target_date: str, usuario: str)` - Devuelve el resumen de movimientos diarios por usuario.
-  - Parámetros:
-    - `target_date`: Fecha objetivo en formato YYYY-MM-DD.
-    - `usuario`: Nombre del usuario.
-- `get_user_movements_daily_details(target_date: str, usuario: str, operacion: str)` - Devuelve los detalles de los movimientos diarios por usuario y operación específica.
-  - Parámetros:
-    - `target_date`: Fecha objetivo en formato YYYY-MM-DD.
-    - `usuario`: Nombre del usuario.
-    - `operacion`: Tipo de operación.
+- `ProductivityDailyService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
+  - `get_available_dates()` - Retorna las fechas disponibles para los KPIs de productividad.
+  - `get_productivity_data(target_date: str) -> Dict[str, Any]` - Obtiene todos los KPIs de productividad para una fecha específica (YYYY-MM-DD).
+  - `get_user_movements_daily_summary(target_date: str, usuario: str) -> list` - Retorna el resumen diario de movimientos de un usuario.
+  - `get_user_movements_daily_details(target_date: str, usuario: str, operacion: str) -> list` - Retorna los detalles diarios de movimientos de un usuario para una operación específica.
+
+### Interacción con Base de Datos
+- Motor de BD: SQLite
+- Tablas y Columnas:
+  - `get_available_dates()`: No especifica consultas directas.
+  - `get_productivity_data(target_date: str)`: Llama a `_get_daily_summary`, `_get_hourly_trend`, `_get_inactivity_gaps`, y `_get_activity_heatmap` en `ProductivityRepository`.
+    - `_get_daily_summary(date_sap)`
+    - `_get_hourly_trend(date_sap)`
+    - `_get_inactivity_gaps(date_sap)`
+    - `_get_activity_heatmap(date_sap)`
+  - `get_user_movements_daily_summary(target_date: str, usuario: str)`: Llama a `get_user_movements_daily_summary` en `ProductivityRepository`.
+  - `get_user_movements_daily_details(target_date: str, usuario: str, operacion: str)`: Llama a `get_user_movements_daily_details` en `ProductivityRepository`.
+
+### Estado y Variables Globales
+- No hay variables globales declaradas.
+
+### Dependencias y Flujo
+- Librerías externas:
+  - `logging`
+  - `typing`
+  - `re` (módulo estándar de Python)
+- Archivos del proyecto que importan a este archivo (`productivity_daily.py`):
+  - Ninguna.
+- Archivos del proyecto que este archivo importa (`productivity_daily.py`):
+  - `repositories.productivity.ProductivityRepository`
+- Flujo de datos:
+  - El servicio recibe una sesión de base de datos y utiliza un repositorio para interactuar con la BD.
+  - Los métodos devuelven datos estructurados en formato JSON.
+
+
+---
+
+## Archivo: ./services/productivity_monthly.py
+
+### Resumen Funcional
+El archivo `productivity_monthly.py` contiene servicios para calcular y obtener datos de productividad mensuales en un sistema de almacén (WMS). Ofrece métodos para obtener resúmenes y detalles de movimientos de usuarios por mes.
+
+### Catálogo de Funciones y Clases
+- `ProductivityMonthlyService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
+  - `get_monthly_productivity_data(target_month: str) -> Dict[str, Any]` - Calcula y devuelve los KPIs de productividad para un mes específico (YYYY-MM).
+  - `get_user_movements_monthly_summary(target_month: str, usuario: str) -> list` - Obtiene el resumen de movimientos mensuales por usuario.
+  - `get_user_movements_monthly_details(target_month: str, usuario: str, operacion: str) -> list` - Obtiene los detalles de movimientos mensuales por usuario y operación.
 
 ### Interacción con Base de Datos
 - Motor: SQLite
-- Tablas y Columnas:
-  - **tasks_repo.get_available_dates()**: Lee las fechas disponibles en la tabla `tasks`.
-  - **tasks_repo._get_daily_summary(date_sap)**, **tasks_repo._get_hourly_trend(date_sap)**, **tasks_repo._get_inactivity_gaps(date_sap)**, **tasks_repo._get_activity_heatmap(date_sap)**: Lee datos de las tablas `tasks`, `inventory_movements`, y posiblemente otras dependiendo del contexto.
-  - **tasks_repo.get_user_movements_daily_summary(target_date, usuario)**, **tasks_repo.get_user_movements_daily_details(target_date, usuario, operacion)**: Leerán datos de la tabla `tasks` y posiblemente otras tablas relacionadas.
+- Tablas:
+  - Ninguna (se asume que las consultas SQL están definidas en el repositorio `ProductivityRepository`)
+- Consultas SQL Crudas o ORM:
+  - `_get_monthly_summary(month_sap)`
+  - `_get_monthly_shifts(month_sap)`
+  - `_get_monthly_heatmap(month_sap)`
+  - `get_user_movements_monthly_summary(target_month, usuario)`
+  - `get_user_movements_monthly_details(target_month, usuario, operacion)`
 
 ### Estado y Variables Globales
 - Ninguna
@@ -2816,57 +2854,17 @@ El archivo `productivity_daily.py` contiene el servicio para calcular y devolver
 - Librerías Externas:
   - `logging`
   - `typing`
-  - `sqlalchemy.orm`
-  - `re` (módulo de expresiones regulares)
-- Archivos del Proyecto que Importan a este archivo (`productivity_daily.py`):
+  - `sqlalchemy.orm.Session`
+- Archivos del Proyecto que Importan a este Archivo (lo Consumen):
   - Ninguno
-- Archivos del Proyecto que Este Archivo Importa:
-  - `repositories.tasks`
+- Archivos del Proyecto que Este Archivo Importa (consume):
+  - `repositories.productivity.ProductivityRepository`
 
 **Flujo de Datos:**
-1. **Entrada**: Fecha objetivo (YYYY-MM-DD).
-2. **Procesamiento**:
-   - Convierte la fecha al formato SAP (DD.MM.YYYY) si es necesario.
-   - Llama a métodos del repositorio para obtener resúmen diario, tendencia horaria, brechas de inactividad y mapa de actividad.
-3. **Salida**: Diccionario con los KPIs de productividad.
-
-**Flujo Inverso:**
-- No aplica
-
-
----
-
-## Archivo: ./services/productivity_monthly.py
-
-### Resumen Funcional
-El archivo `productivity_monthly.py` contiene servicios para calcular y obtener datos de productividad mensuales en un sistema de almacén (WMS). Ofrece métodos para obtener resúmenes de productividad mensuales, movimientos diarios de usuarios y detalles específicos de operaciones.
-
-### Catálogo de Funciones y Clases
-- `ProductivityMonthlyService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
-  - `get_monthly_productivity_data(target_month: str) -> Dict[str, Any]` - Calcula y devuelve los KPIs de productividad para un mes específico (YYYY-MM).
-  - `get_user_movements_monthly_summary(target_month: str, usuario: str) -> list` - Obtiene el resumen de movimientos diarios de un usuario para un mes.
-  - `get_user_movements_monthly_details(target_month: str, usuario: str, operacion: str) -> list` - Obtiene los detalles específicos de una operación de movimiento diario de un usuario para un mes.
-
-### Interacción con Base de Datos
-- Motor de BD: SQLite.
-- Tablas y Columnas:
-  - `tasks_repo._get_monthly_summary(month_sap)` - Lee datos de la tabla que contiene resúmenes mensuales de tareas.
-  - `tasks_repo._get_monthly_shifts(month_sap)` - Lee datos de la tabla que contiene información sobre los turnos diarios.
-  - `tasks_repo._get_monthly_heatmap(month_sap)` - Lee datos de la tabla que contiene mapas térmicos de productividad.
-
-### Estado y Variables Globales
-- Ninguna.
-
-### Dependencias y Flujo
-- Librerías externas: `logging`, `typing`.
-- Archivos del proyecto que importa:
-  - `repositories.tasks` - Importado en el constructor de la clase `ProductivityMonthlyService`.
-- Archivos del proyecto que son importados por este archivo:
-  - Ninguno.
-- Flujo de datos:
-  - El servicio recibe una sesión de base de datos y utiliza un repositorio para acceder a los datos necesarios. Los resultados se procesan y devuelven en formato JSON.
-
-Este archivo es parte de la capa de servicios del sistema, donde se encapsulan las lógicas de negocio relacionadas con el cálculo y obtención de datos de productividad mensuales.
+1. El servicio `ProductivityMonthlyService` se inicializa con una sesión de base de datos.
+2. Los métodos `get_monthly_productivity_data`, `get_user_movements_monthly_summary`, y `get_user_movements_monthly_details` llaman a los métodos correspondientes del repositorio `ProductivityRepository`.
+3. El repositorio ejecuta consultas SQL para obtener los datos de productividad y movimientos.
+4. Los resultados se procesan y devuelven al servicio, que finalmente los devuelve al cliente.
 
 
 ---
@@ -2874,38 +2872,46 @@ Este archivo es parte de la capa de servicios del sistema, donde se encapsulan l
 ## Archivo: ./services/tasks_service.py
 
 ### Resumen Funcional
-El archivo `tasks_service.py` contiene la lógica del servicio para gestionar y analizar las Operaciones Técnicas (OTs) en el sistema de monitoreo de almacén (WMS). Genera un contexto analítico que incluye resúmenes, tendencias, usuarios involucrados, tipos de OTs, movimientos no paletizados y KPIs dinámicos.
+El archivo `tasks_service.py` contiene la lógica del servicio para generar y gestionar el contexto analítico de las Operaciones Técnicas (OTs) en un sistema de monitoreo de almacén (WMS). Este servicio utiliza SQLAlchemy para interactuar con una base de datos SQLite, pandas para procesamiento de datos, y FastAPI para la gestión del estado.
 
 ### Catálogo de Funciones y Clases
 - `TasksService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
-- `get_full_context()` - Genera y cachea el contexto analítico para la gestión de OTs.
+  - **Propósito**: Proporciona métodos para obtener y gestionar el contexto analítico de las OTs.
 
 ### Interacción con Base de Datos
-- **Motor:** SQLite
-- **Tablas y Columnas:**
-  - Tabla: `config_queries`
-    - Columnas: `sql_text`, `visual_state`, `query_id`
-  - Tabla: No especificadas explícitamente, pero se usan consultas SQL crudas para leer datos.
-- **Consultas SQL Crudas:** Se realizan consultas SQL para obtener resúmenes y KPIs dinámicos.
+- **Motor**: SQLite
+- **Tablas**:
+  - `config_queries` (Lectura)
+- **Columnas**:
+  - `sql_text`, `visual_state` (Tabla `config_queries`)
+- **Consultas SQL Crudas**:
+  ```sql
+  SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_list_pending'
+  SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_kpi_pending'
+  SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_kpi_users'
+  SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_kpi_critical'
+  ```
 
 ### Estado y Variables Globales
-- **Variables Globales:** Ninguna.
-- **Estado de Sesión:** Utiliza `get_app_state()` para acceder al estado de la aplicación, que incluye el caché.
-- **Diccionarios Quemados:** Ninguno.
+- **Ninguna**
 
 ### Dependencias y Flujo
-- **Librerías Externas:**
-  - `pandas`
-  - `sqlalchemy`
+- **Librerías Externas**:
   - `logging`
   - `datetime`
-- **Archivos del Proyecto que Importa:**
-  - `repositories/TasksRepository.py`
-  - `core/state.py`
-  - `core/utils.py`
-- **Archivos del Proyecto que Son Importados por Este Archivo:**
-  - Ninguno.
-- **Dirección del Flujo de Datos:** El flujo de datos comienza con la solicitud de contexto, pasa a través del servicio para generar los datos necesarios y finalmente devuelve el contexto analítico.
+  - `pandas`
+  - `sqlalchemy`
+- **Archivos del Proyecto que Importan a Este Archivo**:
+  - `core.state.get_cache_manager()`
+  - `core.utils.sanitize_for_json()`
+  - `repositories.TasksRepository`
+- **Archivos del Proyecto que Este Archivo Importa**:
+  - No aplica
+- **Dirección del Flujo de Datos**:
+  - Desde el servicio hasta la base de datos para leer y escribir datos.
+  - Desde el servicio hasta los repositorios para obtener datos analíticos.
+  - Desde los repositorios hasta pandas para procesar datos.
+  - Desde pandas hasta el contexto final que se almacena en caché.
 
 
 ---
@@ -2934,26 +2940,22 @@ El archivo `tunnel.py` contiene la implementación del servicio de túnel utiliz
 - `stop()` - Detiene el servicio de ngrok.
   - Propósito: Termina el proceso de ngrok y limpia los recursos asociados.
 
-- `_run_loop()` - Bucle principal del servicio de ngrok.
-  - Propósito: Maneja el ciclo de vida del túnel, reiniciándolo si es necesario.
+- `_run_loop()` - Bucle principal del servicio de ngrok, encargado de iniciar y gestionar el túnel.
+  - Propósito: Maneja la creación y reinicio del túnel hasta que se solicite su detención.
 
 ### Interacción con Base de Datos
-Ninguna. El archivo no interactúa con ninguna base de datos.
+Ninguna.
 
 ### Estado y Variables Globales
-- `_service_lock` - Un objeto `threading.Lock()` para proteger el acceso al servicio global.
-- `_global_service` - Una variable global que almacena la instancia singleton del servicio de ngrok.
+- `_service_lock` - Lock para proteger el acceso al servicio global.
+- `_global_service` - Variable global que almacena la instancia singleton del servicio de ngrok.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: 
-  - `os`, `subprocess`, `threading`, `time`, `urllib.request`, `json`, `logging`
-  
-- **Archivos Importados**:
-  - `config.py` (para las constantes `NGROK_BIN` y `TUNNEL_URL_FILE`)
-  
+- **Librerías Externas**: `json`, `logging`, `os`, `subprocess`, `threading`, `time`, `urllib.request`.
+- **Archivos Importados**: `config.py` (para constantes como `NGROK_BIN` y `TUNNEL_URL_FILE`).
 - **Flujo de Datos**:
-  - El archivo se importa por otros archivos del proyecto para iniciar o detener el servicio de túnel.
-  - Los métodos `_run_loop`, `start`, y `stop` manejan la lógica interna del servicio, mientras que las funciones `start_tunnel` y `stop_tunnel` proporcionan una interfaz segura y thread-safe para interactuar con el servicio.
+  - El archivo se importa por otros módulos para iniciar o detener el servicio de túnel.
+  - Los métodos `_run_loop`, `start`, y `stop` manejan la creación, reinicio y finalización del proceso de ngrok en un hilo separado.
 
 
 ---
@@ -3206,6 +3208,260 @@ El archivo `analytics_studio_ui.js` contiene funciones y métodos para gestionar
   - Ninguno especificado en el fragmento proporcionado.
 - **Flujo de Datos**:
   - El flujo de datos se gestiona principalmente a través de la interfaz de usuario y las solicitudes HTTP al backend.
+
+
+---
+
+## Archivo: ./static/js/bundle.js (Procesado en 8 partes)
+
+#### --- PARTE 1 de 8 ---
+
+### Resumen Funcional
+El archivo `bundle.js` contiene módulos de utilidades para la interfaz de usuario (UI) y lógica del backend para un sistema de monitoreo de almacén (WMS). Incluye funciones para manejar modales, renderizar materiales, llenar selectores con áreas, leer datos JSON embebidos en el DOM, así como funciones de API para interactuar con el backend.
+
+### Catálogo de Funciones y Clases
+- `CoreUI.openModal(id)` - Muestra un modal por su ID.
+- `CoreUI.closeModal(id)` - Oculta un modal por su ID.
+- `CoreUI.renderMaterialModal(opts)` - Rellena y abre un modal con una lista de materiales.
+- `CoreUI.populateAreaSelect(selectId, data, key)` - Llena un `<select>` con áreas únicas de un array.
+- `CoreUI.getData(id)` - Lee y parsea JSON embebido en el DOM.
+- `DashboardAPI._fetch(url, options)` - Realiza una solicitud HTTP a la API.
+- `DashboardAPI.fetchKPIs(params)` - Obtiene indicadores clave del negocio (KPIs).
+- `DashboardAPI.fetchFilteredData(params)` - Obtiene datos filtrados.
+- `DashboardAPI.sync()` - Sincroniza los datos con el backend.
+- `DashboardAPI.checkSyncStatus()` - Verifica el estado de la sincronización.
+- `DashboardAPI.logout()` - Cierra sesión y limpia el almacenamiento local.
+
+### Interacción con Base de Datos
+Ninguna
+
+### Estado y Variables Globales
+- `window.CoreUI` - Objeto que expone funciones comunes para la UI.
+- `window.openModal`, `window.closeModal` - Aliases globales para compatibilidad con handlers inline.
+
+### Dependencias y Flujo
+- **Dependencias Externas**: `fetch`
+- **Archivos Importados**: Ninguno
+- **Archivos Exportados**: `bundle.js` es importado por otros archivos del proyecto, como `_logout.html`, `dashboard_core.js`, etc.
+
+#### --- PARTE 2 de 8 ---
+
+### Resumen Funcional
+El archivo `bundle.js` contiene funciones para renderizar gráficos de líneas y trellis en un sistema de monitoreo de almacén. Utiliza Chart.js para crear visualizaciones dinámicas basadas en datos proporcionados.
+
+### Catálogo de Funciones y Clases
+- `renderSaaSChart(container, queryId, data)` - Renderiza un gráfico de líneas.
+- `renderSaaSTrellis(container, queryId, data)` - Renderiza una grilla de gráficos trellis.
+- `initSaaSWidgets(params = null, rootElement = document)` - Inicializa widgets SaaS en el DOM.
+
+### Interacción con Base de Datos
+Ninguna
+
+### Estado y Variables Globales
+- `window.saasChartInstances` - Almacena instancias de gráficos Chart.js.
+- `window.saasChartInstancesV2` - Almacena instancias de gráficos Chart.js para la versión 2.
+
+### Dependencias y Flujo
+- **Dependencias Externas**: `Chart.js`, `ChartDataLabels`
+- **Archivos Importados**: No se importan archivos adicionales.
+- **Archivos Exportados**: No se exportan funciones adicionales.
+
+**Flujo de Datos**:
+1. `initSaaSWidgets` es llamado al cargar el DOM.
+2. Busca elementos con la clase `.saas-widget-v2`.
+3. Para cada widget, llama a `renderSaaSChart` o `renderSaaSTrellis` según los datos proporcionados.
+4. Los gráficos se renderizan en los contenedores correspondientes.
+
+**Flujo de Datos (Continuación)**:
+- `renderSaaSChart` y `renderSaaSTrellis` procesan los datos y crean instancias de Chart.js para renderizar los gráficos.
+- Los gráficos se actualizan dinámicamente según los parámetros proporcionados en `initSaaSWidgets`.
+
+**Flujo de Datos (Continuación)**:
+- Los widgets pueden interactuar con el usuario a través de eventos como clics, que pueden abrir modales o cargar datos adicionales.
+
+#### --- PARTE 3 de 8 ---
+
+### Resumen Funcional
+El archivo `bundle.js` contiene funciones JavaScript que se utilizan para inicializar widgets de monitoreo en un sistema de almacén (WMS). Incluye la actualización de valores en el DOM, carga de sugerencias de reabastecimiento y manejo de modales con detalles específicos.
+
+### Catálogo de Funciones y Clases
+- `initSaaSWidgetsV2(queryId)` - Inicializa widgets V2 basados en el ID de la consulta.
+- `loadReplenishmentSuggestions(freq='all')` - Carga sugerencias de reabastecimiento en función de la frecuencia seleccionada.
+- `openDrilldownModal(queryId, segmentLabel, materialId=null)` - Abre un modal con detalles de drill-down para una consulta específica.
+
+### Interacción con Base de Datos
+Ninguna
+
+### Estado y Variables Globales
+- `window.initSaaSWidgetsV2` - Función global que inicializa widgets V2.
+- `window.loadReplenishmentSuggestions` - Función global que carga sugerencias de reabastecimiento.
+- `window.openDrilldownModal` - Función global para abrir modales de drill-down.
+
+### Dependencias y Flujo
+- **Dependencias Externas**: No se mencionan dependencias externas específicas en el fragmento proporcionado.
+- **Archivos Importados**: No hay importaciones de archivos dentro del fragmento proporcionado.
+- **Archivos Exportados**: El archivo no exporta ninguna función o variable.
+
+El flujo de datos es principalmente entre funciones y el DOM, con llamadas a APIs para cargar datos.
+
+#### --- PARTE 4 de 8 ---
+
+### Resumen Funcional
+Este archivo JavaScript (`bundle.js`) contiene lógica para cargar y mostrar datos en una interfaz web, utilizando funciones como `fetch` para obtener datos de un servidor, manipular el DOM para actualizar la vista y renderizar tablas con información sobre materiales y entregas.
+
+### Catálogo de Funciones y Clases
+- **getData(id)** - Obtiene datos desde el almacenamiento local.
+- **openModalArea(name, isCurrentMonth = false)** - Abre un modal con detalles de una área.
+- **openModalWeekday(dayName, isCurrentMonth = false)** - Abre un modal con detalles de un día.
+- **openModalUbicacion(name)** - Abre un modal con detalles de ubicaciones.
+- **openModalUser(name)** - Abre un modal con detalles de usuarios.
+- **switchVLView(view)** - Cambia la vista entre operativa y histórica.
+- **toggleMulti(id)** - Alterna la visibilidad de elementos.
+- **updateDeliveriesAnalytics()** - Actualiza los KPIs y filtra listas según selección.
+- **toggleChartSelectAll(isChecked)** - Maneja el estado del checkbox "Seleccionar todo".
+- **handleSmartCheckbox(cb)** - Maneja la lógica inteligente de los checkboxes.
+
+### Interacción con Base de Datos
+Ninguna. El archivo no interactúa directamente con una base de datos.
+
+### Estado y Variables Globales
+- `currentModalContext` - Almacena el contexto actual del modal.
+- `window.slaTrendChart`, `window.slaAreaTrendChart`, etc. - Referencias a gráficos que se redibujan en ciertas acciones.
+
+### Dependencias y Flujo
+- **Dependencias**: No hay dependencias externas mencionadas directamente en el código proporcionado.
+- **Flujo de Datos**: El flujo de datos comienza con una solicitud `fetch` para obtener datos, luego se procesan y renderizan en la interfaz web. Los eventos como clics en checkboxes o botones desencadenan funciones que actualizan el estado y la vista.
+
+#### --- PARTE 5 de 8 ---
+
+### Resumen Funcional
+El archivo `bundle.js` contiene funciones y lógica para manejar la visualización de gráficos, tablas y modales en un sistema de monitoreo de almacén (WMS). Incluye funcionalidades para cargar datos desde una API, renderizar gráficos utilizando Chart.js, gestionar el estado del usuario y mostrar información detallada en modales.
+
+### Catálogo de Funciones y Clases
+- `cerrarTendenciaMaterial()` - Cierra un modal de tendencia de material.
+- `loadData()` - Carga datos de transporte desde una API y los renderiza en gráficos y tablas.
+- `getMonday(dateStr)` - Calcula la fecha del lunes correspondiente a una fecha dada.
+- `updateTransporteChartGroup(group)` - Actualiza el grupo de datos para el gráfico de transporte.
+- `loadPendingData()` - Carga y muestra los datos pendientes de entrega en una tabla con agrupación por mes y fecha.
+- `renderChart()` - Renderiza un gráfico de líneas utilizando Chart.js.
+- `renderTable(data)` - Renderiza una tabla con los últimos 25 registros de transporte.
+- `openPdfViewer(url)` - Abre un modal para visualizar un PDF.
+- `closePdfViewer()` - Cierra el modal del PDF.
+- `searchTransporte()` - Realiza una búsqueda en tiempo real de datos de transporte y muestra los resultados.
+
+### Interacción con Base de Datos
+Ninguna
+
+### Estado y Variables Globales
+- `_tendenciaChart` - Variable global que almacena la instancia del gráfico de tendencia.
+- `chartInstance` - Variable global que almacena la instancia del gráfico de transporte.
+- `allTransporteData` - Array global que almacena los datos de transporte cargados desde la API.
+- `currentChartGroup` - Variable global que almacena el grupo actual de datos para el gráfico de transporte.
+
+### Dependencias y Flujo
+- **Dependencias Externas**: 
+  - `fetch` (API web para hacer solicitudes HTTP)
+  - `Chart.js` (biblioteca para renderizar gráficos)
+
+- **Archivos del Proyecto que Importan a este Archivo**:
+  - Ninguno
+
+- **Archivos del Proyecto que Este Archivo Importa**:
+  - `transporte.js`
+  - `tasks.js`
+  - `inventory.js`
+
+- **Flujo de Datos**: 
+  - El archivo se carga en el navegador y ejecuta las funciones necesarias para cargar y mostrar datos.
+  - Los datos son cargados desde una API utilizando `fetch`.
+  - Los datos son procesados y renderizados en gráficos y tablas utilizando Chart.js y DOM manipulation.
+
+#### --- PARTE 6 de 8 ---
+
+### Resumen Funcional
+El archivo `bundle.js` contiene funciones JavaScript que se utilizan en un sistema de monitoreo de almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite. El script realiza operaciones como la carga de datos desde una API, el procesamiento de estos datos y la actualización del contenido de las páginas web.
+
+### Catálogo de Funciones y Clases
+- `toggleDailyUserFilter()` - Alterna la visibilidad del filtro de usuarios diarios.
+- `renderDailyUserCheckboxes(summary)` - Renderiza los checkboxes para seleccionar usuarios diarios.
+- `toggleAllDailyUsers()` - Selecciona/deselecciona todos los usuarios diarios.
+- `onDailyUserCheckboxChange()` - Maneja el cambio en la selección de usuarios diarios.
+- `renderFilteredDaily()` - Renderiza los KPIs filtrados según los usuarios seleccionados.
+
+### Interacción con Base de Datos
+Ninguna
+
+### Estado y Variables Globales
+- `productivityTrendChartInst` - Instancia del gráfico de tendencias de productividad.
+- `currentDailyData` - Datos actuales de productividad.
+- `selectedDailyUsers` - Usuarios diarios seleccionados.
+
+### Dependencias y Flujo
+- Depende de librerías como `marked` para el procesamiento de markdown.
+- Importa funciones desde otros archivos JavaScript (`analytics_proyecciones.js`, `docs_explorer.js`, `productivity_daily.js`).
+- Exporta funciones globales para ser utilizadas en otros scripts.
+
+#### --- PARTE 7 de 8 ---
+
+### Resumen Funcional
+El archivo `bundle.js` contiene funciones para cargar y renderizar datos de productividad diaria y mensual en un sistema de monitoreo de almacén (WMS). Utiliza una interfaz de usuario con elementos como tablas, gráficos y modales para mostrar estadísticas detalladas.
+
+### Catálogo de Funciones y Clases
+- `renderDailyUserCheckboxes(summary)` - Renderiza los checkboxes para filtrar usuarios diarios.
+- `renderFilteredDaily()` - Filtra y renderiza datos diarios según el usuario seleccionado.
+- `renderKPI1(summary)` - Renderiza la KPI 1 (Productividad Diaria) en una tabla con barras de progreso.
+- `renderKPI2(trend)` - Renderiza la KPI 2 (Tendencia Productiva) en un gráfico de líneas.
+- `renderKPI3(gaps)` - Renderiza la KPI 3 (Baches en Productividad) en una lista de tarjetas.
+- `renderKPI4(heatmapData)` - Renderiza la KPI 4 (Mapa de Calor de Productividad) en una tabla.
+
+### Interacción con Base de Datos
+Ninguna
+
+### Estado y Variables Globales
+- `currentDailyData` - Almacena los datos diarios actuales.
+- `productivityTrendChartInst` - Instancia del gráfico de tendencia productiva mensual.
+- `selectedMonthlyUsers` - Lista de usuarios seleccionados para el filtrado mensual.
+
+### Dependencias y Flujo
+Dependencias:
+- `fetch` - Para hacer solicitudes HTTP.
+- `Chart.js` - Para renderizar gráficos.
+
+Flujo:
+- `bundle.js` importa funciones desde otros archivos (`productivity_monthly.js`, `productivity_modals.js`).
+- Otros archivos importan `bundle.js`.
+
+El flujo de datos es unidireccional, con `bundle.js` consumiendo datos y renderizando la interfaz de usuario.
+
+#### --- PARTE 8 de 8 ---
+
+### Resumen Funcional
+El archivo `bundle.js` contiene funciones JavaScript que gestionan la interacción del usuario con el sistema de monitoreo de almacén, permitiendo ver resúmenes diarios y mensuales de movimientos de productos por usuarios.
+
+### Catálogo de Funciones y Clases
+- `cargarNivel2Diario(operacion)` - Carga los detalles de una operación diaria.
+- `volverNivel1Diario()` - Vuelve al nivel 1 del detalle diario.
+- `cerrarDetalleUsuario()` - Cierra el modal de movimientos diarios.
+- `abrirDetalleMensualUsuario(usuario)` - Abre el modal de resumen mensual de movimientos por usuario.
+- `cargarNivel2Mensual(operacion)` - Carga los detalles de una operación mensual.
+- `volverNivel1Mensual()` - Vuelve al nivel 1 del detalle mensual.
+- `cerrarDetalleMensualUsuario()` - Cierra el modal de movimientos mensuales.
+
+### Interacción con Base de Datos
+Ninguna. El archivo no realiza ninguna interacción directa con una base de datos.
+
+### Estado y Variables Globales
+- `currentDailyDate` - Almacena la fecha actual para los detalles diarios.
+- `currentDailyUsuario` - Almacena el usuario actual para los detalles diarios.
+- `currentMonthlyDate` - Almacena la fecha actual para los detalles mensuales.
+- `currentMonthlyUsuario` - Almacena el usuario actual para los detalles mensuales.
+
+### Dependencias y Flujo
+- **Dependencias**: No se importan librerías externas.
+- **Flujo de Datos**:
+  - El archivo es consumido por HTML que muestra modales y tablas interactivas.
+  - Los datos son solicitados a través de llamadas `fetch` a endpoints definidos en el backend (FastAPI).
+  - Los datos recibidos se procesan y mostrados en la interfaz del usuario.
 
 
 ---
@@ -3608,30 +3864,40 @@ Ninguna.
 
 ---
 
-## Archivo: ./static/js/saas_engine_core.js
+## Archivo: ./static/js/saas_engine_core.js (Procesado en 1 partes)
+
+#### --- PARTE 1 de 1 ---
 
 ### Resumen Funcional
-El archivo `saas_engine_core.js` es un motor SaaS V2 que se encarga de leer contenedores con la clase `.saas-widget-v2`, renderizar gráficos o KPIs según los parámetros proporcionados, y actualizarlos dinámicamente.
+El archivo `saas_engine_core.js` es un script que inicializa widgets de gráficos y KPIs en una interfaz web, utilizando datos obtenidos a través de una API. Los widgets pueden mostrar diferentes tipos de gráficos (lineales, trellis, etc.) basándose en los parámetros proporcionados.
 
 ### Catálogo de Funciones y Clases
-- `initSaaSWidgetsV2(params = null, rootElement = document)` - Inicializa los widgets SaaS V2 en el elemento raíz especificado o en todo el documento si no se proporciona ninguno. Recibe parámetros para filtrar los datos.
+- `initSaaSWidgetsV2(params = null, rootElement = document)` - Inicializa los widgets SaaS V2.
+- `loadReplenishmentSuggestions(freq = 'all')` - Carga sugerencias de abastecimiento en una tabla.
 
 ### Interacción con Base de Datos
-- **Motor**: Ninguna.
-- **Tablas y Columnas**: No hay consultas SQL explícitas ni llamadas a ORM detectadas en este archivo.
+Ninguna. El archivo no interactúa directamente con una base de datos.
 
 ### Estado y Variables Globales
-- `window.saasChartInstancesV2` - Almacena instancias de gráficos Chart.js para widgets individuales.
+- `window.saasChartInstancesV2` - Almacena instancias de gráficos Chart.js para widgets trellis.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: 
-  - `ChartDataLabels` (plugin para Chart.js).
-- **Archivos del Proyecto que Importan a este Archivo**:
-  - Ninguno.
-- **Archivos del Proyecto que Este Archivo Importa**:
+- **Dependencias Externas**: 
+  - `fetch` (API web para hacer solicitudes HTTP).
+  - `ChartDataLabels` (plugin para Chart.js que permite mostrar etiquetas en los gráficos).
+
+- **Archivos del Proyecto Importados**:
   - Ninguno.
 
-El flujo de datos es el siguiente: el archivo se ejecuta al cargar la página, inicia los widgets SaaS V2 y actualiza dinámicamente sus contenidos según los parámetros proporcionados.
+- **Archivos del Proyecto que Importan a Este Archivo**:
+  - Ninguno.
+
+- **Flujo de Datos**: 
+  - El archivo se ejecuta al cargar el DOM (`DOMContentLoaded`).
+  - Llama a `initSaaSWidgetsV2()` y `loadReplenishmentSuggestions()` con un pequeño retraso.
+  - Los widgets son inicializados y actualizados según los parámetros proporcionados.
+
+El flujo de datos es unidireccional, desde el archivo hasta la interfaz web y viceversa para las interacciones del usuario.
 
 
 ---
@@ -3639,24 +3905,31 @@ El flujo de datos es el siguiente: el archivo se ejecuta al cargar la página, i
 ## Archivo: ./static/js/saas_engine_drilldown.js
 
 ### Resumen Funcional
-El archivo `saas_engine_drilldown.js` contiene funciones para abrir y gestionar un modal de detalles con una tabla dinámica que muestra datos filtrados y ordenables. El contenido se carga a través de una API RESTful.
+El archivo `saas_engine_drilldown.js` contiene funciones para abrir modales de detalles y cargar tablas dinámicas con datos desde una API. Los modales incluyen detalles de materiales, áreas de negocio y estadísticas relacionadas.
 
 ### Catálogo de Funciones y Clases
-- `window.openDrilldownModal(queryId, segmentLabel, materialId = null)` - Abre el modal de detalles con los datos filtrados según la consulta y segmento proporcionados.
-- `window.sortDrilldownTable(n)` - Ordena las filas de la tabla por la columna especificada.
-- `window.filterDrilldownTable()` - Filtra las filas de la tabla según los valores ingresados en los campos de búsqueda.
+- `window.openDrilldownModal(queryId, segmentLabel, materialId = null)` - Abre el modal de detalles para un área o material específico.
+- `window.sortDrilldownTable(n)` - Ordena la tabla de detalles por una columna específica.
+- `window.filterDrilldownTable()` - Filtra los datos de la tabla según los valores ingresados en los campos de búsqueda.
+- `window.openCmv201Modal()` - Abre el modal para mostrar resúmenes de CMV 201.
+- `window.loadCmv201Data(planType)` - Carga los datos del resumen de CMV 201 según el tipo de planificación seleccionado.
+- `window.openCmv201AreaDetails(area)` - Abre el modal para mostrar detalles específicos de una área en CMV 201.
+- `window.backToCmv201Summary()` - Vuelve al resumen general de CMV 201.
+- `window.onCmv201MonthChange()` - Maneja el cambio de mes seleccionado en los modales de CMV 201 y CMV 261.
+- `window.loadCmv201AreaDetails()` - Carga los detalles específicos de una área en CMV 201 según el mes seleccionado.
 
 ### Interacción con Base de Datos
-Ninguna. El archivo no interactúa directamente con una base de datos. Los datos se cargan a través de una API RESTful.
+Ninguna. El archivo no interactúa directamente con una base de datos. Los datos se cargan a través de llamadas a la API FastAPI.
 
 ### Estado y Variables Globales
-- `window.filterDrilldownTableTimer` - Variable global que almacena el temporizador para la función de filtrado.
+- `window.currentCmv201PlanType` - Almacena el tipo de planificación seleccionado para CMV 201.
+- `window.currentCmv201Area` - Almacena el área de negocio seleccionada en los modales de CMV 201 y CMV 261.
+- `window.cmv201MonthsAvailable` - Almacena los meses disponibles para la visualización en los modales de CMV 201 y CMV 261.
 
 ### Dependencias y Flujo
-- **Dependencias**: No hay dependencias externas mencionadas.
+- **Dependencias**: No se importan librerías externas específicas.
 - **Flujo de Datos**:
-  - El archivo se importa en otros archivos del proyecto (consumido por ellos).
-  - Otros archivos del proyecto pueden importar este archivo para usar sus funciones (`window.openDrilldownModal`, `window.sortDrilldownTable`, `window.filterDrilldownTable`).
+  - `saas_engine_drilldown.js` importa y es importado por otros archivos JavaScript dentro del proyecto, pero no hay intercambio explícito de datos entre ellos.
 
 
 ---
@@ -3797,7 +4070,7 @@ El flujo de datos es principalmente hacia la interfaz del usuario, donde los dat
 ## Archivo: ./templates/dashboard.html
 
 ### Resumen Funcional
-El archivo `dashboard.html` es una plantilla HTML para el panel de control del sistema de monitoreo de almacén (WMS). Contiene la interfaz de usuario principal que incluye encabezado, indicadores clave (KPIs), menú de acciones y contenido principal dividido en sidebar y tabla.
+El archivo `dashboard.html` es una plantilla HTML para el panel de control del sistema de monitoreo de almacén (WMS). Contiene la interfaz de usuario principal que incluye encabezado, indicadores clave (KPIs), menú de navegación y contenido principal.
 
 ### Catálogo de Funciones y Clases
 Ninguna función o clase detectada directamente en este archivo HTML. Todas las interacciones son realizadas a través de JavaScript y eventos del usuario.
@@ -3813,85 +4086,52 @@ Ninguna. El archivo no contiene consultas SQL ni llamadas a ORM para interactuar
 
 ### Dependencias y Flujo
 - **Dependencias**: No se importan librerías externas directamente en este archivo.
-- **Flujo de Datos**: El flujo de datos pasa por el servidor (FastAPI) que renderiza esta plantilla HTML, pasando los valores de las variables globales como contexto. Los eventos del usuario (clics en botones, cambios en la interfaz) se manejan con JavaScript.
+- **Flujo de Datos**: El flujo de datos pasa a través del servidor (FastAPI) al cliente (navegador). Los datos necesarios para renderizar la página son pasados como variables globales desde el backend.
 
-Este archivo es una vista HTML que presenta información y permite interacciones al usuario, pero no realiza ninguna operación directamente relacionada con la base de datos o el backend del sistema.
+Este archivo es una vista HTML que presenta los datos y funcionalidades principales del sistema, pero no realiza ninguna operación directamente en la base de datos ni contiene lógica de negocio.
 
 
 ---
 
-## Archivo: ./templates/deliveries.html (Procesado en 2 partes)
+## Archivo: ./templates/deliveries.html (Procesado en 1 partes)
 
-#### --- PARTE 1 de 2 ---
+#### --- PARTE 1 de 1 ---
 
 ### Resumen Funcional
-El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario del sistema de monitoreo de almacén (WMS). Contiene el diseño y las funcionalidades necesarias para mostrar diferentes secciones como entregas, movimientos, consumos, etc., con un menú de pestañas interactiva.
+El archivo `deliveries.html` es una plantilla HTML para la interfaz de usuario del sistema de monitoreo de almacén (WMS). Proporciona una vista consolidada con varias secciones, como entregas, movimientos, consumos y más. Incluye funcionalidades para filtrar y ordenar datos, así como modales para detalles adicionales.
 
 ### Catálogo de Funciones y Clases
 - `switchTab(tabId, btnElement)` - Cambia la pestaña activa.
 - `switchSubTab(subTabId, btnElement)` - Cambia la subpestaña activa.
 - `openNonPalletizedDetails(user, claseMov)` - Abre un modal con detalles no paletizados.
 - `initTableFilters()` - Inicializa los filtros de tablas.
-- `filterOTTable()` - Filtra la tabla de OTs según los criterios seleccionados.
-- `filterDiscrepancyTable()` - Filtra la tabla de discrepancias según los criterios seleccionados.
+- `filterOTTable()` - Filtra la tabla de OTs según criterios seleccionados.
+- `filterDiscrepancyTable()` - Filtra la tabla de discrepancias según criterios seleccionados.
 - `sortTableDiscrepancy(columnIndex)` - Ordena la tabla de discrepancias.
 
 ### Interacción con Base de Datos
 Ninguna
 
 ### Estado y Variables Globales
-No hay variables globales explícitas definidas en el código. Las variables están almacenadas en elementos `<script type="application/json">` que contienen datos JSON serializados.
+- Variables globales no detectadas directamente en el código proporcionado.
 
 ### Dependencias y Flujo
-- **Librerías externas**: Chart.js, marked.js, Font Awesome.
-- **Archivos del proyecto importados**:
+- **Librerías Externas**: 
+  - `Chart.js`
+  - `chartjs-plugin-datalabels`
+  - `marked`
+  - `font-awesome`
+
+- **Archivos del Proyecto Importados**:
   - `partials/_styles.html`
   - `css/deliveries.css`, `css/inventory.css`, `css/analytics_proyecciones.css`
-  - `js/core_ui.js`, `js/dashboard_api.js`, `js/dashboard_core.js`, `js/dashboard_saas.js`, `js/saas_engine_core.js`, `js/saas_engine_drilldown.js`, `js/deliveries.js`, `js/consumos.js`, `js/transporte.js`
-- **Archivos del proyecto que importan a este archivo**: No especificados en el fragmento.
+  - `js/bundle.js`
+  - `partials/_modals.html`, `_deliveries_modals.html`, `_inventory_modals.html`, `_analytics_proyecciones_modals.html`, `_edit_query_modal.html`, `_quick_login_modal.html`, `_logout.html`
 
-El flujo de datos se gestiona principalmente mediante eventos JavaScript y la manipulación del DOM.
+- **Archivos del Proyecto que Importan a Este Archivo**:
+  - No detectados directamente en el código proporcionado.
 
-#### --- PARTE 2 de 2 ---
-
-### Resumen Funcional
-El archivo `deliveries.html` es una plantilla HTML para el sistema de monitoreo de almacén (WMS). Contiene variables JSON que se utilizan en scripts JavaScript y carga varios archivos JavaScript adicionales.
-
-### Catálogo de Funciones y Clases
-Ninguna
-
-### Interacción con Base de Datos
-Ninguna
-
-### Estado y Variables Globales
-- `ots_trend_created`
-- `ots_trend_confirmed`
-- `ots_user_labels`
-- `ots_user_created`
-- `ots_user_confirmed`
-- `ots_type_labels`
-- `ots_type_data`
-
-### Dependencias y Flujo
-- Archivos JavaScript:
-  - `js/tasks.js` (versión 5)
-  - `js/inventory.js` (versión 21)
-  - `js/analytics_proyecciones.js` (versión 3)
-  - `js/docs_explorer.js` (versión 5)
-  - `js/productivity_daily.js` (versión 2)
-  - `js/productivity_monthly.js` (versión 2)
-  - `js/productivity_modals.js` (versión 2)
-
-- Archivos HTML incluidos:
-  - `_modals.html`
-  - `_deliveries_modals.html`
-  - `_inventory_modals.html`
-  - `_analytics_proyecciones_modals.html`
-  - `_edit_query_modal.html`
-  - `_quick_login_modal.html`
-  - `_logout.html`
-
-El archivo `deliveries.html` carga varios scripts JavaScript y partials HTML, lo que indica un flujo de datos hacia el cliente para la visualización y interacción con los datos del sistema de almacén.
+El flujo de datos se realiza principalmente mediante JavaScript para interactuar con la interfaz y cargar datos dinámicamente.
 
 
 ---
@@ -4021,19 +4261,22 @@ Ninguna
 ## Archivo: ./templates/partials/_inventory_modals.html
 
 ### Resumen Funcional
-Este archivo contiene fragmentos HTML para varios modales en una interfaz de usuario, cada uno relacionado con diferentes aspectos del sistema de monitoreo de almacén (WMS). Los modales muestran información detallada sobre el consumo específico, actividad del asistente, materiales más movimientos, desglose de ubicación, curva ABC, frecuencia semanal y top materiales.
+Este archivo contiene fragmentos HTML para varios modales en una interfaz de usuario de sistema de monitoreo de almacén (WMS). Cada modal muestra diferentes tipos de información, como consumo específico, actividad del asistente, materiales más movimientos, desglose de ubicación, curva ABC, materiales frecuentes y detalles de producción vs mantenimiento.
 
 ### Catálogo de Funciones y Clases
-Ninguna función o clase detectada en este fragmento HTML.
+Ninguna función o clase detectada directamente en este fragmento HTML. Todas las interacciones son realizadas a través del DOM y JavaScript.
 
 ### Interacción con Base de Datos
-Ninguna. Este archivo solo contiene código HTML y no realiza ninguna interacción con una base de datos.
+Ninguna interacción con la base de datos detectada en este archivo. Todas las listas y detalles se muestran dinámicamente mediante JavaScript.
 
 ### Estado y Variables Globales
-Ninguna variable global, de sesión o diccionario quemado en el código que almacene estado crítico.
+Ninguna variable global, de sesión o de entorno detectada directamente en este fragmento HTML. Todas las variables y estados son gestionados por el JavaScript que interactúa con el DOM.
 
 ### Dependencias y Flujo
-Ninguna dependencia externa. Este archivo solo importa HTML y no consume ningún otro archivo del proyecto ni es consumido por otros archivos.
+- **Librerías externas**: Ninguna librería externa importada.
+- **Archivos del proyecto que IMPORTA a este archivo**: Ninguno.
+- **Archivos del proyecto que este archivo IMPORTA (lo consume)**: Ninguno.
+- **Flujo de datos**: El flujo de datos se gestiona completamente por JavaScript, que interactúa con el DOM para mostrar y ocultar modales y cargar contenido dinámicamente.
 
 
 ---
@@ -4316,30 +4559,28 @@ Ninguna
 ## Archivo: ./templates/partials/_tab_inventory.html
 
 ### Resumen Funcional
-Este fragmento HTML es una pestaña que muestra el análisis de movimientos en un sistema de monitoreo de almacén (WMS). Incluye un selector para cambiar entre vistas anuales y semanales, KPIs (indicadores clave de rendimiento) como ingresos, consumo de producción, mantenimiento, tasa de reabastecimiento, traspasos, tasas desplanificadas y devoluciones, así como tablas dinámicas que muestran la capacidad operativa y eficiencia.
+Este fragmento HTML es una pestaña de análisis de movimientos en el sistema de monitoreo de almacén (WMS). Muestra estadísticas clave como ingresos, consumos y traspasos, junto con gráficos que representan la eficiencia operativa y tendencias de consumo.
 
 ### Catálogo de Funciones y Clases
-- Ninguna función o clase detectada directamente en el fragmento HTML proporcionado.
+- Ninguna
 
 ### Interacción con Base de Datos
-- **Motor:** SQLite (implícito, ya que se menciona "SQLite" en el contexto del proyecto).
+- **Motor:** SQLite
 - **Tablas y Columnas:**
-  - No hay consultas SQL crudas o llamadas a ORM explícitas en este fragmento HTML. Las tablas y columnas específicas se obtienen a través de variables pasadas al template (como `ingresos_eff_stats`, `consumos_eff_stats`, etc.).
+  - No se especifican consultas SQL o llamadas a ORM en este fragmento HTML. Todas las estadísticas y datos son presentados directamente desde el contexto del backend.
 
 ### Estado y Variables Globales
-- **Variables Globales:** Ninguna variable global detectada directamente en el fragmento HTML proporcionado.
-- **Estado Crítico:** Las variables que contienen datos dinámicos como `kpi_devoluciones` son pasadas al template desde el backend.
+- `user.role`: Rol del usuario actual.
+- `ingresos_eff_stats`, `ingresos_eff_stats_weekly`: Datos de eficiencia operativa para ingresos (mensuales y semanales).
+- `consumos_eff_stats`, `consumos_eff_stats_weekly`: Datos de eficiencia operativa para consumos (mensuales y semanales).
+- `kpi_devoluciones`: Tasa de devoluciones.
 
 ### Dependencias y Flujo
-- **Librerías Externas:**
-  - Font Awesome (`fas fa-layer-group`, `fas fa-cog`, etc.)
-- **Archivos del Proyecto que Importan a este Archivo:** Ninguno.
-- **Archivos del Proyecto que Este Archivo Importa:** Ninguno.
+- **Dependencias Externas:** Font Awesome (`fas fa-layer-group`, `fas fa-cog`, etc.)
+- **Archivos del Proyecto que Importan a este Archivo:** Ninguno
+- **Archivos del Proyecto que Este Archivo Importa:** Ninguno
 
-**Flujo de Datos:**
-El fragmento HTML consume datos desde el backend (probablemente a través de una vista o endpoint FastAPI) y los muestra en la interfaz. Los datos incluyen KPIs, estadísticas de eficiencia y gráficos que se actualizan según la selección del usuario.
-
-**Nota:** El contenido HTML es principalmente estético y interactivo, sin funciones o consultas directas a la base de datos.
+El flujo de datos es unidireccional, con el backend proporcionando los datos necesarios para renderizar la vista en el frontend.
 
 
 ---
@@ -4394,6 +4635,33 @@ Ninguna
 
 ### Dependencias y Flujo
 Ninguna
+
+
+---
+
+## Archivo: ./templates/partials/_tab_replenishment.html
+
+### Resumen Funcional
+Este fragmento HTML es una interfaz de usuario para mostrar sugerencias de pedido en un sistema de monitoreo de almacén (WMS). Muestra una tabla con detalles sobre el material, su descripción, UMB, stock inicial y actual, consumo mensual, frecuencia de retiros, autonomía en meses y clasificación ABC. Incluye filtros para la frecuencia de pedido y un botón para exportar los datos a Excel.
+
+### Catálogo de Funciones y Clases
+Ninguna
+
+### Interacción con Base de Datos
+- **Motor:** SQLite
+- **Tablas:** Ninguna (El fragmento HTML no interactúa directamente con una base de datos. Los datos se cargan desde un endpoint API).
+- **Columnas:** Ninguna (No hay consultas SQL o ORM explícitas en el fragmento HTML).
+
+### Estado y Variables Globales
+Ninguna
+
+### Dependencias y Flujo
+- **Librerías Externas:** `fas fa-exclamation-triangle`, `fas fa-file-excel`
+- **Archivos del Proyecto que Importan a este Archivo:** Ninguno (Este archivo no importa otros archivos).
+- **Archivos del Proyecto que Este Archivo Importa:** Ninguno (No hay imports en el fragmento HTML).
+
+**Flujo de Datos:**
+El fragmento HTML se carga en la interfaz del usuario. Los datos para llenar la tabla se obtienen a través de una solicitud GET al endpoint `/api/inventory/replenishment-suggestions/export`.
 
 
 ---
@@ -4520,7 +4788,7 @@ Ninguna
 ## Archivo: ./tests/conftest.py
 
 ### Resumen Funcional
-Este archivo `conftest.py` es un archivo de configuración para pruebas unitarias en un proyecto de Sistema de Monitoreo de Almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite. Define varias funciones de prueba que configuran y limpian la base de datos de pruebas, proporcionan clientes de prueba autenticados y gestionan el estado global para las pruebas.
+Este archivo `conftest.py` es un archivo de configuración para pruebas unitarias en un proyecto de Sistema de Monitoreo de Almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite. Define varias funciones de prueba que configuran y limpian la base de datos de pruebas, proporcionan clientes de prueba autenticados y gestionan el entorno de ejecución para las pruebas.
 
 ### Catálogo de Funciones y Clases
 - `TEST_SESSION_ID()` - Genera un identificador criptográficamente seguro para evitar colisiones.
@@ -4544,16 +4812,17 @@ Este archivo `conftest.py` es un archivo de configuración para pruebas unitaria
 ### Estado y Variables Globales
 - `TEST_SESSION_ID`: Identificador criptográficamente seguro para evitar colisiones.
 - `MEMORY_DB_URI`: URI de la base de datos SQLite en memoria compartida.
+- `os.environ["DATABASE_URL"]`: Variable de entorno que almacena la URL de la base de datos.
 
 ### Dependencias y Flujo
-- Librerías externas: `os`, `secrets`, `pathlib`, `sqlite3`, `unittest.mock`, `pytest`, `fastapi.testclient`.
+- Librerías externas: `secrets`, `sys`, `pathlib`, `sqlite3`, `unittest.mock`, `pytest`, `fastapi.testclient`.
 - Archivos del proyecto que este archivo importa:
   - `config`
   - `app`
-  - `core.db_config_manager`
   - `core.auth`
+  - `core.db_config_manager`
 - Archivos del proyecto que importan a este archivo: Ninguno.
-- Flujo de datos: El archivo configura y limpia la base de datos de pruebas, proporciona clientes de prueba autenticados y gestiona el estado global para las pruebas.
+- Flujo de datos: El archivo configura y limpia la base de datos para las pruebas, proporciona clientes de prueba autenticados y gestiona el entorno de ejecución para las pruebas.
 
 
 ---
@@ -4590,12 +4859,12 @@ Ninguna.
 ### Dependencias y Flujo
 - Librerías externas: `pytest`, `unittest.mock`.
 - Archivos del proyecto que este archivo importa:
-  - `core.state.AppState`
+  - `core.state.SyncStateManager`
   - `routes.sync.TUNNEL_URL_FILE`
   - `routes.sync._run_sync_pipeline`
   - `routes.sync.task_manager`
 - Archivos del proyecto que importan a este archivo: Ninguno.
-- Flujo de datos: El archivo consume pruebas unitarias y dependencias para verificar la funcionalidad de los endpoints de la API.
+- Flujo de datos: El archivo realiza pruebas unitarias, no interactúa directamente con el flujo de datos del sistema.
 
 
 ---
@@ -4634,7 +4903,7 @@ Ninguna. Todas las variables utilizadas son locales dentro de las funciones de p
 ## Archivo: ./tests/test_enrichment.py
 
 ### Resumen Funcional
-El archivo `test_enrichment.py` contiene pruebas unitarias para funciones que enriquecen y actualizan datos en una base de datos SQLite utilizada por un sistema de monitoreo de almacén (WMS). Las funciones se encargan de aprender mapeos de autor a áreas, rellenar datos de entrega desde movimientos, enriquecer entregas con información de stock y actualizar el SLA basado en tareas de bodega.
+El archivo `test_enrichment.py` contiene pruebas unitarias para funciones que enriquecen datos en una base de datos SQLite utilizada por un sistema de monitoreo de almacén (WMS). Las funciones se encargan de aprender mapeos de autor a áreas, rellenar información de entregas desde movimientos, enriquecer entregas con detalles de stock y actualizar el SLA basado en tareas de bodega.
 
 ### Catálogo de Funciones y Clases
 - `db_with_data(test_db: sqlite3.Connection) -> sqlite3.Connection` - Prepara una base de datos SQLite con datos de prueba para los procesos de enriquecimiento.
@@ -4645,23 +4914,22 @@ El archivo `test_enrichment.py` contiene pruebas unitarias para funciones que en
 
 ### Interacción con Base de Datos
 - **Motor:** SQLite
-- **Tablas y Columnas:**
-  - `outbound_deliveries`: `entrega`, `autor`, `area_negocio`, `centro_costo`, `material`
-  - `inventory_movements`: `material`, `usuario`, `ce_coste`, `referencia`
-  - `stock_levels`: `material`, `denominacion`, `ubicacion_bin`, `stock_disp`, `umb`
-  - `autor_area_mapping`: `autor`, `area_negocio`
-  - `warehouse_tasks`: `entrega`, `fecha_conf`
+- **Tablas y Columnas Modificadas/Leídas:**
+  - `outbound_deliveries`: Campos modificados (`area_negocio`, `autor`, `centro_costo`, `material`, `dias_retraso`).
+  - `inventory_movements`: Campos leídos (`usuario`, `ce_coste`, `referencia`).
+  - `stock_levels`: Campos leídos (`material`, `denominacion`, `ubicacion_bin`, `stock_disp`, `umb`).
 
 ### Estado y Variables Globales
-- Ninguna
+- Ninguna.
 
 ### Dependencias y Flujo
-- **Librerías Externas:** `pytest`, `sqlite3`
-- **Archivos del Proyecto que Importan a este Archivo:**
-  - `conftest.py` (para el fixture `test_db`)
-- **Archivos del Proyecto que Este Archivo Importa:**
-  - `db.db_enrichment` (contiene las funciones `learn_author_areas`, `apply_author_learning`, `backfill_deliveries_from_movements`, `enrich_deliveries_with_stock`, `update_sla_with_tasks`)
-- **Dirección del Flujo de Datos:** El archivo importa funciones desde `db.db_enrichment` y utiliza un fixture para preparar una base de datos SQLite con datos de prueba. Luego, ejecuta pruebas unitarias que invocan estas funciones y verifican su comportamiento utilizando consultas SQL directas a la base de datos.
+- **Librerías Externas:** `pytest`, `sqlite3`.
+- **Archivos del Proyecto Importados:**
+  - `db.db_enrichment`: Contiene las funciones que se prueban (`apply_author_learning`, `backfill_deliveries_from_movements`, `enrich_deliveries_with_stock`, `learn_author_areas`, `update_sla_with_tasks`).
+- **Archivos del Proyecto Importados por:** Ninguno.
+- **Dirección del Flujo de Datos:**
+  - El archivo importa funciones desde `db.db_enrichment`.
+  - Las pruebas crean y manipulan datos en una base de datos SQLite para verificar el comportamiento de las funciones.
 
 
 ---
@@ -4669,7 +4937,7 @@ El archivo `test_enrichment.py` contiene pruebas unitarias para funciones que en
 ## Archivo: ./tests/test_maintenance.py
 
 ### Resumen Funcional
-El archivo `test_maintenance.py` contiene pruebas unitarias para funciones relacionadas con el mantenimiento del sistema, específicamente para cerrar aplicaciones y filtrar archivos en el generador de documentación.
+El archivo `test_maintenance.py` contiene pruebas unitarias para funciones relacionadas con el mantenimiento del sistema, específicamente para cerrar aplicaciones y filtrar archivos en un generador de documentación.
 
 ### Catálogo de Funciones y Clases
 - `test_quit_app_success()` - Verifica que la función `quit_app` retorne True cuando el comando de sistema tiene éxito.
@@ -4683,10 +4951,16 @@ Ninguna
 Ninguna
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `pytest`, `subprocess`, `unittest.mock`
-- **Archivos del Proyecto que IMPORTA (consume)**: `scripts.free_ram.quit_app`, `scripts.doc_generator.should_process`
-- **Archivos del Proyecto que IMPORTAN a este archivo (lo consumen)**: Ninguno
-- **Dirección del Flujo de Datos**: El flujo de datos se centra en la simulación y verificación de funciones relacionadas con el mantenimiento del sistema.
+- **Librerías Externas**: `subprocess`, `unittest.mock`
+- **Archivos del Proyecto que IMPORTA a este archivo (lo consumen)**: Ninguno
+- **Archivos del Proyecto que ESTE archivo IMPORTA (consume)**: `scripts.doc_generator`, `scripts.free_ram`
+
+**Flujo de Datos**:
+1. El archivo importa las funciones `quit_app` y `should_process` desde otros módulos.
+2. Se ejecutan pruebas unitarias para verificar el comportamiento de estas funciones.
+3. Las pruebas utilizan mocks para simular llamadas a `subprocess.run` y validar los resultados.
+
+**Nota**: La función `quit_app` utiliza `subprocess.run` para cerrar aplicaciones, lo que implica una interacción con el sistema operativo.
 
 
 ---
@@ -4697,8 +4971,8 @@ Ninguna
 Este archivo `test_pdf.py` contiene pruebas unitarias para validar la funcionalidad del módulo `pdf_engine`, que se encarga de generar documentos PDF en formato Landscape utilizando la orientación de papel Letter. Las pruebas cubren la creación de instancias de PDF, generación de códigos de barras, recuperación lógica de órdenes de transporte (OTs) y el dibujo de páginas de entrega.
 
 ### Catálogo de Funciones y Clases
-- `pdf_instance() -> WMS_Landscape_PDF` - Proporciona una instancia limpia de `WMS_Landscape_PDF` para cada test.
-- `sample_header() -> pd.Series` - Genera datos de cabecera de entrega ficticios para pruebas de renderizado de metadatos.
+- `pdf_instance() -> WMS_Landscape_PDF` - Proporciona una instancia limpia de la clase `WMS_Landscape_PDF`.
+- `sample_header() -> pd.Series` - Genera datos ficticios para pruebas de renderizado de metadatos.
 - `sample_items() -> pd.DataFrame` - Genera un listado de materiales ficticios para validar el cuerpo dinámico del PDF.
 - `test_pdf_instantiation(pdf_instance: WMS_Landscape_PDF) -> None` - Verifica que la clase PDF se instancie con la orientación Landscape y dimensiones Letter.
 - `test_barcode_generation(barcode_data: str) -> None` - Valida que la utilidad de códigos de barras produzca un stream binario válido.
@@ -4708,27 +4982,25 @@ Este archivo `test_pdf.py` contiene pruebas unitarias para validar la funcionali
 ### Interacción con Base de Datos
 - Motor de BD: SQLite
 - Tablas y Columnas:
-  - `get_ots_for_delivery("8000123", mock_conn)`:
-    - Tabla: No especificada (mocked)
-    - Columna: `numero_ot`
+  - `numero_ot`: Columna utilizada para recuperar OTs válidas.
 
 ### Estado y Variables Globales
-Ninguna.
+Ninguna
 
 ### Dependencias y Flujo
 - Librerías externas:
-  - `pytest`
-  - `pandas`
   - `io`
   - `sqlite3`
   - `typing`
   - `unittest.mock`
+  - `pandas`
+  - `pytest`
 - Archivos del proyecto que este archivo importa (consume):
-  - `core.pdf_engine` (`WMS_Landscape_PDF`, `_generate_barcode_stream`, `draw_delivery_page`, `get_ots_for_delivery`)
+  - `core.pdf_engine` (contiene las clases y funciones a probar)
 - Archivos del proyecto que importan a este archivo (lo consumen):
   - Ninguno
 - Flujo de datos:
-  - El archivo se ejecuta como parte de las pruebas unitarias, no tiene flujo de entrada/salida directo con otros archivos.
+  - El archivo se ejecuta como parte de pruebas unitarias, no tiene un flujo de entrada/salida directo con otros componentes del sistema.
 
 
 ---
@@ -4736,84 +5008,34 @@ Ninguna.
 ## Archivo: ./tests/test_pipeline.py
 
 ### Resumen Funcional
-El archivo `test_pipeline.py` contiene pruebas unitarias para el módulo de consolidación de datos en un sistema de monitoreo de almacén (WMS). Las pruebas cubren la funcionalidad de análisis de fechas, validación de nombres de tablas y lógica de sobrescritura de archivos.
+El archivo `test_pipeline.py` contiene pruebas unitarias para el módulo de consolidación de datos en un sistema de monitoreo de almacén (WMS). Las pruebas cubren la validación de fechas, la protección contra nombres de tabla no seguros y la lógica de sobrescritura de archivos más recientes.
 
 ### Catálogo de Funciones y Clases
-- `test_parse_file_date(consolidator)` - Verifica que el parsing de fechas sea correcto.
-- `test_validate_table_security(consolidator)` - Verifica la protección contra nombres de tabla no permitidos.
-- `test_overwrite_with_latest_logic(consolidator, tmp_path)` - Verifica que se tome el archivo más reciente para sobrescribir.
+- `test_parse_file_date(consolidator)` - Verifica que el parsing de fechas desde nombres de archivo sea correcto.
+- `test_validate_table_security(consolidator)` - Valida la protección contra nombres de tabla no permitidos.
+- `test_overwrite_with_latest_logic(consolidator, tmp_path)` - Verifica que se tome el archivo más reciente para sobrescribir en la base de datos.
 
 ### Interacción con Base de Datos
-- Motor: SQLite (in-memory)
+- Motor: SQLite (indicado por la cadena de conexión `":memory:"`)
 - Tablas:
   - `TABLE_DELIVERIES`
   - `TABLE_STOCK`
-- Columnas: No especificadas explícitamente en el código proporcionado.
-- Consultas SQL crudas o llamadas a ORM: No se observan consultas específicas.
+- Columnas: No se especifican explícitamente, pero se asume que las columnas coinciden con el esquema de las tablas en la base de datos.
 
 ### Estado y Variables Globales
-No se detectan variables globales, de sesión, de entorno o diccionarios quemados en código que almacenen estado crítico.
+- Ninguna
 
 ### Dependencias y Flujo
 - Librerías externas:
-  - `pytest`
-  - `pathlib`
-  - `datetime`
   - `pandas`
-- Archivos del proyecto que este archivo importa (consume):
+  - `pytest`
+- Archivos del proyecto que importa:
+  - `core.security.validate_table`
   - `db.consolidator.DataConsolidator`
-  - `services.etl.OutboundDeliveryAdapter.read_and_clean_data`
-- Archivos del proyecto que importan a este archivo (lo consumen): Ninguna.
-- Dirección del flujo de datos: El archivo consume funciones y clases de otros módulos para realizar pruebas unitarias.
-
-
----
-
-## Archivo: ./tests/test_queries.py
-
-### Resumen Funcional
-El archivo `test_queries.py` contiene pruebas unitarias para verificar la funcionalidad de consultas y métodos relacionados con el repositorio de entregas (`DeliveriesRepository`) en un sistema de monitoreo de almacén (WMS). Las pruebas incluyen la obtención del número de días activos, estadísticas por área de negocio y la compilación correcta de consultas SQL a partir de payloads.
-
-### Catálogo de Funciones y Clases
-- `test_get_total_active_days(test_db: sqlite3.Connection) -> None` - Verifica el conteo de días únicos con actividad filtrado por año usando fechas ISO.
-- `test_get_total_active_days_empty(test_db: sqlite3.Connection) -> None` - Verifica que la función retorne 0 si no hay registros.
-- `test_get_area_stats(test_db: sqlite3.Connection) -> None` - Verifica el cálculo de KPIs (ontime/late) agrupados por área de negocio.
-- `test_area_expr_fallback_locations(test_db: sqlite3.Connection) -> None` - Verifica la asignación correcta de áreas basada en ubicaciones binarias.
-- `test_query_engine_compiles_ast_correctly(test_db: sqlite3.Connection) -> None` - Verifica que el motor de consultas compile correctamente los ASTs a SQL.
-
-### Interacción con Base de Datos
-- **Motor:** SQLite
-- **Tablas:** `outbound_deliveries`
-- **Columnas:**
-  - `entrega`
-  - `fecha_carga`
-  - `area_negocio`
-  - `dias_retraso`
-  - `centro_costo`
-  - `ubicacion_bin_1`
-  - `ubicacion_bin`
-
-### Estado y Variables Globales
-- **Constantes:** 
-  - `TEST_YEAR` (`"%2026"`)
-  - `AREA_A` (`"ASERRADERO"`)
-  - `AREA_B` (`"MOLDURAS"`)
-  - `DATE_1` (`"01-05-2026"`)
-  - `DATE_2` (`"02-05-2026"`)
-
-### Dependencias y Flujo
-- **Librerías Externas:** 
-  - `pytest`
-  - `sqlite3`
-  - `pandas`
-- **Archivos del Proyecto que Importan a este Archivo:**
-  - `repositories.deliveries.DeliveriesRepository`
-  - `core.query_engine.build_sql_from_payload`
-  - `core.schemas.VisualQueryBuilderPayload`, `MetricDef`, `TimeAxisDef`, `FilterDef`
-- **Archivos del Proyecto que Este Archivo Importa:**
+  - `db.consolidator.StockLevelAdapter.read_and_clean_data`
+- Archivos del proyecto que son importados por este archivo:
   - Ninguno
-- **Dirección del Flujo de Datos:** 
-  - Pruebas unitarias invocan métodos del repositorio y verifican sus resultados.
+- Flujo de datos: El archivo no realiza operaciones directas sobre archivos o bases de datos, sino que interactúa con objetos inyectados y mockeados para probar la lógica de negocio.
 
 
 ---
@@ -4821,31 +5043,33 @@ El archivo `test_queries.py` contiene pruebas unitarias para verificar la funcio
 ## Archivo: ./tests/test_services.py
 
 ### Resumen Funcional
-El archivo `test_services.py` contiene pruebas unitarias para funciones y servicios relacionados con la gestión del estado de la aplicación y el manejo de túneles en un sistema de monitoreo de almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite.
+El archivo `test_services.py` contiene pruebas unitarias para funciones y clases relacionadas con la gestión del estado de caché y el manejo de túneles en un sistema de monitoreo de almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite.
 
 ### Catálogo de Funciones y Clases
-- `app_state()` - Proporciona una instancia limpia de AppState configurada para pruebas.
+- `cache_manager()` - Proporciona una instancia limpia de CacheManager configurada para pruebas.
+- `sync_manager()` - Proporciona una instancia limpia de SyncStateManager.
 - `cleanup_tunnel()` - Garantiza la limpieza del estado global del túnel tras cada test.
-- `test_state_cache_respects_limits(app_state: AppState)` - Verifica que el gestor de estado respete los límites de memoria.
-- `test_state_sync_flag_reactivity(app_state: AppState)` - Valida que la propiedad reactiva de sincronización cambie su estado de forma consistente.
-- `test_start_tunnel_manages_singleton_instance(mock_access, mock_exists, mock_popen)` - Verifica que `start_tunnel` inicialice correctamente el servicio de túnel.
-- `test_stop_tunnel_releases_global_reference(mock_run)` - Valida que `stop_tunnel` limpie las referencias globales de forma segura.
+- `test_state_cache_respects_limits(cache_manager: CacheManager)` - Verifica que el gestor de estado respete los límites de memoria.
+- `test_state_sync_flag_reactivity(sync_manager: SyncStateManager)` - Valida que la propiedad reactiva de sincronización cambie su estado de forma consistente.
+- `test_start_tunnel_manages_singleton_instance(mock_access, mock_exists, mock_popen)` - Verifica que start_tunnel inicialice correctamente el servicio de túnel.
+- `test_stop_tunnel_releases_global_reference(mock_run)` - Valida que stop_tunnel limpie las referencias globales de forma segura.
 
 ### Interacción con Base de Datos
 Ninguna.
 
 ### Estado y Variables Globales
 - `TEST_MAX_CACHE_SIZE` - Constante que establece el límite de caché para pruebas.
-- `app_state.max_cache_size` - Variable global que almacena el límite de caché en la instancia de AppState.
+- `cache_manager.max_cache_size` - Variable global que almacena el tamaño máximo de la caché.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `pytest`, `unittest.mock`.
+- **Librerías Externas**: `unittest.mock`, `pytest`.
 - **Archivos del Proyecto Importados**:
-  - `services.tunnel`: Para las funciones `start_tunnel` y `stop_tunnel`.
-  - `core.state`: Para la clase `AppState`.
-- **Archivos del Proyecto que Importan a Este Archivo**: Ninguno.
-
-El flujo de datos se centra en la ejecución de pruebas unitarias para asegurar el correcto funcionamiento de los servicios y funciones relacionados con el estado de la aplicación y el manejo de túneles.
+  - `core.state.CacheManager`
+  - `core.state.SyncStateManager`
+  - `services.tunnel.start_tunnel`
+  - `services.tunnel.stop_tunnel`
+- **Archivos que Importan a Este Archivo**: Ninguno.
+- **Dirección del Flujo de Datos**: El flujo de datos se centra en la creación y gestión de instancias de clases, así como en las pruebas unitarias para validar su comportamiento.
 
 
 ---
@@ -4853,12 +5077,12 @@ El flujo de datos se centra en la ejecución de pruebas unitarias para asegurar 
 ## Archivo: ./tests/test_ui_smoke.py
 
 ### Resumen Funcional
-El archivo `test_ui_smoke.py` contiene pruebas unitarias para verificar la presencia de componentes UI críticos en diferentes rutas del sistema de monitoreo de almacén (WMS). Las pruebas incluyen verificación de la disponibilidad del servidor, la presencia de elementos HTML específicos y el manejo adecuado de errores.
+El archivo `test_ui_smoke.py` contiene pruebas unitarias para verificar la funcionalidad y la interfaz de usuario (UI) de un sistema de monitoreo de almacén (WMS). Las pruebas incluyen la verificación de la presencia de componentes UI críticos en diferentes rutas, manejo de errores para rutas inexistentes, y validación de componentes específicos en el modal del AST.
 
 ### Catálogo de Funciones y Clases
-- `test_ui_smoke_components_presence(auth_client, path: str, markers: List[Tuple[str, str]])` - Prueba que verifica la presencia de componentes UI críticos en diferentes rutas.
-- `test_ui_smoke_error_handling(client)` - Prueba que verifica el manejo correcto del servidor para rutas inexistentes.
-- `test_ui_smoke_analytics_studio_modal_components(auth_client)` - Prueba que verifica la presencia de selectores visuales y asegura que no exista el textarea de SQL crudo.
+- `test_ui_smoke_components_presence(auth_client, path: str, markers: List[Tuple[str, str]])` - Prueba la presencia de componentes UI críticos en diferentes rutas.
+- `test_ui_smoke_error_handling(client)` - Verifica que el servidor maneje correctamente las peticiones a rutas inexistentes.
+- `test_ui_smoke_analytics_studio_modal_components(auth_client)` - Valida la presencia de selectores visuales del AST y asegura que no exista el textarea de SQL crudo.
 
 ### Interacción con Base de Datos
 Ninguna.
@@ -4867,11 +5091,11 @@ Ninguna.
 Ninguna.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: `pytest`, `typing`
-- **Archivos del Proyecto Importados**:
-  - Ninguno.
-- **Archivos del Proyecto que Importan a Este Archivo**:
-  - Ninguno.
+- **Librerías Externas**: `pytest`
+- **Archivos Importados**:
+  - `test_ui_smoke.py` importa `pytest`.
+- **Archivos que Importan a este Archivo**: Ninguno.
+- **Flujo de Datos**: El archivo no realiza ninguna operación que implique el flujo de datos entre diferentes componentes del sistema.
 
 
 ---
@@ -4879,7 +5103,7 @@ Ninguna.
 ## Archivo: ./tests/test_utils.py
 
 ### Resumen Funcional
-El archivo `test_utils.py` contiene pruebas unitarias para el módulo `utils` del proyecto WMS, específicamente para verificar que la función `setup_signal_handlers` funcione correctamente y de manera idempotente.
+El archivo `test_utils.py` contiene pruebas unitarias para el módulo `utils` del proyecto WMS, específicamente para verificar que la función `setup_signal_handlers` funcione correctamente y de manera segura.
 
 ### Catálogo de Funciones y Clases
 - `test_setup_signal_handlers_safety()` - Verifica que el registro de manejadores de señales sea seguro e idempotente.

@@ -10,13 +10,13 @@ Uso:
     with get_session() as session:
         records = session.query(StatusMapping).all()
 """
-import os
 import logging
+import os
 from contextlib import contextmanager
 from typing import Generator
 
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, Session, DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from config import DB_PATH
 

@@ -1,17 +1,20 @@
-import pandas as pd
-from pathlib import Path
-from typing import List, Dict, Optional
 import sqlite3
+from pathlib import Path
+from typing import Dict, List, Optional
+
+import pandas as pd
+
+from core.wms_utils import (
+    apply_cost_center_mapping,
+    calculate_sla_delays,
+    generate_time_labels,
+    map_wms_status,
+    normalize_date_columns,
+    sanitize_string,
+)
 
 from .base import BaseWMSProcessor
-from core.wms_utils import (
-    sanitize_string,
-    map_wms_status,
-    apply_cost_center_mapping,
-    normalize_date_columns,
-    calculate_sla_delays,
-    generate_time_labels
-)
+
 
 class OutboundDeliveryAdapter(BaseWMSProcessor):
     """Adaptador para procesar Entregas de Salida (Deliveries)."""
@@ -30,7 +33,7 @@ class OutboundDeliveryAdapter(BaseWMSProcessor):
     def _clean_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         df = df.dropna(how='all', axis=0).dropna(how='all', axis=1)
         df.columns = self._sanitizar_nombres_columnas(df.columns)
-        
+
         df = map_wms_status(df)
         df = apply_cost_center_mapping(df)
         df = normalize_date_columns(df)
@@ -64,7 +67,7 @@ class OutboundDeliveryAdapter(BaseWMSProcessor):
         cursor = conn.cursor()
         cursor.execute(f"PRAGMA table_info({table_name})")
         existing_cols = {row[1] for row in cursor.fetchall()}
-        
+
         for col in df.columns:
             if col not in existing_cols:
                 try:
@@ -72,6 +75,6 @@ class OutboundDeliveryAdapter(BaseWMSProcessor):
                     existing_cols.add(col)
                 except sqlite3.Error:
                     pass
-        
+
         # Insertar atómico usando Pandas (no replace de fila completa, solo append y luego deduplicar)
         df.to_sql(table_name, conn, if_exists='append', index=False)

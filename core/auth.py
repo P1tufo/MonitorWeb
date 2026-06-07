@@ -18,19 +18,19 @@ Uso:
     def admin_route(user = Depends(require_admin)):
         ...
 """
-import os
 import logging
+import os
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Annotated
+from typing import Annotated, Optional
 
 import bcrypt
 import jwt
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
-from .database import get_session_dep, engine, Base
+from .database import Base, engine, get_session_dep
 from .models_auth import User
 
 logger = logging.getLogger("auth")
@@ -139,7 +139,7 @@ def get_current_user(
     if not username:
         return guest_user
 
-    user = db.query(User).filter(User.username == username, User.is_active == True).first()
+    user = db.query(User).filter(User.username == username, User.is_active).first()
     return user or guest_user
 
 def require_auth(

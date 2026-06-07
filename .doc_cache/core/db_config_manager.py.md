@@ -17,23 +17,26 @@ Este archivo gestiona la configuración dinámica del Sistema de Monitoreo de Al
 ### Interacción con Base de Datos
 - Motor: SQLite
 - Tablas:
-  - `StatusMapping`
-  - `CostCenterMapping`
-  - `AppSetting`
-  - `Holiday`
-  - `ConfigQuery`
+  - `app_setting`
+  - `config_query`
+  - `cost_center_mapping`
+  - `holiday`
+  - `status_mapping`
 - Columnas:
-  - `StatusMapping`: `code`, `label`
-  - `CostCenterMapping`: `center_code`, `business_area`
-  - `AppSetting`: `key`, `value`, `type`
-  - `Holiday`: `date_str`
-  - `ConfigQuery`: `query_id`, `visual_state`
+  - `app_setting`: `key`, `value`, `type`
+  - `config_query`: `query_id`, `visual_state`
+  - `cost_center_mapping`: `center_code`, `business_area`
+  - `holiday`: `date_str`
+  - `status_mapping`: `code`, `label`
 
 ### Estado y Variables Globales
 - No hay variables globales, de sesión o de entorno explícitas.
 
 ### Dependencias y Flujo
-- Importa: `logging`, `typing`, `sqlalchemy`, `os`.
-- Exporta: Funciones públicas para acceder a la configuración.
-- No depende de otros archivos del proyecto.
+- Importa: `logging`, `typing`, `sqlalchemy`, `sqlalchemy.orm`, `os`
+- Exporta: Todas las funciones descritas anteriormente.
+- Flujo de datos:
+  - `init_config_db()` crea tablas y añade columnas si no existen.
+  - `seed_initial_config()` inserta valores por defecto en las tablas.
+  - Las funciones públicas (`get_setting`, `get_status_mapping`, etc.) consultan la base de datos para recuperar los valores de configuración.
 

@@ -5,17 +5,22 @@ Usa TaskManager (Pilar 4) para ejecución trazable en segundo plano.
 import logging
 import shutil
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException, Depends
-from core.auth import require_auth
+from fastapi import APIRouter, Depends, HTTPException
 
 from config import (
-    DB_PATH, CLEANSED_DIR, PDF_STORAGE, DELIVERIES_DIR, STOCK_DIR, TASKS_DIR,
-    INVENTORY_DIR, TUNNEL_URL_FILE,
+    CLEANSED_DIR,
+    DB_PATH,
+    DELIVERIES_DIR,
+    INVENTORY_DIR,
+    PDF_STORAGE,
+    STOCK_DIR,
+    TASKS_DIR,
+    TUNNEL_URL_FILE,
 )
-from core.state import AppState, get_app_state
-
+from core.auth import require_auth
+from core.state import CacheManager, SyncStateManager, get_cache_manager, get_sync_manager
 from core.task_manager import task_manager
 from db.consolidator import DataConsolidator
 
@@ -25,7 +30,7 @@ router = APIRouter()
 # ─── Rutas ───────────────────────────────────────────────────────────────────
 
 @router.get("/url")
-async def get_tunnel_url(state: AppState = Depends(get_app_state)):
+async def get_tunnel_url():
     """Retorna la URL pública del túnel (Ngrok)."""
     tunnel_file = Path(TUNNEL_URL_FILE)
     if tunnel_file.exists():
@@ -34,32 +39,32 @@ async def get_tunnel_url(state: AppState = Depends(get_app_state)):
             return {"url": url, "local": "http://localhost:8000"}
         except Exception as e:
             logger.error(f"Error leyendo archivo de túnel: {e}")
-            
+
     return {"url": None, "local": "http://localhost:8000", "message": "Túnel no activo."}
-    
+
 @router.get("/status")
-async def get_sync_status(state: AppState = Depends(get_app_state)):
+async def get_sync_status(sync: SyncStateManager = Depends(get_sync_manager)):
     """Retorna el estado actual de la sincronización."""
     return {
-        "is_syncing": state.is_syncing,
-        "status": "busy" if state.is_syncing else "idle"
+        "is_syncing": sync.is_syncing,
+        "status": "busy" if sync.is_syncing else "idle"
     }
 
 @router.post("/sync")
-async def sync_data(state: AppState = Depends(get_app_state), admin = Depends(require_auth)):
+async def sync_data(sync: SyncStateManager = Depends(get_sync_manager), admin = Depends(require_auth)):
     """
     Inicia el proceso de sincronización de datos.
     Encola la tarea en el TaskManager para ejecución trazable en segundo plano.
     """
     logger.info(">>> [POST /sync] Petición de sincronización recibida.")
-    
-    if state.is_syncing or task_manager.has_running_task("sync_data"):
+
+    if sync.is_syncing or task_manager.has_running_task("sync_data"):
         return {"status": "error", "message": "Sincronización en curso."}
 
     task_id = task_manager.submit_task("sync_data", _run_sync_pipeline)
-    
+
     return {
-        "status": "success", 
+        "status": "success",
         "message": "Proceso iniciado en segundo plano.",
         "task_id": task_id,
     }
@@ -67,12 +72,12 @@ async def sync_data(state: AppState = Depends(get_app_state), admin = Depends(re
 # ─── API: Monitoreo de Tareas ────────────────────────────────────────────────
 
 @router.get("/api/tasks")
-async def list_tasks(limit: int = 20, state: AppState = Depends(get_app_state), admin = Depends(require_auth)):
+async def list_tasks(limit: int = 20, admin = Depends(require_auth)):
     """Lista las tareas recientes del sistema."""
     return {"tasks": task_manager.list_tasks(limit)}
 
 @router.get("/api/tasks/{task_id}")
-async def get_task(task_id: str, state: AppState = Depends(get_app_state), admin = Depends(require_auth)):
+async def get_task(task_id: str, admin = Depends(require_auth)):
     """Consulta el estado de una tarea específica por su ID."""
     status = task_manager.get_task_status(task_id)
     if not status:
@@ -83,24 +88,25 @@ async def get_task(task_id: str, state: AppState = Depends(get_app_state), admin
 
 def _run_sync_pipeline():
     """Ejecuta el pipeline completo de limpieza y consolidación."""
-    state = get_app_state()
+    cache = get_cache_manager()
+    sync = get_sync_manager()
     # Intentar adquirir el bloqueo sin esperar (non-blocking)
-    if not state.sync_lock.acquire(blocking=False):
+    if not sync.sync_lock.acquire(blocking=False):
         logger.warning("Intento de sincronización duplicado detectado.")
         return
 
     try:
-        state.is_syncing = True
+        sync.is_syncing = True
         logger.info(">>> Iniciando Pipeline de Sincronización Global...")
 
         from core.database import get_session
         from core.wms_utils import is_file_changed, mark_file_processed
-        
+
         has_changes = False
 
         # 1. Obtener Rutas Dinámicas (SaaS Config)
         from core import wms_config
-        
+
         base_path = Path(wms_config.ONEDRIVE_PATH)
         deliveries_path = base_path / wms_config.DIR_DELIVERIES
         stock_path = base_path / wms_config.DIR_STOCK
@@ -113,7 +119,7 @@ def _run_sync_pipeline():
 
         # 2. Preparar directorios
         Path(CLEANSED_DIR).mkdir(parents=True, exist_ok=True)
-        _reset_directory(PDF_STORAGE) 
+        _reset_directory(PDF_STORAGE)
 
         # 3. Limpieza de archivos (Fase Incremental)
         if deliveries_path.exists():
@@ -121,7 +127,7 @@ def _run_sync_pipeline():
                 for f in deliveries_path.iterdir():
                     if f.suffix.lower() in ['.xlsx', '.xls', '.txt']:
                         out_f = Path(CLEANSED_DIR) / f"clean_{f.name}.xlsx"
-                        
+
                         # Solo procesar si el archivo fuente cambió o el destino no existe
                         if is_file_changed(session, f) or not out_f.exists():
                             logger.info(f"Procesando cambio en: {f.name}")
@@ -206,7 +212,7 @@ def _run_sync_pipeline():
                     rows = process_lx02_pendientes(str(lx02_pendientes_path), str(DB_PATH), conn=con.conn)
                     if rows > 0:
                         has_changes = True
-            
+
             # Sincronización de Transporte (Avanti)
             from routes.transporte import sync_transporte_logic
             with get_session() as _sess_transporte:
@@ -219,9 +225,9 @@ def _run_sync_pipeline():
                 con.backfill_from_movements()
                 con.backfill_texts()  # <-- Asegura descripciones en picking list
                 con.update_sla_with_tasks()  # <-- Cruce automático de Tareas para SLA
-                
+
                 # 4. Limpiar caché global para forzar recarga de gráficos
-                state.clear_cache()
+                cache.clear_cache()
                 try:
                     con.conn.execute("DELETE FROM analytics_snapshots")
                     logger.info("Snapshots de base de datos eliminados tras sincronización de nuevos datos.")
@@ -238,8 +244,8 @@ def _run_sync_pipeline():
         logger.error(f"Fallo crítico en el pipeline de sincronización: {e}", exc_info=True)
         raise  # Re-raise para que TaskManager capture el error
     finally:
-        state.is_syncing = False
-        state.sync_lock.release()
+        sync.is_syncing = False
+        sync.sync_lock.release()
 
 def _reset_directory(path: str):
     """Elimina y recrea un directorio de forma segura."""

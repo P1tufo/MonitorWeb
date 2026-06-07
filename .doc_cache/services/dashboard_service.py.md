@@ -1,46 +1,49 @@
 ## Archivo: ./services/dashboard_service.py
 
 ### Resumen Funcional
-El archivo `dashboard_service.py` contiene la lógica del servicio para el dashboard principal de entregas en un sistema de monitoreo de almacén (WMS). El servicio delega todas las operaciones de base de datos a la clase `DeliveriesRepository`, y proporciona métodos para obtener datos necesarios para renderizar el dashboard, incluyendo gráficos de intensidad semanal, indicadores clave de rendimiento (KPIs), selectores del dashboard y transacciones recientes.
+El archivo `dashboard_service.py` contiene la lógica del servicio para el dashboard principal de entregas en un sistema de monitoreo de almacén (WMS). El servicio se encarga de obtener y formatear datos necesarios para mostrar en el dashboard, incluyendo gráficos de intensidad semanal, indicadores clave de rendimiento (KPIs), selectores y transacciones recientes.
 
 ### Catálogo de Funciones y Clases
 - `DashboardService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
-  - **Parámetros**: 
-    - `session`: Sesión de SQLAlchemy para interactuar con la base de datos.
-  
-- `get_full_context()` - Obtiene el contexto completo necesario para renderizar el dashboard.
-  - **Retorno**:
-    - Un diccionario que contiene gráficos de intensidad semanal, KPIs, selectores del dashboard y transacciones recientes.
+  - **Propósito**: Configura la instancia del servicio para interactuar con la base de datos a través del repositorio `DashboardRepository`.
+
+- `get_full_context()` - Obtiene y formatea los datos necesarios para el contexto del dashboard.
+  - **Propósito**: Recupera gráficos de intensidad semanal, KPIs filtrados, selectores y transacciones recientes, y los devuelve en un formato adecuado para la vista.
 
 ### Interacción con Base de Datos
-- **Motor**: SQLite (implícito a través de SQLAlchemy).
+- **Motor de BD**: SQLite
 - **Tablas y Columnas**:
-  - `DeliveriesRepository` interactúa con las siguientes tablas y columnas:
-    - Tabla: `deliveries`
-      - Columnas: Dependientes de la implementación de `get_weekly_intensity_chart`, `get_filtered_kpis`, `get_dashboard_selectors`, y `get_filtered_transactions`.
-    - Tabla: `kpis`
-      - Columnas: Dependientes de la implementación de `get_filtered_kpis`.
-    - Tabla: `transactions`
-      - Columnas: Dependientes de la implementación de `get_filtered_transactions`.
+  - `get_weekly_intensity_chart(iso_year)` - Recupera datos para el gráfico de intensidad semanal.
+    - Tabla: No especificada (implícita en la consulta SQL).
+    - Columnas: No especificadas (implícitas en la consulta SQL).
+
+  - `get_filtered_kpis(None, None, None, min_week, iso_year)` - Recupera KPIs filtrados por semana y año.
+    - Tabla: No especificada (implícita en la consulta SQL).
+    - Columnas: No especificadas (implícitas en la consulta SQL).
+
+  - `get_dashboard_selectors(min_week)` - Recupera selectores para el dashboard.
+    - Tabla: No especificada (implícita en la consulta SQL).
+    - Columnas: No especificadas (implícitas en la consulta SQL).
+
+  - `get_filtered_transactions(None, None, None, None, None, min_week)` - Recupera transacciones recientes filtradas por semana.
+    - Tabla: No especificada (implícita en la consulta SQL).
+    - Columnas: No especificadas (implícitas en la consulta SQL).
 
 ### Estado y Variables Globales
-- **Ninguna**: No se utilizan variables globales, de sesión o diccionarios quemados en el código.
+- **Variables Globales**: Ninguna
 
 ### Dependencias y Flujo
 - **Librerías Externas**:
   - `logging`
-  - `sqlalchemy.orm.Session`
-  - `typing.Dict`, `typing.Any`, `typing.List`
-  - `datetime.datetime`
+  - `datetime`
+  - `typing`
 
-- **Archivos del Proyecto que Importan a este Archivo (lo consumen)**:
-  - Ninguna.
+- **Archivos del Proyecto que Importan a este Archivo (lo consumen)**: Ninguno
 
-- **Archivos del Proyecto que Este Archivo IMPORTA (consume)**:
-  - `repositories.deliveries.DeliveriesRepository`
+- **Archivos del Proyecto que Este Archivo Importa (consume)**:
+  - `repositories.dashboard.DashboardRepository`
 
 - **Dirección del Flujo de Datos**:
-  - El servicio recibe una sesión de base de datos y delega las operaciones de base de datos a `DeliveriesRepository`.
-  - Los métodos de `DeliveriesRepository` interactúan con la base de datos para obtener los datos necesarios.
-  - El servicio procesa estos datos y los devuelve en un formato que puede ser utilizado por la vista del dashboard.
+  - El servicio recibe una sesión de base de datos y utiliza el repositorio para obtener los datos necesarios.
+  - Los datos obtenidos se formatean y devuelven en un diccionario que representa el contexto completo del dashboard.
 

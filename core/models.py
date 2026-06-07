@@ -14,7 +14,7 @@ Separación de esquemas:
 """
 from __future__ import annotations
 
-from sqlalchemy import String, Float, Integer, Boolean, Text
+from sqlalchemy import Boolean, Float, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base

@@ -1,10 +1,11 @@
+import json
+import logging
 import os
 import subprocess
 import threading
 import time
 import urllib.request
-import json
-import logging
+
 from config import NGROK_BIN, TUNNEL_URL_FILE
 
 # Configurar logs básicos
@@ -73,7 +74,7 @@ class NgrokService:
     def _run_loop(self):
         retry_count = 0
         max_retries = 10
-        
+
         while not self._stop_event.is_set() and retry_count < max_retries:
             # Verificar y limpiar si ya existe un ngrok corriendo
             try:
@@ -83,7 +84,7 @@ class NgrokService:
                     subprocess.run(["pkill", "-f", "ngrok"])
                     time.sleep(2)
                     continue
-            except Exception as e: 
+            except Exception as e:
                 logger.debug(f"Error verificando procesos: {e}")
 
             logger.info("Iniciando tunel publico (ngrok)...")
@@ -93,32 +94,34 @@ class NgrokService:
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
-                
+
                 url = None
-                for i in range(15):
-                    if self._stop_event.is_set(): break
+                for _i in range(15):
+                    if self._stop_event.is_set():
+                        break
                     time.sleep(1)
                     url = self._get_public_url()
-                    if url: break
-                
+                    if url:
+                        break
+
                 if url:
-                    retry_count = 0 
+                    retry_count = 0
                     if self._save_url(url):
                         logger.info(f"\n{'='*55}")
                         logger.info(f"  ENLACE PUBLICO (ngrok): {url}")
                         logger.info(f"  Guardado en: {os.path.basename(self.tunnel_file)}")
-                        logger.info(f"  Local:       http://localhost:8000")
+                        logger.info("  Local:       http://localhost:8000")
                         logger.info(f"{'='*55}\n")
                 else:
                     logger.warning("No se pudo obtener la URL publica.")
-                
+
                 self.process.wait()
                 self.process = None
                 logger.info("Tunel cerrado.")
             except Exception as e:
                 logger.error(f"Error en bucle ngrok: {e}")
                 retry_count += 1
-            
+
             if not self._stop_event.is_set():
                 wait_time = min(5 * (2 ** retry_count), 60)
                 logger.info(f"Reintentando tunel en {wait_time}s...")
@@ -131,7 +134,7 @@ def start_tunnel():
         if _global_service and _global_service.process and _global_service.process.poll() is None:
             logger.info("El servicio de tunel ya esta activo.")
             return _global_service
-            
+
         _global_service = NgrokService()
         _global_service.start()
         return _global_service

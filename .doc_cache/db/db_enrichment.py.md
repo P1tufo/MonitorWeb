@@ -35,14 +35,11 @@ El archivo `db_enrichment.py` contiene funciones para enriquecer los datos de la
 
 ### Dependencias y Flujo
 - **Librerías Externas**:
-  - `logging`
-  - `pandas` (pd)
   - `sqlite3`
+  - `pandas`
+  - `logging`
   - `numpy`
-- **Archivos del Proyecto que IMPORTA**:
-  - `core.security.validate_table`
-  - `core.db_config_manager.get_holidays`
-- **Archivos del Proyecto que IMPORTAN a Este Archivo**:
-  - Ninguno
-- **Dirección del Flujo de Datos**: El flujo de datos pasa por las funciones, realizando consultas SQL para leer y actualizar la base de datos SQLite.
+- **Archivos del Proyecto que IMPORTA (consume)**: Ninguno
+- **Archivos del Proyecto que IMPORTAN a este archivo (lo consumen)**: Ninguno
+- **Dirección del Flujo de Datos**: El flujo de datos pasa por la lectura y escritura directa en la base de datos SQLite, con el procesamiento intermedio realizado mediante Pandas.
 

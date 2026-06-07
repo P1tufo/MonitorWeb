@@ -1,36 +1,44 @@
 ## Archivo: ./services/tasks_service.py
 
 ### Resumen Funcional
-El archivo `tasks_service.py` contiene la lógica del servicio para gestionar y analizar las Operaciones Técnicas (OTs) en el sistema de monitoreo de almacén (WMS). Genera un contexto analítico que incluye resúmenes, tendencias, usuarios involucrados, tipos de OTs, movimientos no paletizados y KPIs dinámicos.
+El archivo `tasks_service.py` contiene la lógica del servicio para generar y gestionar el contexto analítico de las Operaciones Técnicas (OTs) en un sistema de monitoreo de almacén (WMS). Este servicio utiliza SQLAlchemy para interactuar con una base de datos SQLite, pandas para procesamiento de datos, y FastAPI para la gestión del estado.
 
 ### Catálogo de Funciones y Clases
 - `TasksService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
-- `get_full_context()` - Genera y cachea el contexto analítico para la gestión de OTs.
+  - **Propósito**: Proporciona métodos para obtener y gestionar el contexto analítico de las OTs.
 
 ### Interacción con Base de Datos
-- **Motor:** SQLite
-- **Tablas y Columnas:**
-  - Tabla: `config_queries`
-    - Columnas: `sql_text`, `visual_state`, `query_id`
-  - Tabla: No especificadas explícitamente, pero se usan consultas SQL crudas para leer datos.
-- **Consultas SQL Crudas:** Se realizan consultas SQL para obtener resúmenes y KPIs dinámicos.
+- **Motor**: SQLite
+- **Tablas**:
+  - `config_queries` (Lectura)
+- **Columnas**:
+  - `sql_text`, `visual_state` (Tabla `config_queries`)
+- **Consultas SQL Crudas**:
+  ```sql
+  SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_list_pending'
+  SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_kpi_pending'
+  SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_kpi_users'
+  SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_kpi_critical'
+  ```
 
 ### Estado y Variables Globales
-- **Variables Globales:** Ninguna.
-- **Estado de Sesión:** Utiliza `get_app_state()` para acceder al estado de la aplicación, que incluye el caché.
-- **Diccionarios Quemados:** Ninguno.
+- **Ninguna**
 
 ### Dependencias y Flujo
-- **Librerías Externas:**
-  - `pandas`
-  - `sqlalchemy`
+- **Librerías Externas**:
   - `logging`
   - `datetime`
-- **Archivos del Proyecto que Importa:**
-  - `repositories/TasksRepository.py`
-  - `core/state.py`
-  - `core/utils.py`
-- **Archivos del Proyecto que Son Importados por Este Archivo:**
-  - Ninguno.
-- **Dirección del Flujo de Datos:** El flujo de datos comienza con la solicitud de contexto, pasa a través del servicio para generar los datos necesarios y finalmente devuelve el contexto analítico.
+  - `pandas`
+  - `sqlalchemy`
+- **Archivos del Proyecto que Importan a Este Archivo**:
+  - `core.state.get_cache_manager()`
+  - `core.utils.sanitize_for_json()`
+  - `repositories.TasksRepository`
+- **Archivos del Proyecto que Este Archivo Importa**:
+  - No aplica
+- **Dirección del Flujo de Datos**:
+  - Desde el servicio hasta la base de datos para leer y escribir datos.
+  - Desde el servicio hasta los repositorios para obtener datos analíticos.
+  - Desde los repositorios hasta pandas para procesar datos.
+  - Desde pandas hasta el contexto final que se almacena en caché.
 

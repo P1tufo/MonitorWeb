@@ -4,7 +4,8 @@ core/semantic_layer.py — Capa Semántica para aislar el frontend del esquema f
 Mantiene el catálogo de Datasets, Dimensiones y Métricas, junto con sus fórmulas de negocio.
 """
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
+
 
 @dataclass
 class Dimension:
@@ -52,9 +53,9 @@ DATASETS: Dict[str, Dataset] = {
             Metric(id="met_retraso", label="Días de Retraso", physical_column="dias_retraso", aggregation="AVG"),
             Metric(id="met_cantidad", label="Cantidad", physical_column="cantidad", aggregation="SUM"),
             Metric(
-                id="met_sla_efficiency", 
-                label="Eficiencia SLA", 
-                physical_column="dias_retraso", 
+                id="met_sla_efficiency",
+                label="Eficiencia SLA",
+                physical_column="dias_retraso",
                 aggregation="SLA_EFFICIENCY",
                 format="percent",
                 is_complex_formula=True,
@@ -179,20 +180,20 @@ def resolve_dataset_physical_table(dataset_id: str) -> str:
 def resolve_physical_mapping(dataset_id: str, field_id: str) -> str:
     """
     Traduce un ID semántico (dim_area) a su columna física cualificada (outbound_deliveries.area_negocio).
-    Si se le pasa un campo que ya es físico (fallback temporal para queries antiguas), 
+    Si se le pasa un campo que ya es físico (fallback temporal para queries antiguas),
     lo deja pasar si existe en el dataset.
     """
     ds = DATASETS.get(dataset_id)
     if not ds:
         return field_id # Fallback para consultas pre-existentes sin migrar
-        
+
     for dim in ds.dimensions:
         if dim.id == field_id:
             return f"{ds.physical_table}.{dim.physical_column}"
     for met in ds.metrics:
         if met.id == field_id:
             return f"{ds.physical_table}.{met.physical_column}"
-            
+
     # Fallback temporal: si no es un ID semántico, asumimos que es físico
     return field_id
 
@@ -204,7 +205,7 @@ def get_metric_formula(dataset_id: str, metric_id: str, table_alias: str = "", l
     ds = DATASETS.get(dataset_id)
     if not ds:
         return None
-        
+
     for met in ds.metrics:
         is_match = False
         if met.id == metric_id:
@@ -212,14 +213,14 @@ def get_metric_formula(dataset_id: str, metric_id: str, table_alias: str = "", l
         elif legacy_agg and met.aggregation == legacy_agg and met.is_complex_formula:
             if metric_id == met.physical_column or metric_id.endswith(f".{met.physical_column}"):
                 is_match = True
-                
+
         if is_match and met.is_complex_formula:
             col_ref = f"{table_alias}.{met.physical_column}" if table_alias else met.physical_column
             table_ref = table_alias if table_alias else ds.physical_table
             # Reemplaza {col} y {table} en el template
             formula = met.formula_template.replace("{col}", col_ref).replace("{table}", table_ref)
             return formula
-            
+
     return None
 
 
@@ -227,10 +228,10 @@ def get_formula_by_physical_table(physical_table: str, aggregation: str, metric_
     """
     Reverse-lookup: dado una tabla física y el nombre de una agregación compleja
     (ej. 'SLA_EFFICIENCY', 'REPLENISHMENT_RATE'), devuelve la expresión SQL real.
-    
-    Esto permite que payloads legacy (sin datasetId) que provienen de la BD 
+
+    Esto permite que payloads legacy (sin datasetId) que provienen de la BD
     sean resueltos correctamente sin crashear SQLite.
-    
+
     Retorna None si la agregación es estándar o no se encuentra.
     """
     dataset_id = _PHYSICAL_TABLE_TO_DATASET.get(physical_table)

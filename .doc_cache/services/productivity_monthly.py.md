@@ -1,32 +1,41 @@
 ## Archivo: ./services/productivity_monthly.py
 
 ### Resumen Funcional
-El archivo `productivity_monthly.py` contiene servicios para calcular y obtener datos de productividad mensuales en un sistema de almacén (WMS). Ofrece métodos para obtener resúmenes de productividad mensuales, movimientos diarios de usuarios y detalles específicos de operaciones.
+El archivo `productivity_monthly.py` contiene servicios para calcular y obtener datos de productividad mensuales en un sistema de almacén (WMS). Ofrece métodos para obtener resúmenes y detalles de movimientos de usuarios por mes.
 
 ### Catálogo de Funciones y Clases
 - `ProductivityMonthlyService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
   - `get_monthly_productivity_data(target_month: str) -> Dict[str, Any]` - Calcula y devuelve los KPIs de productividad para un mes específico (YYYY-MM).
-  - `get_user_movements_monthly_summary(target_month: str, usuario: str) -> list` - Obtiene el resumen de movimientos diarios de un usuario para un mes.
-  - `get_user_movements_monthly_details(target_month: str, usuario: str, operacion: str) -> list` - Obtiene los detalles específicos de una operación de movimiento diario de un usuario para un mes.
+  - `get_user_movements_monthly_summary(target_month: str, usuario: str) -> list` - Obtiene el resumen de movimientos mensuales por usuario.
+  - `get_user_movements_monthly_details(target_month: str, usuario: str, operacion: str) -> list` - Obtiene los detalles de movimientos mensuales por usuario y operación.
 
 ### Interacción con Base de Datos
-- Motor de BD: SQLite.
-- Tablas y Columnas:
-  - `tasks_repo._get_monthly_summary(month_sap)` - Lee datos de la tabla que contiene resúmenes mensuales de tareas.
-  - `tasks_repo._get_monthly_shifts(month_sap)` - Lee datos de la tabla que contiene información sobre los turnos diarios.
-  - `tasks_repo._get_monthly_heatmap(month_sap)` - Lee datos de la tabla que contiene mapas térmicos de productividad.
+- Motor: SQLite
+- Tablas:
+  - Ninguna (se asume que las consultas SQL están definidas en el repositorio `ProductivityRepository`)
+- Consultas SQL Crudas o ORM:
+  - `_get_monthly_summary(month_sap)`
+  - `_get_monthly_shifts(month_sap)`
+  - `_get_monthly_heatmap(month_sap)`
+  - `get_user_movements_monthly_summary(target_month, usuario)`
+  - `get_user_movements_monthly_details(target_month, usuario, operacion)`
 
 ### Estado y Variables Globales
-- Ninguna.
+- Ninguna
 
 ### Dependencias y Flujo
-- Librerías externas: `logging`, `typing`.
-- Archivos del proyecto que importa:
-  - `repositories.tasks` - Importado en el constructor de la clase `ProductivityMonthlyService`.
-- Archivos del proyecto que son importados por este archivo:
-  - Ninguno.
-- Flujo de datos:
-  - El servicio recibe una sesión de base de datos y utiliza un repositorio para acceder a los datos necesarios. Los resultados se procesan y devuelven en formato JSON.
+- Librerías Externas:
+  - `logging`
+  - `typing`
+  - `sqlalchemy.orm.Session`
+- Archivos del Proyecto que Importan a este Archivo (lo Consumen):
+  - Ninguno
+- Archivos del Proyecto que Este Archivo Importa (consume):
+  - `repositories.productivity.ProductivityRepository`
 
-Este archivo es parte de la capa de servicios del sistema, donde se encapsulan las lógicas de negocio relacionadas con el cálculo y obtención de datos de productividad mensuales.
+**Flujo de Datos:**
+1. El servicio `ProductivityMonthlyService` se inicializa con una sesión de base de datos.
+2. Los métodos `get_monthly_productivity_data`, `get_user_movements_monthly_summary`, y `get_user_movements_monthly_details` llaman a los métodos correspondientes del repositorio `ProductivityRepository`.
+3. El repositorio ejecuta consultas SQL para obtener los datos de productividad y movimientos.
+4. Los resultados se procesan y devuelven al servicio, que finalmente los devuelve al cliente.
 
