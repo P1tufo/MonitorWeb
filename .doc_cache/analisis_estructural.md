@@ -2,34 +2,36 @@
 
 ### Arquitectura General Detectada
 
-La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que contienen funcionalidades específicas, como `core`, `repositories`, `tests`, `docs`, entre otras.
+La estructura del proyecto sugiere una arquitectura **Modular**. Esto se debe a la organización de los módulos y carpetas que separan diferentes aspectos del sistema, como el código principal (`app.py`), las configuraciones (`config.py`), las rutas (`routes/`), los modelos (`core/models.py`), las bases de datos (`db/`), los servicios (`services/`), y las pruebas (`tests/`). Además, la presencia de carpetas como `core`, `repositories`, `scripts`, `templates`, `docs`, y `deploy` indica una organización modular.
 
 ### Propósito Probable de las Carpetas Principales
 
-1. **`app.py`**: Este archivo probablemente contiene el punto de entrada principal de la aplicación, donde se inicializa y ejecuta la aplicación.
-2. **`config.py`**: Contiene configuraciones globales del proyecto, como variables de entorno, parámetros de conexión a bases de datos, etc.
-3. **`core/`**: Esta carpeta contiene el código central de la aplicación, incluyendo componentes como autenticación (`auth.py`), base de datos (`database.py`), modelos (`models.py`), y utilidades generales (`utils.py`). También incluye subcarpetas para diferentes funcionalidades.
-4. **`repositories/`**: Contiene clases que interactúan con la base de datos, proporcionando una capa de abstracción entre el modelo de dominio y la persistencia de datos.
-5. **`tests/`**: Contiene los archivos de pruebas unitarias y de integración para asegurar que el código funcione correctamente.
-6. **`docs/`**: Contiene documentación detallada del proyecto, incluyendo documentación de módulos específicos.
-7. **`routes/`**: Define las rutas de la API web, asociando URLs con funciones de controlador.
-8. **`services/`**: Contiene servicios que encapsulan lógica de negocio compleja y pueden interactuar con múltiples repositorios o otros servicios.
+- **app.py**: Punto de entrada principal del aplicativo.
+- **config.py**: Archivo de configuración global para el proyecto.
+- **core/**: Contiene componentes fundamentales del sistema, como modelos, seguridad, base de datos, y utilidades generales.
+- **bin/**: Almacena herramientas binarias necesarias para el desarrollo o despliegue.
+- **deploy/**: Archivos relacionados con la configuración y despliegue del proyecto, incluyendo Dockerfiles y archivos de configuración de Docker.
+- **setup/**: Contiene scripts y archivos necesarios para la instalación y gestión del proyecto, como `requirements.txt` y `package.json`.
+- **tests/**: Directorio que almacena todos los tests unitarios y de integración del proyecto.
+- **repositories/**: Define las interfaces de acceso a datos (DAOs) para diferentes entidades del sistema.
+- **docs/**: Documentación del proyecto, incluyendo documentación técnica y mejoras propuestas.
+- **DELIVERIES_cleansed/**: Archivos limpios generados por el proceso de limpieza de datos.
+- **static/**: Recursos estáticos como CSS y JavaScript para la interfaz web.
+- **scripts/**: Scripts Python que realizan tareas específicas, como generación de documentación o procesamiento de datos.
+- **db/**: Archivos relacionados con la base de datos, incluyendo archivos de configuración y scripts de consolidación.
+- **templates/**: Plantillas HTML para las vistas del sistema web.
+- **routes/**: Definición de rutas y controladores para el manejo de solicitudes HTTP.
+- **services/**: Servicios que encapsulan la lógica de negocio, como servicios de inventario, entregas, etc.
 
 ### Organización Lógica de las Dependencias
 
-1. **Dependencias Internas**:
-   - `app.py` depende de `config.py`, `core/`, `repositories/`, `routes/`, y `services/`.
-   - `core/` depende de `database.py`, `models.py`, y otras subcarpetas.
-   - `repositories/` dependen de `database.py` y modelos específicos.
+La organización del proyecto muestra una clara separación de responsabilidades y dependencias:
 
-2. **Dependencias Externas**:
-   - El proyecto utiliza bibliotecas externas como `pytest` para pruebas, `Docker` para contenedores, y posiblemente otras dependencias listadas en `requirements.txt`.
+1. **Core**: Contiene componentes fundamentales que son utilizados por todo el sistema.
+2. **Repositories**: Define interfaces para acceder a los datos, lo que facilita la inyección de dependencias y la prueba unitaria.
+3. **Services**: Encapsula la lógica de negocio, lo que permite una separación clara entre la capa de presentación y la capa de negocio.
+4. **Routes**: Define las rutas HTTP y los controladores correspondientes, utilizando los servicios definidos en `services/`.
+5. **Tests**: Contiene pruebas unitarias y de integración para asegurar que cada componente funcione correctamente.
 
-3. **Documentación**:
-   - La carpeta `docs/` contiene documentación detallada de cada módulo, lo que facilita el mantenimiento y la comprensión del código.
-
-4. **Pruebas**:
-   - El proyecto incluye una estructura completa para pruebas unitarias y de integración en la carpeta `tests/`, asegurando que el código funcione como se espera.
-
-En resumen, esta arquitectura modular permite un mantenimiento eficiente del código, facilita la escalabilidad y mejora la comprensión del proyecto.
+Esta organización modular facilita el mantenimiento, la escalabilidad y la colaboración entre equipos de desarrollo.
 

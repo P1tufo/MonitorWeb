@@ -9,7 +9,8 @@ WHITELIST_TABLES: Final[Set[str]] = {
     "stock_levels",
     "inventory_movements",
     "warehouse_tasks",
-    "iw39_orders"
+    "iw39_orders",
+    "mb5b_initial_stock"
 }
 
 def validate_table(table_name: str) -> None:

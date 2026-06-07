@@ -179,6 +179,40 @@ async function initSaaSWidgetsV2(params = null, rootElement = document) {
                 const canvas = document.createElement('canvas');
                 widget.appendChild(canvas);
                 
+                if (queryId === 'inv_cmv_201_mensual') {
+                    const chartBox = widget.closest('.chart-box');
+                    if (chartBox) {
+                        chartBox.style.cursor = 'pointer';
+                        chartBox.onclick = () => {
+                            const modal = document.getElementById('modalCmv201');
+                            if (modal) {
+                                if (window.openModal) window.openModal('modalCmv201');
+                                else modal.classList.add('show');
+                                
+                                if (window.loadCmv201Data) {
+                                    window.loadCmv201Data('planificado');
+                                }
+                            }
+                        };
+                    }
+                } else if (queryId === 'inv_cmv_261_221_mensual') {
+                    const chartBox = widget.closest('.chart-box');
+                    if (chartBox) {
+                        chartBox.style.cursor = 'pointer';
+                        chartBox.onclick = () => {
+                            const modal = document.getElementById('modalCmv261');
+                            if (modal) {
+                                if (window.openModal) window.openModal('modalCmv261');
+                                else modal.classList.add('show');
+                                
+                                if (window.loadCmv261Data) {
+                                    window.loadCmv261Data('planificado');
+                                }
+                            }
+                        };
+                    }
+                }
+
                 // Limpiar instancia previa si existe
                 if (window.saasChartInstancesV2[queryId]) {
                     window.saasChartInstancesV2[queryId].destroy();
@@ -196,6 +230,28 @@ async function initSaaSWidgetsV2(params = null, rootElement = document) {
                     responsive: true,
                     maintainAspectRatio: false,
                     onClick: (e, elements, chart) => {
+                        if (queryId === 'inv_cmv_201_mensual') {
+                            const modal = document.getElementById('modalCmv201');
+                            if (modal) {
+                                if (window.openModal) window.openModal('modalCmv201');
+                                else modal.classList.add('show');
+                                if (window.loadCmv201Data) {
+                                    window.loadCmv201Data('planificado');
+                                }
+                            }
+                            return;
+                        }
+                        if (queryId === 'inv_cmv_261_221_mensual') {
+                            const modal = document.getElementById('modalCmv261');
+                            if (modal) {
+                                if (window.openModal) window.openModal('modalCmv261');
+                                else modal.classList.add('show');
+                                if (window.loadCmv261Data) {
+                                    window.loadCmv261Data('planificado');
+                                }
+                            }
+                            return;
+                        }
                         if (!elements || !elements.length) return;
                         try {
                             const label = chart.data.labels[elements[0].index];
@@ -350,14 +406,112 @@ async function initSaaSWidgetsV2(params = null, rootElement = document) {
     }
 }
 
+// Sugerencias de Abastecimiento (MB5B + Consumos)
+async function loadReplenishmentSuggestions(freq = 'all') {
+    const tbody = document.getElementById('replenishment-body');
+    if (!tbody) return;
+    
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2rem;"><span class="spinner" style="width:24px; height:24px; border:3px solid var(--primary); border-top-color:transparent; border-radius:50%; animation: spin 1s linear infinite; display:inline-block;"></span><br>Calculando inventario y autonomía...</td></tr>`;
+    
+    // Actualizar botones UI
+    document.querySelectorAll('.freq-btn').forEach(btn => {
+        if (btn.dataset.freq === freq) {
+            btn.classList.remove('btn-outline');
+            btn.classList.add('btn-primary');
+        } else {
+            btn.classList.add('btn-outline');
+            btn.classList.remove('btn-primary');
+        }
+    });
+    
+    try {
+        const res = await fetch(`/api/inventory/replenishment-suggestions?freq=${freq}`);
+        if (!res.ok) throw new Error('Error en API');
+        const json = await res.json();
+        const data = json.data;
+        
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2rem; color: var(--verde);">No hay sugerencias para este rango de frecuencia.</td></tr>`;
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            // Formatear números
+            const stockActual = parseFloat(item.stock_actual).toLocaleString('de-DE');
+            const usoMensual = parseFloat(item.consumo_mensual).toLocaleString('de-DE');
+            
+            // Formatear frecuencia legible
+            let frecText = 'N/A';
+            const m = parseFloat(item.frec_meses);
+            if (m > 0) {
+                const totalDays = Math.round(m * 30.4);
+                if (totalDays < 30) {
+                    frecText = `Cada ${totalDays} día${totalDays === 1 ? '' : 's'}`;
+                } else {
+                    const months = Math.floor(totalDays / 30.4);
+                    const days = Math.round(totalDays % 30.4);
+                    if (days === 0) {
+                        frecText = `Cada ${months} mes${months === 1 ? '' : 'es'}`;
+                    } else {
+                        frecText = `Cada ${months} mes${months === 1 ? '' : 'es'} y ${days} día${days === 1 ? '' : 's'}`;
+                    }
+                }
+            }
+            
+            // Destacar autonomía < 1
+            const autoNum = parseFloat(item.autonomia_meses);
+            const autoColor = autoNum < 0.5 ? 'var(--rojo)' : (autoNum < 1.0 ? 'var(--naranja)' : 'inherit');
+            const autoText = autoNum < 0 ? 'Sin Stock' : autoNum.toFixed(2) + ' meses';
+            
+            // Etiqueta ABC
+            let abcBadge = '';
+            if (item.clasificacion_abc === 'A') {
+                abcBadge = '<span style="background: rgba(var(--azul-rgb), 0.1); color: var(--azul); padding: 2px 8px; border-radius: 4px; font-weight: bold;">A</span>';
+            } else if (item.clasificacion_abc === 'B') {
+                abcBadge = '<span style="background: rgba(var(--verde-rgb), 0.1); color: var(--verde); padding: 2px 8px; border-radius: 4px; font-weight: bold;">B</span>';
+            } else {
+                abcBadge = '<span style="background: rgba(100, 116, 139, 0.1); color: #64748b; padding: 2px 8px; border-radius: 4px; font-weight: bold;">C</span>';
+            }
+            
+            tr.innerHTML = `
+                <td style="font-family: monospace; font-weight: bold;">${item.material}</td>
+                <td style="white-space: normal; min-width: 200px;">${item.descripcion || 'Sin descripción'}</td>
+                <td>${item.umb}</td>
+                <td>${item.stock_inicial}</td>
+                <td style="font-weight: bold;">${stockActual}</td>
+                <td>${usoMensual}</td>
+                <td><span style="background: rgba(0,0,0,0.05); padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">${frecText}</span></td>
+                <td style="font-weight: bold; color: ${autoColor};">${autoText}</td>
+                <td style="text-align: center;">${abcBadge}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2rem; color: var(--rojo);">Ocurrió un error calculando las sugerencias.</td></tr>`;
+    }
+}
+
 // Interceptar o inyectarnos en el update
 document.addEventListener('DOMContentLoaded', () => {
     // Iniciar
     setTimeout(() => {
         initSaaSWidgetsV2();
+        loadReplenishmentSuggestions();
+        
+        // Setup Filtros de Frecuencia
+        document.querySelectorAll('.freq-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const f = e.target.dataset.freq;
+                loadReplenishmentSuggestions(f);
+            });
+        });
     }, 500); // Pequeño delay para asegurar que el DOM y Chart.js estén listos
 });
 
 // Exponer globalmente
 window.initSaaSWidgetsV2 = initSaaSWidgetsV2;
+window.loadReplenishmentSuggestions = loadReplenishmentSuggestions;
 

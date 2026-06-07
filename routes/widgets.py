@@ -2,6 +2,9 @@ import json
 import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
+import io
+import pandas as pd
 from sqlalchemy.orm import Session
 
 from core.database import get_session_dep
@@ -413,3 +416,502 @@ async def get_widget_drilldown(
     except Exception as e:
         logger.error(f"Error procesando drilldown para widget {query_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/api/custom/cmv201_summary")
+async def get_cmv201_summary(
+    plan_type: str = Query(..., description="Planificado o Desplanificado"),
+    year: Optional[str] = None,
+    db: Session = Depends(get_session_dep),
+    user = Depends(get_current_user)
+):
+    """
+    Endpoint custom para el modal CMV 201 Mensual.
+    Muestra la cantidad de materiales solicitados por área de negocio y mes.
+    """
+    from core.macros import AREA_EXPR as AREA_EXPR_MACRO
+    from sqlalchemy import text
+    import pandas as pd
+
+    try:
+        # Base table: inventory_movements
+        # Filtro: cmv = 201
+        
+        # Filtro de tipo planificado:
+        if plan_type.lower() == "planificado":
+            plan_filter = '''(
+                (inventory_movements.referencia GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR inventory_movements.referencia GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR
+                inventory_movements.texto_cab_documento GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR inventory_movements.texto_cab_documento GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*')
+            )'''
+        else: # Desplanificado
+            plan_filter = '''NOT (
+                (COALESCE(inventory_movements.referencia, '') GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR COALESCE(inventory_movements.referencia, '') GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR
+                COALESCE(inventory_movements.texto_cab_documento, '') GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR COALESCE(inventory_movements.texto_cab_documento, '') GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*')
+            ) AND
+            COALESCE(inventory_movements.texto_cab_documento, '') NOT LIKE '%cierre%' AND
+            COALESCE(inventory_movements.texto_cab_documento, '') NOT LIKE '%dev%' AND
+            COALESCE(inventory_movements.texto_cab_documento, '') NOT LIKE '%mes%' AND
+            COALESCE(inventory_movements.referencia, '') NOT LIKE '%cierre%' AND
+            COALESCE(inventory_movements.referencia, '') NOT LIKE '%dev%' AND
+            COALESCE(inventory_movements.referencia, '') NOT LIKE '%mes%'
+            '''
+
+        area_expr = "COALESCE((SELECT business_area FROM config_cost_center_mapping WHERE center_code = SUBSTR(inventory_movements.ce_coste, 1, 6)), 'Mantencion')"
+        
+        sql = f"""
+        SELECT 
+            {area_expr} AS area_negocio,
+            substr(inventory_movements.fe_contab, 7, 4) || '-' || substr(inventory_movements.fe_contab, 4, 2) AS mes,
+            COUNT(inventory_movements.material) AS cantidad
+        FROM inventory_movements
+        WHERE inventory_movements.cmv = '201' 
+          AND {plan_filter}
+        """
+        
+        bound_params = []
+        if year:
+            sql += " AND inventory_movements.fe_contab LIKE ?"
+            bound_params.append(f"%{year}%")
+            
+        sql += """
+        GROUP BY 1, 2
+        ORDER BY 1, 2
+        """
+        
+        df = pd.read_sql(sql, db.connection().connection, params=tuple(bound_params))
+        
+        if df.empty:
+            return []
+            
+        return sanitize_for_json(df)
+        
+    except Exception as e:
+        logger.error(f"Error procesando cmv201_summary: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/custom/cmv201_area_details")
+def get_cmv201_area_details(
+    plan_type: str = Query("planificado", description="'planificado' o 'desplanificado'"),
+    area: str = Query(..., description="Area de negocio filtrada"),
+    mes: str = Query(None, description="Mes en formato YYYY-MM. Si no se provee, no se filtra por mes."),
+    year: str = Query(None, description="Año"),
+    db: Session = Depends(get_session_dep)
+):
+    import pandas as pd
+
+    try:
+        if plan_type.lower() == "planificado":
+            plan_filter = '''(
+                (COALESCE(inventory_movements.referencia, '') GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR COALESCE(inventory_movements.referencia, '') GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR
+                COALESCE(inventory_movements.texto_cab_documento, '') GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR COALESCE(inventory_movements.texto_cab_documento, '') GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*')
+            )'''
+        else:
+            plan_filter = '''NOT (
+                (COALESCE(inventory_movements.referencia, '') GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR COALESCE(inventory_movements.referencia, '') GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR
+                COALESCE(inventory_movements.texto_cab_documento, '') GLOB '*81[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*' OR COALESCE(inventory_movements.texto_cab_documento, '') GLOB '*081[0-9][0-9][0-9][0-9][0-9][0-9][0-9]*')
+            ) AND
+            COALESCE(inventory_movements.texto_cab_documento, '') NOT LIKE '%cierre%' AND
+            COALESCE(inventory_movements.texto_cab_documento, '') NOT LIKE '%dev%' AND
+            COALESCE(inventory_movements.texto_cab_documento, '') NOT LIKE '%mes%' AND
+            COALESCE(inventory_movements.referencia, '') NOT LIKE '%cierre%' AND
+            COALESCE(inventory_movements.referencia, '') NOT LIKE '%dev%' AND
+            COALESCE(inventory_movements.referencia, '') NOT LIKE '%mes%'
+            '''
+
+        area_expr = "COALESCE((SELECT business_area FROM config_cost_center_mapping WHERE center_code = SUBSTR(inventory_movements.ce_coste, 1, 6)), 'Mantencion')"
+        
+        sql = f"""
+        SELECT 
+            inventory_movements.material,
+            inventory_movements.texto_breve_material,
+            COUNT(*) AS frecuencia,
+            ROUND(AVG(inventory_movements.cantidad * -1), 2) AS promedio_retiro,
+            ROUND(30.0 / COUNT(*), 1) AS dias_frecuencia
+        FROM inventory_movements
+        WHERE inventory_movements.cmv = '201' 
+          AND {plan_filter}
+        """
+        
+        bound_params = []
+        if area:
+            sql += f" AND {area_expr} = ?"
+            bound_params.append(area)
+
+        if mes:
+            sql += " AND (substr(inventory_movements.fe_contab, 7, 4) || '-' || substr(inventory_movements.fe_contab, 4, 2)) = ?"
+            bound_params.append(mes)
+        elif year:
+            sql += " AND inventory_movements.fe_contab LIKE ?"
+            bound_params.append(f"%{year}%")
+            
+        sql += """
+        GROUP BY inventory_movements.material, inventory_movements.texto_breve_material
+        ORDER BY frecuencia DESC
+        """
+        
+        df = pd.read_sql(sql, db.connection().connection, params=tuple(bound_params))
+        
+        if df.empty:
+            return []
+            
+        return sanitize_for_json(df)
+        
+    except Exception as e:
+        logger.error(f"Error procesando cmv201_area_details: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/api/custom/cmv261_summary")
+def get_cmv261_summary(
+    plan_type: str = Query("planificado", description="'planificado' o 'desplanificado'"),
+    year: str = Query(None, description="Año"),
+    db: Session = Depends(get_session_dep)
+):
+    import pandas as pd
+
+    try:
+        # Filtro de tipo planificado para CMV 261:
+        # Se excluye explicitamente PGP porque es mantencion anual
+        if plan_type.lower() == "planificado":
+            plan_filter = '''(
+                (COALESCE(inventory_movements.referencia, '') = '' AND COALESCE(inventory_movements.texto_cab_documento, '') = '')
+                OR COALESCE(inventory_movements.texto_cab_documento, '') GLOB '*PGE*' 
+                OR COALESCE(inventory_movements.referencia, '') GLOB '*PGE*'
+            ) AND COALESCE(inventory_movements.texto_cab_documento, '') NOT GLOB '*PGP*' AND COALESCE(inventory_movements.referencia, '') NOT GLOB '*PGP*' '''
+        else: # Desplanificado
+            plan_filter = '''NOT (
+                (COALESCE(inventory_movements.referencia, '') = '' AND COALESCE(inventory_movements.texto_cab_documento, '') = '')
+                OR COALESCE(inventory_movements.texto_cab_documento, '') GLOB '*PGE*' 
+                OR COALESCE(inventory_movements.referencia, '') GLOB '*PGE*'
+            ) AND COALESCE(inventory_movements.texto_cab_documento, '') NOT GLOB '*PGP*' AND COALESCE(inventory_movements.referencia, '') NOT GLOB '*PGP*' '''
+
+        area_expr = "COALESCE((SELECT business_area FROM config_cost_center_mapping WHERE center_code = SUBSTR(COALESCE(NULLIF(inventory_movements.ceco_resp, ''), NULLIF(inventory_movements.ce_coste, '')), 1, 6)), 'Mantencion')"
+        
+        sql = f"""
+        SELECT 
+            {area_expr} AS area_negocio,
+            substr(inventory_movements.fe_contab, 7, 4) || '-' || substr(inventory_movements.fe_contab, 4, 2) AS mes,
+            COUNT(inventory_movements.material) AS cantidad
+        FROM inventory_movements
+        WHERE inventory_movements.cmv = '261' 
+          AND {plan_filter}
+        """
+        
+        bound_params = []
+        if year:
+            sql += " AND inventory_movements.fe_contab LIKE ?"
+            bound_params.append(f"%{year}%")
+            
+        sql += """
+        GROUP BY 1, 2
+        ORDER BY 1, 2
+        """
+        
+        df = pd.read_sql(sql, db.connection().connection, params=tuple(bound_params))
+        
+        if df.empty:
+            return []
+            
+        return sanitize_for_json(df)
+        
+    except Exception as e:
+        logger.error(f"Error procesando cmv261_summary: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/api/custom/cmv261_area_details")
+def get_cmv261_area_details(
+    plan_type: str = Query("planificado", description="'planificado' o 'desplanificado'"),
+    area: str = Query(..., description="Area de negocio filtrada"),
+    mes: str = Query(None, description="Mes en formato YYYY-MM. Si no se provee, no se filtra por mes."),
+    year: str = Query(None, description="Año"),
+    db: Session = Depends(get_session_dep)
+):
+    import pandas as pd
+
+    try:
+        if plan_type.lower() == "planificado":
+            plan_filter = '''(
+                (COALESCE(inventory_movements.referencia, '') = '' AND COALESCE(inventory_movements.texto_cab_documento, '') = '')
+                OR COALESCE(inventory_movements.texto_cab_documento, '') GLOB '*PGE*' 
+                OR COALESCE(inventory_movements.referencia, '') GLOB '*PGE*'
+            ) AND COALESCE(inventory_movements.texto_cab_documento, '') NOT GLOB '*PGP*' AND COALESCE(inventory_movements.referencia, '') NOT GLOB '*PGP*' '''
+        else:
+            plan_filter = '''NOT (
+                (COALESCE(inventory_movements.referencia, '') = '' AND COALESCE(inventory_movements.texto_cab_documento, '') = '')
+                OR COALESCE(inventory_movements.texto_cab_documento, '') GLOB '*PGE*' 
+                OR COALESCE(inventory_movements.referencia, '') GLOB '*PGE*'
+            ) AND COALESCE(inventory_movements.texto_cab_documento, '') NOT GLOB '*PGP*' AND COALESCE(inventory_movements.referencia, '') NOT GLOB '*PGP*' '''
+
+        area_expr = "COALESCE((SELECT business_area FROM config_cost_center_mapping WHERE center_code = SUBSTR(COALESCE(NULLIF(inventory_movements.ceco_resp, ''), NULLIF(inventory_movements.ce_coste, '')), 1, 6)), 'Mantencion')"
+        
+        sql = f"""
+        SELECT 
+            inventory_movements.material,
+            inventory_movements.texto_breve_material,
+            COUNT(*) AS frecuencia,
+            ROUND(AVG(inventory_movements.cantidad * -1), 2) AS promedio_retiro,
+            ROUND(30.0 / COUNT(*), 1) AS dias_frecuencia
+        FROM inventory_movements
+        WHERE inventory_movements.cmv = '261' 
+          AND {plan_filter}
+        """
+        
+        bound_params = []
+        if area:
+            sql += f" AND {area_expr} = ?"
+            bound_params.append(area)
+
+        if mes:
+            sql += " AND (substr(inventory_movements.fe_contab, 7, 4) || '-' || substr(inventory_movements.fe_contab, 4, 2)) = ?"
+            bound_params.append(mes)
+        elif year:
+            sql += " AND inventory_movements.fe_contab LIKE ?"
+            bound_params.append(f"%{year}%")
+            
+        sql += """
+        GROUP BY inventory_movements.material, inventory_movements.texto_breve_material
+        ORDER BY frecuencia DESC
+        """
+        
+        df = pd.read_sql(sql, db.connection().connection, params=tuple(bound_params))
+        
+        if df.empty:
+            return []
+            
+        return sanitize_for_json(df)
+        
+    except Exception as e:
+        logger.error(f"Error procesando cmv261_area_details: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/inventory/replenishment-suggestions")
+async def get_replenishment_suggestions(
+    freq: str = Query("all", description="Filtro de frecuencia: all, 1, 3, 6, 12"),
+    db: Session = Depends(get_session_dep)
+):
+    """
+    Calcula sugerencias de pedido basándose en el stock inicial MB5B y el ritmo de consumo.
+    Muestra los materiales con autonomía < 1 mes.
+    """
+    
+    freq_filter = "AND (SELECT m_count FROM MonthCount) / c.n_retiros <= 12.0" # Default
+    if freq == "1":
+        freq_filter = "AND (SELECT m_count FROM MonthCount) / c.n_retiros <= 1.0"
+    elif freq == "3":
+        freq_filter = "AND (SELECT m_count FROM MonthCount) / c.n_retiros > 1.0 AND (SELECT m_count FROM MonthCount) / c.n_retiros <= 3.0"
+    elif freq == "6":
+        freq_filter = "AND (SELECT m_count FROM MonthCount) / c.n_retiros > 3.0 AND (SELECT m_count FROM MonthCount) / c.n_retiros <= 6.0"
+    elif freq == "12":
+        freq_filter = "AND (SELECT m_count FROM MonthCount) / c.n_retiros > 6.0 AND (SELECT m_count FROM MonthCount) / c.n_retiros <= 12.0"
+    
+    sql = f"""
+    WITH MonthCount AS (
+        SELECT CAST(COUNT(DISTINCT substr(fe_contab, 4, 7)) AS REAL) AS m_count 
+        FROM inventory_movements
+        WHERE alm = '0060'
+    ),
+    Consumption AS (
+        SELECT 
+            TRIM(material) AS material,
+            MAX(texto_breve_material) AS descripcion,
+            MAX(umb) AS umb,
+            SUM(CASE WHEN cantidad < 0 AND cmv IN ('201', '261', '221') THEN ABS(cantidad) ELSE 0 END) AS consumo_total,
+            COUNT(CASE WHEN cantidad < 0 AND cmv IN ('201', '261', '221') THEN 1 END) AS n_retiros
+        FROM inventory_movements
+        WHERE cantidad < 0 AND cmv IN ('201', '261', '221') AND alm = '0060'
+        GROUP BY TRIM(material)
+    ),
+    TotalBalance AS (
+        SELECT 
+            TRIM(material) AS material,
+            SUM(cantidad) AS balance
+        FROM inventory_movements
+        WHERE alm = '0060'
+        GROUP BY TRIM(material)
+    )
+    SELECT 
+        c.material,
+        c.descripcion,
+        COALESCE(c.umb, i.umb) AS umb,
+        COALESCE(i.stock_inicial, 0) AS stock_inicial,
+        ROUND(COALESCE(i.stock_inicial, 0) + COALESCE(b.balance, 0), 2) AS stock_actual,
+        ROUND(c.consumo_total / (SELECT m_count FROM MonthCount), 2) AS consumo_mensual,
+        CASE WHEN c.n_retiros > 0 THEN ROUND((SELECT m_count FROM MonthCount) / c.n_retiros, 2) ELSE 0 END AS frec_meses,
+        CASE WHEN c.n_retiros > 0 THEN ROUND(c.consumo_total / c.n_retiros, 2) ELSE 0 END AS prom_retiro,
+        ROUND((COALESCE(i.stock_inicial, 0) + COALESCE(b.balance, 0)) / NULLIF(c.consumo_total / (SELECT m_count FROM MonthCount), 0), 2) AS autonomia_meses,
+        CASE 
+            WHEN (c.consumo_total / (SELECT m_count FROM MonthCount)) >= 5.0 THEN 'A'
+            WHEN (c.consumo_total / (SELECT m_count FROM MonthCount)) >= 1.0 THEN 'B'
+            ELSE 'C'
+        END AS clasificacion_abc
+    FROM Consumption c
+    LEFT JOIN TotalBalance b ON c.material = b.material
+    LEFT JOIN mb5b_initial_stock i ON c.material = TRIM(i.material)
+    WHERE c.consumo_total > 0
+      AND (COALESCE(i.stock_inicial, 0) + COALESCE(b.balance, 0)) / NULLIF(c.consumo_total / (SELECT m_count FROM MonthCount), 0) < 1.0
+      AND NOT (UPPER(COALESCE(c.umb, i.umb)) IN ('KG', 'GLN') AND (c.consumo_total / (SELECT m_count FROM MonthCount)) > 300)
+      {freq_filter}
+    ORDER BY autonomia_meses ASC, consumo_mensual DESC
+    LIMIT 100;
+    """
+    
+    try:
+        from sqlalchemy import text
+        result = db.execute(text(sql)).mappings().fetchall()
+        # Convert to a list of dicts safely
+        data = [dict(row) for row in result]
+        return {"data": data}
+    except Exception as e:
+        logger.error(f"Error fetching replenishment suggestions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/api/inventory/replenishment-suggestions/export")
+async def export_replenishment_suggestions(db: Session = Depends(get_session_dep)):
+    """
+    Exporta todas las sugerencias de pedido (Autonomía < 1) a un archivo Excel.
+    """
+    sql = """
+    WITH MonthCount AS (
+        SELECT CAST(COUNT(DISTINCT substr(fe_contab, 4, 7)) AS REAL) AS m_count 
+        FROM inventory_movements
+        WHERE alm = '0060'
+    ),
+    Consumption AS (
+        SELECT 
+            TRIM(material) AS material,
+            MAX(texto_breve_material) AS descripcion,
+            MAX(umb) AS umb,
+            SUM(CASE WHEN cantidad < 0 AND cmv IN ('201', '261', '221') THEN ABS(cantidad) ELSE 0 END) AS consumo_total,
+            COUNT(CASE WHEN cantidad < 0 AND cmv IN ('201', '261', '221') THEN 1 END) AS n_retiros
+        FROM inventory_movements
+        WHERE cantidad < 0 AND cmv IN ('201', '261', '221') AND alm = '0060'
+        GROUP BY TRIM(material)
+    ),
+    TotalBalance AS (
+        SELECT 
+            TRIM(material) AS material,
+            SUM(cantidad) AS balance
+        FROM inventory_movements
+        WHERE alm = '0060'
+        GROUP BY TRIM(material)
+    )
+    SELECT 
+        c.material AS "Material",
+        c.descripcion AS "Descripción",
+        COALESCE(c.umb, i.umb) AS "UMB",
+        COALESCE(i.stock_inicial, 0) AS "Stock Inicial MB5B",
+        ROUND(COALESCE(i.stock_inicial, 0) + COALESCE(b.balance, 0), 2) AS "Stock Actual Calculado",
+        ROUND(c.consumo_total / (SELECT m_count FROM MonthCount), 2) AS "Consumo Promedio Mensual",
+        CASE WHEN c.n_retiros > 0 THEN ROUND((SELECT m_count FROM MonthCount) / c.n_retiros, 2) ELSE 0 END AS "Frecuencia de Retiro (Meses)",
+        CASE WHEN c.n_retiros > 0 THEN ROUND(c.consumo_total / c.n_retiros, 2) ELSE 0 END AS "Promedio por Retiro",
+        ROUND((COALESCE(i.stock_inicial, 0) + COALESCE(b.balance, 0)) / NULLIF(c.consumo_total / (SELECT m_count FROM MonthCount), 0), 2) AS "Autonomía Global (Meses)",
+        CASE 
+            WHEN (c.consumo_total / (SELECT m_count FROM MonthCount)) >= 5.0 THEN 'A'
+            WHEN (c.consumo_total / (SELECT m_count FROM MonthCount)) >= 1.0 THEN 'B'
+            ELSE 'C'
+        END AS "Clasificación ABC"
+    FROM Consumption c
+    LEFT JOIN TotalBalance b ON c.material = b.material
+    LEFT JOIN mb5b_initial_stock i ON c.material = TRIM(i.material)
+    WHERE c.consumo_total > 0
+      AND (COALESCE(i.stock_inicial, 0) + COALESCE(b.balance, 0)) / NULLIF(c.consumo_total / (SELECT m_count FROM MonthCount), 0) < 1.0
+      AND NOT (UPPER(COALESCE(c.umb, i.umb)) IN ('KG', 'GLN') AND (c.consumo_total / (SELECT m_count FROM MonthCount)) > 300)
+    ORDER BY "Autonomía Global (Meses)" ASC, "Consumo Promedio Mensual" DESC;
+    """
+    
+    sql_areas = """
+    WITH MonthCount AS (
+        SELECT CAST(COUNT(DISTINCT substr(fe_contab, 4, 7)) AS REAL) AS m_count 
+        FROM inventory_movements
+        WHERE alm = '0060'
+    ),
+    AreaMapping AS (
+        SELECT 
+            TRIM(material) AS material,
+            MAX(texto_breve_material) AS descripcion,
+            CASE 
+                WHEN cmv = '261' THEN COALESCE((SELECT business_area FROM config_cost_center_mapping WHERE center_code = SUBSTR(ceco_resp, 1, 6)), 'Mantencion')
+                WHEN cmv IN ('201', '221') THEN COALESCE((SELECT business_area FROM config_cost_center_mapping WHERE center_code = SUBSTR(ce_coste, 1, 6)), 'Mantencion')
+                ELSE 'Otros'
+            END AS area_negocio,
+            SUM(ABS(cantidad)) AS area_consumo_total,
+            COUNT(1) AS area_n_retiros
+        FROM inventory_movements
+        WHERE cantidad < 0 AND cmv IN ('201', '261', '221') AND alm = '0060'
+        GROUP BY TRIM(material), area_negocio
+    ),
+    TotalBalance AS (
+        SELECT TRIM(material) AS material, SUM(cantidad) AS balance
+        FROM inventory_movements WHERE alm = '0060' GROUP BY TRIM(material)
+    ),
+    GlobalConsumption AS (
+        SELECT 
+            TRIM(material) AS material,
+            SUM(CASE WHEN cantidad < 0 AND cmv IN ('201', '261', '221') THEN ABS(cantidad) ELSE 0 END) AS global_consumo_total,
+            COUNT(CASE WHEN cantidad < 0 AND cmv IN ('201', '261', '221') THEN 1 END) AS global_n_retiros
+        FROM inventory_movements
+        WHERE cantidad < 0 AND cmv IN ('201', '261', '221') AND alm = '0060'
+        GROUP BY TRIM(material)
+    )
+    SELECT 
+        a.area_negocio AS "Área de Negocio",
+        a.material AS "Material",
+        a.descripcion AS "Descripción",
+        COALESCE(i.umb, '') AS "UMB",
+        ROUND(COALESCE(i.stock_inicial, 0) + COALESCE(b.balance, 0), 2) AS "Stock Global Actual",
+        ROUND(a.area_consumo_total / (SELECT m_count FROM MonthCount), 2) AS "Consumo Local (Mes)",
+        CASE WHEN a.area_n_retiros > 0 THEN ROUND((SELECT m_count FROM MonthCount) / a.area_n_retiros, 2) ELSE 0 END AS "Frecuencia Local (Meses)",
+        CASE WHEN a.area_n_retiros > 0 THEN ROUND(a.area_consumo_total / a.area_n_retiros, 2) ELSE 0 END AS "Promedio Retiro Local",
+        ROUND((COALESCE(i.stock_inicial, 0) + COALESCE(b.balance, 0)) / NULLIF(a.area_consumo_total / (SELECT m_count FROM MonthCount), 0), 2) AS "Autonomía Local (Meses)"
+    FROM AreaMapping a
+    LEFT JOIN TotalBalance b ON a.material = b.material
+    LEFT JOIN mb5b_initial_stock i ON a.material = TRIM(i.material)
+    LEFT JOIN GlobalConsumption g ON a.material = g.material
+    WHERE g.global_consumo_total > 0
+      AND (COALESCE(i.stock_inicial, 0) + COALESCE(b.balance, 0)) / NULLIF(g.global_consumo_total / (SELECT m_count FROM MonthCount), 0) < 1.0
+      AND NOT (UPPER(COALESCE(i.umb, '')) IN ('KG', 'GLN') AND (g.global_consumo_total / (SELECT m_count FROM MonthCount)) > 300)
+      AND (SELECT m_count FROM MonthCount) / g.global_n_retiros <= 12.0
+    ORDER BY a.area_negocio ASC, "Autonomía Local (Meses)" ASC;
+    """
+    
+    try:
+        from sqlalchemy import text
+        result_main = db.execute(text(sql)).mappings().fetchall()
+        result_areas = db.execute(text(sql_areas)).mappings().fetchall()
+        
+        df_main = pd.DataFrame([dict(row) for row in result_main])
+        df_areas = pd.DataFrame([dict(row) for row in result_areas])
+        
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # Hoja Principal
+            df_main.to_excel(writer, index=False, sheet_name='Sugerencias Consolidadas')
+            worksheet = writer.sheets['Sugerencias Consolidadas']
+            for i, col in enumerate(df_main.columns):
+                max_length = max(df_main[col].astype(str).map(len).max() if not df_main.empty else 0, len(col)) + 2
+                worksheet.column_dimensions[chr(65 + i)].width = min(max_length, 60)
+                
+            # Hojas por Área
+            if not df_areas.empty:
+                areas = df_areas["Área de Negocio"].unique()
+                for area in areas:
+                    safe_area_name = str(area)[:31] # Excel sheet name limit is 31 chars
+                    df_area = df_areas[df_areas["Área de Negocio"] == area].drop(columns=["Área de Negocio"])
+                    df_area.to_excel(writer, index=False, sheet_name=safe_area_name)
+                    
+                    ws = writer.sheets[safe_area_name]
+                    for i, col in enumerate(df_area.columns):
+                        max_length = max(df_area[col].astype(str).map(len).max() if not df_area.empty else 0, len(col)) + 2
+                        ws.column_dimensions[chr(65 + i)].width = min(max_length, 60)
+                
+        output.seek(0)
+        
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=Sugerencias_Pedido_Urgente.xlsx"}
+        )
+    except Exception as e:
+        logger.error(f"Error exporting replenishment suggestions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+

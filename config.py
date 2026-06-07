@@ -40,6 +40,7 @@ DELIVERIES_DIR: Final[Path] = ONEDRIVE_PATH / "VL06O"
 STOCK_DIR: Final[Path]      = ONEDRIVE_PATH / "LX02"
 TASKS_DIR: Final[Path]      = ONEDRIVE_PATH / "LT22"
 INVENTORY_DIR: Final[Path]  = ONEDRIVE_PATH / "MB51"
+MB5B_DIR: Final[Path]       = ONEDRIVE_PATH / "MB5B"
 
 # ─── VALIDACIONES Y UTILIDADES ────────────────────────────────────────────────
 def validate_config():

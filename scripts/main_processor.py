@@ -14,7 +14,8 @@ try:
         INVENTORY_DIR,
         CLEANSED_DIR, 
         DB_PATH as DATABASE_PATH,
-        ONEDRIVE_PATH
+        ONEDRIVE_PATH,
+        MB5B_DIR
     )
     IW39_DIR = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/IW39"
 except ImportError:
@@ -23,6 +24,7 @@ except ImportError:
     STOCK_DIR       = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/Stock"
     INVENTORY_DIR   = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/Movimientos"
     IW39_DIR        = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/IW39"
+    MB5B_DIR        = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/MB5B"
     CLEANSED_DIR    = "/Users/christianykelly/Desktop/MonitorWeb/DELIVERIES_cleansed"
     DATABASE_PATH   = "/Users/christianykelly/Desktop/MonitorWeb/data/wms_transactions.db"
 
@@ -124,6 +126,20 @@ def run_pipeline():
     except Exception as e:
         logger.error(f"[IW39] Fallo: {e}", exc_info=True)
         print(f"  ❌  IW39 falló: {e}")
+
+    # ── Fase 6: MB5B (Stock Inicial) ────────────────────────────────────────────
+    print("\n" + "-"*60)
+    print("📦 PROCESANDO MB5B (Stock Inicial)")
+    print("-"*60)
+    try:
+        from services.etl.mb5b import MB5BProcessor
+        processor = MB5BProcessor()
+        with sqlite3.connect(DATABASE_PATH) as conn:
+            total = processor.process_directory(str(MB5B_DIR), str(DATABASE_PATH), "mb5b_initial_stock", conn)
+        print(f"  ✅  MB5B completado: {total:,} filas en mb5b_initial_stock")
+    except Exception as e:
+        logger.error(f"[MB5B] Fallo: {e}", exc_info=True)
+        print(f"  ❌  MB5B falló: {e}")
 
     # ── Resumen final ─────────────────────────────────────────────────────────
     print("\n" + "="*60)

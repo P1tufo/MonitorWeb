@@ -117,3 +117,89 @@
         </div>
     </div>
 </div>
+
+<!-- Modal: CMV 201 Custom Drilldown -->
+<div id="modalCmv201" class="modal-overlay">
+    <div class="modal-content" style="max-width: 800px; width: 90%;">
+        <div class="modal-header">
+            <h2 id="modalCmv201Title">Desglose CMV 201</h2>
+            <button class="close-btn" onclick="closeModal('modalCmv201')">&times;</button>
+        </div>
+        <div class="modal-body" style="padding-top: 0;">
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                <button id="btnPlanificado" onclick="window.loadCmv201Data('planificado')" class="btn btn-primary" style="flex: 1;">Planificado</button>
+                <button id="btnDesplanificado" onclick="window.loadCmv201Data('desplanificado')" class="btn btn-secondary" style="flex: 1;">Desplanificado</button>
+            </div>
+            
+            <div id="cmv201Spinner" style="display: none; text-align: center; padding: 20px;">
+                <span class="spinner" style="display: inline-block; width: 30px; height: 30px; border: 3px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+            </div>
+
+            <div id="cmv201TableContainer" style="max-height: 50vh; overflow-y: auto;">
+                <!-- Table will be injected here -->
+            </div>
+
+            <!-- Contenedor Detalles de Área (oculto por defecto) -->
+            <div id="cmv201AreaDetailsContainer" style="display: none; flex-direction: column; height: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <button onclick="window.backToCmv201Summary()" class="btn btn-secondary" style="padding: 5px 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; cursor: pointer;">⬅ Volver</button>
+                    <h3 id="cmv201AreaTitle" style="margin: 0; font-size: 1.1rem; color: #e2e8f0;">Detalles del Área</h3>
+                    <select id="cmv201MonthSelect" onchange="window.onCmv201MonthChange()" style="padding: 5px; background: rgba(15, 23, 42, 0.8); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; outline: none; cursor: pointer;">
+                        <!-- Meses inyectados dinámicamente -->
+                    </select>
+                </div>
+                
+                <div id="cmv201AreaDetailsSpinner" style="display: none; text-align: center; padding: 20px;">
+                    <span class="spinner" style="display: inline-block; width: 30px; height: 30px; border: 3px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+                </div>
+
+                <div id="cmv201AreaDetailsTableContainer" style="max-height: 50vh; overflow-y: auto;">
+                    <!-- Tabla de materiales inyectada aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: CMV 261 Custom Drilldown -->
+<div id="modalCmv261" class="modal-overlay">
+    <div class="modal-content" style="max-width: 800px; width: 90%;">
+        <div class="modal-header">
+            <h2 id="modalCmv261Title">Desglose CMV 261</h2>
+            <button class="close-btn" onclick="closeModal('modalCmv261')">&times;</button>
+        </div>
+        <div class="modal-body" style="padding-top: 0;">
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                <button id="btnCmv261Planificado" onclick="window.loadCmv261Data('planificado')" class="btn btn-primary" style="flex: 1;">Planificado</button>
+                <button id="btnCmv261Desplanificado" onclick="window.loadCmv261Data('desplanificado')" class="btn btn-secondary" style="flex: 1;">Desplanificado</button>
+            </div>
+            
+            <div id="cmv261Spinner" style="display: none; text-align: center; padding: 20px;">
+                <span class="spinner" style="display: inline-block; width: 30px; height: 30px; border: 3px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+            </div>
+
+            <div id="cmv261TableContainer" style="max-height: 50vh; overflow-y: auto;">
+                <!-- Table will be injected here -->
+            </div>
+
+            <!-- Contenedor Detalles de Área (oculto por defecto) -->
+            <div id="cmv261AreaDetailsContainer" style="display: none; flex-direction: column; height: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <button onclick="window.backToCmv261Summary()" class="btn btn-secondary" style="padding: 5px 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; cursor: pointer;">⬅ Volver</button>
+                    <h3 id="cmv261AreaTitle" style="margin: 0; font-size: 1.1rem; color: #e2e8f0;">Detalles del Área</h3>
+                    <select id="cmv261MonthSelect" onchange="window.onCmv261MonthChange()" style="padding: 5px; background: rgba(15, 23, 42, 0.8); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; outline: none; cursor: pointer;">
+                        <!-- Meses inyectados dinámicamente -->
+                    </select>
+                </div>
+                
+                <div id="cmv261AreaDetailsSpinner" style="display: none; text-align: center; padding: 20px;">
+                    <span class="spinner" style="display: inline-block; width: 30px; height: 30px; border: 3px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span>
+                </div>
+
+                <div id="cmv261AreaDetailsTableContainer" style="max-height: 50vh; overflow-y: auto;">
+                    <!-- Tabla de materiales inyectada aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

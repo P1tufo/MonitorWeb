@@ -1,0 +1,44 @@
+<div id="tab-replenishment" class="tab-content">
+    <div class="row-grid-1">
+        <div class="chart-box" style="height: auto; min-height: 300px; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <h3 style="color: var(--danger); margin: 0;"><i class="fas fa-exclamation-triangle"></i> Sugerencias de Pedido (Autonomía Crítica < 1 Mes)</h3>
+                    <div id="freq-filters" style="display: flex; gap: 0.5rem; margin-left: 1rem;">
+                        <button class="btn btn-primary freq-btn" data-freq="all" style="padding: 0.25rem 0.75rem; font-size: 0.85rem; border-radius: 20px;">Todos</button>
+                        <button class="btn btn-outline freq-btn" data-freq="1" style="padding: 0.25rem 0.75rem; font-size: 0.85rem; border-radius: 20px;">&lt; 1 Mes</button>
+                        <button class="btn btn-outline freq-btn" data-freq="3" style="padding: 0.25rem 0.75rem; font-size: 0.85rem; border-radius: 20px;">1-3 Meses</button>
+                        <button class="btn btn-outline freq-btn" data-freq="6" style="padding: 0.25rem 0.75rem; font-size: 0.85rem; border-radius: 20px;">3-6 Meses</button>
+                        <button class="btn btn-outline freq-btn" data-freq="12" style="padding: 0.25rem 0.75rem; font-size: 0.85rem; border-radius: 20px;">6-12 Meses</button>
+                    </div>
+                </div>
+                <a href="/api/inventory/replenishment-suggestions/export" target="_blank" class="btn btn-secondary" style="background: rgba(93, 186, 169, 0.1); border: 1px solid rgba(93, 186, 169, 0.3); color: #5DBAA9; text-decoration: none;">
+                    <i class="fas fa-file-excel"></i> Exportar Todo a Excel
+                </a>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="saas-table w-100" id="replenishment-table">
+                    <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th>Descripción</th>
+                            <th>UMB</th>
+                            <th>Stock Inicial</th>
+                            <th>Stock Actual</th>
+                            <th>Consumo (Mes)</th>
+                            <th>Frec. Retiros</th>
+                            <th>Autonomía (Meses)</th>
+                            <th>Clas. ABC</th>
+                        </tr>
+                    </thead>
+                    <tbody id="replenishment-body">
+                        <tr><td colspan="9" style="text-align: center; padding: 2rem;">Cargando sugerencias...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.8rem; color: #64748b; text-align: center; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 6px;">
+                Calculado usando <b>Stock Inicial MB5B (2025) + Movimientos (Entradas/Salidas)</b>. Se divide el stock actual por el consumo promedio mensual.
+            </div>
+        </div>
+    </div>
+</div>

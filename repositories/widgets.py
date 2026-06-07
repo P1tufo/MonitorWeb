@@ -74,6 +74,9 @@ class WidgetRepository(BaseRepository):
         raw_data = []
         
         if not df.empty:
+            if "categoria" in df.columns:
+                df = df[df["categoria"] != "Otro"]
+                
             raw_data = sanitize_for_json(df)
             if "fecha" in df.columns and (df["fecha"] == "Total").all():
                 df = df.drop(columns=["fecha"])

@@ -404,7 +404,7 @@ def api_export_missing_orders(db: DBSession, state: AppState = Depends(get_app_s
         SELECT DISTINCT i.orden 
         FROM inventory_movements i 
         LEFT JOIN iw39_orders o ON i.orden = o.orden 
-        WHERE i.orden IS NOT NULL AND i.orden != '' AND o.ceco_resp IS NULL
+        WHERE i.orden IS NOT NULL AND i.orden != '' AND o.ceco_resp IS NULL AND i.cmv = '261' AND length(i.orden) = 8
     """
     df = pd.read_sql(text(sql), db.connection())
     

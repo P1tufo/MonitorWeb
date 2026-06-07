@@ -194,10 +194,22 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
                         ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND 
                         ({payload.baseTable}.texto_cab_documento IS NULL OR {payload.baseTable}.texto_cab_documento = '')
                     ) OR 
-                    {payload.baseTable}.texto_cab_documento GLOB '*PGP*' OR {payload.baseTable}.texto_cab_documento GLOB '*PGE*' OR
-                    {payload.baseTable}.referencia GLOB '*PGP*' OR {payload.baseTable}.referencia GLOB '*PGE*'
+                    {payload.baseTable}.texto_cab_documento GLOB '*PGE*' OR
+                    {payload.baseTable}.referencia GLOB '*PGE*'
                 ) THEN 'Planificado'
-                WHEN {payload.baseTable}.cmv IN ('201', '261', '221') THEN 'Desplanificado'
+                WHEN {payload.baseTable}.cmv = '261' AND (
+                    {payload.baseTable}.texto_cab_documento GLOB '*PGP*' OR
+                    {payload.baseTable}.referencia GLOB '*PGP*'
+                ) THEN 'Otro'
+                WHEN {payload.baseTable}.cmv IN ('201', '221') AND 
+                    COALESCE({payload.baseTable}.texto_cab_documento, '') NOT LIKE '%cierre%' AND
+                    COALESCE({payload.baseTable}.texto_cab_documento, '') NOT LIKE '%dev%' AND
+                    COALESCE({payload.baseTable}.texto_cab_documento, '') NOT LIKE '%mes%' AND
+                    COALESCE({payload.baseTable}.referencia, '') NOT LIKE '%cierre%' AND
+                    COALESCE({payload.baseTable}.referencia, '') NOT LIKE '%dev%' AND
+                    COALESCE({payload.baseTable}.referencia, '') NOT LIKE '%mes%'
+                THEN 'Desplanificado'
+                WHEN {payload.baseTable}.cmv = '261' THEN 'Desplanificado'
                 ELSE 'Otro'
             END"""
         elif payload.breakdown == "__ABAST_VS_CONSUMO__":
@@ -217,10 +229,22 @@ def build_sql_from_payload(payload, db: Session, drilldown_segment: Optional[str
                         ({payload.baseTable}.referencia IS NULL OR {payload.baseTable}.referencia = '') AND 
                         ({payload.baseTable}.texto_cab_documento IS NULL OR {payload.baseTable}.texto_cab_documento = '')
                     ) OR 
-                    {payload.baseTable}.texto_cab_documento GLOB '*PGP*' OR {payload.baseTable}.texto_cab_documento GLOB '*PGE*' OR
-                    {payload.baseTable}.referencia GLOB '*PGP*' OR {payload.baseTable}.referencia GLOB '*PGE*'
+                    {payload.baseTable}.texto_cab_documento GLOB '*PGE*' OR
+                    {payload.baseTable}.referencia GLOB '*PGE*'
                 ) THEN 'Mantención (261)'
-                WHEN {payload.baseTable}.cmv IN ('201', '261', '221') THEN 'Desplanificado'
+                WHEN {payload.baseTable}.cmv = '261' AND (
+                    {payload.baseTable}.texto_cab_documento GLOB '*PGP*' OR
+                    {payload.baseTable}.referencia GLOB '*PGP*'
+                ) THEN 'Otro'
+                WHEN {payload.baseTable}.cmv IN ('201', '221') AND 
+                    COALESCE({payload.baseTable}.texto_cab_documento, '') NOT LIKE '%cierre%' AND
+                    COALESCE({payload.baseTable}.texto_cab_documento, '') NOT LIKE '%dev%' AND
+                    COALESCE({payload.baseTable}.texto_cab_documento, '') NOT LIKE '%mes%' AND
+                    COALESCE({payload.baseTable}.referencia, '') NOT LIKE '%cierre%' AND
+                    COALESCE({payload.baseTable}.referencia, '') NOT LIKE '%dev%' AND
+                    COALESCE({payload.baseTable}.referencia, '') NOT LIKE '%mes%'
+                THEN 'Desplanificado'
+                WHEN {payload.baseTable}.cmv = '261' THEN 'Desplanificado'
                 ELSE 'Otro'
             END"""
         else:
