@@ -19,8 +19,9 @@ from core.db_config_manager import (
     get_setting,
     get_status_mapping,
     load_config_to_memory,
+    get_user_groups,
 )
-from core.models import AppSetting, ConfigQuery, CostCenterMapping, Holiday, StatusMapping
+from core.models import AppSetting, ConfigQuery, CostCenterMapping, Holiday, StatusMapping, UserGroup
 from core.state import CacheManager, get_cache_manager
 from core.utils import sanitize_for_json
 
@@ -65,22 +66,30 @@ class CostCenterMappingUpdate(BaseModel):
 class HolidayAdd(BaseModel):
     date_str: str  # ISO format: YYYY-MM-DD
 
+class UserGroupAdd(BaseModel):
+    old_group_name: Optional[str] = None
+    group_name: str
+    users: str
+
 class QueryUpdate(BaseModel):
     query_id: str
     visual_state: str
 
 from core.schemas import FilterDef, JoinDef, MetricDef, SecondMetricDef, TimeAxisDef, VisualQueryBuilderPayload
+from repositories import get_productivity_repo, ProductivityRepository
 
 
 # ─── Vista (UI) ───────────────────────────────────────────────────────────────
 @router.get("/settings", response_class=HTMLResponse)
-async def settings_view(request: Request, db: DBSession):
+async def settings_view(request: Request, db: DBSession, repo: ProductivityRepository = Depends(get_productivity_repo)):
     """Renderiza el panel de control de configuraciones SaaS."""
     context = {
         "request": request,
         "status_mapping": get_status_mapping(),
         "cost_centers": get_cost_center_mapping(),
         "holidays": get_holidays(),
+        "user_groups": get_user_groups(),
+        "all_users": repo.get_all_users(),
         "settings": {
             "HEADER_DENSITY_THRESHOLD": get_setting("HEADER_DENSITY_THRESHOLD"),
             "HEADER_MIN_COLS": get_setting("HEADER_MIN_COLS"),
@@ -101,6 +110,7 @@ def api_get_settings():
     return {
         "status_mapping": get_status_mapping(),
         "cost_centers": get_cost_center_mapping(),
+        "user_groups": get_user_groups(),
         "app_settings": {
             k: get_setting(k) for k in [
                 "HEADER_DENSITY_THRESHOLD", "HEADER_MIN_COLS", "HEADER_SCAN_LIMIT",
@@ -162,6 +172,39 @@ def api_delete_cost_center(code: str, db: DBSession):
     row = db.query(CostCenterMapping).filter(CostCenterMapping.center_code == code).first()
     if not row:
         raise HTTPException(status_code=404, detail="Centro de costo no encontrado")
+    db.delete(row)
+    db.flush()
+    load_config_to_memory(db)
+    invalidate_caches(db)
+    return {"status": "success"}
+
+
+# ─── API: Grupos de Usuarios ──────────────────────────────────────────────────
+@router.post("/api/settings/user_group")
+def api_upsert_user_group(update: UserGroupAdd, db: DBSession):
+    if update.old_group_name and update.old_group_name != update.group_name:
+        # Renombrar: borrar el antiguo y crear el nuevo
+        old_row = db.query(UserGroup).filter(UserGroup.group_name == update.old_group_name).first()
+        if old_row:
+            db.delete(old_row)
+            db.flush()
+    
+    row = db.query(UserGroup).filter(UserGroup.group_name == update.group_name).first()
+    if row:
+        row.users = update.users
+    else:
+        db.add(UserGroup(group_name=update.group_name, users=update.users))
+    
+    db.flush()
+    load_config_to_memory(db)
+    invalidate_caches(db)
+    return {"status": "success", "message": "Grupo de usuarios actualizado"}
+
+@router.delete("/api/settings/user_group/{group_name}")
+def api_delete_user_group(group_name: str, db: DBSession):
+    row = db.query(UserGroup).filter(UserGroup.group_name == group_name).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Grupo no encontrado")
     db.delete(row)
     db.flush()
     load_config_to_memory(db)

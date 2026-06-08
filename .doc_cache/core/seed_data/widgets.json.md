@@ -1,7 +1,7 @@
 ## Archivo: ./core/seed_data/widgets.json
 
 ### Resumen Funcional
-El archivo `widgets.json` contiene una lista de consultas y configuraciones para visualizaciones en un sistema de monitoreo de almacén (WMS). Cada consulta define cómo se deben obtener datos de la base de datos y cómo se deben presentar gráficamente.
+El archivo `widgets.json` contiene una lista de consultas y configuraciones para visualizaciones en un sistema de monitoreo de almacén (WMS). Cada consulta define cómo se deben obtener datos de la base de datos y cómo se deben presentar estos datos en gráficos.
 
 ### Catálogo de Funciones y Clases
 Ninguna
@@ -15,12 +15,11 @@ Ninguna
 - **COLUMNAS**:
   - `material`
   - `entrega`
-  - `dias_retraso`
   - `fecha_carga`
+  - `dias_retraso`
   - `tipo_operacion`
-  - `area_negocio`
-  - `warehouse_tasks.material`
-  - `warehouse_tasks.entrega`
+  - `cmv`
+  - `fe_contab`
 
 ### Estado y Variables Globales
 Ninguna

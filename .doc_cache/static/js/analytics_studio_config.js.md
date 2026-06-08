@@ -1,23 +1,23 @@
 ## Archivo: ./static/js/analytics_studio_config.js
 
 ### Resumen Funcional
-Este archivo define un módulo para gestionar el estado visual de gráficos en una aplicación de análisis. Permite obtener y establecer el estado visual de diferentes consultas, así como mantener mapeos predefinidos para inicializar gráficos con configuraciones específicas.
+Este archivo JavaScript define un manejador para el estado visual de gráficos en una aplicación de análisis. Permite obtener y establecer el estado visual de diferentes consultas, utilizando un patrón singleton para mantener la instancia única por consulta.
 
 ### Catálogo de Funciones y Clases
-- `AnalyticsStudioManager.getVisualState(queryId)` - Obtiene el estado visual asociado a una consulta específica.
-- `AnalyticsStudioManager.setVisualState(queryId, state)` - Establece el estado visual para una consulta específica.
+- `AnalyticsStudioManager.getVisualState(queryId)` - Obtiene el estado visual actualizado para una consulta específica.
+- `AnalyticsStudioManager.setVisualState(queryId, state)` - Establece un nuevo estado visual para una consulta específica.
 
 ### Interacción con Base de Datos
-Ninguna
+Ninguna. El archivo no realiza ninguna operación directa en la base de datos.
 
 ### Estado y Variables Globales
-- `studioChartInstance` - Instancia del gráfico actual.
-- `currentSchema` - Esquema actual (no se usa en este fragmento).
-- `currentQueryId` - ID de la consulta actual.
-- `serverVisualState` - Estado visual del servidor (no se usa en este fragmento).
+- `studioChartInstance` - Variable global que almacena una instancia del gráfico.
+- `currentSchema` - Objeto que contiene el esquema actual.
+- `currentQueryId` - ID de la consulta actualmente seleccionada.
+- `serverVisualState` - Estado visual almacenado en el servidor.
 - `visualState` - Puntero al estado activo del modal.
 
 ### Dependencias y Flujo
-- No depende de ninguna librería externa.
-- Este archivo no importa a otros archivos ni es importado por otros archivos.
+- **Dependencias**: No hay dependencias externas mencionadas.
+- **Flujo de Datos**: El archivo no importa ni es importado por otros archivos. Es un módulo autónomo que gestiona el estado visual de los gráficos.
 

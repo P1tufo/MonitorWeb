@@ -4,11 +4,12 @@
 Este archivo define los modelos ORM SQLAlchemy para las tablas de configuración dinámica del sistema WMS, incluyendo mapeos de estados, centros de costo, parámetros globales, feriados y consultas SQL gestionadas via UI.
 
 ### Catálogo de Funciones y Clases
-- `StatusMapping(code: str, label: str)` - Representa el mapeo de códigos internos del WMS a etiquetas legibles.
+- `StatusMapping(code: str, label: str)` - Mapea códigos internos del WMS a etiquetas legibles por humanos.
 - `CostCenterMapping(center_code: str, business_area: str)` - Asocia un código de centro de costo con un Área de Negocio.
-- `AppSetting(key: str, value: str, type: str = "str")` - Almacena parámetros de comportamiento del sistema con deserialización correcta.
-- `Holiday(date_str: str)` - Representa los días no hábiles para el cálculo de SLA.
-- `ConfigQuery(query_id: str, visual_state: str)` - Almacena el estado visual (JSON) de las consultas del Analytics Studio.
+- `AppSetting(key: str, value: str, type: str = "str")` - Parámetros de comportamiento del sistema.
+  - `typed_value()` - Retorna el valor con el tipo Python correcto.
+- `Holiday(date_str: str)` - Días no hábiles para el cálculo de SLA.
+- `ConfigQuery(query_id: str, visual_state: str = None)` - Almacena el estado visual de las consultas del Analytics Studio.
 
 ### Interacción con Base de Datos
 - Motor: SQLite
@@ -25,5 +26,5 @@ Ninguna
 ### Dependencias y Flujo
 - Importa de `sqlalchemy` para definir los tipos de datos y ORM.
 - Importa de `.database.Base` para la herencia de modelos.
-- No se importan archivos del proyecto que lo consuman.
+- No importa a otros archivos del proyecto.
 

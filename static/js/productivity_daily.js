@@ -3,11 +3,34 @@
 let productivityTrendChartInst = null;
 let currentDailyData = null;
 let selectedDailyUsers = [];
+let userGroupsCache = typeof INITIAL_USER_GROUPS !== 'undefined' ? INITIAL_USER_GROUPS : {};
+
 
 function toggleDailyUserFilter() {
     const d = document.getElementById('daily-user-filter-dropdown');
     if(d) {
         d.style.display = (d.style.display === 'none' || d.style.display === '') ? 'block' : 'none';
+        if (d.style.display === 'block') {
+            const input = document.getElementById('search-daily-user');
+            if (input) input.focus();
+        }
+    }
+}
+
+function filterDailyUserList() {
+    const input = document.getElementById('search-daily-user');
+    const filter = input.value.toUpperCase();
+    const container = document.getElementById('daily-user-filter-list');
+    if (!container) return;
+    
+    const items = container.querySelectorAll('.daily-user-item');
+    for (let i = 0; i < items.length; i++) {
+        const txtValue = items[i].textContent || items[i].innerText;
+        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            items[i].style.setProperty('display', 'block', 'important');
+        } else {
+            items[i].style.setProperty('display', 'none', 'important');
+        }
     }
 }
 
@@ -15,10 +38,37 @@ function renderDailyUserCheckboxes(summary) {
     const list = document.getElementById('daily-user-filter-list');
     if (!list) return;
     list.innerHTML = '';
+
+    // 1. Renderizar Grupos de Usuarios
+    if (Object.keys(userGroupsCache).length > 0) {
+        const groupHeader = document.createElement('div');
+        groupHeader.style.cssText = "color: #5DBAA9; font-size: 0.8rem; font-weight: 700; margin-top: 5px; margin-bottom: 5px; text-transform: uppercase;";
+        groupHeader.textContent = "Grupos Rápidos";
+        list.appendChild(groupHeader);
+
+        for (const [groupName, groupUsers] of Object.entries(userGroupsCache)) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'daily-user-item';
+            btn.innerHTML = `<i class="fas fa-layer-group"></i> ${groupName}`;
+            btn.style.cssText = "display: block; width: 100%; text-align: left; background: rgba(93, 186, 169, 0.1); color: #5DBAA9; border: 1px solid rgba(93, 186, 169, 0.3); padding: 6px 10px; border-radius: 4px; margin-bottom: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;";
+            btn.onmouseover = () => btn.style.background = 'rgba(93, 186, 169, 0.2)';
+            btn.onmouseout = () => btn.style.background = 'rgba(93, 186, 169, 0.1)';
+            btn.onclick = () => selectUserGroup(groupUsers);
+            list.appendChild(btn);
+        }
+
+        const userHeader = document.createElement('div');
+        userHeader.style.cssText = "color: #94a3b8; font-size: 0.8rem; font-weight: 700; margin-top: 10px; margin-bottom: 5px; text-transform: uppercase; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;";
+        userHeader.textContent = "Usuarios Individuales";
+        list.appendChild(userHeader);
+    }
+
     if (!summary || summary.length === 0) return;
     const users = summary.map(s => s.usuario).sort();
     users.forEach(u => {
         const lbl = document.createElement('label');
+        lbl.className = 'daily-user-item';
         lbl.style.cssText = "display: block !important; cursor: pointer !important; margin: 4px 0 !important; white-space: nowrap !important; text-align: left !important;";
         const chk = document.createElement('input');
         chk.type = 'checkbox';
@@ -39,6 +89,20 @@ function renderDailyUserCheckboxes(summary) {
     const allChk = document.getElementById('daily-user-filter-all');
     if(allChk) allChk.checked = selectedDailyUsers.length === 0;
 }
+
+function selectUserGroup(groupUsers) {
+    selectedDailyUsers = groupUsers;
+    const allChk = document.getElementById('daily-user-filter-all');
+    if(allChk) allChk.checked = false;
+    
+    const cbs = document.querySelectorAll('.daily-user-cb');
+    cbs.forEach(c => {
+        c.checked = groupUsers.includes(c.value);
+    });
+
+    renderFilteredDaily();
+}
+
 
 function toggleAllDailyUsers() {
     const allChk = document.getElementById('daily-user-filter-all');
@@ -113,6 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
         dp.value = dateStr;
     }
 });
+
 
 // Intercepción al abrir la sub-pestaña
 // Si `switchSubTab` es global y la pestaña se llama `productividad`, 
@@ -241,8 +306,11 @@ async function loadProductivityData() {
         const json = await res.json();
         currentDailyData = json.data;
 
-        // Limpiar selección al cambiar de fecha si se desea, o mantenerla si coincide
-        // Por ahora la mantenemos, pero actualizamos los checkboxes con los usuarios del día
+        // Limpiar selección al cambiar de fecha para evitar filtros huérfanos
+        selectedDailyUsers = [];
+        const allChk = document.getElementById('daily-user-filter-all');
+        if(allChk) allChk.checked = true;
+
         renderDailyUserCheckboxes(currentDailyData.summary);
         
         renderFilteredDaily();

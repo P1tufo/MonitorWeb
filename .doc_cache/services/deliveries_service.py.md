@@ -1,14 +1,14 @@
 ## Archivo: ./services/deliveries_service.py
 
 ### Resumen Funcional
-El archivo `deliveries_service.py` contiene la lógica del servicio de entregas para un sistema de monitoreo de almacén (WMS). Este servicio se encarga de generar el contexto completo para las entregas, incluyendo información sobre áreas de negocio y widgets configurados.
+El archivo `deliveries_service.py` contiene la lógica de negocio para el servicio de entregas en un sistema de monitoreo de almacén (WMS). Este servicio se encarga de generar un contexto completo con metadatos ligeros, incluyendo áreas de negocio y widgets configurados.
 
 ### Catálogo de Funciones y Clases
 - `DeliveriesService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
   - **Propósito**: Prepara el servicio para interactuar con la base de datos proporcionada.
   
-- `get_full_context() -> Dict[str, Any]` - Genera y devuelve un contexto completo para las entregas.
-  - **Propósito**: Recopila y organiza información relevante sobre áreas de negocio y widgets configurados.
+- `get_full_context()` - Genera un contexto completo con metadatos ligeros.
+  - **Propósito**: Recopila y devuelve información relevante como áreas de negocio, widgets configurados, y otros datos necesarios para el monitoreo del almacén.
 
 ### Interacción con Base de Datos
 - **Motor**: SQLite
@@ -22,23 +22,17 @@ Ninguna
 
 ### Dependencias y Flujo
 - **Librerías Externas**: 
-  - `logging`, `typing`
+  - `logging`, `typing`, `sqlalchemy.orm`
   
-- **Archivos del Proyecto que Importan a este Archivo (lo consumen)**:
-  - Ninguno
-  
-- **Archivos del Proyecto que Este Archivo IMPORTA (consume)**:
+- **Archivos del Proyecto que Importan a este Archivo**:
+  - `routes.analytics_proyecciones.get_proyecciones_context()`
+  - `routes.inventory.get_inventory_context()`
+  - `routes.tasks.get_tasks_context()`
+
+- **Archivos del Proyecto que Este Archivo Importa**:
+  - `core.cache_decorator.analytics_cache`
   - `core.models.ConfigQuery`
-  - `routes.analytics_proyecciones.get_proyecciones_context`
-  - `routes.inventory.get_inventory_context`
-  - `routes.tasks.get_tasks_context`
-
-**Flujo de Datos**: 
-1. El servicio se inicializa con una sesión de base de datos.
-2. Llama a `get_full_context()` para generar el contexto completo.
-3. Consulta la tabla `outbound_deliveries` para obtener áreas de negocio distintas.
-4. Recupera widgets configurados desde la base de datos.
-5. Intenta cargar contextos adicionales desde otros módulos (`routes.analytics_proyecciones`, `routes.inventory`, `routes.tasks`) y los combina en el contexto final.
-
-**Nota**: El archivo importa funciones desde otros archivos, lo que indica un flujo bidireccional de dependencias dentro del proyecto.
+  
+- **Dirección del Flujo de Datos**: 
+  - El archivo importa funciones desde otros archivos y utiliza la sesión de base de datos para consultar información.
 

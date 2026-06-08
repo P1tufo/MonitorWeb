@@ -15,12 +15,20 @@ Ninguna.
 - `CACHE_DIR` - Directorio donde se almacenan las copias en caché de las documentaciones.
 
 ### Dependencias y Flujo
-- **Dependencias Externas**: No hay dependencias externas directamente importadas.
-- **Archivos Importados**:
-  - `config.py`: Para obtener los directorios base (`BASE_DIR`, `CACHE_DIR`).
-- **Archivos que Importan a este Archivo**: Ninguno.
+- **Dependencias**: No hay dependencias externas directamente importadas.
+- **Flujo de Datos**:
+  - `get_docs_tree()` genera un árbol jerárquico de archivos del proyecto, identificando cuáles tienen documentación.
+  - `get_doc_content(path: str)` intenta leer el contenido de una documentación desde la carpeta real o desde el caché, y devuelve su contenido.
 
-El flujo de datos es el siguiente:
-1. El usuario accede al endpoint `/api/docs/tree` para obtener la estructura del proyecto con indicadores de documentación.
-2. El usuario accede al endpoint `/api/docs/content/{path:path}` para leer el contenido específico de una documentación (.md).
+**Flujo detallado**:
+1. **`get_docs_tree()`**:
+   - Recorre los archivos del proyecto, ignorando ciertos directorios y extensiones.
+   - Construye un árbol jerárquico con información sobre cada archivo/documentación.
+   - Ordena el árbol primero por carpetas y luego por archivos, alfabéticamente.
+   - Añade una opción destacada para la documentación global.
+
+2. **`get_doc_content(path: str)`**:
+   - Intenta leer el contenido de un archivo `.md` desde la carpeta real del proyecto.
+   - Si no existe en la carpeta real, intenta leerlo desde el caché.
+   - Devuelve el contenido del archivo si lo encuentra, o lanza una excepción `HTTPException` 404 si no se encuentra.
 

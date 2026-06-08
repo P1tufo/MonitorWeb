@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: core
-Compilado el: 2026-06-07 12:50:47
+Compilado el: 2026-06-07 18:34:58
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -45,7 +45,7 @@ Este archivo `auth.py` contiene las funcionalidades de autenticación y segurida
 - `verify_password(plain: str, hashed: str) -> bool` - Verifica un password contra su hash bcrypt.
 - `create_access_token(username: str, role: str) -> tuple[str, int]` - Crea un JWT firmado con HS256.
 - `decode_token(token: str) -> Optional[dict]` - Decodifica y valida un JWT. Retorna None si es inválido o expirado.
-- `get_current_user(token: Optional[str] = Depends(oauth2_scheme), request: Request = None, db: Session = Depends(get_session_dep)) -> User` - Dependencia que extrae el usuario del token JWT.
+- `get_current_user(request: Request, token: Optional[str] = Depends(oauth2_scheme), db: Session = Depends(get_session_dep)) -> User` - Dependencia que extrae el usuario del token JWT.
 - `require_auth(user: User = Depends(get_current_user)) -> User` - Dependencia que EXIGE un usuario autenticado (no invitado).
 - `require_admin(user: User = Depends(require_auth)) -> User` - Dependencia que EXIGE rol de administrador. Lanza 403 si no tiene permisos.
 - `init_auth_db()` - Crea las tablas de autenticación si no existen.
@@ -55,7 +55,7 @@ Este archivo `auth.py` contiene las funcionalidades de autenticación y segurida
 - Motor: SQLite
 - Tablas:
   - `User` (columnas: id, username, password_hash, role, is_active, created_at)
-- Consultas SQL crudas o llamadas a ORM: Sí, se usan consultas ORM para leer y escribir en la tabla `User`.
+- Consultas SQL crudas o llamadas a ORM: Sí, se usan consultas ORM para interactuar con la tabla `User`.
 
 ### Estado y Variables Globales
 - Variables globales:
@@ -64,13 +64,57 @@ Este archivo `auth.py` contiene las funcionalidades de autenticación y segurida
   - `ACCESS_TOKEN_EXPIRE_MINUTES`: Tiempo de expiración del token JWT.
 
 ### Dependencias y Flujo
-- Librerías externas: `bcrypt`, `jwt`, `fastapi`, `pydantic`.
+- Librerías externas: `bcrypt`, `jwt`, `fastapi.security.OAuth2PasswordBearer`
 - Archivos del proyecto que este archivo importa:
-  - `core.database`
-  - `core.models_auth`
-- Archivos del proyecto que importan a este archivo:
-  - Ninguno.
-- Flujo de datos: El flujo de datos pasa por las funciones y dependencias definidas aquí, desde la autenticación hasta la creación de tokens JWT y la gestión de usuarios.
+  - `core.database` (para `Base`, `engine`, `get_session_dep`)
+  - `core.models_auth` (para `User`)
+- Archivos del proyecto que importan a este archivo: Ninguno
+- Flujo de datos: El flujo de datos pasa por las funciones de autenticación y seguridad, utilizando tokens JWT para la autenticación y roles para el control de acceso.
+
+
+---
+
+## Archivo: ./core/cache_decorator.py
+
+### Resumen Funcional
+El archivo `cache_decorator.py` contiene funciones y un decorador para implementar una caché multinivel en un sistema de monitoreo de almacén (WMS). El decorador permite almacenar y recuperar datos analíticos tanto en memoria como en una base de datos SQLite, utilizando un patrón de caché que prioriza la velocidad de acceso a los datos.
+
+### Catálogo de Funciones y Clases
+- `save_analytics_snapshot(session: Session, key: str, data: Dict[str, Any])` - Guarda una captura de las analíticas en la base de datos para carga instantánea.
+- `load_analytics_snapshot(session: Session, key: str) -> Optional[Dict[str, Any]]` - Recupera la última captura de analíticas desde la base de datos.
+- `analytics_cache(key_prefix: str)` - Decorador que implementa el patrón de caché multinivel (Memoria -> DB Snapshot -> Cálculo).
+
+### Interacción con Base de Datos
+- Motor de BD: SQLite
+- Tablas:
+  - `analytics_snapshots`
+    - Columnas:
+      - `key` (TEXT, PRIMARY KEY)
+      - `data` (TEXT)
+      - `updated_at` (TIMESTAMP, DEFAULT CURRENT_TIMESTAMP)
+
+### Estado y Variables Globales
+- Ninguna
+
+### Dependencias y Flujo
+- Librerías externas: `json`, `logging`, `datetime`, `functools`, `typing`
+- Archivos del proyecto que IMPORTA:
+  - `core.state` (para `get_cache_manager`)
+- Archivos del proyecto que IMPORTAN a este archivo:
+  - Ninguno
+
+**Flujo de Datos:**
+1. **Entrada:** Llamada al método decorado con parámetros.
+2. **Proceso:**
+   - Verifica si existe una sesión (`self.session`).
+   - Genera claves para caché en memoria y base de datos.
+   - Intenta recuperar los datos desde la caché en memoria.
+   - Si no está en caché, intenta recuperarlos desde el snapshot en la base de datos.
+   - Si no están disponibles, ejecuta el cálculo completo del método decorado.
+   - Almacena los resultados en la caché en memoria y en la base de datos si es un diccionario.
+3. **Salida:** Devuelve los datos recuperados o calculados.
+
+Este flujo asegura que los datos sean recuperados lo más rápido posible, utilizando el caché en memoria como primer recurso, seguido del snapshot en la base de datos, y finalmente ejecutando el cálculo completo si es necesario.
 
 
 ---
@@ -121,32 +165,32 @@ Este archivo gestiona la configuración dinámica del Sistema de Monitoreo de Al
 - `get_cost_center_mapping() -> Dict[str, str]` - Devuelve el mapeo de centros de costo en formato diccionario.
 - `get_holidays() -> List[str]` - Devuelve la lista de feriados.
 - `get_query_visual_state(query_id: str) -> str` - Recupera el visual_state JSON de una consulta.
+- `get_user_groups() -> Dict[str, List[str]]` - Devuelve un diccionario de grupos de usuarios.
 
 ### Interacción con Base de Datos
-- Motor: SQLite
+- Motor de BD: SQLite
 - Tablas:
   - `app_setting`
   - `config_query`
   - `cost_center_mapping`
   - `holiday`
   - `status_mapping`
+  - `user_group`
 - Columnas:
   - `app_setting`: `key`, `value`, `type`
   - `config_query`: `query_id`, `visual_state`
   - `cost_center_mapping`: `center_code`, `business_area`
   - `holiday`: `date_str`
   - `status_mapping`: `code`, `label`
+  - `user_group`: `group_name`, `users`
 
 ### Estado y Variables Globales
-- No hay variables globales, de sesión o de entorno explícitas.
+- No hay variables globales explícitas.
 
 ### Dependencias y Flujo
-- Importa: `logging`, `typing`, `sqlalchemy`, `sqlalchemy.orm`, `os`
-- Exporta: Todas las funciones descritas anteriormente.
-- Flujo de datos:
-  - `init_config_db()` crea tablas y añade columnas si no existen.
-  - `seed_initial_config()` inserta valores por defecto en las tablas.
-  - Las funciones públicas (`get_setting`, `get_status_mapping`, etc.) consultan la base de datos para recuperar los valores de configuración.
+- Importa librerías internas del proyecto (`database.py`, `models.py`).
+- No se importan archivos del proyecto que lo consuman.
+- El flujo de datos es desde el archivo hacia la base de datos para lectura y escritura.
 
 
 ---
@@ -178,7 +222,7 @@ Este archivo actúa como un punto central para la gestión y reutilización de e
 ## Archivo: ./core/models.py
 
 ### Resumen Funcional
-Este archivo define los modelos ORM SQLAlchemy para las tablas de configuración dinámica del sistema de monitoreo de almacén (WMS). Incluye mapeos de estados, centros de costo, parámetros globales, feriados y consultas SQL gestionadas via UI.
+Este archivo define los modelos ORM SQLAlchemy para las tablas de configuración dinámica del sistema WMS, incluyendo mapeos de estados, centros de costo, parámetros globales, feriados y consultas SQL gestionadas via UI.
 
 ### Catálogo de Funciones y Clases
 - `StatusMapping(code: str, label: str)` - Mapea códigos internos del WMS a etiquetas legibles por humanos.
@@ -201,8 +245,9 @@ Este archivo define los modelos ORM SQLAlchemy para las tablas de configuración
 Ninguna
 
 ### Dependencias y Flujo
-- Importa de `database.py`: `Base`
-- No se importan archivos del proyecto que lo consuman.
+- Importa de `sqlalchemy` para definir los tipos de datos y ORM.
+- Importa de `.database.Base` para la herencia de modelos.
+- No importa a otros archivos del proyecto.
 
 
 ---
@@ -282,7 +327,7 @@ Ninguna
 ## Archivo: ./core/pdf_engine.py
 
 ### Resumen Funcional
-El archivo `pdf_engine.py` es un motor optimizado para la generación de documentos PDF en formato horizontal (landscape) para el sistema de monitoreo de almacén (WMS). Permite crear reportes detallados de entregas, incluyendo códigos de barras y tablas de materiales.
+El archivo `pdf_engine.py` es un motor optimizado para la generación de documentos PDF en formato horizontal (landscape) para el sistema de monitoreo de almacén (WMS). Permite crear páginas de entrega que incluyen encabezados, información detallada, tablas de materiales y códigos de barras.
 
 ### Catálogo de Funciones y Clases
 - `WMS_Landscape_PDF(FPDF)` - Clase base para reportes WMS en formato horizontal.
@@ -342,21 +387,17 @@ El archivo `pdf_engine.py` es un motor optimizado para la generación de documen
   - Columnas: `numero_ot`, `entrega`
 
 ### Estado y Variables Globales
-- No hay variables globales declaradas en este archivo.
+- No hay variables globales declaradas explícitamente.
 
 ### Dependencias y Flujo
 - Librerías externas:
-  - `io`, `logging`, `sqlite3`, `datetime`, `pathlib`, `typing`
-  - `numpy`, `pandas`
-  - `barcode`, `fpdf`
-
+  - `io`, `logging`, `sqlite3`, `datetime`, `pathlib`, `typing`, `numpy`, `pandas`, `barcode`, `FPDF`
 - Archivos del proyecto que importan a este archivo (`pdf_engine.py`):
   - Ninguno
-
 - Archivos del proyecto que este archivo importa:
   - `config`
 
-Flujo de datos: El archivo se utiliza para generar PDFs, por lo tanto, los datos necesarios (encabezado y detalles de entrega) provienen de otros componentes del sistema (probablemente desde el servicio o repositorio correspondientes).
+Flujo de datos: El archivo se utiliza para generar PDFs, por lo tanto, consume datos desde la base de datos y genera flujos de bytes con los documentos PDF.
 
 
 ---
@@ -380,13 +421,7 @@ Ninguna.
 
 ### Dependencias y Flujo
 - **Dependencias**: `datetime` (módulo estándar de Python).
-- **Flujo**: Este archivo no importa ni es importado por otros archivos. Es una parte independiente del sistema que se ejecuta directamente en el contexto de la aplicación FastAPI.
-
-El flujo de datos dentro del archivo implica:
-1. La entrada de `grouped_data` para la función `draw_annex_table`.
-2. La entrada de `picking_df` para la función `draw_picking_list`.
-
-La salida es un PDF generado con las tablas y listas correspondientes.
+- **Flujo**: Este archivo no importa ni es importado por otros archivos. Es una parte interna del módulo `core/pdf_reports.py`.
 
 
 ---
@@ -421,11 +456,11 @@ El flujo de datos es simple: el archivo recibe payloads y estados visuales, los 
 ## Archivo: ./core/query_utils.py
 
 ### Resumen Funcional
-Este archivo contiene funciones utilitarias para el procesamiento de parámetros y extracción de métricas desde datos en formato JSON y DataFrames.
+Este archivo contiene funciones utilitarias para el procesamiento de parámetros y métricas en un sistema de monitoreo de almacén (WMS). Las funciones extraen parámetros de estado visual y valores numéricos principales de DataFrames.
 
 ### Catálogo de Funciones y Clases
 - `get_bound_params_from_visual_state(visual_state_str: str) -> list` - Extrae los bind params (?) de un visual_state JSON serializado.
-- `extract_metric_value(df, active_year: str = None)` - Extrae el valor numérico principal de un DataFrame de resultado de query.
+- `extract_metric_value(df, active_year: Optional[str] = None)` - Extrae el valor numérico principal de un DataFrame de resultado de query.
 
 ### Interacción con Base de Datos
 Ninguna
@@ -436,8 +471,8 @@ Ninguna
 ### Dependencias y Flujo
 - **Dependencias**: `json`
 - **Flujo de Datos**:
-  - `get_bound_params_from_visual_state` importa `json` para procesar el JSON serializado.
-  - `extract_metric_value` no depende de ninguna librería externa.
+  - `get_bound_params_from_visual_state` no consume ni produce datos externos.
+  - `extract_metric_value` no consume ni produce datos externos.
 
 
 ---
@@ -533,35 +568,62 @@ Este archivo contiene utilidades centralizadas de seguridad y validación, espec
 ## Archivo: ./core/semantic_layer.py
 
 ### Resumen Funcional
-La capa semántica `semantic_layer.py` mantiene el catálogo de conjuntos de datos (datasets), dimensiones y métricas, junto con sus fórmulas de negocio. Proporciona funciones para obtener esquemas front-end, resolver mapeos físicos y recuperar fórmulas complejas.
+La capa `semantic_layer.py` proporciona una abstracción semántica sobre el esquema físico de la base de datos, permitiendo que el frontend acceda a los conjuntos de datos (datasets), dimensiones y métricas mediante identificadores semánticos en lugar de nombres físicos de tablas o columnas.
 
 ### Catálogo de Funciones y Clases
-- `Dimension(id: str, label: str, physical_column: str, type: str = "string", description: str = "")` - Define una dimensión con sus atributos.
-- `Metric(id: str, label: str, physical_column: str, aggregation: str = "SUM", format: str = "number", is_complex_formula: bool = False, formula_template: Optional[str] = None, description: str = "")` - Define una métrica con sus atributos.
-- `Dataset(id: str, label: str, physical_table: str, dimensions: List[Dimension] = field(default_factory=list), metrics: List[Metric] = field(default_factory=list))` - Define un conjunto de datos con sus dimensiones y métricas.
+- `Dimension(id: str, label: str, physical_column: str, type: str = "string", description: str = "")` - Define una dimensión con su identificador, etiqueta, columna física y tipo.
+- `Metric(id: str, label: str, physical_column: str, aggregation: str = "SUM", format: str = "number", is_complex_formula: bool = False, formula_template: Optional[str] = None, description: str = "")` - Define una métrica con su identificador, etiqueta, columna física, agregación y fórmula compleja si es necesario.
+- `Dataset(id: str, label: str, physical_table: str, dimensions: List[Dimension] = field(default_factory=list), metrics: List[Metric] = field(default_factory=list))` - Define un conjunto de datos con su identificador, etiqueta, tabla física y listas de dimensiones y métricas.
 - `DATASETS: Dict[str, Dataset]` - Catálogo global de conjuntos de datos.
-- `_PHYSICAL_TABLE_TO_DATASET: Dict[str, str]` - Mapa inverso para mapear tablas físicas a IDs de conjunto de datos.
+- `_PHYSICAL_TABLE_TO_DATASET: Dict[str, str]` - Mapa inverso para mapear tablas físicas a sus respectivos conjuntos de datos.
 - `get_frontend_schema() -> Dict[str, Any]` - Genera un diccionario semántico para exponer a la UI (Studio).
 - `resolve_dataset_physical_table(dataset_id: str) -> str` - Devuelve la tabla física dado el ID del dataset.
 - `resolve_physical_mapping(dataset_id: str, field_id: str) -> str` - Traduce un ID semántico a su columna física cualificada.
 - `get_metric_formula(dataset_id: str, metric_id: str, table_alias: str = "", legacy_agg: str = "") -> Optional[str]` - Devuelve la fórmula compleja de una métrica si la tiene.
-- `get_formula_by_physical_table(physical_table: str, aggregation: str, metric_col: str = "") -> Optional[str]` - Reverse-lookup para obtener la expresión SQL real dada una tabla física y una agregación compleja.
+- `get_formula_by_physical_table(physical_table: str, aggregation: str, metric_col: str = "") -> Optional[str]` - Reverse-lookup para obtener la expresión SQL real basada en la tabla física y la agregación.
 
 ### Interacción con Base de Datos
-Ninguna. El archivo no interactúa directamente con una base de datos.
+- Motor de BD: SQLite.
+- Tablas:
+  - `outbound_deliveries`
+  - `stock_levels`
+  - `warehouse_tasks`
+  - `inventory_movements`
+- Columnas:
+  - `area_negocio` (en `outbound_deliveries`)
+  - `fecha_carga` (en `outbound_deliveries`)
+  - `material` (en varias tablas)
+  - `estado_wms` (en `outbound_deliveries`)
+  - `centro_costo` (en varias tablas)
+  - `autor` (en `outbound_deliveries`)
+  - `entrega` (en `outbound_deliveries`)
+  - `dias_retraso` (en varias tablas)
+  - `cantidad` (en varias tablas)
+  - `stock_disp` (en `stock_levels`)
+  - `fe_creac` (en `warehouse_tasks`)
+  - `fecha_conf` (en `warehouse_tasks`)
+  - `numero_ot` (en `warehouse_tasks`)
+  - `ctd_teor_dsd` (en `warehouse_tasks`)
+  - `fe_contab` (en varias tablas)
+  - `ce_coste` (en `inventory_movements`)
+  - `cmv` (en varias tablas)
+  - `tipo_operacion` (en varias tablas)
+  - `texto_cab_documento` (en varias tablas)
 
 ### Estado y Variables Globales
-- `DATASETS: Dict[str, Dataset]` - Almacena el catálogo global de conjuntos de datos.
-- `_PHYSICAL_TABLE_TO_DATASET: Dict[str, str]` - Mapa inverso para mapear tablas físicas a IDs de conjunto de datos.
+- `DATASETS: Dict[str, Dataset]` - Almacena el catálogo de conjuntos de datos.
+- `_PHYSICAL_TABLE_TO_DATASET: Dict[str, str]` - Mapa inverso para mapear tablas físicas a sus respectivos conjuntos de datos.
 
 ### Dependencias y Flujo
-- **Dependencias**: No importa ninguna librería externa.
-- **Flujo de Datos**:
-  - `get_frontend_schema()` consume `DATASETS` y genera un esquema semántico para la UI.
-  - `resolve_dataset_physical_table(dataset_id: str)` consume `DATASETS`.
-  - `resolve_physical_mapping(dataset_id: str, field_id: str)` consume `DATASETS`.
-  - `get_metric_formula(dataset_id: str, metric_id: str, table_alias: str = "", legacy_agg: str = "")` consume `DATASETS`.
-  - `get_formula_by_physical_table(physical_table: str, aggregation: str, metric_col: str = "")` consume `_PHYSICAL_TABLE_TO_DATASET` y `DATASETS`.
+- Librerías externas: `dataclasses`, `typing`.
+- Archivos del proyecto que importan a este archivo:
+  - `services.py`
+  - `repositories.py`
+  - `db.py`
+- Archivos del proyecto que este archivo importa:
+  - Ninguno
+
+El flujo de datos es unidireccional, con el archivo `semantic_layer.py` proporcionando funciones para obtener información semántica y mapeos entre IDs semánticos y físicos.
 
 
 ---
@@ -646,10 +708,10 @@ Este archivo contiene utilidades transversales y gestión de señales del sistem
 
 ### Catálogo de Funciones y Clases
 - `setup_signal_handlers()` - Configura los manejadores de señales (SIGINT, SIGTERM) para un cierre limpio.
-- `log_startup_banner()` - Registra un banner de inicio del módulo de utilidades.
+- `log_startup_banner()` - Registra un banner de inicio del módulo de utilidades del sistema.
 - `sanitize_for_json(data: Any) -> Any` - Limpia datos para su serialización JSON segura de forma recursiva y exhaustiva.
 - `_get_bound_params_from_visual_state(visual_state_str: str) -> list` - Alias de compatibilidad para obtener parámetros enlazados desde un estado visual.
-- `_extract_metric_value(df, active_year: str = None) -> Any` - Alias de compatibilidad para extraer un valor métrico de un DataFrame.
+- `_extract_metric_value(df, active_year: Optional[str] = None) -> Any` - Alias de compatibilidad para extraer un valor métrico de un DataFrame.
 
 ### Interacción con Base de Datos
 Ninguna.
@@ -661,11 +723,10 @@ Ninguna.
 - **Dependencias Externas**: `logging`, `math`, `signal`, `sys`, `pandas`.
 - **Archivos del Proyecto que Importan a este Archivo**:
   - `services.tunnel.stop_tunnel()`
-  - `core.query_engine.get_bound_params_from_visual_state`
-  - `core.query_engine.extract_metric_value`
-- **Archivos del Proyecto que Este Archivo Importa**: Ninguno.
+  - `core.query_engine.get_bound_params_from_visual_state(visual_state_str)`
+  - `core.query_engine.extract_metric_value(df, active_year)`
 
-El flujo de datos es unidireccional, con este archivo consumiendo funciones y servicios externos para su funcionalidad.
+Este archivo no importa archivos del proyecto.
 
 
 ---

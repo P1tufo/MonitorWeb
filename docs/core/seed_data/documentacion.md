@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: core/seed_data
-Compilado el: 2026-06-07 12:50:47
+Compilado el: 2026-06-07 18:34:58
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -7,7 +7,7 @@ Modelo: qwen2.5-coder:7b | Separado por Carpetas
 ## Archivo: ./core/seed_data/widgets.json
 
 ### Resumen Funcional
-El archivo `widgets.json` contiene una lista de consultas y configuraciones para visualizaciones en un sistema de monitoreo de almacén (WMS). Cada consulta define cómo se deben obtener datos de la base de datos y cómo se deben presentar gráficamente.
+El archivo `widgets.json` contiene una lista de consultas y configuraciones para visualizaciones en un sistema de monitoreo de almacén (WMS). Cada consulta define cómo se deben obtener datos de la base de datos y cómo se deben presentar estos datos en gráficos.
 
 ### Catálogo de Funciones y Clases
 Ninguna
@@ -21,12 +21,11 @@ Ninguna
 - **COLUMNAS**:
   - `material`
   - `entrega`
-  - `dias_retraso`
   - `fecha_carga`
+  - `dias_retraso`
   - `tipo_operacion`
-  - `area_negocio`
-  - `warehouse_tasks.material`
-  - `warehouse_tasks.entrega`
+  - `cmv`
+  - `fe_contab`
 
 ### Estado y Variables Globales
 Ninguna

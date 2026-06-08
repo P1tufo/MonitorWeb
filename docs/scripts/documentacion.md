@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: scripts
-Compilado el: 2026-06-07 12:50:47
+Compilado el: 2026-06-07 18:34:58
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -38,7 +38,7 @@ Ninguna.
 ## Archivo: ./scripts/generate_graphify.py
 
 ### Resumen Funcional
-El archivo `generate_graphify.py` es un script que prepara y ejecuta el proceso de generación de un mapa interactivo utilizando la herramienta `graphify`. El script limpia el directorio de salida, ejecuta el CLI de `graphify`, procesa el HTML generado para aplicar traducciones y finalmente mueve el archivo HTML resultante a una ubicación específica dentro del proyecto.
+El archivo `generate_graphify.py` es un script que prepara y ejecuta el proceso de generación de un mapa interactivo utilizando la herramienta `graphify`. El script limpia cualquier salida previa, ejecuta el CLI de `graphify`, traduce el HTML generado y lo mueve al directorio estático para su visualización en la aplicación web.
 
 ### Catálogo de Funciones y Clases
 - `prepare_environment()` - Limpia el directorio anterior y prepara la configuración.
@@ -51,16 +51,18 @@ Ninguna.
 
 ### Estado y Variables Globales
 - `ROOT_DIR` - Directorio raíz del proyecto.
-- `OUT_DIR` - Directorio donde se genera el HTML por `graphify`.
-- `DEST_DIR` - Directorio de destino para el archivo HTML final.
+- `OUT_DIR` - Directorio donde se genera la salida de `graphify`.
+- `DEST_DIR` - Directorio donde se mueve el archivo HTML final.
 - `TRANSLATIONS` - Diccionario con traducciones para elementos HTML.
 
 ### Dependencias y Flujo
 - **Dependencias**: `shutil`, `subprocess`, `pathlib`.
-- **Flujo**:
+- **Flujo de Datos**:
   - `generate_graphify.py` importa `shutil`, `subprocess` y `pathlib`.
-  - No hay archivos del proyecto que importen a este archivo.
-  - El flujo de datos es desde el script hasta la ejecución del CLI de `graphify`, procesamiento del HTML y finalmente su movimiento al directorio de destino.
+  - `graphify-out` es el directorio donde se genera la salida de `graphify`.
+  - El archivo HTML generado se mueve a `static/docs`.
+
+El flujo comienza con la ejecución del script, que llama a `run_graphify()`, que en su turno llama a `prepare_environment()`, `execute_graphify()` y finalmente `process_and_move_html()`.
 
 
 ---
@@ -90,15 +92,19 @@ El archivo `main_processor.py` es el punto de entrada del sistema de monitoreo d
 - **Librerías Externas:** `logging`, `subprocess`, `sys`, `pathlib`
 - **Archivos Importados:**
   - `config.py` (para configuraciones globales)
-  - `scripts/analyze_folder.py` (para análisis de carpetas)
   - `db.consolidator.DataConsolidator` (para consolidación de datos)
+  - `db.db_enrichment.enrich_deliveries_with_stock` y `db.db_enrichment.enrich_movements_with_iw39` (para enriquecimiento de datos)
   - `services.etl.movements.InventoryMovementAdapter` (para procesamiento de Movimientos)
   - `services.etl.iw39.IW39Processor` (para procesamiento de IW39)
   - `services.etl.mb5b.MB5BProcessor` (para procesamiento de MB5B)
-- **Archivos Importados por Otros:**
-  - No se indica explícitamente quiénes importan a este archivo.
 
-El flujo de datos fluye desde el punto de entrada hasta la ejecución de cada fase del pipeline, donde se realizan operaciones en archivos y actualizaciones en la base de datos.
+**Flujo:**
+1. `main_processor.py` importa configuraciones y dependencias.
+2. Llama a `run_pipeline()`.
+3. `run_pipeline()` ejecuta las fases del pipeline, que incluyen análisis de carpetas, consolidación de datos, enriquecimiento y procesamiento de diferentes tipos de archivos.
+4. Los resultados se almacenan en la base de datos SQLite especificada.
+
+Este archivo es el punto central para iniciar el proceso de análisis y consolidación en el sistema WMS, gestionando todas las fases del pipeline desde la validación de entrada hasta la actualización de la base de datos.
 
 
 ---
@@ -106,27 +112,35 @@ El flujo de datos fluye desde el punto de entrada hasta la ejecución de cada fa
 ## Archivo: ./scripts/run_consolidator.py
 
 ### Resumen Funcional
-El archivo `run_consolidator.py` es un script que ejecuta la consolidación de datos en una carpeta especificada utilizando el motor de base de datos SQLite. El script recibe como argumento la ruta de la carpeta a procesar y utiliza una instancia de `DataConsolidator` para realizar la consolidación.
+El archivo `run_consolidator.py` es un script que ejecuta la consolidación de transacciones del almacén. Recibe como parámetro el camino a una carpeta y utiliza la clase `DataConsolidator` para procesar y consolidar los datos de las transacciones almacenados en una base de datos SQLite.
 
 ### Catálogo de Funciones y Clases
-- `main()` - Función principal que verifica si se proporciona un argumento (ruta de la carpeta) y luego ejecuta el método `consolidate_folder` de la clase `DataConsolidator`.
+- `main()` - Función principal que verifica si se proporciona un argumento (camino a la carpeta) y luego llama al método `consolidate_folder` de la clase `DataConsolidator`.
 
 ### Interacción con Base de Datos
 - Motor: SQLite
-- Tablas y Columnas: Ninguna. El script no realiza consultas directas a la base de datos.
+- Tablas y Columnas: Ninguna. La base de datos se especifica en el parámetro del constructor de `DataConsolidator`.
+- Consultas SQL Crudas o ORM: Ninguna.
 
 ### Estado y Variables Globales
-- Ninguna. No se utilizan variables globales, de sesión o diccionarios quemados en el código.
+- Ninguna.
 
 ### Dependencias y Flujo
-- Librerías externas: `os`, `sys`
-- Archivos del proyecto que importa:
-  - `config.py` (para obtener la ruta de la base de datos)
-  - `db.consolidator.DataConsolidator` (clase para la consolidación de datos)
+- Librerías Externas:
+  - `pathlib`: Para manejar rutas de archivos.
+  - `os`: Para manipular el sistema operativo.
+- Archivos del Proyecto que Importan a este Archivo: Ninguno.
+- Archivos del Proyecto que Este Archivo Importa:
+  - `config.DB_PATH`: Ruta de la base de datos.
+  - `db.consolidator.DataConsolidator`: Clase para la consolidación de datos.
 
-- Archivos del proyecto que son importados por este archivo: Ninguno.
+**Flujo de Datos:**
+1. El script se ejecuta desde la línea de comandos con un argumento que es el camino a una carpeta.
+2. La función `main()` verifica si se proporciona el argumento necesario.
+3. Se crea una instancia de `DataConsolidator` con la ruta a la base de datos SQLite.
+4. El método `consolidate_folder` de `DataConsolidator` es llamado para procesar y consolidar los datos en la carpeta especificada.
 
-**Flujo de Datos:** El script recibe una ruta de carpeta como argumento, crea una instancia de `DataConsolidator`, y llama al método `consolidate_folder` con la ruta proporcionada.
+Este flujo asegura que el script se comporte correctamente cuando se ejecuta desde la línea de comandos con el argumento adecuado.
 
 
 ---

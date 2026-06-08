@@ -43,13 +43,14 @@ DATASETS: Dict[str, Dataset] = {
         physical_table="outbound_deliveries",
         dimensions=[
             Dimension(id="dim_area", label="Área de Negocio", physical_column="area_negocio"),
-            Dimension(id="dim_fecha", label="Fecha de Registro", physical_column="creado_el", type="date"),
+            Dimension(id="dim_fecha", label="Fecha de Registro", physical_column="fecha_carga", type="date"),
             Dimension(id="dim_material", label="Material", physical_column="material"),
             Dimension(id="dim_estado", label="Estado WMS", physical_column="estado_wms"),
             Dimension(id="dim_centro", label="Centro de Costo", physical_column="centro_costo"),
             Dimension(id="dim_autor", label="Autor", physical_column="autor"),
         ],
         metrics=[
+            Metric(id="met_entregas", label="Total Entregas", physical_column="entrega", aggregation="COUNT"),
             Metric(id="met_retraso", label="Días de Retraso", physical_column="dias_retraso", aggregation="AVG"),
             Metric(id="met_cantidad", label="Cantidad", physical_column="cantidad", aggregation="SUM"),
             Metric(
@@ -81,10 +82,12 @@ DATASETS: Dict[str, Dataset] = {
         physical_table="warehouse_tasks",
         dimensions=[
             Dimension(id="dim_fecha", label="Fecha Creación", physical_column="fe_creac", type="date"),
+            Dimension(id="dim_fecha_conf", label="Fecha Confirmación", physical_column="fecha_conf", type="date"),
             Dimension(id="dim_material", label="Material", physical_column="material"),
             Dimension(id="dim_usuario", label="Usuario", physical_column="usuario"),
         ],
         metrics=[
+            Metric(id="met_tareas", label="Total Tareas", physical_column="numero_ot", aggregation="COUNT"),
             Metric(id="met_cantidad", label="Cantidad Teórica", physical_column="ctd_teor_dsd", aggregation="SUM"),
         ]
     ),
@@ -97,9 +100,11 @@ DATASETS: Dict[str, Dataset] = {
             Dimension(id="dim_material", label="Material", physical_column="material"),
             Dimension(id="dim_ceco", label="Centro de Costo", physical_column="ce_coste"),
             Dimension(id="dim_cmv", label="Clase de Movimiento", physical_column="cmv"),
+            Dimension(id="dim_tipo_operacion", label="Tipo Operación", physical_column="tipo_operacion"),
             Dimension(id="dim_texto", label="Texto Cabecera", physical_column="texto_cab_documento"),
         ],
         metrics=[
+            Metric(id="met_movimientos", label="Total Movimientos", physical_column="material", aggregation="COUNT"),
             Metric(id="met_cantidad", label="Cantidad", physical_column="cantidad", aggregation="SUM"),
             Metric(
                 id="met_avg_tx_per_day",

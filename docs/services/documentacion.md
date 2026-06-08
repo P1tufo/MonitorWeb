@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: services
-Compilado el: 2026-06-07 12:50:47
+Compilado el: 2026-06-07 18:34:58
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -107,14 +107,14 @@ El archivo `dashboard_service.py` contiene la lógica del servicio para el dashb
 ## Archivo: ./services/deliveries_service.py
 
 ### Resumen Funcional
-El archivo `deliveries_service.py` contiene la lógica del servicio de entregas para un sistema de monitoreo de almacén (WMS). Este servicio se encarga de generar el contexto completo para las entregas, incluyendo información sobre áreas de negocio y widgets configurados.
+El archivo `deliveries_service.py` contiene la lógica de negocio para el servicio de entregas en un sistema de monitoreo de almacén (WMS). Este servicio se encarga de generar un contexto completo con metadatos ligeros, incluyendo áreas de negocio y widgets configurados.
 
 ### Catálogo de Funciones y Clases
 - `DeliveriesService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
   - **Propósito**: Prepara el servicio para interactuar con la base de datos proporcionada.
   
-- `get_full_context() -> Dict[str, Any]` - Genera y devuelve un contexto completo para las entregas.
-  - **Propósito**: Recopila y organiza información relevante sobre áreas de negocio y widgets configurados.
+- `get_full_context()` - Genera un contexto completo con metadatos ligeros.
+  - **Propósito**: Recopila y devuelve información relevante como áreas de negocio, widgets configurados, y otros datos necesarios para el monitoreo del almacén.
 
 ### Interacción con Base de Datos
 - **Motor**: SQLite
@@ -128,25 +128,19 @@ Ninguna
 
 ### Dependencias y Flujo
 - **Librerías Externas**: 
-  - `logging`, `typing`
+  - `logging`, `typing`, `sqlalchemy.orm`
   
-- **Archivos del Proyecto que Importan a este Archivo (lo consumen)**:
-  - Ninguno
-  
-- **Archivos del Proyecto que Este Archivo IMPORTA (consume)**:
+- **Archivos del Proyecto que Importan a este Archivo**:
+  - `routes.analytics_proyecciones.get_proyecciones_context()`
+  - `routes.inventory.get_inventory_context()`
+  - `routes.tasks.get_tasks_context()`
+
+- **Archivos del Proyecto que Este Archivo Importa**:
+  - `core.cache_decorator.analytics_cache`
   - `core.models.ConfigQuery`
-  - `routes.analytics_proyecciones.get_proyecciones_context`
-  - `routes.inventory.get_inventory_context`
-  - `routes.tasks.get_tasks_context`
-
-**Flujo de Datos**: 
-1. El servicio se inicializa con una sesión de base de datos.
-2. Llama a `get_full_context()` para generar el contexto completo.
-3. Consulta la tabla `outbound_deliveries` para obtener áreas de negocio distintas.
-4. Recupera widgets configurados desde la base de datos.
-5. Intenta cargar contextos adicionales desde otros módulos (`routes.analytics_proyecciones`, `routes.inventory`, `routes.tasks`) y los combina en el contexto final.
-
-**Nota**: El archivo importa funciones desde otros archivos, lo que indica un flujo bidireccional de dependencias dentro del proyecto.
+  
+- **Dirección del Flujo de Datos**: 
+  - El archivo importa funciones desde otros archivos y utiliza la sesión de base de datos para consultar información.
 
 
 ---
@@ -154,37 +148,60 @@ Ninguna
 ## Archivo: ./services/inventory_service.py
 
 ### Resumen Funcional
-El archivo `inventory_service.py` contiene la lógica de negocio para el servicio de inventario en un sistema de gestión de almacén (WMS). Genera un contexto completo que incluye estadísticas de eficiencia, datos históricos y otros detalles relevantes para el dashboard de Movimientos.
+El archivo `inventory_service.py` contiene la lógica de negocio para el servicio de inventario en un sistema de gestión de almacén (WMS). Define una clase `InventoryService` que interactúa con la base de datos para obtener y procesar datos de movimientos de inventario, calculando estadísticas de eficiencia y generando un contexto completo para el dashboard.
 
 ### Catálogo de Funciones y Clases
-- `InventoryService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
-- `fmt_num(val)` - Formatea un número como una cadena con separadores de miles.
-- `_get_latest_data_period()` - Obtiene el período más reciente de datos disponibles en la tabla `inventory_movements`.
-- `_get_empty_context()` - Devuelve un contexto vacío con valores por defecto.
-- `get_full_context()` - Genera y devuelve el contexto completo para el dashboard de Movimientos.
+- **Clase: InventoryService**
+  - **Método:** `__init__(self, session: Session)`
+    - **Propósito:** Inicializa la instancia con una sesión de base de datos.
+  
+  - **Método:** `fmt_num(self, val)`
+    - **Propósito:** Formatea un número para mostrarlo como una cadena con separadores de miles y decimales.
+
+  - **Método:** `_get_latest_data_period(self) -> Tuple[str, str]`
+    - **Propósito:** Obtiene el período más reciente de datos disponibles en la base de datos.
+
+  - **Método:** `_get_empty_context(self) -> Dict[str, Any]`
+    - **Propósito:** Devuelve un contexto vacío con valores por defecto para las estadísticas y métricas del inventario.
+
+  - **Método:** `get_full_context(self) -> Dict[str, Any]`
+    - **Propósito:** Genera el contexto completo para el dashboard de Movimientos (Fase 3: SaaS), incluyendo estadísticas de eficiencia y datos históricos.
 
 ### Interacción con Base de Datos
 - **Motor:** SQLite
 - **Tablas:** `inventory_movements`
-- **Columnas:**
+- **Columnas:** 
   - `fe_contab` (Fecha del movimiento)
-  - `tipo_operacion` (Tipo de operación, ej. Ingreso/Consumo)
+  - `tipo_operacion` (Tipo de operación: Ingreso/Consumo)
   - `registrado` (Fecha de registro)
 
 ### Estado y Variables Globales
-- Ninguna
+- **Variables Globales:** Ninguna
 
 ### Dependencias y Flujo
-- **Librerías Externas:** `pandas`, `numpy`
+- **Librerías Externas:** 
+  - `pandas`
+  - `numpy`
+  - `sqlalchemy`
+
 - **Archivos del Proyecto que Importan a este Archivo:**
-  - `core.state.get_cache_manager()`
-  - `core.utils.sanitize_for_json()`
+  - `repositories.InventoryRepository`
+
+- **Archivos del Proyecto que Este Archivo Importa:**
+  - `core.cache_decorator.analytics_cache`
+  - `core.state.get_cache_manager`
+  - `core.utils.sanitize_for_json`
   - `core.wms_config.COST_CENTER_MAPPING`
-  - `repositories.InventoryRepository(self.session)`
-- **Archivos del Proyecto que Este Archivo Importa:** Ninguno
-- **Dirección del Flujo de Datos:**
-  - El archivo importa datos desde la base de datos y los procesa para generar un contexto completo.
-  - El contexto generado se almacena en caché para futuras solicitudes.
+  - `repositories.InventoryRepository`
+
+**Flujo de Datos:** 
+1. El archivo se importa por otros archivos del proyecto.
+2. Se crea una instancia de `InventoryService` pasando una sesión de base de datos.
+3. Llama al método `get_full_context()` para generar el contexto completo.
+4. Este método interactúa con la base de datos para obtener y procesar los datos necesarios.
+5. Los resultados se almacenan en caché para mejorar el rendimiento.
+
+Este archivo es crucial para el funcionamiento del sistema de gestión de inventario, proporcionando las estadísticas y datos necesarios para el dashboard de Movimientos.
 
 
 ---
@@ -279,46 +296,46 @@ El archivo `productivity_monthly.py` contiene servicios para calcular y obtener 
 ## Archivo: ./services/tasks_service.py
 
 ### Resumen Funcional
-El archivo `tasks_service.py` contiene la lógica del servicio para generar y gestionar el contexto analítico de las Operaciones Técnicas (OTs) en un sistema de monitoreo de almacén (WMS). Este servicio utiliza SQLAlchemy para interactuar con una base de datos SQLite, pandas para procesamiento de datos, y FastAPI para la gestión del estado.
+El archivo `tasks_service.py` contiene la lógica del servicio para generar el contexto analítico para la gestión de Operaciones Técnicas (OTs) en un sistema de monitoreo de almacén (WMS). Este servicio utiliza SQLAlchemy para interactuar con una base de datos SQLite y pandas para procesar los datos.
 
 ### Catálogo de Funciones y Clases
-- `TasksService(session: Session)` - Inicializa el servicio con una sesión de base de datos.
-  - **Propósito**: Proporciona métodos para obtener y gestionar el contexto analítico de las OTs.
+- `TasksService(session: Session)` - Inicializa el servicio con una sesión de la base de datos.
+  - **Propósito**: Proporciona métodos para obtener diferentes conjuntos de datos relacionados con las OTs.
+
+- `get_full_context()` - Genera el contexto analítico para la gestión de OTs.
+  - **Propósito**: Recopila y procesa datos desde múltiples fuentes (tablas de la base de datos, consultas dinámicas) para generar un diccionario con información relevante.
 
 ### Interacción con Base de Datos
 - **Motor**: SQLite
 - **Tablas**:
-  - `config_queries` (Lectura)
+  - `config_queries` - Almacena consultas y estados visuales configurados.
 - **Columnas**:
-  - `sql_text`, `visual_state` (Tabla `config_queries`)
-- **Consultas SQL Crudas**:
-  ```sql
-  SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_list_pending'
-  SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_kpi_pending'
-  SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_kpi_users'
-  SELECT sql_text, visual_state FROM config_queries WHERE query_id = 'ots_kpi_critical'
-  ```
+  - `sql_text` - Texto de la consulta SQL.
+  - `visual_state` - Estado visual de la consulta.
+  - `query_id` - Identificador único de la consulta.
 
 ### Estado y Variables Globales
-- **Ninguna**
+- Ninguna
 
 ### Dependencias y Flujo
 - **Librerías Externas**:
-  - `logging`
-  - `datetime`
   - `pandas`
   - `sqlalchemy`
-- **Archivos del Proyecto que Importan a Este Archivo**:
-  - `core.state.get_cache_manager()`
-  - `core.utils.sanitize_for_json()`
-  - `repositories.TasksRepository`
-- **Archivos del Proyecto que Este Archivo Importa**:
-  - No aplica
+  - `logging`
+  - `datetime`
+
+- **Archivos del Proyecto que Importa a este Archivo (lo consumen)**:
+  - `repositories/TasksRepository.py` - Para acceder a los datos de las OTs.
+
+- **Archivos del Proyecto que Este Archivo IMPORTA**:
+  - `core/cache_decorator.py`
+  - `core/state.py`
+  - `core/utils.py`
+
 - **Dirección del Flujo de Datos**:
-  - Desde el servicio hasta la base de datos para leer y escribir datos.
-  - Desde el servicio hasta los repositorios para obtener datos analíticos.
-  - Desde los repositorios hasta pandas para procesar datos.
-  - Desde pandas hasta el contexto final que se almacena en caché.
+  - Desde el servicio (`TasksService`) se obtienen datos desde la base de datos y las tablas configuradas.
+  - Los datos son procesados y transformados en un formato adecuado para su visualización o análisis.
+  - El resultado final es un diccionario que contiene los datos procesados, que luego puede ser utilizado por otras partes del sistema.
 
 
 ---

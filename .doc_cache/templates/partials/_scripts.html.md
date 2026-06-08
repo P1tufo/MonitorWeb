@@ -17,5 +17,5 @@ Ninguna
 - **Archivos del proyecto que IMPORTA (consume)**: Ninguno.
 - **Archivos del proyecto que IMPORTAN a este archivo (lo consumen)**: Ninguno.
 
-El flujo de datos es unidireccional desde el HTML hacia los scripts JavaScript.
+El flujo de datos es unidireccional desde el HTML hacia los scripts externos y locales.
 

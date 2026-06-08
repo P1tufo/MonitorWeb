@@ -1,5 +1,5 @@
 # Sugerencias de Mejora Global - MonitorWeb
-Compilado el: 2026-06-07 12:50:47
+Compilado el: 2026-06-07 18:34:58
 Modelo: qwen2.5-coder:7b | Hardware: M1 Pro Optimized
 
 ---
@@ -33,6 +33,13 @@ CÓDIGO ÓPTIMO
 ---
 
 ## Sugerencias para: ./core/auth.py
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./core/cache_decorator.py
 
 CÓDIGO ÓPTIMO
 
@@ -665,7 +672,6 @@ CÓDIGO ÓPTIMO
 
 #### --- PARTE 7 de 8 ---
 
-**Veredicto de Calidad**
 CÓDIGO ÓPTIMO
 
 #### --- PARTE 8 de 8 ---
@@ -984,7 +990,9 @@ CÓDIGO ÓPTIMO
 
 ---
 
-## Sugerencias para: ./templates/settings.html
+## Sugerencias para: ./templates/settings.html (Procesado en 1 partes)
+
+#### --- PARTE 1 de 1 ---
 
 CÓDIGO ÓPTIMO
 

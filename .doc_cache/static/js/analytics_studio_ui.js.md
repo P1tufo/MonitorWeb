@@ -3,7 +3,7 @@
 #### --- PARTE 1 de 1 ---
 
 ### Resumen Funcional
-El archivo `analytics_studio_ui.js` contiene funciones y métodos para gestionar la interfaz de usuario del Studio de Análíticas, permitiendo la edición, visualización y publicación de consultas. Incluye lógica para cargar esquemas de base de datos, previsualizar tablas, ejecutar consultas y manejar filtros y configuraciones visuales.
+El archivo `analytics_studio_ui.js` contiene funciones y métodos para gestionar la interfaz de usuario del Studio de Análíticas, permitiendo la edición, visualización y publicación de consultas. Incluye funcionalidades para cargar esquemas de base de datos, previsualizar tablas, ejecutar consultas y manejar filtros y configuraciones visuales.
 
 ### Catálogo de Funciones y Clases
 - `openEditQueryModal(queryId, chartTitle)` - Abre el modal para editar una consulta.
@@ -18,34 +18,33 @@ El archivo `analytics_studio_ui.js` contiene funciones y métodos para gestionar
 - `onBaseTableChange()` - Maneja el cambio en la tabla base seleccionada.
 - `getActiveTables()` - Devuelve las tablas activas.
 - `getActiveColumns()` - Devuelve las columnas activas.
-- `refreshQbColumns(forceState = false)` - Refresca los selectores de columnas para el Constructor Visual.
+- `refreshQbColumns(forceState = false)` - Refresca los controles de columna para el Constructor Visual.
 - `renderFilters()` - Renderiza los filtros en la interfaz de usuario.
 - `addFilter()` - Añade un nuevo filtro.
 - `updateFilterType(index, type)` - Actualiza el tipo de valor del filtro.
 - `updateFilter(index)` - Actualiza los detalles del filtro seleccionado.
 - `removeFilter(index)` - Elimina un filtro.
-- `onSecondMetricToggle()` - Maneja el toggle de la Segunda Métrica.
+- `onSecondMetricToggle()` - Maneja el cambio en la activación de la Segunda Métrica.
 - `onQbChange()` - Sincroniza los cambios en la configuración del Constructor Visual con el estado actual.
 
 ### Interacción con Base de Datos
 - Motor: SQLite
-- Tablas:
-  - No se especifican tablas explícitas, pero se hacen solicitudes a endpoints como `/api/queries/{queryId}`, `/api/studio/schema`, y `/api/studio/preview_table/{tableName}`.
-- Columnas:
-  - No se especifican columnas explícitas, pero las solicitudes implican operaciones en tablas de consultas y esquemas.
+- Tablas y Columnas:
+  - **Tabla:** `queries`
+    - **Columnas:** `id`, `visual_state`
+  - **Tabla:** `studio_schema`
+    - **Columnas:** `ds_id`, `label`
 
 ### Estado y Variables Globales
-- `currentQueryId` - ID de la consulta actualmente seleccionada.
-- `serverVisualState` - Estado visual del servidor para la consulta actual.
-- `visualState` - Estado visual actual del Constructor Visual.
+- `currentQueryId` - ID de la consulta actual.
+- `serverVisualState` - Estado visual del servidor.
+- `visualState` - Estado visual actual.
 - `currentSchema` - Esquema actual de la base de datos.
 
 ### Dependencias y Flujo
-- **Dependencias Externas**: No se mencionan dependencias externas específicas.
-- **Archivos Importados**:
-  - Ninguno especificado en el fragmento proporcionado.
-- **Archivos Exportados**:
-  - Ninguno especificado en el fragmento proporcionado.
-- **Flujo de Datos**:
-  - El flujo de datos se gestiona principalmente a través de la interfaz de usuario y las solicitudes HTTP al backend.
+- **Dependencias Externas:** `fetch`
+- **Archivos Importados:**
+  - Ninguno
+- **Archivos Exportados:**
+  - Ninguno
 

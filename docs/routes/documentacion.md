@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: routes
-Compilado el: 2026-06-07 12:50:47
+Compilado el: 2026-06-07 18:34:58
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -200,7 +200,8 @@ El archivo `dashboard.py` contiene rutas para el dashboard de un sistema de moni
   - `core.auth.get_current_user`
   - `core.database.get_session_dep`
   - `core.schemas.DashboardResponse`
-  - `core.state.CacheManager`, `core.state.SyncStateManager`, `get_cache_manager`, `get_sync_manager`
+  - `core.state.CacheManager`, `core.state.SyncStateManager`
+  - `core.db_config_manager.get_user_groups`
   - `services.dashboard_service.DashboardService`
 
 **Flujo de Datos:**
@@ -208,9 +209,9 @@ El archivo `dashboard.py` contiene rutas para el dashboard de un sistema de moni
 2. **Procesamiento:**
    - Para `get_ubicaciones`: Consulta la tabla `stock_levels` para obtener las ubicaciones del material especificado.
    - Para `dashboard` y `dashboard_api`: Utiliza el servicio `DashboardService` para obtener el contexto completo del negocio, que luego se almacena en caché.
-3. **Salida:** Devuelve los datos en formato JSON o HTML según la solicitud.
+3. **Salida:** Devuelve datos en formato JSON o HTML según la solicitud.
 
-**Nota:** El archivo no utiliza consultas SQL crudas directamente; en su lugar, usa SQLAlchemy ORM y pandas para manipular los datos.
+**Nota:** El archivo no realiza consultas SQL crudas directamente; en su lugar, utiliza SQLAlchemy ORM y pandas para manipular los datos.
 
 
 ---
@@ -218,37 +219,22 @@ El archivo `dashboard.py` contiene rutas para el dashboard de un sistema de moni
 ## Archivo: ./routes/deliveries.py
 
 ### Resumen Funcional
-Este archivo contiene rutas y funciones para el módulo de análisis de entregas en un sistema de gestión de almacén (WMS). Ofrece endpoints para renderizar páginas web con datos de análisis, así como una API JSON que devuelve los mismos datos.
+Este archivo contiene rutas para el sistema de monitoreo de almacén (WMS) que proporcionan análisis y detalles sobre entregas. Incluye endpoints para renderizar páginas web con datos de entrega, obtener detalles detallados de movimientos no paletizados y proporcionar una API JSON con analíticas de entregas.
 
 ### Catálogo de Funciones y Clases
-- `save_analytics_snapshot(session: Session, key: str, data: Dict[str, Any])` - Guarda una captura de las analíticas en la base de datos para carga instantánea.
-- `load_analytics_snapshot(session: Session, key: str) -> Optional[Dict[str, Any]]` - Recupera la última captura de analíticas desde la base de datos.
-- `analytics(request: Request, user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager))` - Renderiza la página principal de analíticas con caché multinivel (Memoria -> DB -> Cálculo).
-- `sla_details(request: Request, type: str = "late", date: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, session: Session = Depends(get_session_dep))` - Vista detallada de auditoría SLA.
-- `get_non_palletized_details(user: str, clase_mov: str, db: Session = Depends(get_session_dep), current_user: Dict[str, Any] = Depends(get_current_user))` - Obtiene el listado detallado (hasta 200) de movimientos no paletizados para un usuario y tipo de movimiento específicos.
-- `analytics_deliveries_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager), sync: SyncStateManager = Depends(get_sync_manager))` - API JSON para analíticas de Entregas (Outbound Deliveries).
+- `analytics(request: Request, user=Depends(get_current_user), session: Session=Depends(get_session_dep))` - Renderiza la página principal de analíticas.
+- `sla_details(request: Request, type: str="late", date: Optional[str]=None, area: Optional[str]=None, centro: Optional[str]=None, has_ots_filter: Optional[str]=None, session: Session=Depends(get_session_dep))` - Vista detallada de auditoría SLA.
+- `get_non_palletized_details(user: str, clase_mov: str, db: Session=Depends(get_session_dep), current_user: Dict[str, Any]=Depends(get_current_user))` - Obtiene el listado detallado de movimientos no paletizados para un usuario y tipo de movimiento específicos.
+- `analytics_deliveries_api(user=Depends(get_current_user), session: Session=Depends(get_session_dep), sync: SyncStateManager=Depends(get_sync_manager))` - API JSON para analíticas de Entregas con caché multinivel.
 
 ### Interacción con Base de Datos
 - **Motor:** SQLite
 - **Tablas y Columnas:**
-  - `analytics_snapshots`: 
-    - `key` (TEXT, PRIMARY KEY)
-    - `data` (TEXT)
-    - `updated_at` (TIMESTAMP)
-  - `inventory_movements`: 
-    - `doc_mat`
-    - `usuario`
-    - `cmv`
-    - `alm`
-    - `ce`
-    - `fe_contab`
-    - `hora`
+  - `lx02_pendientes`: `otcuanto`, `material`, `stock_disp`
+  - `inventory_movements`: `doc_mat`, `usuario`, `cmv`, `alm`, `ce`, `fe_contab`, `hora`
 
 ### Estado y Variables Globales
-- **Variables Globales:** Ninguna.
-- **Estado de Sesión:** Ninguna.
-- **Estado de Entorno:** Ninguna.
-- **Diccionarios Quemados en Código:** Ninguno.
+- **Variables Globales:** Ninguna
 
 ### Dependencias y Flujo
 - **Librerías Externas:**
@@ -256,32 +242,26 @@ Este archivo contiene rutas y funciones para el módulo de análisis de entregas
   - `fastapi`
   - `sqlalchemy`
   - `logging`
-  - `json`
   - `datetime`
+  - `json`
   - `typing`
 
-- **Archivos del Proyecto que Este Archivo IMPORTA (consume):**
-  - `core.app_instance`
-  - `core.auth`
-  - `core.database`
-  - `core.schemas`
-  - `core.state`
-  - `core.utils`
+- **Archivos del Proyecto que Importan a este Archivo (lo consumen):** Ninguno
+
+- **Archivos del Proyecto que Este Archivo Importa:**
+  - `core.app_instance.templates`
+  - `core.auth.get_current_user`
+  - `core.database.get_session_dep`
+  - `core.schemas.AnalyticsDeliveriesResponse`
+  - `core.state.SyncStateManager.get_sync_manager`
+  - `core.utils.sanitize_for_json`
   - `repositories.DeliveriesRepository`
-  - `routes.analytics_proyecciones`
-  - `routes.inventory`
-  - `routes.tasks`
-  - `services.deliveries_service`
+  - `services.deliveries_service.DeliveriesService`
 
-- **Archivos del Proyecto que IMPORTAN a Este Archivo (lo consumen):**
-  - Ninguno.
-
-**Flujo de Datos:**
-1. **Entrada:** Solicitudes HTTP a las rutas definidas.
-2. **Procesamiento:** Llamadas a funciones y servicios para obtener datos, aplicar caché y guardar capturas en la base de datos.
-3. **Salida:** Renderizado de plantillas HTML o respuesta JSON con los datos procesados.
-
-Este archivo es crucial para el rendimiento y la eficiencia del sistema de análisis de entregas, ya que implementa un mecanismo de caché multinivel y persistente en la base de datos.
+- **Dirección del Flujo de Datos:**
+  - Desde el endpoint hasta la base de datos para obtener los datos necesarios.
+  - Desde la base de datos hasta el servicio para procesar y formatear los datos.
+  - Desde el servicio hasta las vistas para renderizar la información.
 
 
 ---
@@ -303,14 +283,22 @@ Ninguna.
 - `CACHE_DIR` - Directorio donde se almacenan las copias en caché de las documentaciones.
 
 ### Dependencias y Flujo
-- **Dependencias Externas**: No hay dependencias externas directamente importadas.
-- **Archivos Importados**:
-  - `config.py`: Para obtener los directorios base (`BASE_DIR`, `CACHE_DIR`).
-- **Archivos que Importan a este Archivo**: Ninguno.
+- **Dependencias**: No hay dependencias externas directamente importadas.
+- **Flujo de Datos**:
+  - `get_docs_tree()` genera un árbol jerárquico de archivos del proyecto, identificando cuáles tienen documentación.
+  - `get_doc_content(path: str)` intenta leer el contenido de una documentación desde la carpeta real o desde el caché, y devuelve su contenido.
 
-El flujo de datos es el siguiente:
-1. El usuario accede al endpoint `/api/docs/tree` para obtener la estructura del proyecto con indicadores de documentación.
-2. El usuario accede al endpoint `/api/docs/content/{path:path}` para leer el contenido específico de una documentación (.md).
+**Flujo detallado**:
+1. **`get_docs_tree()`**:
+   - Recorre los archivos del proyecto, ignorando ciertos directorios y extensiones.
+   - Construye un árbol jerárquico con información sobre cada archivo/documentación.
+   - Ordena el árbol primero por carpetas y luego por archivos, alfabéticamente.
+   - Añade una opción destacada para la documentación global.
+
+2. **`get_doc_content(path: str)`**:
+   - Intenta leer el contenido de un archivo `.md` desde la carpeta real del proyecto.
+   - Si no existe en la carpeta real, intenta leerlo desde el caché.
+   - Devuelve el contenido del archivo si lo encuentra, o lanza una excepción `HTTPException` 404 si no se encuentra.
 
 
 ---
@@ -318,35 +306,37 @@ El flujo de datos es el siguiente:
 ## Archivo: ./routes/filters.py
 
 ### Resumen Funcional
-El archivo `filters.py` contiene endpoints para filtrar entregas y calcular KPIs dinámicos en un sistema de monitoreo de almacén (WMS). Utiliza FastAPI, SQLAlchemy y SQLite para interactuar con la base de datos.
+El archivo `filters.py` contiene endpoints para filtrar transacciones y calcular KPIs en un sistema de monitoreo de almacén (WMS) utilizando FastAPI, SQLAlchemy y SQLite. Ofrece funcionalidades para obtener datos filtrados por múltiples criterios y calcular indicadores clave de rendimiento (KPIs).
 
 ### Catálogo de Funciones y Clases
-- `_build_unified_where(date: str = None, area: str = None, centro: str = None, has_ots: str = None, min_week: str = None) -> tuple[str, dict]` - Construye una cláusula WHERE unificada basada en los criterios de filtro proporcionados.
-- `filter_transactions(request: Request, date: Optional[str] = None, entrega: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, session: Session = Depends(get_session_dep))` - Filtra entregas basándose en múltiples criterios.
-- `get_kpis(date: Optional[str] = None, entrega: Optional[str] = None, area: Optional[str] = None, centro: Optional[str] = None, has_ots_filter: Optional[str] = None, session: Session = Depends(get_session_dep))` - Calcula KPIs dinámicos filtrados por área para el dashboard.
-- `api_widget_data(query_id: str, request: Request, session: Session = Depends(get_session_dep))` - Endpoint de carga asíncrona para los componentes del Dashboard.
+- `_build_unified_where(date: Optional[str], area: Optional[str], centro: Optional[str], has_ots: Optional[str], min_week: Optional[str]) -> tuple[str, dict]` - Construye una cláusula WHERE unificada basada en los criterios de filtro proporcionados.
+- `filter_transactions(request: Request, date: Optional[str], entrega: Optional[str], area: Optional[str], centro: Optional[str], has_ots_filter: Optional[str], session: Session = Depends(get_session_dep))` - Filtra entregas según múltiples criterios y devuelve los resultados.
+- `get_kpis(date: Optional[str], entrega: Optional[str], area: Optional[str], centro: Optional[str], has_ots_filter: Optional[str], session: Session = Depends(get_session_dep))` - Calcula KPIs dinámicos filtrados por área para el dashboard.
+- `api_widget_data(query_id: str, request: Request, session: Session = Depends(get_session_dep))` - Endpoint de carga asíncrona para los componentes del Dashboard, lee visual_state, compila SQL y retorna los datos JSON directamente.
 
 ### Interacción con Base de Datos
-- Motor de BD: SQLite
+- Motor de BD: SQLite.
 - Tablas:
   - `warehouse_tasks`
-  - `deliveries`
-  - `dashboard`
-  - `config_query`
+  - `ConfigQuery`
 - Columnas:
-  - `v.fecha_carga`, `v.fecha_sm_real`, `v.creado_el` (de la tabla `deliveries`)
+  - `v.fecha_carga`, `v.fecha_sm_real`, `v.creado_el` (de la tabla `v`)
   - `l.entrega` (de la tabla `warehouse_tasks`)
-  - `v.week_sort` (de la tabla `dashboard`)
-  - `v.visual_state`, `v.sql_text` (de la tabla `config_query`)
+  - `v.week_sort` (de la tabla `v`)
+  - `area_expr` (de la tabla `v`)
+  - `entrega` (de la tabla `ConfigQuery`)
+  - `visual_state` (de la tabla `ConfigQuery`)
 - Consultas SQL crudas: Sí, se utilizan consultas SQL generadas dinámicamente.
 
 ### Estado y Variables Globales
-- `DATE_EXPR`: Expresión para obtener la fecha de carga.
-- `ALLOWED_OTS_STATES`: Conjunto de estados OT permitidos como filtro.
+- Variables globales:
+  - `DATE_EXPR`: Expresión unificada para la fecha de carga.
+  - `ALLOWED_OTS_STATES`: Conjunto de estados OT permitidos como filtro.
 
 ### Dependencias y Flujo
-- Librerías externas: `pandas`, `fastapi`, `sqlalchemy`
-- Archivos del proyecto que importan a este archivo:
+- Librerías externas: `pandas`, `fastapi`, `sqlalchemy`.
+- Archivos del proyecto que importa:
+  - `config.py`
   - `core.database`
   - `core.models`
   - `core.query_engine`
@@ -354,18 +344,9 @@ El archivo `filters.py` contiene endpoints para filtrar entregas y calcular KPIs
   - `core.utils`
   - `repositories.deliveries`
   - `repositories.dashboard`
-- Archivos del proyecto que este archivo importa:
-  - `config`
-  - `core.macros`
-
-**Flujo de datos:**
-1. **Entrada**: Parámetros de filtro desde el cliente.
-2. **Procesamiento**:
-   - Construcción dinámica de consultas SQL basadas en los criterios de filtro.
-   - Ejecución de consultas SQL contra la base de datos SQLite.
-3. **Salida**: Datos filtrados o KPIs calculados en formato JSON.
-
-Este archivo es crucial para el funcionamiento del sistema de monitoreo de almacén, proporcionando endpoints para obtener datos filtrados y calcular indicadores clave de rendimiento (KPIs) dinámicamente.
+- Archivos del proyecto que son importados por este archivo:
+  - Ninguno.
+- Flujo de datos: El flujo de datos pasa a través de los endpoints, donde se reciben parámetros de filtro, se construyen consultas SQL dinámicas y se ejecutan contra la base de datos SQLite. Los resultados se procesan y devuelven al cliente en formato JSON.
 
 
 ---
@@ -373,34 +354,36 @@ Este archivo es crucial para el funcionamiento del sistema de monitoreo de almac
 ## Archivo: ./routes/inventory.py
 
 ### Resumen Funcional
-Este archivo contiene rutas y lógica para el análisis de inventario en un sistema de gestión de almacén (WMS). Ofrece una redirección a la página de analíticas de inventario y una API que devuelve datos de inventario optimizados.
+El archivo `inventory.py` contiene rutas y lógica para el análisis de inventario en un sistema de gestión de almacén (WMS). Ofrece una redirección a la página de analíticas de inventario y una API que devuelve datos de inventario limpios.
 
 ### Catálogo de Funciones y Clases
 - `analytics_inventory_redirect(request: Request)` - Redirige a la página de analíticas de inventario.
 - `get_inventory_context(session: Session) -> Dict[str, Any]` - Obtiene el contexto completo del inventario.
-- `analytics_inventory_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager), sync: SyncStateManager = Depends(get_sync_manager))` - API que devuelve datos de inventario optimizados.
+- `analytics_inventory_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), sync: SyncStateManager = Depends(get_sync_manager))` - API que devuelve datos de inventario limpios.
 
 ### Interacción con Base de Datos
-Ninguna. El archivo no realiza consultas a la base de datos directamente.
+Ninguna.
 
 ### Estado y Variables Globales
-- `logger` - Manejador de registros.
-- `router` - Ruta FastAPI para el módulo de analíticas de inventario.
+Ninguna.
 
 ### Dependencias y Flujo
-- **Dependencias Importadas**: 
-  - `get_current_user`, `get_session_dep`, `get_cache_manager`, `get_sync_manager` (desde `core.auth`, `core.database`, `core.state`).
-  - `InventoryService` (desde `services.inventory_service`).
-  - `AnalyticsInventoryResponse` (desde `core.schemas`).
+- **Librerías Externas**: `pandas`, `fastapi`, `sqlalchemy`.
+- **Archivos del Proyecto que IMPORTA**:
+  - `core.auth.get_current_user`
+  - `core.database.get_session_dep`
+  - `core.schemas.AnalyticsInventoryResponse`
+  - `core.state.SyncStateManager`
+  - `core.utils.sanitize_for_json`
+  - `core.wms_config.COST_CENTER_MAPPING`
+  - `repositories.InventoryRepository`
+  - `routes.analytics_proyecciones.get_proyecciones_context`
+  - `services.inventory_service.InventoryService`
+- **Archivos del Proyecto que IMPORTAN a este archivo**: Ninguno.
 
-- **Dependencias Exportadas**: 
-  - No se exportan dependencias.
-
-- **Flujo de Datos**:
-  - El archivo recibe una solicitud HTTP y utiliza dependencias para obtener el contexto del inventario.
-  - Luego, intenta recuperar los datos desde la caché. Si no están en caché, obtiene los datos del servicio de inventario, limpia el contexto y lo almacena en caché antes de devolverlo.
-
-Este archivo es parte del módulo de analíticas de inventario y se encarga de manejar las solicitudes para obtener datos optimizados del inventario.
+**Flujo de Datos**:
+1. El usuario accede a la ruta `/inventory`, lo cual es redirigido a `/analytics?tab=inventory`.
+2. Para la API `/api/v1/analytics/inventory`, se obtiene el contexto del inventario utilizando `InventoryService` y se filtran los datos para eliminar campos no deseados (`'request', 'user', 'is_syncing'`). El resultado se devuelve como una respuesta JSON con el modelo `AnalyticsInventoryResponse`.
 
 
 ---
@@ -424,7 +407,8 @@ Este archivo contiene rutas FastAPI para generar PDFs relacionados con el sistem
 
 ### Estado y Variables Globales
 - **Variables Globales:** Ninguna.
-- **Variables de Sesión:** Ninguna.
+- **Sesiones de Usuario:** Ninguna.
+- **Entorno:** Ninguna.
 - **Diccionarios Quemados:** Ninguno.
 
 ### Dependencias y Flujo
@@ -434,28 +418,24 @@ Este archivo contiene rutas FastAPI para generar PDFs relacionados con el sistem
   - `sqlalchemy`
   - `logging`
   - `io`
-  - `datetime`
-  - `typing`
-- **Archivos del Proyecto que Importa a este Archivo:** Ninguno.
-- **Archivos del Proyecto que Este Archivo Importa:**
-  - `config.DB_PATH`
-  - `config.PDF_STORAGE`
-  - `core.database.get_session_dep`
+
+- **Archivos del Proyecto que Importa a este Archivo (Consumo):**
+  - `config.py` (para constantes como `DB_PATH`, `PDF_STORAGE`)
+  - `core.database.get_session_dep` (dependencia para obtener la sesión de base de datos)
   - `core.pdf_engine.WMS_Landscape_PDF`
-  - `core.pdf_engine.draw_delivery_page`
-  - `core.pdf_engine.get_ots_for_delivery`
   - `core.pdf_reports.draw_annex_table`
   - `core.pdf_reports.draw_picking_list`
   - `repositories.deliveries.DeliveriesRepository`
 
-**Flujo de Datos:**
-1. **Entrada:** Parámetros del formulario.
-2. **Procesamiento:**
-   - Consulta a la base de datos para obtener los datos necesarios.
-   - Generación del PDF utilizando las funciones definidas en `core.pdf_engine` y `core.pdf_reports`.
-3. **Salida:** Respuesta HTTP con el contenido del PDF.
+- **Archivos del Proyecto que este Archivo Importa (Lo Consumen):**
+  - Ninguno.
 
-Este flujo asegura que los datos se procesen correctamente y se generen los PDFs según los parámetros proporcionados.
+**Flujo de Datos:**
+1. El usuario accede a las rutas `/generate-pdf` o `/generate-pdf-bulk`.
+2. Se inicia una sesión de base de datos.
+3. Se obtienen los datos necesarios desde la base de datos usando `DeliveriesRepository`.
+4. Se genera el PDF utilizando `WMS_Landscape_PDF` y funciones auxiliares (`draw_delivery_page`, `get_ots_for_delivery`, etc.).
+5. El PDF se devuelve al usuario como una respuesta HTTP con tipo MIME `application/pdf`.
 
 
 ---
@@ -492,17 +472,19 @@ Este archivo es una parte integral del sistema de monitoreo de almacén, proporc
 ## Archivo: ./routes/settings.py
 
 ### Resumen Funcional
-El archivo `settings.py` contiene endpoints para la gestión dinámica de configuraciones SaaS en un sistema de monitoreo de almacén (WMS). Utiliza SQLAlchemy ORM para todas las operaciones de escritura y FastAPI para crear una API RESTful.
+El archivo `settings.py` contiene endpoints para la gestión dinámica de configuraciones en un sistema de monitoreo de almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite. Permite actualizar y gestionar configuraciones generales, grupos de usuarios, feriados, estados, costos centrales y consultas SQL.
 
 ### Catálogo de Funciones y Clases
 - `invalidate_caches(db: Session)` - Limpia el caché global en memoria y elimina todos los snapshots de base de datos.
-- `settings_view(request: Request, db: DBSession)` - Renderiza el panel de control de configuraciones SaaS.
+- `settings_view(request: Request, db: DBSession, repo: ProductivityRepository = Depends(get_productivity_repo))` - Renderiza el panel de control de configuraciones SaaS.
 - `api_get_settings()` - Retorna las configuraciones generales.
-- `api_update_setting(update: SettingUpdate, db: DBSession)` - Actualiza una configuración específica.
-- `api_upsert_status(update: StatusMappingUpdate, db: DBSession)` - Inserta o actualiza un mapeo de estado.
-- `api_delete_status(code: str, db: DBSession)` - Elimina un mapeo de estado.
+- `api_update_setting(update: SettingUpdate, db: DBSession)` - Actualiza una configuración general.
+- `api_upsert_status(update: StatusMappingUpdate, db: DBSession)` - Inserta o actualiza un estado.
+- `api_delete_status(code: str, db: DBSession)` - Elimina un estado.
 - `api_upsert_cost_center(update: CostCenterMappingUpdate, db: DBSession)` - Inserta o actualiza un centro de costo.
 - `api_delete_cost_center(code: str, db: DBSession)` - Elimina un centro de costo.
+- `api_upsert_user_group(update: UserGroupAdd, db: DBSession)` - Inserta o actualiza un grupo de usuarios.
+- `api_delete_user_group(group_name: str, db: DBSession)` - Elimina un grupo de usuarios.
 - `api_add_holiday(h: HolidayAdd, db: DBSession)` - Añade un feriado.
 - `api_sync_holidays(db: DBSession)` - Sincroniza automáticamente los feriados nacionales (Chile).
 - `api_delete_holiday(date_str: str, db: DBSession)` - Elimina un feriado.
@@ -515,33 +497,34 @@ El archivo `settings.py` contiene endpoints para la gestión dinámica de config
 - `api_export_missing_orders(db: DBSession)` - Exporta órdenes sin ceco a un archivo Excel.
 
 ### Interacción con Base de Datos
-- Motor: SQLite
-- Tablas:
-  - `analytics_snapshots`
-- Columnas:
-  - `id` (de `analytics_snapshots`)
-- Consultas SQL crudas o llamadas a ORM:
-  - `DELETE FROM analytics_snapshots`
+- **Motor:** SQLite
+- **Tablas y Columnas:**
+  - `analytics_snapshots` (DELETE)
+  - `app_settings`
+  - `cost_center_mapping`
+  - `holiday`
+  - `status_mapping`
+  - `user_group`
 
 ### Estado y Variables Globales
-- No hay variables globales, de sesión, de entorno o diccionarios quemados en código que almacenen estado crítico.
+- No hay variables globales explícitas.
 
 ### Dependencias y Flujo
-- Librerías externas: `fastapi`, `sqlalchemy`, `pydantic`, `pandas`, `holidays`, `openpyxl`
-- Archivos del proyecto que este archivo importa:
-  - `core.app_instance`
-  - `core.auth`
-  - `core.database`
-  - `core.db_config_manager`
-  - `core.models`
-  - `core.state`
-  - `core.utils`
-  - `core.schemas`
-  - `core.semantic_layer`
-  - `core.query_engine`
-- Archivos del proyecto que importan a este archivo:
-  - Ninguno
-- Flujo de datos: El archivo es un endpoint de FastAPI que consume y produce datos para la gestión de configuraciones SaaS.
+- **Dependencias Externas:** FastAPI, SQLAlchemy, Pandas, Holidays (librería de feriados)
+- **Archivos del Proyecto que Importan a este Archivo:**
+  - `core.auth.require_admin`
+  - `core.database.get_session_dep`
+  - `core.db_config_manager.*`
+  - `core.models.*`
+  - `core.state.CacheManager`
+  - `core.utils.sanitize_for_json`
+- **Archivos del Proyecto que Este Archivo Importa:**
+  - `routes/settings.py` (se importa a sí mismo)
+  - `repositories.get_productivity_repo`
+  - `core.schemas.*`
+  - `core.query_engine.build_sql_from_payload`
+
+El flujo de datos es principalmente entre el endpoint, la base de datos y los modelos de datos.
 
 
 ---
@@ -595,40 +578,30 @@ El flujo de datos es desde el endpoint `/sync`, que inicia la tarea de sincroniz
 ## Archivo: ./routes/tasks.py
 
 ### Resumen Funcional
-El archivo `tasks.py` proporciona una interfaz RESTful para obtener analíticas de tareas en un sistema de almacén (WMS) utilizando FastAPI. La API permite recuperar datos de tareas, almacenándolos en caché para mejorar el rendimiento y gestionando el estado de sincronización.
+El archivo `tasks.py` contiene la definición de una ruta FastAPI para proporcionar analíticas sobre las tareas del almacén. La ruta permite a un usuario autenticado obtener datos detallados sobre las tareas, excluyendo ciertos campos sensibles.
 
 ### Catálogo de Funciones y Clases
-- `get_tasks_context(session: Session) -> dict` - Obtiene el contexto completo de las tareas utilizando un servicio.
-- `analytics_tasks_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager), sync: SyncStateManager = Depends(get_sync_manager))` - Endpoint FastAPI para obtener analíticas de tareas, recuperando datos del caché si es posible.
+- `get_tasks_context(session: Session) -> dict` - Obtiene el contexto completo de las tareas utilizando el servicio `TasksService`.
+- `analytics_tasks_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), sync: SyncStateManager = Depends(get_sync_manager))` - Ruta FastAPI que devuelve analíticas sobre las tareas en formato JSON.
 
 ### Interacción con Base de Datos
-Ninguna. El archivo no realiza consultas directas a la base de datos. Utiliza un servicio (`TasksService`) que probablemente interactúa con el repositorio de tareas para obtener los datos necesarios.
+Ninguna. El archivo no realiza consultas directas a la base de datos. Utiliza el repositorio `TasksRepository` y el servicio `TasksService`, pero no interactúa explícitamente con la BD.
 
 ### Estado y Variables Globales
-- `logger` - Objeto de registro utilizado para registrar errores.
-- `router` - Instancia de `APIRouter` de FastAPI para definir las rutas del API.
+- Ninguna variable global, de sesión o diccionario quemado en código que almacene estado crítico.
 
 ### Dependencias y Flujo
-- **Dependencias Importadas**: 
-  - `get_current_user`, `get_session_dep`, `get_cache_manager`, `get_sync_manager` - Funciones que proporcionan dependencias como la sesión de base de datos, el manejador de caché y el estado de sincronización.
-  
-- **Archivos Importados**:
-  - `core.auth`: Para autenticación del usuario.
-  - `core.database`: Para obtener la sesión de base de datos.
-  - `core.schemas`: Para definir los modelos de respuesta.
-  - `core.state`: Para gestionar el estado de caché y sincronización.
-  - `core.utils`: Para utilidades como la limpieza de datos para JSON.
-  - `repositories`: Para interactuar con las tablas de la base de datos.
-  - `services.tasks_service`: Para obtener el contexto completo de las tareas.
-
-- **Flujo de Datos**:
-  1. El endpoint `analytics_tasks_api` se invoca a través de una solicitud HTTP GET a `/api/v1/analytics/tasks`.
-  2. Se intenta recuperar los datos del caché.
-  3. Si el dato no está en caché, se obtiene utilizando el servicio `TasksService`.
-  4. El contexto obtenido se limpia para eliminar información sensible y se almacena en caché.
-  5. Finalmente, se devuelve la respuesta con los datos limpios y el estado de sincronización.
-
-Este archivo es crucial para proporcionar una interfaz eficiente y segura para obtener analíticas de tareas en un sistema de almacén, utilizando técnicas de caché y gestión de estado para mejorar el rendimiento.
+- **Librerías externas**: `pandas`, `fastapi`, `sqlalchemy`.
+- **Archivos del proyecto que IMPORTA (consume)**: 
+  - `core.auth.get_current_user`
+  - `core.database.get_session_dep`
+  - `core.schemas.AnalyticsTasksResponse`
+  - `core.state.SyncStateManager`
+  - `core.utils.sanitize_for_json`
+  - `repositories.TasksRepository`
+  - `services.tasks_service.TasksService`
+- **Archivos del proyecto que IMPORTAN a este archivo (lo consumen)**: Ninguno.
+- **Dirección del flujo de datos**: El flujo comienza con la solicitud HTTP, pasa por el middleware de autenticación y dependencias, luego se procesa en `analytics_tasks_api`, donde se obtiene el contexto de las tareas y se devuelve como respuesta JSON.
 
 
 ---

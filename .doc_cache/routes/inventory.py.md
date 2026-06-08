@@ -1,32 +1,34 @@
 ## Archivo: ./routes/inventory.py
 
 ### Resumen Funcional
-Este archivo contiene rutas y lógica para el análisis de inventario en un sistema de gestión de almacén (WMS). Ofrece una redirección a la página de analíticas de inventario y una API que devuelve datos de inventario optimizados.
+El archivo `inventory.py` contiene rutas y lógica para el análisis de inventario en un sistema de gestión de almacén (WMS). Ofrece una redirección a la página de analíticas de inventario y una API que devuelve datos de inventario limpios.
 
 ### Catálogo de Funciones y Clases
 - `analytics_inventory_redirect(request: Request)` - Redirige a la página de analíticas de inventario.
 - `get_inventory_context(session: Session) -> Dict[str, Any]` - Obtiene el contexto completo del inventario.
-- `analytics_inventory_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), cache: CacheManager = Depends(get_cache_manager), sync: SyncStateManager = Depends(get_sync_manager))` - API que devuelve datos de inventario optimizados.
+- `analytics_inventory_api(user = Depends(get_current_user), session: Session = Depends(get_session_dep), sync: SyncStateManager = Depends(get_sync_manager))` - API que devuelve datos de inventario limpios.
 
 ### Interacción con Base de Datos
-Ninguna. El archivo no realiza consultas a la base de datos directamente.
+Ninguna.
 
 ### Estado y Variables Globales
-- `logger` - Manejador de registros.
-- `router` - Ruta FastAPI para el módulo de analíticas de inventario.
+Ninguna.
 
 ### Dependencias y Flujo
-- **Dependencias Importadas**: 
-  - `get_current_user`, `get_session_dep`, `get_cache_manager`, `get_sync_manager` (desde `core.auth`, `core.database`, `core.state`).
-  - `InventoryService` (desde `services.inventory_service`).
-  - `AnalyticsInventoryResponse` (desde `core.schemas`).
+- **Librerías Externas**: `pandas`, `fastapi`, `sqlalchemy`.
+- **Archivos del Proyecto que IMPORTA**:
+  - `core.auth.get_current_user`
+  - `core.database.get_session_dep`
+  - `core.schemas.AnalyticsInventoryResponse`
+  - `core.state.SyncStateManager`
+  - `core.utils.sanitize_for_json`
+  - `core.wms_config.COST_CENTER_MAPPING`
+  - `repositories.InventoryRepository`
+  - `routes.analytics_proyecciones.get_proyecciones_context`
+  - `services.inventory_service.InventoryService`
+- **Archivos del Proyecto que IMPORTAN a este archivo**: Ninguno.
 
-- **Dependencias Exportadas**: 
-  - No se exportan dependencias.
-
-- **Flujo de Datos**:
-  - El archivo recibe una solicitud HTTP y utiliza dependencias para obtener el contexto del inventario.
-  - Luego, intenta recuperar los datos desde la caché. Si no están en caché, obtiene los datos del servicio de inventario, limpia el contexto y lo almacena en caché antes de devolverlo.
-
-Este archivo es parte del módulo de analíticas de inventario y se encarga de manejar las solicitudes para obtener datos optimizados del inventario.
+**Flujo de Datos**:
+1. El usuario accede a la ruta `/inventory`, lo cual es redirigido a `/analytics?tab=inventory`.
+2. Para la API `/api/v1/analytics/inventory`, se obtiene el contexto del inventario utilizando `InventoryService` y se filtran los datos para eliminar campos no deseados (`'request', 'user', 'is_syncing'`). El resultado se devuelve como una respuesta JSON con el modelo `AnalyticsInventoryResponse`.
 

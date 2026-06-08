@@ -133,6 +133,9 @@
             {% include "partials/_table.html" %}
     </div>
 
+    <script>
+        const INITIAL_USER_GROUPS = {{ user_groups | default({}) | tojson | safe }};
+    </script>
     {% include "partials/_scripts.html" %}
 
 </body>

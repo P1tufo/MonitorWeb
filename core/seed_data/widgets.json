@@ -113,15 +113,15 @@
     },
     {
         "query_id": "inv_kpi_ingresos",
-        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [{\"column\": \"inventory_movements.cmv\", \"operator\": \"in\", \"value\": \"101, 305\", \"valueType\": \"value\"}, {\"column\": \"inventory_movements.fe_contab\", \"operator\": \"contains\", \"value\": \"2026\", \"valueType\": \"value\"}], \"metric\": {\"column\": \"inventory_movements.material\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"YEAR\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
     },
     {
         "query_id": "inv_kpi_consumos_prod",
-        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [{\"column\": \"inventory_movements.cmv\", \"operator\": \"in\", \"value\": \"201\", \"valueType\": \"value\"}, {\"column\": \"inventory_movements.fe_contab\", \"operator\": \"contains\", \"value\": \"2026\", \"valueType\": \"value\"}], \"metric\": {\"column\": \"inventory_movements.material\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"YEAR\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
     },
     {
         "query_id": "inv_kpi_consumos_mant",
-        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [], \"metric\": {\"column\": \"\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
+        "visual_state": "{\"baseTable\": \"inventory_movements\", \"joins\": [], \"filters\": [{\"column\": \"inventory_movements.cmv\", \"operator\": \"in\", \"value\": \"261\", \"valueType\": \"value\"}, {\"column\": \"inventory_movements.fe_contab\", \"operator\": \"contains\", \"value\": \"2026\", \"valueType\": \"value\"}], \"metric\": {\"column\": \"inventory_movements.material\", \"aggregation\": \"COUNT\"}, \"timeAxis\": {\"column\": \"\", \"granularity\": \"YEAR\"}, \"breakdown\": \"\", \"chartType\": \"kpi\"}"
     },
     {
         "query_id": "inv_kpi_rate_reabast",

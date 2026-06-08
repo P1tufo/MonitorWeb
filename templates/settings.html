@@ -238,6 +238,92 @@
         </div>
 
         <div class="section-card">
+            <h2 class="section-title">Grupos de Usuarios</h2>
+            <p style="color: #94a3b8; margin-bottom: 15px; font-size: 0.85rem;">Agrupa usuarios para facilitar el filtrado en las vistas de Productividad. Selecciona los usuarios de la lista desplegable.</p>
+            <style>
+            .dropdown-check-list { display: inline-block; position: relative; width: 100%; text-align: left; }
+            .dropdown-check-list .anchor { position: relative; cursor: pointer; display: inline-block; padding: 8px 30px 8px 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(15,23,42,0.6); color: white; border-radius: 6px; width: 100%; box-sizing: border-box; font-size: 0.85rem; }
+            .dropdown-check-list .anchor:after { position: absolute; content: ""; border-left: 2px solid white; border-top: 2px solid white; padding: 4px; right: 12px; top: 35%; transform: rotate(-135deg); }
+            .dropdown-check-list ul.items { padding: 5px; display: none; position: absolute; top: 100%; left: 0; width: 100%; margin: 5px 0 0 0; border: 1px solid rgba(255,255,255,0.1); background: #0f172a; border-radius: 6px; max-height: 200px; overflow-y: auto; z-index: 100; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+            .dropdown-check-list ul.items li { list-style: none; padding: 4px 8px; display: flex; align-items: center; color: #e2e8f0; font-size: 0.85rem; cursor: pointer; border-radius: 4px; }
+            .dropdown-check-list ul.items li:hover { background: rgba(255,255,255,0.05); }
+            .dropdown-check-list ul.items li input { margin-right: 8px; cursor: pointer; }
+            .dropdown-check-list.visible .items { display: block; }
+            </style>
+            <script>
+            function toggleCheckList(id) {
+                const el = document.getElementById(id);
+                el.classList.toggle('visible');
+            }
+            function getSelectedUsers(listId) {
+                const list = document.getElementById(listId);
+                if (!list) return "";
+                const checkboxes = list.querySelectorAll('input[type="checkbox"]:checked');
+                return Array.from(checkboxes).map(cb => cb.value).join(', ');
+            }
+            function filterCheckList(inputId, listId) {
+                const input = document.getElementById(inputId);
+                const filter = input.value.toUpperCase();
+                const container = document.getElementById(listId);
+                if (!container) return;
+                const ul = container.querySelector('.items');
+                if (!ul) return;
+                const items = ul.querySelectorAll('li.user-item');
+                for (let i = 0; i < items.length; i++) {
+                    const txtValue = items[i].textContent || items[i].innerText;
+                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        items[i].style.display = "flex";
+                    } else {
+                        items[i].style.display = "none";
+                    }
+                }
+            }
+            </script>
+            <table>
+                <tr><th>Nombre del Grupo</th><th style="width: 50%;">Usuarios Asignados</th><th>Acción</th></tr>
+                {% for name, users_list in user_groups.items() %}
+                <tr id="row-group-{{ name | replace(' ', '_') }}">
+                    <td>
+                        <input type="text" id="group-name-{{ name | replace(' ', '_') }}" class="edit-field" value="{{ name }}" style="font-family: monospace; font-weight: 600; width: 100%;">
+                    </td>
+                    <td>
+                        <div id="list-{{ name | replace(' ', '_') }}" class="dropdown-check-list" tabindex="100">
+                            <span class="anchor" onclick="toggleCheckList('list-{{ name | replace(' ', '_') }}')">Seleccionar Usuarios...</span>
+                            <ul class="items">
+                                <div style="padding: 5px;">
+                                    <input type="text" id="search-{{ name | replace(' ', '_') }}" placeholder="Buscar usuario..." onkeyup="filterCheckList('search-{{ name | replace(' ', '_') }}', 'list-{{ name | replace(' ', '_') }}')" style="width: 100%; padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; font-size: 0.8rem; box-sizing: border-box;">
+                                </div>
+                                {% for user in all_users %}
+                                <li class="user-item"><label style="width: 100%; margin:0; cursor: pointer;"><input type="checkbox" value="{{ user }}" {% if user in users_list %}checked{% endif %}> {{ user }}</label></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </td>
+                    <td style="width: 180px; display: flex; gap: 8px;">
+                        <button class="btn-save" onclick="updateUserGroup('{{ name }}', 'group-name-{{ name | replace(' ', '_') }}', 'list-{{ name | replace(' ', '_') }}')">Guardar</button>
+                        <button class="btn-delete" onclick="deleteUserGroup('{{ name }}')">X</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            <div class="add-row">
+                <input type="text" id="new-group-name" class="edit-field" placeholder="Nombre del Grupo" style="width:200px;">
+                <div id="list-new-group" class="dropdown-check-list" tabindex="100" style="flex: 1; max-width: 400px; margin-right: 10px;">
+                    <span class="anchor" onclick="toggleCheckList('list-new-group')">Seleccionar Usuarios...</span>
+                    <ul class="items">
+                        <div style="padding: 5px;">
+                            <input type="text" id="search-new-group" placeholder="Buscar usuario..." onkeyup="filterCheckList('search-new-group', 'list-new-group')" style="width: 100%; padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; font-size: 0.8rem; box-sizing: border-box;">
+                        </div>
+                        {% for user in all_users %}
+                        <li class="user-item"><label style="width: 100%; margin:0; cursor: pointer;"><input type="checkbox" value="{{ user }}"> {{ user }}</label></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <button class="btn-save" onclick="addUserGroup()">+ Añadir Grupo</button>
+            </div>
+        </div>
+
+        <div class="section-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h2 class="section-title" style="margin:0;">Calendario de Feriados (Holidays)</h2>
                 <button class="btn" onclick="syncHolidays()" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.5); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600;">
@@ -437,6 +523,32 @@
             if(!confirm(`¿Eliminar feriado: ${date_str}?`)) return;
             if(await apiCall(`/api/settings/holiday/${date_str}`, 'DELETE')) {
                 setTimeout(() => window.location.reload(), 500);
+            }
+        }
+
+        async function updateUserGroup(oldName, nameId, listId) {
+            const newName = document.getElementById(nameId).value.trim();
+            const users = getSelectedUsers(listId);
+            if (!newName) return showToast("El nombre del grupo no puede estar vacío", true);
+            await apiCall('/api/settings/user_group', 'POST', {old_group_name: oldName, group_name: newName, users: users});
+            if (oldName !== newName) {
+                setTimeout(() => window.location.reload(), 500);
+            }
+        }
+
+        async function addUserGroup() {
+            const name = document.getElementById('new-group-name').value.trim();
+            const users = getSelectedUsers('list-new-group');
+            if(!name || !users) return showToast("Completar todos los campos (Selecciona al menos un usuario)", true);
+            if(await apiCall('/api/settings/user_group', 'POST', {group_name: name, users: users})) {
+                setTimeout(() => window.location.reload(), 500);
+            }
+        }
+
+        async function deleteUserGroup(name) {
+            if(!confirm(`¿Eliminar grupo: ${name}?`)) return;
+            if(await apiCall(`/api/settings/user_group/${name}`, 'DELETE')) {
+                document.getElementById('row-group-' + name.replace(/ /g, '_')).remove();
             }
         }
 

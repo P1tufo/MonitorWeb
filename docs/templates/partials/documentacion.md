@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: templates/partials
-Compilado el: 2026-06-07 12:50:47
+Compilado el: 2026-06-07 18:34:58
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -48,21 +48,20 @@ Ninguna
 ## Archivo: ./templates/partials/_edit_query_modal.html
 
 ### Resumen Funcional
-Este archivo contiene el código HTML para un modal de edición de consultas en el sistema de monitoreo de almacén (WMS). El modal incluye un constructor visual interactivo que permite a los usuarios crear y editar consultas SQL de manera gráfica.
+Este archivo contiene el código HTML para un modal de edición de consultas en el sistema de monitoreo de almacén (WMS). El modal incluye un constructor visual interactivo que permite configurar gráficos y KPIs, así como una vista previa del resultado.
 
 ### Catálogo de Funciones y Clases
-No se detectaron funciones o clases específicas dentro del fragmento HTML proporcionado.
+No se detectaron funciones o clases específicas en este fragmento HTML. Todo el contenido es estructura HTML y CSS.
 
 ### Interacción con Base de Datos
 Ninguna
 
 ### Estado y Variables Globales
-- `editQueryId`: Un input oculto que almacena el ID de la consulta actualmente siendo editada.
+- `editQueryId`: Un input oculto que almacena el ID de la consulta actualmente editada.
 
 ### Dependencias y Flujo
-- **Dependencias**: No se detectaron dependencias externas directamente en este fragmento HTML.
-- **Archivos Importados**: El archivo importa scripts JavaScript desde rutas estáticas (`analytics_studio_config.js`, `analytics_studio_renderer.js`, `analytics_studio_ui.js`).
-- **Flujo de Datos**: No se detectó un flujo de datos específico dentro del fragmento HTML proporcionado.
+- **Dependencias**: No se importan bibliotecas externas ni archivos del proyecto en este fragmento.
+- **Flujo**: Este archivo es consumido por otros archivos HTML o JavaScript para renderizar el modal de edición de consultas.
 
 
 ---
@@ -183,7 +182,7 @@ Ninguna
 - **Archivos del proyecto que IMPORTA (consume)**: Ninguno.
 - **Archivos del proyecto que IMPORTAN a este archivo (lo consumen)**: Ninguno.
 
-El flujo de datos es unidireccional desde el HTML hacia los scripts JavaScript.
+El flujo de datos es unidireccional desde el HTML hacia los scripts externos y locales.
 
 
 ---
@@ -399,39 +398,32 @@ El flujo de datos es unidireccional, con el backend proporcionando los datos nec
 #### --- PARTE 1 de 2 ---
 
 ### Resumen Funcional
-Este fragmento HTML corresponde a la pestaña de gestión de Ordenes de Transporte (OTs) en el sistema de monitoreo de almacén. Muestra estadísticas, gráficos y tablas interactivas para visualizar y gestionar OTs pendientes, movimientos no paletizados y productividad.
+Este fragmento HTML corresponde a una pestaña dentro de un sistema de monitoreo de almacén (WMS) que muestra estadísticas y tablas interactivas relacionadas con las Ordenes de Transporte (OTs). Incluye gráficos, contadores y listados filtrables para visualizar el estado de las OTs pendientes, movimientos no paletizados y análisis de productividad.
 
 ### Catálogo de Funciones y Clases
-No se detectan funciones o clases definidas en este fragmento HTML.
+No se detectan funciones o clases definidas en este fragmento HTML. Todo es contenido estático y dinámico generado por JavaScript.
 
 ### Interacción con Base de Datos
 - **Motor**: SQLite
 - **TABLAS**:
-  - `inventory_movements` (Tabla donde se identifican movimientos no paletizados)
+  - `inventory_movements` (Mencionada en la alerta operativa)
 - **COLUMNAS**:
-  - `doc_mat`
-  - `clase_mov`
-  - `user`
-  - `qty`
-  - `source`
-  - `dest`
-  - `created_at`
+  - No se especifican columnas explícitas, pero el fragmento hace referencia a campos como `doc_mat`, `creator`, `clase_mov`, etc.
 
 ### Estado y Variables Globales
-No se detectan variables globales, de sesión o de entorno quemadas en el código.
+No se detectan variables globales o de sesión definidas en este fragmento HTML. Todo es contenido dinámico generado por JavaScript.
 
 ### Dependencias y Flujo
-- **Librerías Externas**: No se importan librerías externas específicas.
-- **Archivos del Proyecto que Importa a este Archivo**: Ninguno.
-- **Archivos del Proyecto que Este Archivo Importa**: Ninguno.
-- **Dirección del Flujo de Datos**: El fragmento HTML consume datos desde el backend (FastAPI) y los presenta en la interfaz web. No hay interacción directa con APIs externas.
+- **Librerías Externas**: No se mencionan librerías externas específicas.
+- **Archivos del Proyecto que IMPORTA a este archivo**: Ninguno.
+- **Archivos del Proyecto que ESTE archivo IMPORTA (consume)**: Ninguno.
 
-Este fragmento es una vista HTML que se renderiza en el navegador, consumiendo datos desde el backend para mostrar estadísticas, gráficos y tablas interactivas relacionadas con las OTs y movimientos de almacén.
+El flujo de datos es principalmente entre el cliente y el servidor, con la generación dinámica de contenido HTML y JavaScript basado en los datos recuperados desde la base de datos.
 
 #### --- PARTE 2 de 2 ---
 
 ### Resumen Funcional
-Este fragmento HTML es una interfaz de usuario para mostrar detalles de movimientos en un sistema de almacén (WMS). Incluye tablas para visualizar operaciones diarias y mensuales, con opciones para expandir los detalles de las operaciones.
+Este archivo contiene el código HTML para una interfaz de usuario que muestra detalles diarios y mensuales de movimientos en un sistema de almacén (WMS). Incluye tablas interactivas para visualizar los datos y botones para navegar entre diferentes niveles de detalle.
 
 ### Catálogo de Funciones y Clases
 Ninguna
@@ -443,7 +435,10 @@ Ninguna
 Ninguna
 
 ### Dependencias y Flujo
-Ninguna
+- **Dependencias**: No se mencionan dependencias específicas en el código proporcionado.
+- **Flujo**: El archivo no importa ni es importado por otros archivos. Es un fragmento de HTML que se utiliza para renderizar la interfaz de usuario en una página web.
+
+Este archivo solo contiene estructura HTML y CSS, sin interacción con base de datos o lógica de negocio.
 
 
 ---

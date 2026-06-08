@@ -165,87 +165,105 @@ Ninguna
 #### --- PARTE 6 de 8 ---
 
 ### Resumen Funcional
-El archivo `bundle.js` contiene funciones JavaScript que se utilizan en un sistema de monitoreo de almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite. El script realiza operaciones como la carga de datos desde una API, el procesamiento de estos datos y la actualización del contenido de las páginas web.
+El archivo `bundle.js` contiene funciones JavaScript que se utilizan para actualizar y renderizar información en una interfaz de usuario web. Específicamente, maneja la carga de datos desde un servidor a través de peticiones AJAX, actualiza el contenido de tablas y elementos HTML basándose en los datos recibidos, y controla la interacción con modales y gráficos.
 
 ### Catálogo de Funciones y Clases
-- `toggleDailyUserFilter()` - Alterna la visibilidad del filtro de usuarios diarios.
-- `renderDailyUserCheckboxes(summary)` - Renderiza los checkboxes para seleccionar usuarios diarios.
-- `toggleAllDailyUsers()` - Selecciona/deselecciona todos los usuarios diarios.
-- `onDailyUserCheckboxChange()` - Maneja el cambio en la selección de usuarios diarios.
-- `renderFilteredDaily()` - Renderiza los KPIs filtrados según los usuarios seleccionados.
+- `renderAlerts()` - Renderiza una tabla de alertas.
+- `renderCombos(filterText)` - Renderiza una lista de combinaciones de materiales.
+- `renderScatter()` - Renderiza un gráfico de dispersión.
+- `openModalAlerts()` - Abre el modal de alertas y carga los datos.
+- `openModalCombos()` - Abre el modal de combinaciones y carga los datos.
+- `openModalScatter()` - Abre el modal de scatter y carga los datos.
 
 ### Interacción con Base de Datos
 Ninguna
 
 ### Estado y Variables Globales
-- `productivityTrendChartInst` - Instancia del gráfico de tendencias de productividad.
-- `currentDailyData` - Datos actuales de productividad.
-- `selectedDailyUsers` - Usuarios diarios seleccionados.
+- `ubicTimer` - Variable global que almacena un temporizador para la actualización de datos.
 
 ### Dependencias y Flujo
-- Depende de librerías como `marked` para el procesamiento de markdown.
-- Importa funciones desde otros archivos JavaScript (`analytics_proyecciones.js`, `docs_explorer.js`, `productivity_daily.js`).
-- Exporta funciones globales para ser utilizadas en otros scripts.
+Dependencias:
+- `CoreUI` (vía `window.CoreUI`)
+- `Chart.js`
+
+Flujo:
+1. **analytics_proyecciones.js**:
+   - Carga los datos necesarios desde el almacenamiento local (`getData`) y los filtra según los criterios de búsqueda.
+   - Renderiza las tablas y gráficos en función de los datos filtrados.
+
+2. **docs_explorer.js**:
+   - Llama a la API para cargar el árbol de documentos y renderiza el contenido del documento seleccionado.
+
+3. **productivity_daily.js**:
+   - No se muestra ninguna interacción con base de datos ni dependencias externas específicas en este fragmento.
+
+El flujo general es que los componentes de la interfaz web interactúan con funciones JavaScript para cargar y mostrar datos, utilizando `fetch` para obtener información del servidor.
 
 #### --- PARTE 7 de 8 ---
 
 ### Resumen Funcional
-El archivo `bundle.js` contiene funciones para cargar y renderizar datos de productividad diaria y mensual en un sistema de monitoreo de almacén (WMS). Utiliza una interfaz de usuario con elementos como tablas, gráficos y modales para mostrar estadísticas detalladas.
+El archivo `bundle.js` contiene funciones y lógica relacionada con la interacción del usuario en una interfaz web de sistema de monitoreo de almacén (WMS). Permite cambiar entre diferentes pestañas, cargar datos de productividad diaria y mensual, y renderizar gráficos y tablas basados en esos datos.
 
 ### Catálogo de Funciones y Clases
-- `renderDailyUserCheckboxes(summary)` - Renderiza los checkboxes para filtrar usuarios diarios.
-- `renderFilteredDaily()` - Filtra y renderiza datos diarios según el usuario seleccionado.
-- `renderKPI1(summary)` - Renderiza la KPI 1 (Productividad Diaria) en una tabla con barras de progreso.
-- `renderKPI2(trend)` - Renderiza la KPI 2 (Tendencia Productiva) en un gráfico de líneas.
-- `renderKPI3(gaps)` - Renderiza la KPI 3 (Baches en Productividad) en una lista de tarjetas.
-- `renderKPI4(heatmapData)` - Renderiza la KPI 4 (Mapa de Calor de Productividad) en una tabla.
+- `changeProductivityDate(offset)` - Cambia la fecha seleccionada para el análisis de productividad.
+- `changeProductivityMonth(offsetMonths)` - Cambia el mes seleccionado para el análisis de productividad mensual.
+- `loadProductivityData()` - Carga los datos de productividad diaria y actualiza la interfaz web.
+- `renderKPI1(summary)` - Renderiza el KPI 1 (resumen de movimientos diarios).
+- `renderKPI2(trend)` - Renderiza el KPI 2 (tendencia de movimientos diarios).
+- `renderKPI3(gaps)` - Renderiza el KPI 3 (baches en la productividad).
+- `renderKPI4(heatmapData)` - Renderiza el KPI 4 (mapa de calor de productividad).
 
 ### Interacción con Base de Datos
-Ninguna
+Ninguna.
 
 ### Estado y Variables Globales
-- `currentDailyData` - Almacena los datos diarios actuales.
-- `productivityTrendChartInst` - Instancia del gráfico de tendencia productiva mensual.
-- `selectedMonthlyUsers` - Lista de usuarios seleccionados para el filtrado mensual.
+- `currentDailyData` - Almacena los datos de productividad diarios actuales.
+- `selectedDailyUsers` - Lista de usuarios seleccionados para el análisis diario.
+- `productivityTrendChartInst` - Instancia del gráfico de tendencia de movimientos diarios.
+- `currentMonthlyData` - Almacena los datos de productividad mensuales actuales.
+- `selectedMonthlyUsers` - Lista de usuarios seleccionados para el análisis mensual.
+- `productivityMonthlyTrendChartInst` - Instancia del gráfico de tendencia de movimientos mensuales.
 
 ### Dependencias y Flujo
-Dependencias:
-- `fetch` - Para hacer solicitudes HTTP.
-- `Chart.js` - Para renderizar gráficos.
+- **Dependencias Externas**: `fetch`, `Chart.js`
+- **Archivos Importados**: Ninguno
+- **Archivos Exportados**: Ninguno
 
-Flujo:
-- `bundle.js` importa funciones desde otros archivos (`productivity_monthly.js`, `productivity_modals.js`).
-- Otros archivos importan `bundle.js`.
-
-El flujo de datos es unidireccional, con `bundle.js` consumiendo datos y renderizando la interfaz de usuario.
+El flujo de datos es el siguiente:
+1. El usuario selecciona una pestaña (diaria o mensual).
+2. Se llama a las funciones correspondientes (`changeProductivityDate`, `changeProductivityMonth`).
+3. Estas funciones cargan los datos necesarios y llaman a las funciones de renderizado (`renderKPI1`, `renderKPI2`, etc.) para actualizar la interfaz web con los nuevos datos.
 
 #### --- PARTE 8 de 8 ---
 
 ### Resumen Funcional
-El archivo `bundle.js` contiene funciones JavaScript que gestionan la interacción del usuario con el sistema de monitoreo de almacén, permitiendo ver resúmenes diarios y mensuales de movimientos de productos por usuarios.
+Este archivo JavaScript (`bundle.js`) contiene funciones para crear y actualizar tablas HTML dinámicamente basadas en datos de usuarios y sus movimientos. También incluye funciones para abrir y cerrar modales que muestran detalles diarios y mensuales de los movimientos de usuario.
 
 ### Catálogo de Funciones y Clases
-- `cargarNivel2Diario(operacion)` - Carga los detalles de una operación diaria.
-- `volverNivel1Diario()` - Vuelve al nivel 1 del detalle diario.
+- `getColor(val, max)` - Calcula un color RGB con opacidad basada en el valor proporcionado.
+- `abrirDetalleUsuario(usuario)` - Abre el modal para mostrar los detalles diarios de un usuario.
+- `cargarNivel2Diario(operacion)` - Carga los detalles del nivel 2 (detalles específicos) para una operación diaria.
+- `volverNivel1Diario()` - Cierra el nivel 2 y vuelve al nivel 1 en el modal de movimientos diarios.
 - `cerrarDetalleUsuario()` - Cierra el modal de movimientos diarios.
-- `abrirDetalleMensualUsuario(usuario)` - Abre el modal de resumen mensual de movimientos por usuario.
-- `cargarNivel2Mensual(operacion)` - Carga los detalles de una operación mensual.
-- `volverNivel1Mensual()` - Vuelve al nivel 1 del detalle mensual.
+- `abrirDetalleMensualUsuario(usuario)` - Abre el modal para mostrar los detalles mensuales de un usuario.
+- `cargarNivel2Mensual(operacion)` - Carga los detalles del nivel 2 (detalles específicos) para una operación mensual.
+- `volverNivel1Mensual()` - Cierra el nivel 2 y vuelve al nivel 1 en el modal de movimientos mensuales.
 - `cerrarDetalleMensualUsuario()` - Cierra el modal de movimientos mensuales.
 
 ### Interacción con Base de Datos
-Ninguna. El archivo no realiza ninguna interacción directa con una base de datos.
+Ninguna. Este archivo no interactúa directamente con una base de datos. Los datos se obtienen a través de llamadas AJAX a endpoints de API (`/api/v1/analytics/productivity/user-movements-summary`, `/api/v1/analytics/productivity/user-movements-details`, etc.).
 
 ### Estado y Variables Globales
-- `currentDailyDate` - Almacena la fecha actual para los detalles diarios.
-- `currentDailyUsuario` - Almacena el usuario actual para los detalles diarios.
-- `currentMonthlyDate` - Almacena la fecha actual para los detalles mensuales.
-- `currentMonthlyUsuario` - Almacena el usuario actual para los detalles mensuales.
+- `currentDailyUsuario` - Almacena el usuario seleccionado para los detalles diarios.
+- `currentDailyDate` - Almacena la fecha seleccionada para los detalles diarios.
+- `currentMonthlyUsuario` - Almacena el usuario seleccionado para los detalles mensuales.
+- `currentMonthlyDate` - Almacena la fecha seleccionada para los detalles mensuales.
 
 ### Dependencias y Flujo
-- **Dependencias**: No se importan librerías externas.
+- **Dependencias**: No se importan librerías externas específicas en este fragmento de código.
 - **Flujo de Datos**:
-  - El archivo es consumido por HTML que muestra modales y tablas interactivas.
-  - Los datos son solicitados a través de llamadas `fetch` a endpoints definidos en el backend (FastAPI).
-  - Los datos recibidos se procesan y mostrados en la interfaz del usuario.
+  - El archivo `bundle.js` es consumido por otros archivos JavaScript que no se muestran aquí.
+  - Los datos para las tablas y modales se obtienen a través de llamadas AJAX al backend FastAPI.
+
+Este archivo es crucial para la interfaz de usuario del sistema, proporcionando una forma visual de interactuar con los datos de movimientos de usuarios en el sistema de monitoreo de almacén.
 

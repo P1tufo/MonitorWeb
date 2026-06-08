@@ -286,8 +286,21 @@ errorEl.style.display = 'block';
         // Desglose dropdown
         const bSelect = document.getElementById('qbBreakdownColumn');
         const prevB = forceState ? visualState.breakdown : (bSelect.value !== undefined ? bSelect.value : visualState.breakdown);
-        bSelect.innerHTML = '<option value="">-- Sin Desglose --</option>' + renderOptions(colsObj);
-        if(prevB === '' || colsIds.includes(prevB)) {
+        
+        let customMacros = '';
+        if (visualState.baseTable === 'movimientos') {
+            customMacros += '<option value="__PLAN_VS_UNPLAN__">Macro: Planificado vs Desplanificado</option>';
+            customMacros += '<option value="__ABAST_VS_CONSUMO__">Macro: Abastecimiento vs Consumo</option>';
+            customMacros += '<option value="__PROD_VS_MANT__">Macro: Producción vs Mantención</option>';
+        }
+        if (visualState.baseTable === 'entregas' || visualState.baseTable === 'movimientos' || visualState.baseTable === 'outbound_deliveries') {
+            customMacros += '<option value="__AREA_EXPR__">Macro: Área de Negocio Compleja</option>';
+        }
+
+        bSelect.innerHTML = '<option value="">-- Sin Desglose --</option>' + renderOptions(colsObj) + customMacros;
+        
+        const isMacro = prevB && prevB.startsWith('__');
+        if(prevB === '' || colsIds.includes(prevB) || isMacro) {
             bSelect.value = prevB;
             visualState.breakdown = prevB;
         } else {

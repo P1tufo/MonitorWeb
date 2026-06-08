@@ -1,17 +1,19 @@
 ## Archivo: ./routes/settings.py
 
 ### Resumen Funcional
-El archivo `settings.py` contiene endpoints para la gestión dinámica de configuraciones SaaS en un sistema de monitoreo de almacén (WMS). Utiliza SQLAlchemy ORM para todas las operaciones de escritura y FastAPI para crear una API RESTful.
+El archivo `settings.py` contiene endpoints para la gestión dinámica de configuraciones en un sistema de monitoreo de almacén (WMS) construido con FastAPI, SQLAlchemy y SQLite. Permite actualizar y gestionar configuraciones generales, grupos de usuarios, feriados, estados, costos centrales y consultas SQL.
 
 ### Catálogo de Funciones y Clases
 - `invalidate_caches(db: Session)` - Limpia el caché global en memoria y elimina todos los snapshots de base de datos.
-- `settings_view(request: Request, db: DBSession)` - Renderiza el panel de control de configuraciones SaaS.
+- `settings_view(request: Request, db: DBSession, repo: ProductivityRepository = Depends(get_productivity_repo))` - Renderiza el panel de control de configuraciones SaaS.
 - `api_get_settings()` - Retorna las configuraciones generales.
-- `api_update_setting(update: SettingUpdate, db: DBSession)` - Actualiza una configuración específica.
-- `api_upsert_status(update: StatusMappingUpdate, db: DBSession)` - Inserta o actualiza un mapeo de estado.
-- `api_delete_status(code: str, db: DBSession)` - Elimina un mapeo de estado.
+- `api_update_setting(update: SettingUpdate, db: DBSession)` - Actualiza una configuración general.
+- `api_upsert_status(update: StatusMappingUpdate, db: DBSession)` - Inserta o actualiza un estado.
+- `api_delete_status(code: str, db: DBSession)` - Elimina un estado.
 - `api_upsert_cost_center(update: CostCenterMappingUpdate, db: DBSession)` - Inserta o actualiza un centro de costo.
 - `api_delete_cost_center(code: str, db: DBSession)` - Elimina un centro de costo.
+- `api_upsert_user_group(update: UserGroupAdd, db: DBSession)` - Inserta o actualiza un grupo de usuarios.
+- `api_delete_user_group(group_name: str, db: DBSession)` - Elimina un grupo de usuarios.
 - `api_add_holiday(h: HolidayAdd, db: DBSession)` - Añade un feriado.
 - `api_sync_holidays(db: DBSession)` - Sincroniza automáticamente los feriados nacionales (Chile).
 - `api_delete_holiday(date_str: str, db: DBSession)` - Elimina un feriado.
@@ -24,31 +26,32 @@ El archivo `settings.py` contiene endpoints para la gestión dinámica de config
 - `api_export_missing_orders(db: DBSession)` - Exporta órdenes sin ceco a un archivo Excel.
 
 ### Interacción con Base de Datos
-- Motor: SQLite
-- Tablas:
-  - `analytics_snapshots`
-- Columnas:
-  - `id` (de `analytics_snapshots`)
-- Consultas SQL crudas o llamadas a ORM:
-  - `DELETE FROM analytics_snapshots`
+- **Motor:** SQLite
+- **Tablas y Columnas:**
+  - `analytics_snapshots` (DELETE)
+  - `app_settings`
+  - `cost_center_mapping`
+  - `holiday`
+  - `status_mapping`
+  - `user_group`
 
 ### Estado y Variables Globales
-- No hay variables globales, de sesión, de entorno o diccionarios quemados en código que almacenen estado crítico.
+- No hay variables globales explícitas.
 
 ### Dependencias y Flujo
-- Librerías externas: `fastapi`, `sqlalchemy`, `pydantic`, `pandas`, `holidays`, `openpyxl`
-- Archivos del proyecto que este archivo importa:
-  - `core.app_instance`
-  - `core.auth`
-  - `core.database`
-  - `core.db_config_manager`
-  - `core.models`
-  - `core.state`
-  - `core.utils`
-  - `core.schemas`
-  - `core.semantic_layer`
-  - `core.query_engine`
-- Archivos del proyecto que importan a este archivo:
-  - Ninguno
-- Flujo de datos: El archivo es un endpoint de FastAPI que consume y produce datos para la gestión de configuraciones SaaS.
+- **Dependencias Externas:** FastAPI, SQLAlchemy, Pandas, Holidays (librería de feriados)
+- **Archivos del Proyecto que Importan a este Archivo:**
+  - `core.auth.require_admin`
+  - `core.database.get_session_dep`
+  - `core.db_config_manager.*`
+  - `core.models.*`
+  - `core.state.CacheManager`
+  - `core.utils.sanitize_for_json`
+- **Archivos del Proyecto que Este Archivo Importa:**
+  - `routes/settings.py` (se importa a sí mismo)
+  - `repositories.get_productivity_repo`
+  - `core.schemas.*`
+  - `core.query_engine.build_sql_from_payload`
+
+El flujo de datos es principalmente entre el endpoint, la base de datos y los modelos de datos.
 

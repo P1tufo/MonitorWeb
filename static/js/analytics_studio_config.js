@@ -30,7 +30,7 @@
             joins: [],
             filters: [],
             metric: { column: 'met_tareas', aggregation: 'COUNT' },
-            timeAxis: { column: 'dim_fecha_creac', granularity: 'DAY' },
+            timeAxis: { column: 'dim_fecha', granularity: 'DAY' },
             breakdown: '',
             chartType: 'line'
         },
@@ -39,7 +39,7 @@
             joins: [],
             filters: [{ column: 'dim_clase_mov', operator: 'isnotnull', value: '' }],
             metric: { column: 'met_tareas', aggregation: 'COUNT' },
-            timeAxis: { column: 'dim_fecha_creac', granularity: 'MONTH' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
             breakdown: 'dim_clase_mov',
             chartType: 'pie'
         },
@@ -48,7 +48,7 @@
             joins: [],
             filters: [],
             metric: { column: 'met_tareas', aggregation: 'COUNT' },
-            timeAxis: { column: 'dim_fecha_creac', granularity: 'MONTH' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
             breakdown: 'dim_usuario',
             chartType: 'bar'
         },
@@ -57,7 +57,7 @@
             joins: [],
             filters: [],
             metric: { column: 'met_movimientos', aggregation: 'COUNT' },
-            timeAxis: { column: 'dim_fecha_contab', granularity: 'DAY' },
+            timeAxis: { column: 'dim_fecha', granularity: 'DAY' },
             breakdown: 'dim_tipo_operacion',
             chartType: 'bar'
         },
@@ -66,7 +66,7 @@
             joins: [],
             filters: [{ column: 'met_movimientos', operator: 'isnotnull', value: '' }],
             metric: { column: 'met_cantidad', aggregation: 'SUM' },
-            timeAxis: { column: 'dim_fecha_contab', granularity: 'MONTH' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
             breakdown: 'dim_texto_breve',
             chartType: 'bar'
         },
@@ -102,7 +102,7 @@
             joins: [],
             filters: [],
             metric: { column: 'met_cantidad', aggregation: 'SUM' },
-            timeAxis: { column: 'dim_fecha_contab', granularity: 'MONTH' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
             breakdown: 'dim_ce_coste',
             chartType: 'bar'
         },
@@ -111,7 +111,7 @@
             joins: [],
             filters: [],
             metric: { column: 'met_movimientos', aggregation: 'COUNT' },
-            timeAxis: { column: 'dim_fecha_contab', granularity: 'MONTH' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
             breakdown: 'dim_texto_breve',
             chartType: 'bar'
         },
@@ -120,8 +120,26 @@
             joins: [],
             filters: [],
             metric: { column: 'met_movimientos', aggregation: 'COUNT' },
-            timeAxis: { column: 'dim_fecha_contab', granularity: 'DAY' },
+            timeAxis: { column: 'dim_fecha', granularity: 'DAY' },
             breakdown: '',
+            chartType: 'line'
+        },
+        'inv_cmv_201_mensual': {
+            baseTable: 'movimientos',
+            joins: [],
+            filters: [{ column: 'dim_cmv', operator: 'equals', value: '201', valueType: 'value' }],
+            metric: { column: 'met_movimientos', aggregation: 'COUNT', label: 'Consumos 201' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
+            breakdown: '__PLAN_VS_UNPLAN__',
+            chartType: 'line'
+        },
+        'inv_cmv_261_221_mensual': {
+            baseTable: 'movimientos',
+            joins: [],
+            filters: [{ column: 'dim_cmv', operator: 'in', value: '261,221', valueType: 'value' }],
+            metric: { column: 'met_movimientos', aggregation: 'COUNT', label: 'Consumos 261/221' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
+            breakdown: '__PLAN_VS_UNPLAN__',
             chartType: 'line'
         },
         'inv_pm_type_records': {
@@ -129,7 +147,7 @@
             joins: [],
             filters: [],
             metric: { column: 'met_cantidad', aggregation: 'SUM' },
-            timeAxis: { column: 'dim_fecha_contab', granularity: 'MONTH' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
             breakdown: 'dim_tipo_operacion',
             chartType: 'bar'
         },
@@ -138,7 +156,7 @@
             joins: [],
             filters: [],
             metric: { column: 'met_movimientos', aggregation: 'COUNT' },
-            timeAxis: { column: 'dim_fecha_contab', granularity: 'MONTH' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
             breakdown: 'dim_alm',
             chartType: 'bar'
         },
@@ -147,7 +165,7 @@
             joins: [],
             filters: [],
             metric: { column: 'met_movimientos', aggregation: 'COUNT' },
-            timeAxis: { column: 'dim_fecha_contab', granularity: 'MONTH' },
+            timeAxis: { column: 'dim_fecha', granularity: 'MONTH' },
             breakdown: 'dim_usuario',
             chartType: 'bar'
         },
@@ -258,7 +276,10 @@
         'inv_kpi_ingresos': {
             baseTable: 'movimientos',
             joins: [],
-            filters: [{ column: 'dim_tipo_operacion', operator: 'contains', value: 'Ingreso' }],
+            filters: [
+                { column: 'dim_cmv', operator: 'in', value: '101, 305' },
+                { column: 'dim_fecha', operator: 'contains', value: '2026' }
+            ],
             metric: { column: 'met_movimientos', aggregation: 'COUNT' },
             timeAxis: { column: '', granularity: 'YEAR' },
             breakdown: '',
@@ -267,7 +288,10 @@
         'inv_kpi_consumos_prod': {
             baseTable: 'movimientos',
             joins: [],
-            filters: [{ column: 'dim_tipo_operacion', operator: 'contains', value: 'Centro Costo' }],
+            filters: [
+                { column: 'dim_cmv', operator: 'in', value: '201' },
+                { column: 'dim_fecha', operator: 'contains', value: '2026' }
+            ],
             metric: { column: 'met_movimientos', aggregation: 'COUNT' },
             timeAxis: { column: '', granularity: 'YEAR' },
             breakdown: '',
@@ -276,7 +300,10 @@
         'inv_kpi_consumos_mant': {
             baseTable: 'movimientos',
             joins: [],
-            filters: [{ column: 'dim_tipo_operacion', operator: 'contains', value: 'Orden/Reserva' }],
+            filters: [
+                { column: 'dim_cmv', operator: 'in', value: '261' },
+                { column: 'dim_fecha', operator: 'contains', value: '2026' }
+            ],
             metric: { column: 'met_movimientos', aggregation: 'COUNT' },
             timeAxis: { column: '', granularity: 'YEAR' },
             breakdown: '',
@@ -285,7 +312,7 @@
         'inv_kpi_rate_reabast': {
             baseTable: 'movimientos',
             joins: [],
-            filters: [{ column: 'dim_fecha_contab', operator: 'contains', value: '2026' }],
+            filters: [{ column: 'dim_fecha', operator: 'contains', value: '2026' }],
             metric: { column: 'met_replenishment_rate', aggregation: 'REPLENISHMENT_RATE', format: 'percent' },
             timeAxis: { column: '', granularity: 'YEAR' },
             breakdown: '',
@@ -296,7 +323,7 @@
             joins: [],
             filters: [
                 { column: 'dim_cmv', operator: 'in', value: '301, 303' },
-                { column: 'dim_fecha_contab', operator: 'contains', value: '2026' }
+                { column: 'dim_fecha', operator: 'contains', value: '2026' }
             ],
             metric: { column: 'met_movimientos', aggregation: 'COUNT' },
             timeAxis: { column: '', granularity: 'YEAR' },
@@ -306,7 +333,7 @@
         'inv_kpi_rate_devolucion': {
             baseTable: 'movimientos',
             joins: [],
-            filters: [{ column: 'dim_fecha_contab', operator: 'contains', value: '2026' }],
+            filters: [{ column: 'dim_fecha', operator: 'contains', value: '2026' }],
             metric: { column: 'met_return_rate', aggregation: 'RETURN_RATE', format: 'percent' },
             timeAxis: { column: '', granularity: 'YEAR' },
             breakdown: '',
@@ -315,7 +342,7 @@
         'inv_kpi_rate_eficiencia': {
             baseTable: 'movimientos',
             joins: [],
-            filters: [{ column: 'dim_fecha_contab', operator: 'contains', value: '2026' }],
+            filters: [{ column: 'dim_fecha', operator: 'contains', value: '2026' }],
             metric: { column: 'met_inv_efficiency', aggregation: 'INV_EFFICIENCY', format: 'percent' },
             timeAxis: { column: '', granularity: 'YEAR' },
             breakdown: '',
@@ -335,7 +362,7 @@
             joins: [],
             filters: [
                 { column: 'dim_usuario', operator: 'isnotnull', value: '' },
-                { column: 'dim_fecha_creac', operator: 'contains', value: '2026' }
+                { column: 'dim_fecha', operator: 'contains', value: '2026' }
             ],
             metric: { column: 'dim_usuario', aggregation: 'COUNT_DISTINCT' },
             timeAxis: { column: '', granularity: 'MONTH' },

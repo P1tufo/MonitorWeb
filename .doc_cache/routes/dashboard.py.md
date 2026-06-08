@@ -30,7 +30,8 @@ El archivo `dashboard.py` contiene rutas para el dashboard de un sistema de moni
   - `core.auth.get_current_user`
   - `core.database.get_session_dep`
   - `core.schemas.DashboardResponse`
-  - `core.state.CacheManager`, `core.state.SyncStateManager`, `get_cache_manager`, `get_sync_manager`
+  - `core.state.CacheManager`, `core.state.SyncStateManager`
+  - `core.db_config_manager.get_user_groups`
   - `services.dashboard_service.DashboardService`
 
 **Flujo de Datos:**
@@ -38,7 +39,7 @@ El archivo `dashboard.py` contiene rutas para el dashboard de un sistema de moni
 2. **Procesamiento:**
    - Para `get_ubicaciones`: Consulta la tabla `stock_levels` para obtener las ubicaciones del material especificado.
    - Para `dashboard` y `dashboard_api`: Utiliza el servicio `DashboardService` para obtener el contexto completo del negocio, que luego se almacena en caché.
-3. **Salida:** Devuelve los datos en formato JSON o HTML según la solicitud.
+3. **Salida:** Devuelve datos en formato JSON o HTML según la solicitud.
 
-**Nota:** El archivo no utiliza consultas SQL crudas directamente; en su lugar, usa SQLAlchemy ORM y pandas para manipular los datos.
+**Nota:** El archivo no realiza consultas SQL crudas directamente; en su lugar, utiliza SQLAlchemy ORM y pandas para manipular los datos.
 

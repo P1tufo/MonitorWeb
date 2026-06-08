@@ -108,6 +108,26 @@ class ProductivityRepository(BaseRepository):
             logger.error(f"Error en get_available_dates: {e}")
             return []
 
+    def get_all_users(self) -> list:
+        """
+        Retorna la lista completa de usuarios que han tenido alguna actividad
+        (inventario o almacén) para poblar los filtros y agrupaciones.
+        """
+        query = """
+            SELECT DISTINCT usuario FROM inventory_movements WHERE usuario IS NOT NULL AND usuario != ''
+            UNION
+            SELECT DISTINCT usuario_conf FROM warehouse_tasks WHERE usuario_conf IS NOT NULL AND usuario_conf != ''
+            UNION
+            SELECT DISTINCT usuario FROM warehouse_tasks WHERE usuario IS NOT NULL AND usuario != ''
+            ORDER BY usuario ASC
+        """
+        try:
+            df = pd.read_sql(text(query), self.session.connection())
+            return df['usuario'].dropna().tolist()
+        except Exception as e:
+            logger.error(f"Error en get_all_users: {e}")
+            return []
+
     # --- DAILY PRODUCTIVITY ---
 
     def _get_daily_summary(self, date_sap: str) -> list:

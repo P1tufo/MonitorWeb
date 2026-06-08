@@ -26,7 +26,6 @@ CÓDIGO ÓPTIMO
 
 #### --- PARTE 7 de 8 ---
 
-**Veredicto de Calidad**
 CÓDIGO ÓPTIMO
 
 #### --- PARTE 8 de 8 ---

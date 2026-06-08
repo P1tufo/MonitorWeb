@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: db
-Compilado el: 2026-06-07 12:50:47
+Compilado el: 2026-06-07 18:34:58
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -38,21 +38,27 @@ El archivo `consolidator.py` es un orquestador que gestiona la consolidación de
   - `stock_levels`
 - Columnas (no detalladas por brevedad):
   - Todas las columnas relevantes para cada tabla mencionada.
-- Consultas SQL crudas o llamadas a ORM: Sí, se utilizan funciones que interactúan con la base de datos.
+- Consultas SQL crudas o llamadas a ORM: Sí, se utilizan funciones como `_enrich_with_stock`, `_backfill_movements`, etc., que probablemente implican consultas SQL.
 
 ### Estado y Variables Globales
-- `logger` - Variable global para el registro de eventos.
+- `logger` - Variable global de logging.
 - `TABLE_DELIVERIES` - Constante con el nombre de la tabla de entregas.
 - `TABLE_STOCK` - Constante con el nombre de la tabla de niveles de stock.
 
 ### Dependencias y Flujo
-- Librerías externas: `sqlite3`, `datetime`, `re`, `os`, `pathlib`, `typing`.
+- Librerías externas: `logging`, `os`, `re`, `sqlite3`, `datetime`, `pathlib`, `typing`.
 - Archivos del proyecto que este archivo importa:
-  - `services.etl`
-  - `db_enrichment` (varias funciones)
+  - `services.etl.OutboundDeliveryAdapter`
+  - `services.etl.StockLevelAdapter`
+  - `db_enrichment.apply_author_learning`
+  - `db_enrichment.learn_author_areas`
+  - `db_enrichment.backfill_deliveries_from_movements`
+  - `db_enrichment.backfill_material_texts`
+  - `db_enrichment.enrich_deliveries_with_stock`
+  - `db_enrichment.update_sla_with_tasks`
 - Archivos del proyecto que importan a este archivo:
   - Ninguno
-- Flujo de datos: El archivo se utiliza para procesar y consolidar archivos WMS, interactuar con la base de datos SQLite y llamar a funciones de enriquecimiento y actualización.
+- Flujo de datos: El flujo de datos pasa por el objeto `DataConsolidator`, que se encarga de la conexión a la base de datos, el procesamiento de archivos y el enriquecimiento de los datos.
 
 
 ---

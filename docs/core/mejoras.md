@@ -1,5 +1,5 @@
 # Sugerencias de Mejora - Directorio: core
-Compilado el: 2026-06-07 12:50:47
+Compilado el: 2026-06-07 18:34:58
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -19,6 +19,13 @@ CÓDIGO ÓPTIMO
 ---
 
 ## Sugerencias para: ./core/auth.py
+
+CÓDIGO ÓPTIMO
+
+
+---
+
+## Sugerencias para: ./core/cache_decorator.py
 
 CÓDIGO ÓPTIMO
 

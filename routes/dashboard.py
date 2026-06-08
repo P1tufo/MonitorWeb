@@ -18,6 +18,7 @@ from core.auth import get_current_user
 from core.database import get_session_dep
 from core.schemas import DashboardResponse
 from core.state import CacheManager, SyncStateManager, get_cache_manager, get_sync_manager
+from core.db_config_manager import get_user_groups
 from services.dashboard_service import DashboardService
 
 logger = logging.getLogger("routes-dashboard")
@@ -129,6 +130,7 @@ async def dashboard(request: Request, user = Depends(get_current_user), session:
             "request": request,
             "user": user,
             "is_syncing": sync.is_syncing,
+            "user_groups": get_user_groups(),
             **service_context
         }
 

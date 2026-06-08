@@ -22,7 +22,7 @@ from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 
 from .database import Base, engine, get_session
-from .models import AppSetting, ConfigQuery, CostCenterMapping, Holiday, StatusMapping
+from .models import AppSetting, ConfigQuery, CostCenterMapping, Holiday, StatusMapping, UserGroup
 
 logger = logging.getLogger("db-config")
 
@@ -138,6 +138,15 @@ def seed_initial_config():
             if not session.query(Holiday).filter_by(date_str=d).first():
                 session.add(Holiday(date_str=d))
 
+        # ── Grupos de Usuarios ────────────────────────────────────────────────
+        initial_groups = [
+            UserGroup(group_name="Grupo de Ejemplo", users="usuario1, usuario2"),
+        ]
+        for g in initial_groups:
+            if not session.query(UserGroup).filter_by(group_name=g.group_name).first():
+                session.add(g)
+
+
         # ── Consultas SQL ─────────────────────────────────────────────────────
         # ── Consultas SQL (Seed JSON) ──────────────────────────────────────────
         import json
@@ -204,3 +213,12 @@ def get_query_visual_state(query_id: str) -> str:
             return row.visual_state or "" if row else ""
     except Exception:
         return ""
+
+def get_user_groups() -> Dict[str, List[str]]:
+    """Devuelve un diccionario de grupos de usuarios { 'Nombre': ['user1', 'user2'] }."""
+    try:
+        with get_session() as session:
+            groups = session.query(UserGroup).all()
+            return {row.group_name: [u.strip() for u in row.users.split(",") if u.strip()] for row in groups}
+    except Exception:
+        return {}

@@ -30,7 +30,11 @@ class WidgetRepository(BaseRepository):
 
             if not date_col_updated:
                 base_table = payload_dict.get("baseTable", "outbound_deliveries")
-                date_col = f"{base_table}.fecha_carga" if base_table == "outbound_deliveries" else f"{base_table}.fe_contab"
+                if base_table in ("entregas", "movimientos", "tareas"):
+                    date_col = "dim_fecha"
+                else:
+                    date_col = f"{base_table}.fecha_carga" if base_table == "outbound_deliveries" else f"{base_table}.fe_contab"
+                
                 filters.append({
                     "column": date_col,
                     "operator": "contains",
@@ -40,9 +44,10 @@ class WidgetRepository(BaseRepository):
 
         if area and area.strip() != "":
             base_table = payload_dict.get("baseTable", "outbound_deliveries")
-            if base_table == "outbound_deliveries":
+            if base_table in ("outbound_deliveries", "entregas"):
+                col = "__AREA_EXPR__"
                 filters.append({
-                    "column": "__AREA_EXPR__",
+                    "column": col,
                     "operator": "in",
                     "value": area,
                     "valueType": "value"
@@ -58,8 +63,9 @@ class WidgetRepository(BaseRepository):
             curr = datetime.now()
             curr_str = f"{curr.month:02d}-{curr.year}"
             base_t = payload_dict.get("baseTable", "outbound_deliveries")
+            col = "dim_fecha" if base_t == "entregas" else f"{base_t}.fecha_carga"
             filters.append({
-                "column": f"{base_t}.fecha_carga",
+                "column": col,
                 "operator": "notcontains",
                 "value": curr_str,
                 "valueType": "value"
@@ -136,7 +142,11 @@ class WidgetRepository(BaseRepository):
                     date_col_updated = True
             if not date_col_updated:
                 base_table = payload_dict.get("baseTable", "outbound_deliveries")
-                date_col = f"{base_table}.fecha_carga" if base_table == "outbound_deliveries" else f"{base_table}.fe_contab"
+                if base_table in ("entregas", "movimientos", "tareas"):
+                    date_col = "dim_fecha"
+                else:
+                    date_col = f"{base_table}.fecha_carga" if base_table == "outbound_deliveries" else f"{base_table}.fe_contab"
+                
                 filters.append({
                     "column": date_col,
                     "operator": "contains",

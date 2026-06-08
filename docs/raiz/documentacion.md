@@ -1,5 +1,5 @@
 # Documentación Técnica - Directorio: raiz
-Compilado el: 2026-06-07 12:50:47
+Compilado el: 2026-06-07 18:34:58
 Modelo: qwen2.5-coder:7b | Separado por Carpetas
 
 ---
@@ -10,40 +10,51 @@ Modelo: qwen2.5-coder:7b | Separado por Carpetas
 El archivo `app.py` es el punto de entrada para la configuración y ejecución del servidor FastAPI. Se encarga de montar las rutas, recursos estáticos y gestionar el ciclo de vida de la aplicación, incluyendo la inicialización de tablas de autenticación, carga de snapshots desde la base de datos y la ejecución de tareas en segundo plano.
 
 ### Catálogo de Funciones y Clases
-- `lifespan(fastapi_app: FastAPI)` - Manejador del ciclo de vida de la aplicación, gestionando el arranque y cierre.
+- `lifespan(fastapi_app: FastAPI)` - Manejador del ciclo de vida de la aplicación, incluyendo inicialización y limpieza.
 - `initialize_app(fastapi_app: FastAPI) -> None` - Configura y prepara la aplicación FastAPI.
 
 ### Interacción con Base de Datos
-- Motor de BD: SQLite
-- Tablas:
+- **Motor**: SQLite
+- **Tablas**:
   - `analytics_snapshots`
-- Columnas:
+- **Columnas**:
   - `data`
   - `key`
 
 ### Estado y Variables Globales
-- No se detectan variables globales explícitas en el código proporcionado.
+- Ninguna
 
 ### Dependencias y Flujo
-- **Dependencias Externas**: FastAPI, SQLAlchemy, pandas.
+- **Librerías Externas**:
+  - `fastapi`
+  - `sqlalchemy`
+  - `logging`
+  - `warnings`
+  - `asyncio`
+  - `json`
+  - `os`
+  - `contextlib`
+
 - **Archivos del Proyecto Importados**:
-  - `config.py`
+  - `config`
   - `core.app_instance`
   - `routes.config`
   - `core.auth`
   - `core.db_config_manager`
-  - `scripts.bundler`
   - `core.database`
   - `core.state`
   - `core.task_manager`
+  - `scripts.bundler`
   - `services.background_tasks`
   - `core.watcher`
-- **Archivos del Proyecto que Importan a Este Archivo**: Ninguna.
-- **Flujo de Datos**:
-  - La aplicación se inicia y configura en el archivo `main.py`.
-  - El ciclo de vida de la aplicación se gestiona mediante el contexto asincrónico `lifespan`.
-  - Se registran rutas y recursos estáticos.
-  - Se manejan excepciones globales, incluyendo redirecciones para autenticación.
+
+- **Archivos del Proyecto que Importan a Este Archivo**:
+  - Ninguno
+
+- **Dirección del Flujo de Datos**:
+  - El archivo importa configuraciones y componentes necesarios para la inicialización y ejecución del servidor FastAPI.
+  - Realiza tareas como la carga de snapshots desde la base de datos y el inicio de tareas en segundo plano.
+  - Maneja el ciclo de vida de la aplicación, incluyendo la inicialización y limpieza.
 
 
 ---
