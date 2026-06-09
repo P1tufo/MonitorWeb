@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from config import DB_PATH, PDF_STORAGE
+from config import DB_PATH
 from core.database import get_session_dep
 from core.pdf_engine import WMS_Landscape_PDF, draw_delivery_page, get_ots_for_delivery
 from core.pdf_reports import draw_annex_table, draw_picking_list

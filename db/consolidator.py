@@ -15,6 +15,7 @@ from .db_enrichment import apply_author_learning, learn_author_areas
 from .db_enrichment import backfill_deliveries_from_movements as _backfill_movements
 from .db_enrichment import backfill_material_texts as _backfill_texts
 from .db_enrichment import enrich_deliveries_with_stock as _enrich_with_stock
+from .db_enrichment import enrich_movements_with_iw39 as _enrich_movements_with_iw39
 from .db_enrichment import update_sla_with_tasks as _update_sla_tasks
 
 # Configuración de Logging
@@ -71,10 +72,11 @@ class DataConsolidator:
         """Consolida archivos cronológicamente mediante lógica UPSERT."""
         validate_table(table_name)
         folder = Path(folder_path)
-        files = sorted(folder.glob("*.xlsx"), key=self._parse_file_date)
+        files = [f for f in folder.iterdir() if f.suffix.lower() in {'.txt', '.csv', '.xlsx', '.xls'} and not f.name.startswith('~')]
+        files.sort(key=self._parse_file_date)
 
         if not files:
-            logger.warning(f"No se encontraron archivos .xlsx en {folder_path}")
+            logger.warning(f"No se encontraron archivos válidos en {folder_path}")
             return
 
         logger.info(f"Consolidando {len(files)} archivos en '{table_name}'...")
@@ -152,6 +154,11 @@ class DataConsolidator:
         """Actualiza el SLA cruzando fechas con Tareas."""
         if self.conn:
             _update_sla_tasks(self.conn)
+
+    def enrich_movements_with_iw39(self):
+        """Enriquece inventarios con iw39."""
+        if self.conn:
+            _enrich_movements_with_iw39(self.conn)
 
     def close(self):
         """Cierra la conexión de forma segura."""

@@ -73,6 +73,40 @@ def process_and_move_html():
     for old, new in TRANSLATIONS.items():
         html_content = html_content.replace(old, new)
 
+    # Inyectar CSS y JS para hacer el menú y info-panel plegables
+    mobile_css_js = """
+  /* Botón para desplegar el sidebar en móvil */
+  #mobile-sidebar-toggle { display: none; position: absolute; top: 10px; right: 10px; z-index: 1000; padding: 8px 12px; background: rgba(44, 62, 80, 0.9); color: white; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 5px; cursor: pointer; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
+  
+  /* Ajustes para evitar saturación de info-panel */
+  #info-panel { max-height: 40vh; overflow-y: auto; }
+
+  /* Hacer el info-panel plegable (accordion) */
+  #info-panel h3 { cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+  #info-panel h3::after { content: '▼'; font-size: 10px; transition: transform 0.2s; }
+  #info-panel.collapsed h3::after { transform: rotate(-90deg); }
+  #info-panel.collapsed #info-content { display: none; }
+  
+  @media (max-width: 768px) {
+    #mobile-sidebar-toggle { display: block; }
+    #sidebar { position: absolute; top: 0; right: -280px; height: 100%; transition: right 0.3s ease; z-index: 999; box-shadow: -2px 0 10px rgba(0,0,0,0.5); }
+    #sidebar.open { right: 0; }
+  }
+</style>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var infoPanel = document.getElementById('info-panel');
+    var h3 = infoPanel.querySelector('h3');
+    h3.addEventListener('click', function() {
+      infoPanel.classList.toggle('collapsed');
+    });
+  });
+</script>"""
+    html_content = html_content.replace('</style>', mobile_css_js)
+
+    sidebar_html = """<button id="mobile-sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰ Menú</button>\n<div id="sidebar">"""
+    html_content = html_content.replace('<div id="sidebar">', sidebar_html)
+
     # Escribir directamente en el destino
     dest_html.write_text(html_content, encoding="utf-8")
 

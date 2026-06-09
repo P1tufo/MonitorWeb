@@ -52,3 +52,16 @@ Icon
 # Node
 node_modules/
 npm-debug.log*
+
+# Carpetas temporales y generadas localmente
+DELIVERIES_cleansed/
+PDFs_Generados/
+Temp_Assets/
+.doc_cache/
+graphify-out/
+bin/
+
+# Archivos de sqlite auxiliares
+*.db-shm
+*.db-wal
+*.backup*

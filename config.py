@@ -14,8 +14,6 @@ BASE_DIR: Final[Path] = Path(__file__).resolve().parent
 # ─── BASES DE DATOS Y ALMACENAMIENTO ──────────────────────────────────────────
 # Definición de rutas críticas para persistencia y caché
 DB_PATH: Final[Path]         = Path(os.getenv("DB_PATH", BASE_DIR / "data" / "wms_transactions.db"))
-PDF_STORAGE: Final[Path]     = Path(os.getenv("PDF_STORAGE", BASE_DIR / "PDFs_Generados"))
-CLEANSED_DIR: Final[Path]    = Path(os.getenv("CLEANSED_DIR", BASE_DIR / "DELIVERIES_cleansed"))
 TEMP_DIR: Final[Path]        = Path(os.getenv("TEMP_DIR", BASE_DIR / "Temp_Assets"))
 CACHE_DIR_NAME: Final[str]   = os.getenv("CACHE_DIR", ".doc_cache")
 CACHE_DIR: Final[Path]       = BASE_DIR / CACHE_DIR_NAME
@@ -53,7 +51,7 @@ def validate_config():
 
 def ensure_project_structure():
     """Crea los directorios necesarios para el funcionamiento de la app si no existen."""
-    dirs = [PDF_STORAGE, TEMP_DIR, CLEANSED_DIR, CACHE_DIR]
+    dirs = [TEMP_DIR, CACHE_DIR]
     for d in dirs:
         try:
             d.mkdir(parents=True, exist_ok=True)

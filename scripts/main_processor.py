@@ -8,7 +8,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 # Importar configuraciones globales
 try:
-    from config import CLEANSED_DIR, DELIVERIES_DIR, INVENTORY_DIR, MB5B_DIR, ONEDRIVE_PATH, STOCK_DIR
+    from config import DELIVERIES_DIR, INVENTORY_DIR, MB5B_DIR, ONEDRIVE_PATH, STOCK_DIR
     from config import DB_PATH as DATABASE_PATH
     IW39_DIR = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/IW39"
 except ImportError:
@@ -18,7 +18,7 @@ except ImportError:
     INVENTORY_DIR   = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/Movimientos" # type: ignore
     IW39_DIR        = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/IW39" # type: ignore
     MB5B_DIR        = "/Users/christianykelly/Library/CloudStorage/OneDrive-ARAUCO/Escritorio/Transacciones/MB5B" # type: ignore
-    CLEANSED_DIR    = "/Users/christianykelly/Desktop/MonitorWeb/DELIVERIES_cleansed" # type: ignore
+    # CLEANSED_DIR ya no se utiliza
     DATABASE_PATH   = "/Users/christianykelly/Desktop/MonitorWeb/data/wms_transactions.db" # type: ignore
 
 # Configure logging
@@ -42,50 +42,26 @@ def run_pipeline():
             print(f"  ❌ Abortando: No se encuentra {path_name}")
             return
 
-    # ── Fase 1: Entregas ────────────────────────────────────────────────────────
-    # Buscar analyze_folder.py en scripts/ o en la raíz
-    analyze_script = PROJECT_ROOT / "scripts" / "analyze_folder.py"
-    if not analyze_script.exists():
-        analyze_script = PROJECT_ROOT / "analyze_folder.py"
-
-    if not analyze_script.exists():
-        logger.error(f"No se encontró analyze_folder.py en {PROJECT_ROOT} o {PROJECT_ROOT}/scripts. Saltando Fase 1 y 2.")
-    else:
-        cmd = [
-            sys.executable, str(analyze_script),
-            str(DELIVERIES_DIR),
-            "--output", str(CLEANSED_DIR),
-            "--db", str(DATABASE_PATH)
-        ]
-
+    # ── Fase 1: Entregas y Fase 2: Stock ───────────────────────────────────────
+    try:
+        from db.consolidator import DataConsolidator
+        
         logger.info(f"[Entregas] Ejecutando pipeline para: {DELIVERIES_DIR}")
+        with DataConsolidator(str(DATABASE_PATH)) as con:
+            processed_count = con.consolidate_folder(str(DELIVERIES_DIR))
+            logger.info(f"[Entregas] Fase completada. Registros procesados: {processed_count}")
 
-        try:
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-            if process.stdout:
-                for line in process.stdout:
-                    print(line, end='')
-            process.wait()
+            # ── Fase 2: Stock (Stock) ─────────────────────────────────────────
+            logger.info("[Stock] Procesando stock...")
+            con.overwrite_with_latest(str(STOCK_DIR), table_name="stock_levels")
 
-            if process.returncode == 0:
-                logger.info("[Entregas] Fase completada.")
+            # ── Fase 3: Enriquecimiento Entregas × Stock ─────────────────────────
+            logger.info("[Enrich] Cruzando Entregas con Stock...")
+            from db.db_enrichment import enrich_deliveries_with_stock
+            enrich_deliveries_with_stock(con.conn)
 
-                # ── Fase 2: Stock (Stock) ─────────────────────────────────────────
-                logger.info("[Stock] Procesando stock...")
-                from db.consolidator import DataConsolidator
-                with DataConsolidator(str(DATABASE_PATH)) as con:
-                    con.overwrite_with_latest(str(STOCK_DIR), table_name="stock_levels")
-
-                    # ── Fase 3: Enriquecimiento Entregas × Stock ─────────────────────────
-                    logger.info("[Enrich] Cruzando Entregas con Stock...")
-                    from db.db_enrichment import enrich_deliveries_with_stock
-                    enrich_deliveries_with_stock(con.conn)
-
-            else:
-                logger.error(f"[Entregas] Pipeline terminó con errores (Código: {process.returncode})")
-
-        except Exception as e:
-            logger.error(f"[Entregas] Fallo crítico: {e}", exc_info=True)
+    except Exception as e:
+        logger.error(f"[Entregas/Stock] Fallo crítico: {e}", exc_info=True)
 
     # ── Fase 4: Movimientos (Movimientos) ────────────────────────────────────────────
     print("\n" + "-"*60)
@@ -138,7 +114,6 @@ def run_pipeline():
     # ── Resumen final ─────────────────────────────────────────────────────────
     print("\n" + "="*60)
     print("✅ PIPELINE COMPLETADO")
-    print(f"📍 Datos limpios en:          {CLEANSED_DIR}")
     print(f"🗄️  Base de datos actualizada: {DATABASE_PATH}")
     print("="*60)
 

@@ -9,12 +9,9 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from config import (
-    CLEANSED_DIR,
     DB_PATH,
     DELIVERIES_DIR,
     INVENTORY_DIR,
-    PDF_STORAGE,
     STOCK_DIR,
     TASKS_DIR,
     TUNNEL_URL_FILE,
@@ -117,36 +114,20 @@ def _run_sync_pipeline():
         except AttributeError:
             lx02_pendientes_path = base_path / "LX02_Pendientes"
 
-        # 2. Preparar directorios
-        Path(CLEANSED_DIR).mkdir(parents=True, exist_ok=True)
-        _reset_directory(PDF_STORAGE)
+        try:
+            iw39_path = base_path / wms_config.DIR_IW39
+        except AttributeError:
+            iw39_path = base_path / "IW39"
 
-        # 3. Limpieza de archivos (Fase Incremental)
-        if deliveries_path.exists():
-            with get_session() as session:
-                for f in deliveries_path.iterdir():
-                    if f.suffix.lower() in ['.xlsx', '.xls', '.txt']:
-                        out_f = Path(CLEANSED_DIR) / f"clean_{f.name}.xlsx"
-
-                        # Solo procesar si el archivo fuente cambió o el destino no existe
-                        if is_file_changed(session, f) or not out_f.exists():
-                            logger.info(f"Procesando cambio en: {f.name}")
-                            from services.etl import OutboundDeliveryAdapter
-                            df_clean = OutboundDeliveryAdapter().read_and_clean_data(f)
-                            if not df_clean.empty:
-                                df_clean.to_excel(out_f, index=False)
-                            rows = len(df_clean) if df_clean is not None else 0
-                            mark_file_processed(session, f, row_count=rows)
-                            has_changes = True
-                        else:
-                            logger.debug(f"Sin cambios en fuente: {f.name}")
+        # 2. (Vacío por remoción de PDF_STORAGE)
 
         # 3. Consolidación en Base de Datos
         with DataConsolidator(DB_PATH) as con:
-            # Entregas (Ya es incremental dentro de con.consolidate_folder)
-            processed_count = con.consolidate_folder(CLEANSED_DIR)
-            if processed_count > 0:
-                has_changes = True
+            # Entregas (Procesa directamente desde OneDrive sin copias intermedias)
+            if deliveries_path.exists():
+                processed_count = con.consolidate_folder(str(deliveries_path))
+                if processed_count > 0:
+                    has_changes = True
 
             # Stock
             if stock_path.exists():
@@ -213,6 +194,22 @@ def _run_sync_pipeline():
                     if rows > 0:
                         has_changes = True
 
+            # IW39 (Órdenes PM)
+            if iw39_path.exists():
+                from services.etl.iw39 import IW39Processor
+                processor_iw39 = IW39Processor()
+                for iw39_file in iw39_path.glob("*"):
+                    if iw39_file.suffix.lower() in ['.txt', '.csv', '.xlsx'] and not iw39_file.name.startswith('~'):
+                        with get_session() as _sess_iw39:
+                            changed = is_file_changed(_sess_iw39, iw39_file)
+                        if changed:
+                            rows = processor_iw39.process_and_save(str(iw39_file), str(DB_PATH), "iw39_orders", con.conn)
+                            with get_session() as _sess_iw39:
+                                mark_file_processed(_sess_iw39, iw39_file, row_count=rows)
+                            has_changes = True
+                        else:
+                            logger.debug(f"IW39 sin cambios ({iw39_file.name})")
+
             # Sincronización de Transporte (Avanti)
             from routes.transporte import sync_transporte_logic
             with get_session() as _sess_transporte:
@@ -222,6 +219,7 @@ def _run_sync_pipeline():
 
             # Enriquecimiento final cruzado (Solo si hubo cambios en algo)
             if has_changes:
+                con.enrich_movements_with_iw39()
                 con.backfill_from_movements()
                 con.backfill_texts()  # <-- Asegura descripciones en picking list
                 con.update_sla_with_tasks()  # <-- Cruce automático de Tareas para SLA
@@ -236,6 +234,7 @@ def _run_sync_pipeline():
                 logger.info(">>> Sincronización finalizada exitosamente. Datos actualizados y caché invalidada.")
             else:
                 # Incluso si no hubo cambios en archivos, corremos backfill por seguridad
+                con.enrich_movements_with_iw39()
                 con.backfill_texts()
                 con.update_sla_with_tasks()
                 logger.info(">>> Sincronización finalizada: No se detectaron cambios en los archivos fuente.")
