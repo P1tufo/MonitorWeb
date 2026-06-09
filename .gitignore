@@ -65,3 +65,6 @@ bin/
 *.db-shm
 *.db-wal
 *.backup*
+
+# Referencias Legacy
+_legacy_reference/
